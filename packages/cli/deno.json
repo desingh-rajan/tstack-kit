@@ -1,0 +1,33 @@
+{
+  "name": "@tonystack/cli",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "dev": "deno run --allow-read --allow-write mod.ts",
+    "test": "deno test --allow-all tests/",
+    "install": "deno install --global --allow-read --allow-write --allow-env --config deno.json -n tstack -f mod.ts"
+  },
+  "imports": {
+    "@std/cli": "jsr:@std/cli@^1.0.0",
+    "@std/fs": "jsr:@std/fs@^1.0.0",
+    "@std/path": "jsr:@std/path@^1.0.0",
+    "@std/fmt": "jsr:@std/fmt@^1.0.0"
+  },
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "deno.ns"],
+    "strict": true
+  },
+  "publish": {
+    "include": ["mod.ts", "src/**/*.ts", "README.md", "LICENSE"],
+    "exclude": ["tests/**"]
+  }
+}

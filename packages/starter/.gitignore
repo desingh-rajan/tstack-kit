@@ -1,0 +1,36 @@
+# Deno
+.env
+deno.lock
+
+# Database
+/data/*.db
+/data/*.db-*
+
+# Logs
+logs/
+*.log
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage
+coverage/
+
+# Distribution
+dist/
+build/

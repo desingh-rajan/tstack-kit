@@ -1,0 +1,41 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-all --watch src/main.ts",
+    "start": "deno run --allow-all src/main.ts",
+    "migrate:generate": "deno run -A npm:drizzle-kit generate",
+    "migrate:run": "deno run -A npm:drizzle-kit migrate",
+    "db:studio": "deno run -A npm:drizzle-kit studio",
+    "test": "deno test --allow-all tests/",
+    "fmt": "deno fmt",
+    "lint": "deno lint"
+  },
+  "imports": {
+    "@std/": "jsr:@std/",
+    "hono": "jsr:@hono/hono@^4.6.0",
+    "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
+    "hono/logger": "jsr:@hono/hono@^4.6.0/logger",
+    "hono/jwt": "jsr:@hono/hono@^4.6.0/jwt",
+    "drizzle-orm": "npm:drizzle-orm@^0.33.0",
+    "drizzle-orm/sqlite-core": "npm:drizzle-orm@^0.33.0/sqlite-core",
+    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.33.0/postgres-js",
+    "drizzle-orm/better-sqlite3": "npm:drizzle-orm@^0.33.0/better-sqlite3",
+    "drizzle-kit": "npm:drizzle-kit@^0.24.0",
+    "drizzle-zod": "npm:drizzle-zod@^0.5.0",
+    "@db/sqlite": "jsr:@db/sqlite@^0.12.0",
+    "postgres": "npm:postgres@^3.4.0",
+    "zod": "npm:zod@^3.23.0"
+  },
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  }
+}

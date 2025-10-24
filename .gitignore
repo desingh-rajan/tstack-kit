@@ -1,0 +1,55 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Deno
+deno.lock
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+/data/*.db
+/data/*.db-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build
+dist/
+build/
+*.js.map
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Docker
+docker-compose.override.yml
