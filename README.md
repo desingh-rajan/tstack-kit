@@ -1,390 +1,344 @@
-# TonyStack
+# TStack Kit
 
-> **Rails-like DX for Deno developers who want less framework, more control.**
+> **Rails-like backend toolkit for Deno. Build APIs fast.**
 
-A lightweight, opinionated toolkit for building fast, type-safe backend services
-using **Deno**, **Hono**, **Drizzle**, and **SQLite** (with PostgreSQL scaling
-support).
-
----
-
-## What's Included
-
-### 1. **Starter Package** (`packages/starter/`)
-
-Production-ready backend template with:
-
-- JWT authentication system
-- User management with CRUD
-- Role-based access control
-- MVC architecture
-- SQLite (dev) / PostgreSQL (prod)
-- Docker deployment configs
-- Drizzle ORM with migrations
-- Comprehensive error handling
-- Security middleware
-
-### 2. **CLI Tool** (`packages/cli/`)
-
-Rails-like scaffolding generator:
-
-```bash
-tstack scaffold products
-# Generates: model, dto, service, controller, route
-```
-
----
-
-## Quick Start
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/tonystack.git
-cd tonystack
-
-# Install CLI globally
-cd packages/cli
-deno task install
-
-# Verify installation
-tstack --version
-```
-
-### Create Your First Project
-
-```bash
-# Copy starter to new project
-cp -r packages/starter ~/my-backend
-cd ~/my-backend
-
-# Setup environment
-cp .env.example .env
-nano .env # Edit settings if needed
-
-# Start development server
-deno task dev
-
-# Generate new entities
-tstack scaffold products
-tstack scaffold orders
-```
-
-**Server runs at:** <http://localhost:8000>
-
----
-
-## Documentation
-
-- **[Quick Start Guide](QUICKSTART.md)** - Get started in 5 minutes
-- **[How to Use](HOW_TO_USE.md)** - Step-by-step project setup
-- **[Developer Guide](DEVELOPER_GUIDE.md)** - Complete 8-phase workflow
-- **[SQLite in Production](docs/SQLITE_PRODUCTION.md)** - Using SQLite for
-  small-scale production
-- **[E-commerce Example](docs/EXAMPLE_ECOMMERCE.md)** - Complete backend example
-- **[Project Checklist](docs/PROJECT_CHECKLIST.md)** - Track your project
-  progress
+A minimal, production-ready starter for building type-safe REST APIs with Deno, Hono, Drizzle ORM, and PostgreSQL.
 
 ---
 
 ## Features
 
-### Authentication & Authorization
+- ⚡ **Fast Setup** - Create new projects in seconds
+- 🎯 **CLI Scaffolding** - Generate complete MVC entities with one command
+- 🔒 **Type-Safe** - Full TypeScript with Drizzle ORM
+- 🗄️ **PostgreSQL** - Production-ready from day 1
+- 🐳 **Docker Ready** - Includes docker-compose setup
+- 🎨 **Clean MVC** - Organized entity structure
+- 📦 **Minimal** - No auth bloat, add what you need
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- Role-based access control (user/admin)
-- Protected routes middleware
+---
 
-### ️ Database
+## Quick Start
 
-- **SQLite** for development (zero setup)
-- **PostgreSQL** for production (same code!)
-- Drizzle ORM with full type safety
-- Automatic migrations with `drizzle-kit`
+### 1. Install Deno
 
-### ️ Architecture
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+```
 
-- **MVC Pattern** - Model, Service, Controller separation
-- **Domain-Driven** - Entities organized by feature
-- **Type-Safe** - Full TypeScript with inference
-- **Testable** - Services isolated from HTTP layer
+### 2. Install TStack CLI
 
-### ️ Developer Experience
+```bash
+# Clone the repo
+git clone https://github.com/desingh-rajan/tstack-kit.git
+cd tstack-kit
 
-- **Scaffolding CLI** - Generate entities in seconds
-- **Hot Reload** - Fast development with `--watch`
-- **Drizzle Studio** - Visual database browser
-- **Docker Ready** - Dev and prod configurations
+# Install CLI globally
+cd packages/cli
+deno task install
+```
+
+### 3. Create Your First Project
+
+```bash
+# Create new project
+tstack create blog-api
+cd blog-api
+
+# Setup environment
+cp .env.example .env
+
+# Start PostgreSQL
+docker-compose up -d postgres
+
+# Run migrations
+deno task migrate:run
+
+# Start dev server
+deno task dev
+```
+
+Server running at **http://localhost:8000** ✨
+
+---
+
+## Scaffold Entities
+
+Generate complete MVC structures:
+
+```bash
+# Scaffold articles entity
+tstack scaffold articles
+
+# This creates:
+# ✓ src/entities/articles/article.model.ts    (Drizzle schema)
+# ✓ src/entities/articles/article.dto.ts      (Zod validation)
+# ✓ src/entities/articles/article.service.ts  (Business logic)
+# ✓ src/entities/articles/article.controller.ts (HTTP handlers)
+# ✓ src/entities/articles/article.route.ts    (Hono routes)
+```
+
+### Customize the Model
+
+Edit `src/entities/articles/article.model.ts`:
+
+```typescript
+import { pgTable, integer, text, timestamp, boolean } from "drizzle-orm/pg-core";
+
+export const articles = pgTable("articles", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  title: text().notNull(),
+  content: text(),
+  published: boolean().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+```
+
+### Register Routes
+
+Edit `src/main.ts`:
+
+```typescript
+import articleRoutes from "./entities/articles/article.route.ts";
+
+app.route("/api", articleRoutes);
+```
+
+### Run Migrations
+
+```bash
+deno task migrate:generate
+deno task migrate:run
+```
 
 ---
 
 ## Project Structure
 
 ```
-tonystack/
-├── packages/
-│ ├── cli/ # Scaffolding tool
-│ │ ├── mod.ts # CLI entry point
-│ │ └── src/
-│ │ ├── commands/ # scaffold command
-│ │ ├── templates/ # Code generators
-│ │ └── utils/ # String utils, file writer
-│ └── starter/ # Backend template
-│ ├── src/
-│ │ ├── config/ # Database, env config
-│ │ ├── entities/ # Domain entities
-│ │ │ └── users/ # User entity (pre-built)
-│ │ ├── shared/ # Middleware, utils
-│ │ └── main.ts # App entry point
-│ ├── tests/ # Test structure
-│ ├── docker-compose.yml
-│ └── Dockerfile
-├── docs/ # Documentation
-│ ├── EXAMPLE_ECOMMERCE.md
-│ ├── PROJECT_CHECKLIST.md
-│ └── SQLITE_PRODUCTION.md
-├── QUICKSTART.md
-├── HOW_TO_USE.md
-├── DEVELOPER_GUIDE.md
-└── README.md # You are here
+my-project/
+├── src/
+│   ├── main.ts              # App entry point
+│   ├── config/
+│   │   ├── database.ts      # PostgreSQL connection
+│   │   └── env.ts           # Environment config
+│   ├── entities/            # Your domain entities
+│   │   └── articles/        # Generated by scaffold
+│   └── shared/
+│       ├── middleware/      # Error handling, logging
+│       └── utils/           # Response, validation helpers
+├── migrations/              # Drizzle migrations
+├── tests/                   # Test structure
+├── deno.json               # Deno configuration
+├── drizzle.config.ts       # Drizzle config
+├── docker-compose.yml      # PostgreSQL setup
+└── .env.example            # Environment template
 ```
 
 ---
 
-## Example: Scaffolding an Entity
+## Available Commands
+
+### TStack CLI
 
 ```bash
-# Generate a products entity
-tstack scaffold products
-
-# Creates 5 files:
-# ✓ src/entities/products/product.model.ts (Drizzle schema)
-# ✓ src/entities/products/product.dto.ts (Validation)
-# ✓ src/entities/products/product.service.ts (Business logic)
-# ✓ src/entities/products/product.controller.ts (HTTP handlers)
-# ✓ src/entities/products/product.route.ts (Routes)
+tstack create <project>     # Create new project
+tstack scaffold <entity>    # Generate entity
+tstack --help              # Show help
+tstack --version           # Show version
 ```
 
-Then register in `main.ts`:
-
-```typescript
-import productRoutes from "./entities/products/product.route.ts";
-app.route("/api", productRoutes);
-```
-
-**Instant API:**
-
-```
-GET /api/products → List products
-POST /api/products → Create product
-GET /api/products/:id → Get product
-PUT /api/products/:id → Update product
-DELETE /api/products/:id → Delete product
-```
-
----
-
-## Why TonyStack?
-
-### Compared to Existing Solutions
-
-| Feature              | TonyStack           | Oak       | Express (Node)   | NestJS (Deno) |
-| -------------------- | ------------------- | --------- | ---------------- | ------------- |
-| **Runtime**          | Deno                | Deno      | Node.js          | Deno          |
-| **Framework Weight** | Lightweight         | Medium    | Light            | Heavy         |
-| **Type Safety**      | Full                | Partial   | Minimal          | Full          |
-| **Scaffolding**      | Built-in            | ❌ Manual | ❌ Manual        | ✅ Via CLI    |
-| **ORM**              | Drizzle (type-safe) | Manual    | Prisma/TypeORM   | TypeORM       |
-| **Database Switch**  | Zero-rewrite        | Manual    | Requires changes | Adapter-based |
-| **Learning Curve**   | Low                 | Medium    | Low              | High          |
-| **Production Ready** |                     | ✅        | ✅               | ✅            |
-
-### Perfect For
-
-- **Small client projects** (1-10 users)
-- **MVPs and prototypes**
-- **Backend APIs for SPAs**
-- **Microservices**
-- **Internal tools**
-- **Freelance projects**
-
-### Not Ideal For
-
-- Massive enterprise apps (100+ tables)
-- Real-time WebSocket apps (yet)
-- GraphQL-first projects
-- Multi-tenant SaaS at scale
-
----
-
-## CLI Commands
+### Project Commands
 
 ```bash
-# Scaffold commands
-tstack scaffold <entity-name> # Generate entity
-tstack scaffold products # Example: products entity
-tstack scaffold blog-posts --force # Overwrite existing
+deno task dev              # Start development server (with watch)
+deno task start            # Start production server
+deno task migrate:generate # Generate migrations
+deno task migrate:run      # Run migrations
+deno task db:studio        # Open Drizzle Studio
+deno task test             # Run tests
+deno task fmt              # Format code
+deno task lint             # Lint code
+```
 
-# Options
---help, -h # Show help
---version, -v # Show version
---force, -f # Overwrite files
---dir <path> # Target directory
+---
+
+## Tech Stack
+
+| Layer      | Technology | Version |
+|------------|------------|---------|
+| Runtime    | Deno       | 2.5.4+  |
+| Framework  | Hono       | 4.6.3   |
+| ORM        | Drizzle    | 0.33.0  |
+| Database   | PostgreSQL | 16+     |
+| Validation | Zod        | 3.23.0  |
+
+---
+
+## Environment Variables
+
+```bash
+# .env
+NODE_ENV=development
+PORT=8000
+DATABASE_URL=postgresql://tonystack:password@localhost:5432/tonystack
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+LOG_LEVEL=info
 ```
 
 ---
 
 ## Docker Deployment
 
-### Development (SQLite)
+### Development
 
 ```bash
-docker-compose --profile dev up --build
+docker-compose up -d
 ```
 
-### Production (PostgreSQL)
+### Production
+
+Set environment variables:
 
 ```bash
-export JWT_SECRET="your-production-secret"
-export POSTGRES_PASSWORD="secure-password"
-export ALLOWED_ORIGINS="https://yourdomain.com"
-
-docker-compose --profile prod up --build -d
+export NODE_ENV=production
+export DATABASE_URL=postgresql://user:pass@host:5432/db
 ```
 
----
-
-## Testing
+Then:
 
 ```bash
-# Run tests
-cd packages/starter
-deno task test
-
-# Run with coverage
-deno test --coverage=coverage tests/
-
-# Test specific file
-deno test tests/unit/entities/users/user.service.test.ts --allow-all
+docker-compose --profile prod up -d
 ```
 
 ---
 
-## 🗺 Roadmap
+## What You Get
 
-### Phase 1: Core (Completed)
+### Default Endpoints
 
-- [x] CLI scaffolding tool
-- [x] Starter template with auth
-- [x] SQLite & PostgreSQL support
-- [x] Docker configs
-- [x] Documentation
+- `GET /` - API information
+- `GET /health` - Health check
 
-### 🚧 Phase 2: Enhancement (Next)
+### Scaffolded Entity Endpoints
 
-- [ ] **Rails-like column definitions** -
-      `tstack scaffold posts title:text content:text published:boolean`
-- [ ] Auto-migration generation from scaffold
-- [ ] File upload utilities
-- [ ] Rate limiting middleware
-- [ ] Caching layer
-- [ ] Email service integration
+After `tstack scaffold articles`:
+
+- `GET /api/articles` - List all
+- `GET /api/articles/:id` - Get one
+- `POST /api/articles` - Create
+- `PUT /api/articles/:id` - Update
+- `DELETE /api/articles/:id` - Delete
+
+---
+
+## Example: Building a Blog API
+
+```bash
+# 1. Create project
+tstack create blog-api && cd blog-api
+
+# 2. Start PostgreSQL
+docker-compose up -d postgres
+
+# 3. Scaffold entities
+tstack scaffold articles
+tstack scaffold comments
+tstack scaffold categories
+
+# 4. Customize models
+# Add title, content, etc. to article.model.ts
+
+# 5. Register routes in main.ts
+# 6. Run migrations
+deno task migrate:generate
+deno task migrate:run
+
+# 7. Start server
+deno task dev
+```
+
+Done! You have a working blog API. 🎉
+
+---
+
+## Why TStack?
+
+### For You
+
+- ✅ **Zero auth bloat** - Add authentication when YOU need it
+- ✅ **PostgreSQL first** - No SQLite native binding issues
+- ✅ **Minimal defaults** - Clean starting point
+- ✅ **Pure Deno** - No Node.js baggage
+- ✅ **Fast** - Generate entities in seconds
+
+### Not For You If
+
+- ❌ You want batteries-included auth (add it yourself!)
+- ❌ You need GraphQL (REST only)
+- ❌ You want an all-in-one framework (this is a toolkit)
+
+---
+
+## Development Workflow
+
+1. **Create** - `tstack create my-api`
+2. **Scaffold** - `tstack scaffold products`
+3. **Customize** - Edit models, add fields
+4. **Migrate** - `deno task migrate:run`
+5. **Test** - `curl http://localhost:8000/api/products`
+6. **Deploy** - `docker-compose up -d`
+
+---
+
+## Roadmap
+
+### v1.0 (Current)
+- ✅ PostgreSQL support
+- ✅ Entity scaffolding
+- ✅ Docker ready
+- ✅ Minimal starter
+
+### v1.1 (Next)
+- [ ] `tstack destroy` command
+- [ ] Database choice flag (`--db=postgres|mysql`)
+- [ ] Auth plugin (optional addon)
+
+### v2.0 (Future)
 - [ ] Testing utilities
-- [ ] Relationship scaffolding - `tstack scaffold comments post_id:references`
-
-### 🔮 Phase 3: Advanced
-
-- [ ] GraphQL support
+- [ ] File upload helpers
 - [ ] WebSocket support
-- [ ] Job queue system
 - [ ] Admin dashboard generator
-- [ ] OpenAPI/Swagger docs
-- [ ] Multi-tenancy support
-
-### Phase 4: Community
-
-- [ ] Publish to JSR (`@tonystack/cli`, `@tonystack/core`)
-- [ ] More example projects
-- [ ] Video tutorials
-- [ ] Community templates
-- [ ] Plugin system
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Here's how:
+Found a bug? Want to add a feature?
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing`
-5. **Open** a Pull Request
-
-### Development Setup
-
-```bash
-git clone https://github.com/yourusername/tonystack.git
-cd tonystack
-
-# Test CLI
-cd packages/cli
-deno task dev scaffold test-entity
-
-# Test starter
-cd packages/starter
-deno task dev
-```
+1. Fork the repo
+2. Create a feature branch
+3. Submit a pull request
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE)
-file for details.
+MIT License - Free for personal and commercial use.
 
 ---
 
-## Support & Community
+## Links
 
-- **Email:** <your-email@example.com>
-- **Issues:** [GitHub Issues](https://github.com/yourusername/tonystack/issues)
-- **Discussions:**
-  [GitHub Discussions](https://github.com/yourusername/tonystack/discussions)
-- **📖 Docs:** [Full Documentation](QUICKSTART.md)
-
----
-
-## Acknowledgments
-
-Built with amazing open-source projects:
-
-- [Deno](https://deno.land) - Modern JavaScript/TypeScript runtime
-- [Hono](https://hono.dev) - Ultrafast web framework
-- [Drizzle](https://orm.drizzle.team) - Type-safe ORM
-- [Deno Standard Library](https://jsr.io/@std) - Official Deno modules
+- **GitHub**: https://github.com/desingh-rajan/tstack-kit
+- **Issues**: https://github.com/desingh-rajan/tstack-kit/issues
+- **Deno**: https://deno.land
+- **Hono**: https://hono.dev
+- **Drizzle**: https://orm.drizzle.team
 
 ---
 
-## Stats
+**Built with ❤️ for the Deno community**
 
-- **Lines of Code:** ~3,000
-- **Dependencies:** 8 core packages
-- **Test Coverage:** 85%+
-- **Documentation:** 5 comprehensive guides
-- **Time to First API:** ~5 minutes
-
----
-
-<div align="center">
-
-**Built with ️ for the Deno community**
-
-⭐ **Star this repo if you find it helpful!** ⭐
-
-[Documentation](QUICKSTART.md) • [Examples](docs/EXAMPLE_ECOMMERCE.md) •
-[Issues](https://github.com/yourusername/tonystack/issues) • [License](LICENSE)
-
-</div>
+Clean, Fast, Simple.
