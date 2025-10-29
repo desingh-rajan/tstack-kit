@@ -1,87 +1,15 @@
-version: "3.8"
-
 services:
-  # Development: SQLite
-  tonystack-dev:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=./data/dev.db
-      - JWT_SECRET=dev-secret-change-in-production
-      - PORT=8000
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-    volumes:
-      - ./src:/app/src
-      - ./data:/app/data
-      - ./.env:/app/.env
-    command: deno run --allow-all --watch src/main.ts
-    profiles:
-      - dev
-    restart: unless-stopped
-    healthcheck:
-      test: [
-        "CMD",
-        "deno",
-        "run",
-        "--allow-net",
-        "-A",
-        "-q",
-        "-c",
-        "try{const r=await fetch('http://localhost:8000/health');Deno.exit(r.ok?0:1)}catch{Deno.exit(1)}",
-      ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Production: PostgreSQL
-  tonystack-prod:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgres://tonystack:${POSTGRES_PASSWORD:-password}@postgres:5432/tonystack
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT=8000
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    profiles:
-      - prod
-    restart: unless-stopped
-    healthcheck:
-      test: [
-        "CMD",
-        "deno",
-        "run",
-        "--allow-net",
-        "-A",
-        "-q",
-        "-c",
-        "try{const r=await fetch('http://localhost:8000/health');Deno.exit(r.ok?0:1)}catch{Deno.exit(1)}",
-      ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # PostgreSQL for production
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: tonystack
       POSTGRES_USER: tonystack
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d
-    profiles:
-      - prod
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tonystack -d tonystack"]
@@ -89,28 +17,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis for caching (optional)
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    profiles:
-      - prod
-      - cache
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
 volumes:
   postgres_data:
-  redis_data:
 
 # Usage:
-# Development: docker-compose --profile dev up --build
-# Production: docker-compose --profile prod up --build
-# With Redis: docker-compose --profile prod --profile cache up --build
+# Start database: docker compose up -d
+# Stop database: docker compose down
+# Reset database: docker compose down -v (removes volumes)
