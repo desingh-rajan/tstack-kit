@@ -106,26 +106,47 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.subtitle("Next Steps:");
   Logger.newLine();
 
-  Logger.info("1. Register routes in src/main.ts:");
+  Logger.warning(
+    "⚠️  IMPORTANT: The model has only id, createdAt, updatedAt by default!",
+  );
+  Logger.newLine();
+
+  Logger.info("1. Add your custom fields to the model:");
+  Logger.code(`src/entities/${names.plural}/${names.singular}.model.ts`);
+  Logger.newLine();
+  Logger.code("Example:");
+  Logger.code(`import { text, integer } from "drizzle-orm/pg-core";`);
   Logger.code("");
+  Logger.code(`export const ${names.plural} = pgTable("${names.tableName}", {`);
+  Logger.code("  id: integer().primaryKey().generatedAlwaysAsIdentity(),");
+  Logger.code("  title: text().notNull(),        // Add your fields here");
+  Logger.code("  content: text(),");
+  Logger.code('  createdAt: timestamp("created_at").defaultNow().notNull(),');
+  Logger.code('  updatedAt: timestamp("updated_at").defaultNow().notNull(),');
+  Logger.code("});");
+  Logger.newLine();
+
+  Logger.info("2. Generate and run database migration:");
+  Logger.code("deno task migrate:generate");
+  Logger.code("deno task migrate:run");
+  Logger.newLine();
+  Logger.info(
+    "   This reads ALL *.model.ts files and generates SQL migrations",
+  );
+  Logger.newLine();
+
+  Logger.info("3. Update validation schemas:");
+  Logger.code(`- Update DTOs in ${names.singular}.dto.ts to match your fields`);
+  Logger.newLine();
+
+  Logger.info("4. Register routes in src/main.ts:");
   Logger.code(
     `import ${names.singular}Routes from "./entities/${names.plural}/${names.singular}.route.ts";`,
   );
   Logger.code(`app.route("/api", ${names.singular}Routes);`);
   Logger.newLine();
 
-  Logger.info("2. Customize the generated files:");
-  Logger.code(`- Add fields to ${names.singular}.model.ts`);
-  Logger.code(`- Update validation in ${names.singular}.dto.ts`);
-  Logger.code(`- Add business logic to ${names.singular}.service.ts`);
-  Logger.newLine();
-
-  Logger.info("3. Generate and run database migration:");
-  Logger.code("deno task migrate:generate");
-  Logger.code("deno task migrate:run");
-  Logger.newLine();
-
-  Logger.info("4. Start development server:");
+  Logger.info("5. Start development server:");
   Logger.code("deno task dev");
   Logger.newLine();
 
