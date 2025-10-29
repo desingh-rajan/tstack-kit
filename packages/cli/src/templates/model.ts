@@ -1,16 +1,16 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateModelTemplate(names: EntityNames): string {
-  return `import { int, text, sqliteTable } from "drizzle-orm/sqlite-core";
+  return `import { integer, text, timestamp, boolean, pgTable } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const ${names.plural} = sqliteTable("${names.tableName}", {
- id: int().primaryKey({ autoIncrement: true }),
+export const ${names.plural} = pgTable("${names.tableName}", {
+ id: integer().primaryKey().generatedAlwaysAsIdentity(),
  name: text().notNull(),
  description: text(),
- isActive: int({ mode: "boolean" }).default(true).notNull(),
- createdAt: int().notNull(),
- updatedAt: int().notNull(),
+ isActive: boolean().default(true).notNull(),
+ createdAt: timestamp().defaultNow().notNull(),
+ updatedAt: timestamp().defaultNow().notNull(),
 });
 
 // Type inference from schema
