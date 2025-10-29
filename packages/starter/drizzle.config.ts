@@ -1,13 +1,13 @@
-import { defineConfig } from "drizzle-kit";
+import process from "node:process";
 
-export default defineConfig({
+export default {
   schema: "./src/entities/*/*.model.ts",
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {
-    url: Deno.env.get("DATABASE_URL") ||
-      "postgresql://postgres:postgres@localhost:5432/tstack_dev",
+    url: process.env.DATABASE_URL ||
+      "postgresql://postgres:password@localhost:5432/tonystack",
   },
   verbose: true,
   strict: true,
-});
+};

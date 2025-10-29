@@ -6,8 +6,11 @@ import { config } from "./env.ts";
 // Initialize PostgreSQL connection
 const client = postgres(config.databaseUrl);
 
-// Create Drizzle instance
-export const db = drizzle(client);
+// Create Drizzle instance with automatic camelCase to snake_case conversion
+// @ts-ignore - casing option exists but may not be in current type definitions
+export const db = drizzle(client, {
+  casing: "snake_case",
+});
 
 // Database connection health check
 export async function healthCheck(): Promise<boolean> {

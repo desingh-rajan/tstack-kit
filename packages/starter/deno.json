@@ -2,9 +2,10 @@
   "tasks": {
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
-    "migrate:generate": "deno run -A npm:drizzle-kit generate",
-    "migrate:run": "deno run -A npm:drizzle-kit migrate",
-    "db:studio": "deno run -A npm:drizzle-kit studio",
+    "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
+    "migrate:generate": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 generate",
+    "migrate:run": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 migrate",
+    "db:studio": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 studio",
     "test": "deno test --allow-all tests/",
     "fmt": "deno fmt",
     "lint": "deno lint"
@@ -15,9 +16,10 @@
     "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
     "hono/logger": "jsr:@hono/hono@^4.6.0/logger",
     "hono/jwt": "jsr:@hono/hono@^4.6.0/jwt",
-    "drizzle-orm": "npm:drizzle-orm@^0.33.0",
-    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.33.0/postgres-js",
-    "drizzle-kit": "npm:drizzle-kit@^0.24.0",
+    "drizzle-orm": "npm:drizzle-orm@^0.36.0",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
+    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",
+    "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-zod": "npm:drizzle-zod@^0.5.0",
     "postgres": "npm:postgres@^3.4.0",
     "zod": "npm:zod@^3.23.0"

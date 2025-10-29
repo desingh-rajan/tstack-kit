@@ -60,7 +60,7 @@ app.get("/", (c: Context) => {
       name: "TonyStack API",
       version: "1.0.0",
       description:
-        "A lightweight, type-safe backend service built with Deno, Hono, Drizzle, and SQLite",
+        "A lightweight, type-safe backend service built with Deno, Hono, Drizzle, and PostgreSQL",
       documentation: "/api/docs",
       health: "/health",
       message:

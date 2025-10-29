@@ -1,22 +1,20 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateModelTemplate(names: EntityNames): string {
-  return `import { integer, timestamp, pgTable } from "drizzle-orm/pg-core";
+  return `import { pgTable } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { commonColumns } from "../../shared/utils/columns.ts";
 // Import additional column types as needed:
-// import { text, boolean, real, jsonb, varchar } from "drizzle-orm/pg-core";
+// import { text, boolean, integer, real, jsonb, varchar } from "drizzle-orm/pg-core";
 
 export const ${names.plural} = pgTable("${names.tableName}", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  ...commonColumns,
   
   // TODO: Add your custom fields here
-  // Example:
-  // name: text().notNull(),
-  // description: text(),
-  // isActive: boolean().default(true),
-  
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Example: Use camelCase in code, but specify snake_case for DB column name
+  // name: text("name").notNull(),
+  // description: text("description"),
+  // isActive: boolean("is_active").default(true).notNull(),
 });
 
 // Type inference from schema
