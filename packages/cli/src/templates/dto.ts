@@ -5,29 +5,37 @@ export function generateDtoTemplate(names: EntityNames): string {
 
 // Create ${names.pascalSingular} DTO
 export const Create${names.pascalSingular}Schema = z.object({
- name: z.string().min(1, "Name is required"),
- description: z.string().optional(),
+  // TODO: Add your validation fields here
+  // Example:
+  // name: z.string().min(1, "Name is required"),
+  // description: z.string().optional(),
+  // isActive: z.boolean().default(true),
 });
 
 export type Create${names.pascalSingular}DTO = z.infer<typeof Create${names.pascalSingular}Schema>;
 
 // Update ${names.pascalSingular} DTO
 export const Update${names.pascalSingular}Schema = z.object({
- name: z.string().min(1).optional(),
- description: z.string().optional(),
- isActive: z.boolean().optional(),
+  // TODO: Add your updatable fields here (all optional)
+  // Example:
+  // name: z.string().min(1).optional(),
+  // description: z.string().optional(),
+  // isActive: z.boolean().optional(),
 });
 
 export type Update${names.pascalSingular}DTO = z.infer<typeof Update${names.pascalSingular}Schema>;
 
 // ${names.pascalSingular} Response DTO
 export interface ${names.pascalSingular}ResponseDTO {
- id: number;
- name: string;
- description?: string | null;
- isActive: boolean;
- createdAt: number;
- updatedAt: number;
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // TODO: Add your response fields here
+  // Example:
+  // name: string;
+  // description?: string | null;
+  // isActive: boolean;
 }
 `;
 }

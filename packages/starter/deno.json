@@ -12,6 +12,7 @@
   },
   "imports": {
     "@std/": "jsr:@std/",
+    "@std/dotenv/load": "jsr:@std/dotenv@^0.225.0/load",
     "hono": "jsr:@hono/hono@^4.6.0",
     "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
     "hono/logger": "jsr:@hono/hono@^4.6.0/logger",

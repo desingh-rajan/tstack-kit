@@ -7,6 +7,7 @@ import {
   writeFiles,
 } from "../utils/fileWriter.ts";
 import { generateModelTemplate } from "../templates/model.ts";
+import { generateInterfaceTemplate } from "../templates/interface.ts";
 import { generateDtoTemplate } from "../templates/dto.ts";
 import { generateServiceTemplate } from "../templates/service.ts";
 import { generateControllerTemplate } from "../templates/controller.ts";
@@ -62,6 +63,16 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       path: join("src", "entities", names.plural, `${names.singular}.model.ts`),
       content: generateModelTemplate(names),
       description: "Database schema",
+    },
+    {
+      path: join(
+        "src",
+        "entities",
+        names.plural,
+        `${names.singular}.interface.ts`,
+      ),
+      content: generateInterfaceTemplate(names),
+      description: "TypeScript interfaces",
     },
     {
       path: join("src", "entities", names.plural, `${names.singular}.dto.ts`),
@@ -139,11 +150,9 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.code(`- Update DTOs in ${names.singular}.dto.ts to match your fields`);
   Logger.newLine();
 
-  Logger.info("4. Register routes in src/main.ts:");
-  Logger.code(
-    `import ${names.singular}Routes from "./entities/${names.plural}/${names.singular}.route.ts";`,
-  );
-  Logger.code(`app.route("/api", ${names.singular}Routes);`);
+  Logger.info("4. Routes are auto-registered! 🎉");
+  Logger.code(`✅ Routes automatically available (no manual imports needed)`);
+  Logger.code(`📁 Auto-discovery: entities/*/*.route.ts files`);
   Logger.newLine();
 
   Logger.info("5. Start development server:");

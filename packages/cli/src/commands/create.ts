@@ -10,7 +10,8 @@ export interface CreateOptions {
 function promptForCredentials(
   projectName: string,
 ): { dbName: string; dbUser: string; dbPassword: string } {
-  const defaultDbName = projectName.replace(/-/g, "_");
+  // Convert project name to database name: shoes-be -> shoes_be_db
+  const defaultDbName = projectName.replace(/-/g, "_") + "_db";
 
   Logger.subtitle("Database Configuration:");
   Logger.newLine();

@@ -9,9 +9,7 @@ import {
 } from "./shared/middleware/errorHandler.ts";
 import { requestLogger, securityHeaders } from "./shared/middleware/logger.ts";
 import { ApiResponse } from "./shared/utils/response.ts";
-
-// Import your entity routes here
-// Example: import productRoutes from "./entities/products/product.route.ts";
+import { registerEntityRoutes } from "./entities/index.ts";
 
 // Create Hono app
 const app = new Hono();
@@ -49,9 +47,14 @@ app.get("/health", async (c: Context) => {
   );
 });
 
-// API routes
-// Register your entity routes here
-// Example: app.route("/api", productRoutes);
+// API routes - Auto-registered from entities folder
+// All *.route.ts files in entities/* subdirectories are automatically imported
+// For manual route registration, see ./entities/index.ts for examples
+await registerEntityRoutes(app);
+
+// Manual route registration (if needed):
+// import customRoutes from "./custom/custom.route.ts";
+// app.route("/custom", customRoutes);
 
 // Root endpoint
 app.get("/", (c: Context) => {
@@ -80,6 +83,8 @@ async function startServer() {
     // Initialize database
     await initDatabase();
 
+    console.log(" Registering entity routes...");
+
     // Start server
     console.log(` Server running on http://localhost:${config.port}`);
     console.log(` Environment: ${config.nodeEnv}`);
@@ -89,10 +94,11 @@ async function startServer() {
       console.log("\n Available endpoints:");
       console.log("   GET  /       - API information");
       console.log("   GET  /health - Health check");
+      console.log("   All /api/*   - Auto-registered from entities/");
       console.log("\n Scaffold entities to get started:");
+      console.log("   tstack scaffold articles");
       console.log("   tstack scaffold products");
-      console.log("   tstack scaffold orders");
-      console.log("\n Development mode enabled");
+      console.log("\n Development mode enabled - routes auto-discovered");
     }
 
     // For Deno Deploy or other platforms that provide the port

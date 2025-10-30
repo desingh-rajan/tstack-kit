@@ -3,10 +3,11 @@ import { integer, timestamp } from "drizzle-orm/pg-core";
 /**
  * Common timestamp columns for all tables
  * Explicitly named in snake_case for database columns
+ * Using 'date' mode to return JavaScript Date objects instead of numbers
  */
 export const timestamps = {
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 };
 
 /**

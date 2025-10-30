@@ -35,13 +35,11 @@ export class ${names.pascalSingular}Service {
 
  // Create new ${names.singular}
  static async create(data: Create${names.pascalSingular}DTO): Promise<${names.pascalSingular}ResponseDTO> {
- const now = Date.now();
  const newRecord = await db
  .insert(${names.plural})
  .values({
  ...data,
- createdAt: now,
- updatedAt: now,
+ // createdAt and updatedAt are auto-set by database defaults
  })
  .returning();
 
@@ -57,7 +55,7 @@ export class ${names.pascalSingular}Service {
  .update(${names.plural})
  .set({
  ...data,
- updatedAt: Date.now(),
+ updatedAt: new Date(), // Update timestamp
  })
  .where(eq(${names.plural}.id, id))
  .returning();
@@ -80,18 +78,19 @@ export class ${names.pascalSingular}Service {
  }
 
  // Soft delete ${names.singular} (deactivate)
- static async softDelete(id: number): Promise<boolean> {
- const updated = await db
- .update(${names.plural})
- .set({
- isActive: false,
- updatedAt: Date.now(),
- })
- .where(eq(${names.plural}.id, id))
- .returning();
-
- return updated.length > 0;
- }
+ // TODO: Implement soft delete if you have an isActive or deletedAt field
+ // static async softDelete(id: number): Promise<boolean> {
+ //   const updated = await db
+ //     .update(${names.plural})
+ //     .set({
+ //       isActive: false,
+ //       updatedAt: new Date(),
+ //     })
+ //     .where(eq(${names.plural}.id, id))
+ //     .returning();
+ //
+ //   return updated.length > 0;
+ // }
 }
 `;
 }
