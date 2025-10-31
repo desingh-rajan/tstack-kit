@@ -1,11 +1,11 @@
 /**
  * Environment Configuration Loader
- * 
+ *
  * Loads environment variables from files based on NODE_ENV:
  * - NODE_ENV=development → .env.development.local or .env
  * - NODE_ENV=test → .env.test.local
  * - NODE_ENV=production → .env.production.local
- * 
+ *
  * Priority: System env vars > .env.{NODE_ENV}.local > .env
  */
 
@@ -14,8 +14,8 @@ import { load } from "@std/dotenv";
 // Determine which env file to load based on NODE_ENV
 const nodeEnv = Deno.env.get("NODE_ENV") || "development";
 const envFiles = [
-  `.env.${nodeEnv}.local`,  // Environment-specific (preferred)
-  ".env",                    // Fallback to generic .env
+  `.env.${nodeEnv}.local`, // Environment-specific (preferred)
+  ".env", // Fallback to generic .env
 ];
 
 // Try to load environment file (skip if not found)

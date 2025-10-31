@@ -1,11 +1,11 @@
 /**
  * Test Database Setup Script
- * 
+ *
  * This script:
  * 1. Creates the test database if it doesn't exist
  * 2. Runs all migrations on the test database
  * 3. Seeds initial test data (optional)
- * 
+ *
  * Run before tests: NODE_ENV=test deno run --allow-all scripts/setup-test-db.ts
  */
 
@@ -18,7 +18,10 @@ async function setupTestDatabase() {
   // Extract database name from connection string
   const dbUrl = new URL(config.databaseUrl);
   const testDbName = dbUrl.pathname.substring(1); // Remove leading /
-  const baseDbUrl = `postgresql://${dbUrl.username}:${dbUrl.password}@${dbUrl.host}${dbUrl.port ? `:${dbUrl.port}` : ""}/postgres`;
+
+  // Build admin connection URL (dbUrl.host already includes port if present)
+  const baseDbUrl =
+    `postgresql://${dbUrl.username}:${dbUrl.password}@${dbUrl.host}/postgres`;
 
   console.log(`   Database: ${testDbName}`);
   console.log(`   Environment: ${config.nodeEnv}\n`);

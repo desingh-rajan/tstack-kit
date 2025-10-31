@@ -1,7 +1,7 @@
 import process from "node:process";
 
 export default {
-  schema: "./src/entities/*/*.model.ts",
+  schema: ["./src/entities/*/*.model.ts", "./src/auth/*.model.ts"],
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {

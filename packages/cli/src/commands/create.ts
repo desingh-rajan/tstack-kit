@@ -175,7 +175,7 @@ JWT_EXPIRY=7d
 
   // Setup environment files
   Logger.step("Setting up environment...");
-  
+
   // 1. Copy .env.example to .env automatically
   const envExamplePath = join(projectPath, ".env.example");
   const envPath = join(projectPath, ".env");
@@ -227,7 +227,9 @@ JWT_EXPIRY=7d
   const envProdPath = join(projectPath, ".env.production.local");
   try {
     if (await exists(envProdPath)) {
-      Logger.info(".env.production.local template ready (requires configuration)");
+      Logger.info(
+        ".env.production.local template ready (requires configuration)",
+      );
     }
   } catch {
     // File doesn't exist, skip

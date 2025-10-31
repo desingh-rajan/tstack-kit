@@ -4,6 +4,7 @@ import { parseArgs } from "@std/cli/parse-args";
 import { Logger } from "./src/utils/logger.ts";
 import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
+import { destroyProject } from "./src/commands/destroy.ts";
 
 const VERSION = "0.1.0";
 
@@ -19,6 +20,9 @@ function showHelp() {
   );
   Logger.code(
     "scaffold <entity-name>     Generate a new entity with all MVC files",
+  );
+  Logger.code(
+    "destroy <project-name>     Remove project and drop its databases",
   );
   Logger.code("--help, -h                 Show this help message");
   Logger.code("--version, -v              Show version number");
@@ -40,6 +44,8 @@ function showHelp() {
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
   Logger.code("tstack scaffold orders --force");
+  Logger.code("tstack destroy my-backend");
+  Logger.code("tstack destroy old-project --force");
   Logger.newLine();
   Logger.subtitle("Documentation:");
   Logger.code("https://github.com/yourusername/tonystack");
@@ -107,6 +113,23 @@ async function main() {
         await scaffoldEntity({
           entityName,
           targetDir: args.dir,
+          force: args.force,
+        });
+        break;
+      }
+
+      case "destroy": {
+        const projectName = args._[1]?.toString();
+
+        if (!projectName) {
+          Logger.error("Project name is required");
+          Logger.info("Usage: tstack destroy <project-name>");
+          Logger.info("Example: tstack destroy my-backend");
+          Deno.exit(1);
+        }
+
+        await destroyProject({
+          projectName,
           force: args.force,
         });
         break;
