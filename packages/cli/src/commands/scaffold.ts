@@ -12,6 +12,7 @@ import { generateDtoTemplate } from "../templates/dto.ts";
 import { generateServiceTemplate } from "../templates/service.ts";
 import { generateControllerTemplate } from "../templates/controller.ts";
 import { generateRouteTemplate } from "../templates/route.ts";
+import { generateTestTemplate } from "../templates/test.ts";
 
 export interface ScaffoldOptions {
   entityName: string;
@@ -104,6 +105,11 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       content: generateRouteTemplate(names),
       description: "Route definitions",
     },
+    {
+      path: join("tests", `${names.plural}.test.ts`),
+      content: generateTestTemplate(names),
+      description: "API tests",
+    },
   ];
 
   await writeFiles(targetDir, files);
@@ -167,5 +173,10 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.code(`POST /api/${names.plural} → Create ${names.singular}`);
   Logger.code(`PUT /api/${names.plural}/:id → Update ${names.singular}`);
   Logger.code(`DELETE /api/${names.plural}/:id → Delete ${names.singular}`);
+  Logger.newLine();
+
+  Logger.subtitle("Test your API:");
+  Logger.code(`deno test --allow-all tests/${names.plural}.test.ts`);
+  Logger.info("⚠️  Remember to update test data in the test file!");
   Logger.newLine();
 }
