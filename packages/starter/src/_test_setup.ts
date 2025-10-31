@@ -9,7 +9,7 @@
  * Deno automatically runs files matching _test_setup.ts before tests
  */
 
-import { config } from "../src/config/env.ts";
+import { config } from "./config/env.ts";
 
 console.log("\n🧪 Setting up test environment...\n");
 console.log(`   NODE_ENV: ${config.nodeEnv}`);
@@ -53,6 +53,10 @@ if (!migrateResult.success) {
 
 // Seed superadmin for auth tests
 console.log("\n🌱 Seeding superadmin for auth tests...");
+
+// Get project root (parent of src/)
+const projectRoot = new URL("../", import.meta.url).pathname;
+
 const seedCmd = new Deno.Command("deno", {
   args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],
   env: {
@@ -61,6 +65,7 @@ const seedCmd = new Deno.Command("deno", {
   },
   stdout: "piped",
   stderr: "piped",
+  cwd: projectRoot,
 });
 
 const seedResult = await seedCmd.output();
@@ -72,7 +77,9 @@ if (seedResult.success) {
   if (stderr.includes("already exists") || stderr.includes("duplicate")) {
     console.log("✓ Superadmin already exists");
   } else {
-    console.warn("⚠️  Superadmin seeding failed (may not be needed for all tests)");
+    console.warn(
+      "⚠️  Superadmin seeding failed (may not be needed for all tests)",
+    );
   }
 }
 

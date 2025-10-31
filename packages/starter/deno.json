@@ -7,7 +7,7 @@
     "migrate:generate": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 generate",
     "migrate:run": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 migrate",
     "db:studio": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 studio",
-    "test": "NODE_ENV=test deno test --allow-all tests/",
+    "test": "NODE_ENV=test deno test --allow-all src/",
     "test:setup": "NODE_ENV=test deno run --allow-all scripts/setup-test-db.ts",
     "test:migrate": "NODE_ENV=test deno task migrate:run",
     "test:reset": "deno task test:setup && deno task test:migrate",

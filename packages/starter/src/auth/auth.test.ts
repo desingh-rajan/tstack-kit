@@ -2,7 +2,7 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { app } from "../src/main.ts";
+import { app } from "../main.ts";
 
 /**
  * Authentication & Admin API Tests
@@ -28,8 +28,10 @@ let testAdminId = 0;
 // Uses Hono's app.request() method directly
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   // Prepend /api to all endpoints
-  const fullEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
-  
+  const fullEndpoint = endpoint.startsWith("/api")
+    ? endpoint
+    : `/api${endpoint}`;
+
   const response = await app.request(fullEndpoint, {
     ...options,
     headers: {
@@ -46,7 +48,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   } catch {
     data = { message: text };
   }
-  
+
   return { status: response.status, data };
 }
 

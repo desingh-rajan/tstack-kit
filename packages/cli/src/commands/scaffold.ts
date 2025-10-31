@@ -106,7 +106,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       description: "Route definitions",
     },
     {
-      path: join("tests", `${names.plural}.test.ts`),
+      path: join("src", "entities", names.plural, `${names.singular}.test.ts`),
       content: generateTestTemplate(names),
       description: "API tests",
     },
