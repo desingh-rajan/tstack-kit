@@ -3,6 +3,7 @@
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
     "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
+    "db:seed": "deno run --allow-all scripts/seed-superadmin.ts",
     "migrate:generate": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 generate",
     "migrate:run": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 migrate",
     "db:studio": "deno run -A --node-modules-dir npm:drizzle-kit@0.28.0 studio",
@@ -13,6 +14,7 @@
   "imports": {
     "@std/": "jsr:@std/",
     "@std/dotenv/load": "jsr:@std/dotenv@^0.225.0/load",
+    "jose": "npm:jose@^5.9.6",
     "hono": "jsr:@hono/hono@^4.6.0",
     "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
     "hono/logger": "jsr:@hono/hono@^4.6.0/logger",

@@ -46,6 +46,13 @@ export class ConflictError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = "Bad request") {
+    super(message, 400);
+    this.name = "BadRequestError";
+  }
+}
+
 export class DatabaseError extends AppError {
   constructor(message = "Database operation failed") {
     super(message, 500, false);
