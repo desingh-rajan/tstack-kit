@@ -14,12 +14,13 @@ using **Deno**, **Hono**, **Drizzle**, and **PostgreSQL**.
 Production-ready backend template with:
 
 - MVC architecture
-- PostgreSQL database
-- Docker deployment ready
+- PostgreSQL database (no SQLite)
+- Docker & docker-compose ready
 - Drizzle ORM with migrations
 - Comprehensive error handling
-- Security middleware
+- Security middleware (CORS, auth)
 - Full TypeScript support
+- Health checks & monitoring
 
 ### 2. **CLI Tool** (`packages/cli/`)
 
@@ -191,15 +192,15 @@ DELETE /api/products/:id → Delete product
 
 ### Compared to Existing Solutions
 
-| Feature              | TonyStack           | Oak       | Express (Node)   | NestJS (Deno) |
-| -------------------- | ------------------- | --------- | ---------------- | ------------- |
-| **Runtime**          | Deno                | Deno      | Node.js          | Deno          |
-| **Framework Weight** | Lightweight         | Medium    | Light            | Heavy         |
-| **Type Safety**      | Full                | Partial   | Minimal          | Full          |
-| **Scaffolding**      | Built-in            | ❌ Manual | ❌ Manual        | ✅ Via CLI    |
-| **ORM**              | Drizzle (type-safe) | Manual    | Prisma/TypeORM   | TypeORM       |
-| **Learning Curve**   | Low                 | Medium    | Low              | High          |
-| **Production Ready** | ✅                  | ✅        | ✅               | ✅            |
+| Feature              | TonyStack           | Oak       | Express (Node) | NestJS (Deno) |
+| -------------------- | ------------------- | --------- | -------------- | ------------- |
+| **Runtime**          | Deno                | Deno      | Node.js        | Deno          |
+| **Framework Weight** | Lightweight         | Medium    | Light          | Heavy         |
+| **Type Safety**      | Full                | Partial   | Minimal        | Full          |
+| **Scaffolding**      | Built-in            | ❌ Manual | ❌ Manual      | ✅ Via CLI    |
+| **ORM**              | Drizzle (type-safe) | Manual    | Prisma/TypeORM | TypeORM       |
+| **Learning Curve**   | Low                 | Medium    | Low            | High          |
+| **Production Ready** | ✅                  | ✅        | ✅             | ✅            |
 
 ### Perfect For
 
@@ -240,11 +241,14 @@ tstack scaffold users --force # Overwrite existing
 
 ## Docker Deployment
 
-### Local Development
+### Local Development (Database Only)
 
 ```bash
-# Start PostgreSQL
-docker compose up -d
+# Start PostgreSQL only
+docker compose up postgres -d
+
+# Use local Deno for development
+deno task dev
 
 # Stop database
 docker compose down
@@ -253,20 +257,77 @@ docker compose down
 docker compose down -v
 ```
 
-### Production
+### Full Stack (App + Database)
 
-Build and deploy your Deno app with the included `Dockerfile`:
+```bash
+# Copy environment template
+cp .env.docker .env
+# Edit .env with your values
+
+# Start everything (app + postgres)
+docker compose up --build -d
+
+# Run migrations
+docker compose exec app deno task migrate:run
+
+# Seed database
+docker compose exec app deno task db:seed
+
+# View logs
+docker compose logs -f app
+
+# Stop everything
+docker compose down
+```
+
+### Production Deployment
+
+**Option 1: Docker Compose (Recommended)**
+
+```bash
+# Use production environment
+export NODE_ENV=production
+
+# Set secure credentials in .env
+JWT_SECRET=your-secure-secret-key-at-least-32-characters
+POSTGRES_PASSWORD=secure-password
+
+# Deploy
+docker compose up --build -d
+
+# Run migrations
+docker compose exec app deno task migrate:run
+
+# Seed initial data
+docker compose exec app deno task db:seed
+```
+
+**Option 2: Separate Database**
+
+Build and run with external PostgreSQL:
 
 ```bash
 # Build image
-docker build -t my-api .
+docker build -t tonystack-api .
 
-# Run with external PostgreSQL
-docker run -p 8000:8000 \
-  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+# Run with external database
+docker run -d \
+  -p 8000:8000 \
+  -e NODE_ENV=production \
+  -e DATABASE_URL="postgresql://user:pass@db.example.com:5432/mydb" \
+  -e JWT_SECRET="your-secure-secret-key" \
   -e PORT=8000 \
-  my-api
+  --name tonystack-app \
+  tonystack-api
 ```
+
+**Environment Variables:**
+
+- `DATABASE_URL` - PostgreSQL connection string (required)
+- `JWT_SECRET` - Secret key for JWT tokens (required)
+- `JWT_EXPIRES_IN` - Token expiry (default: 7d)
+- `NODE_ENV` - Environment (development/test/production)
+- `PORT` - Server port (default: 8000)
 
 ---
 
@@ -297,7 +358,8 @@ deno test tests/unit/entities/users/user.service.test.ts --allow-all
 
 ### 🚧 Phase 2: Enhancement (Next)
 
-- [ ] **Rails-like column definitions**: `tstack scaffold posts title:text content:text published:boolean`
+- [ ] **Rails-like column definitions**:
+      `tstack scaffold posts title:text content:text published:boolean`
 - [ ] Auto-migration generation from scaffold
 - [ ] Testing utilities and examples
 - [ ] File upload utilities
@@ -359,8 +421,10 @@ file for details.
 
 ## Support & Community
 
-- **Issues:** [GitHub Issues](https://github.com/desingh-rajan/tstack-kit/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/desingh-rajan/tstack-kit/discussions)
+- **Issues:**
+  [GitHub Issues](https://github.com/desingh-rajan/tstack-kit/issues)
+- **Discussions:**
+  [GitHub Discussions](https://github.com/desingh-rajan/tstack-kit/discussions)
 
 ---
 

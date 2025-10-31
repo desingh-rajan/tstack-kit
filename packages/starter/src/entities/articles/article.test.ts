@@ -1,0 +1,194 @@
+import {
+  assertEquals,
+  assertExists,
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { app } from "../../main.ts";
+
+let superadminToken = "";
+let alphaToken = "";
+let alphaArticleId = 0;
+let superadminArticleId = 0;
+
+async function apiRequest(endpoint: string, options: RequestInit = {}) {
+  const fullEndpoint = endpoint.startsWith("/api")
+    ? endpoint
+    : `/api${endpoint}`;
+  const response = await app.request(fullEndpoint, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options.headers },
+  });
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = { message: text };
+  }
+  return { status: response.status, data };
+}
+
+Deno.test("Article API Tests", async (t) => {
+  await t.step("Login as superadmin", async () => {
+    const result = await apiRequest("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: "superadmin@tstack.in",
+        password: "TonyStack@2025!",
+      }),
+    });
+    assertEquals(result.status, 200);
+    assertExists(result.data.token);
+    superadminToken = result.data.token;
+  });
+
+  await t.step("Login as alpha user", async () => {
+    const result = await apiRequest("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: "alpha@tstack.in",
+        password: "Alpha@2025!",
+      }),
+    });
+    assertEquals(result.status, 200);
+    assertExists(result.data.token);
+    alphaToken = result.data.token;
+  });
+
+  await t.step("GET /articles - public route", async () => {
+    const result = await apiRequest("/articles");
+    assertEquals(result.status, 200);
+    assertExists(result.data.data);
+    assertEquals(Array.isArray(result.data.data), true);
+  });
+
+  await t.step("POST /articles - without auth should fail", async () => {
+    const result = await apiRequest("/articles", {
+      method: "POST",
+      body: JSON.stringify({
+        title: "Unauthorized",
+        content: "Fail",
+        isPublished: true,
+      }),
+    });
+    assertEquals(result.status, 401);
+  });
+
+  await t.step("POST /articles - alpha creates article", async () => {
+    const result = await apiRequest("/articles", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${alphaToken}` },
+      body: JSON.stringify({
+        title: "Alpha Article",
+        slug: "alpha-article",
+        content: "Content",
+        isPublished: true,
+      }),
+    });
+    assertEquals(result.status, 201);
+    alphaArticleId = result.data.id;
+  });
+
+  await t.step("POST /articles - superadmin creates article", async () => {
+    const result = await apiRequest("/articles", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${superadminToken}` },
+      body: JSON.stringify({
+        title: "Admin Article",
+        slug: "admin-article",
+        content: "Content",
+        isPublished: true,
+      }),
+    });
+    assertEquals(result.status, 201);
+    superadminArticleId = result.data.id;
+  });
+
+  await t.step("GET /articles/:id - read article", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`);
+    assertEquals(result.status, 200);
+    assertEquals(result.data.id, alphaArticleId);
+  });
+
+  await t.step("PUT /articles/:id - without auth should fail", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`, {
+      method: "PUT",
+      body: JSON.stringify({ title: "Unauthorized Update" }),
+    });
+    assertEquals(result.status, 401);
+  });
+
+  await t.step("PUT /articles/:id - alpha updates own article", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${alphaToken}` },
+      body: JSON.stringify({ title: "Updated Alpha Article" }),
+    });
+    assertEquals(result.status, 200);
+  });
+
+  await t.step(
+    "PUT /articles/:id - alpha cannot update admin article",
+    async () => {
+      const result = await apiRequest(`/articles/${superadminArticleId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${alphaToken}` },
+        body: JSON.stringify({ title: "Hacked" }),
+      });
+      assertEquals(result.status, 403);
+    },
+  );
+
+  await t.step(
+    "PUT /articles/:id - superadmin can update any article",
+    async () => {
+      const result = await apiRequest(`/articles/${alphaArticleId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${superadminToken}` },
+        body: JSON.stringify({ title: "Admin Edited" }),
+      });
+      assertEquals(result.status, 200);
+    },
+  );
+
+  await t.step("DELETE /articles/:id - without auth should fail", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`, {
+      method: "DELETE",
+    });
+    assertEquals(result.status, 401);
+  });
+
+  await t.step(
+    "DELETE /articles/:id - alpha cannot delete admin article",
+    async () => {
+      const result = await apiRequest(`/articles/${superadminArticleId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${alphaToken}` },
+      });
+      assertEquals(result.status, 403);
+    },
+  );
+
+  await t.step("DELETE /articles/:id - alpha deletes own article", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${alphaToken}` },
+    });
+    assertEquals(result.status, 200);
+  });
+
+  await t.step("GET /articles/:id - verify deleted article 404", async () => {
+    const result = await apiRequest(`/articles/${alphaArticleId}`);
+    assertEquals(result.status, 404);
+  });
+
+  await t.step(
+    "DELETE /articles/:id - superadmin deletes remaining",
+    async () => {
+      const result = await apiRequest(`/articles/${superadminArticleId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${superadminToken}` },
+      });
+      assertEquals(result.status, 200);
+    },
+  );
+});

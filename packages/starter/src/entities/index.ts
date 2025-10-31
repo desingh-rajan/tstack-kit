@@ -98,7 +98,7 @@ export async function registerEntityRoutes(app: Hono): Promise<void> {
             if (routeModule.default) {
               app.route("/api", routeModule.default);
               console.log(
-                `   ✓ Registered routes from ${entry.name}/${file.name}`,
+                `   [OK] Registered routes from ${entry.name}/${file.name}`,
               );
             }
           }

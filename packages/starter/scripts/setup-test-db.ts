@@ -13,7 +13,7 @@ import { config } from "../src/config/env.ts";
 import postgres from "postgres";
 
 async function setupTestDatabase() {
-  console.log("🧪 Setting up test database...\n");
+  console.log(" Setting up test database...\n");
 
   // Extract database name from connection string
   const dbUrl = new URL(config.databaseUrl);
@@ -33,21 +33,21 @@ async function setupTestDatabase() {
     // Drop existing test database if exists
     console.log("   Dropping existing test database (if exists)...");
     await adminSql.unsafe(`DROP DATABASE IF EXISTS "${testDbName}"`);
-    console.log("   ✓ Dropped");
+    console.log("   [OK] Dropped");
 
     // Create fresh test database
     console.log("   Creating test database...");
     await adminSql.unsafe(`CREATE DATABASE "${testDbName}"`);
-    console.log("   ✓ Created\n");
+    console.log("   [OK] Created\n");
   } catch (error) {
-    console.error("   ❌ Error setting up test database:");
+    console.error("   [ERROR] Error setting up test database:");
     console.error("   ", error);
     Deno.exit(1);
   } finally {
     await adminSql.end();
   }
 
-  console.log("✅ Test database setup complete!\n");
+  console.log("[SUCCESS] Test database setup complete!\n");
   console.log("Next steps:");
   console.log("  1. Run migrations: NODE_ENV=test deno task migrate:run");
   console.log("  2. Run tests: NODE_ENV=test deno test --allow-all tests/\n");

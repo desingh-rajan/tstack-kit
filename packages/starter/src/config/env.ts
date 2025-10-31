@@ -26,7 +26,7 @@ for (const envFile of envFiles) {
     if (Object.keys(envVars).length > 0) {
       envLoaded = true;
       if (nodeEnv === "development") {
-        console.log(`✓ Loaded environment from ${envFile}`);
+        console.log(`[OK] Loaded environment from ${envFile}`);
       }
       break;
     }
@@ -36,7 +36,9 @@ for (const envFile of envFiles) {
 }
 
 if (!envLoaded && nodeEnv === "development") {
-  console.warn("⚠️  No .env file found, using system environment variables");
+  console.warn(
+    "[WARNING]  No .env file found, using system environment variables",
+  );
 }
 
 export interface Config {
@@ -50,7 +52,7 @@ function loadConfig(): Config {
   const databaseUrl = Deno.env.get("DATABASE_URL");
 
   if (!databaseUrl) {
-    console.error("❌ DATABASE_URL environment variable is required");
+    console.error("[ERROR] DATABASE_URL environment variable is required");
     console.error(
       "   Expected files: .env.${nodeEnv}.local or .env",
     );

@@ -1,7 +1,6 @@
 # Deno
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 deno.lock
 
@@ -22,6 +21,8 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+Dockerfile
+.dockerignore
 
 # Temporary files
 tmp/
@@ -33,3 +34,15 @@ coverage/
 # Distribution
 dist/
 build/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+tests/
+*.test.ts

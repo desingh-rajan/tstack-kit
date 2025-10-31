@@ -30,7 +30,7 @@ try {
 const DATABASE_URL = Deno.env.get("DATABASE_URL");
 
 if (!DATABASE_URL) {
-  console.error("❌ DATABASE_URL not set in environment");
+  console.error("[ERROR] DATABASE_URL not set in environment");
   console.log("Run: cp .env.example .env");
   Deno.exit(1);
 }
@@ -72,9 +72,9 @@ try {
     await sql.unsafe(
       `CREATE USER "${username}" WITH PASSWORD '${password}'`,
     );
-    console.log(`✅ User "${username}" created!`);
+    console.log(`[SUCCESS] User "${username}" created!`);
   } else {
-    console.log(`✅ User "${username}" already exists`);
+    console.log(`[SUCCESS] User "${username}" already exists`);
   }
 
   // Check if database exists
@@ -84,19 +84,19 @@ try {
   `;
 
   if (result.length > 0) {
-    console.log(`✅ Database "${dbName}" already exists!`);
+    console.log(`[SUCCESS] Database "${dbName}" already exists!`);
   } else {
     console.log(`📝 Creating database "${dbName}"...`);
     await sql.unsafe(`CREATE DATABASE "${dbName}" OWNER "${username}"`);
-    console.log(`✅ Database "${dbName}" created successfully!`);
+    console.log(`[SUCCESS] Database "${dbName}" created successfully!`);
   }
 
   // Grant all privileges
-  console.log(`🔐 Granting privileges to "${username}"...`);
+  console.log(` Granting privileges to "${username}"...`);
   await sql.unsafe(
     `GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${username}"`,
   );
-  console.log(`✅ Privileges granted!`);
+  console.log(`[SUCCESS] Privileges granted!`);
 
   await sql.end();
   console.log();
@@ -105,9 +105,9 @@ try {
   console.log("   deno task migrate:run");
 } catch (error) {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  console.error("❌ Error:", errorMessage);
+  console.error("[ERROR] Error:", errorMessage);
   console.log();
-  console.log("💡 Make sure PostgreSQL is running and accessible.");
+  console.log("[TIP] Make sure PostgreSQL is running and accessible.");
   console.log();
   console.log("   Option A - Use existing PostgreSQL:");
   console.log(`   sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`);

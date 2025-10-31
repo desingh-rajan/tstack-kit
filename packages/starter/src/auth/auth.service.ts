@@ -30,7 +30,7 @@ export class AuthService {
     // Hash password
     const hashedPassword = await hashPassword(data.password);
 
-    // Create user
+    // Create user (always with "user" role - cannot register as admin)
     const [newUser] = await db
       .insert(users)
       .values({
@@ -38,6 +38,7 @@ export class AuthService {
         username: data.username,
         phone: data.phone,
         password: hashedPassword,
+        role: "user", // Default role, cannot be changed via signup
       })
       .returning();
 

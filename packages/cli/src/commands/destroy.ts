@@ -50,7 +50,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
 
   // Confirm destruction unless --force flag is used
   if (!force) {
-    Logger.warning("⚠️  This will permanently delete:");
+    Logger.warning("[WARNING]  This will permanently delete:");
     Logger.info(`   - Project directory: ${projectPath}`);
     Logger.info(
       `   - Development database: ${projectName.replace(/-/g, "_")}_db`,
@@ -93,7 +93,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     const devResult = await dropDevDb.output();
 
     if (devResult.success) {
-      Logger.info(`✓ Dropped development database: ${dbName}`);
+      Logger.info(`[OK] Dropped development database: ${dbName}`);
     } else {
       Logger.warning(`Could not drop ${dbName} (may not exist)`);
     }
@@ -113,7 +113,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     const testResult = await dropTestDb.output();
 
     if (testResult.success) {
-      Logger.info(`✓ Dropped test database: ${testDbName}`);
+      Logger.info(`[OK] Dropped test database: ${testDbName}`);
     } else {
       Logger.warning(`Could not drop ${testDbName} (may not exist)`);
     }
@@ -136,7 +136,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
 
   try {
     await Deno.remove(projectPath, { recursive: true });
-    Logger.success(`✓ Removed: ${projectPath}`);
+    Logger.success(`[OK] Removed: ${projectPath}`);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     Logger.error(`Failed to remove project directory: ${errorMsg}`);
@@ -144,6 +144,6 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   }
 
   Logger.newLine();
-  Logger.success("🗑️  Project destroyed successfully!");
+  Logger.success("  Project destroyed successfully!");
   Logger.newLine();
 }

@@ -4,6 +4,13 @@ export const CreateAdminSchema = z.object({
   email: z.string().email("Invalid email format"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z
+    .enum(["admin", "moderator"])
+    .optional()
+    .default("admin")
+    .describe(
+      "Role for the user (admin or moderator). Cannot create superadmin.",
+    ),
 });
 
 export const UpdateUserSchema = z.object({

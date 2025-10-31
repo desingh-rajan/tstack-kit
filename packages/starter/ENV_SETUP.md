@@ -1,6 +1,7 @@
 # Environment Configuration Guide
 
-TonyStack uses environment-specific configuration files for better separation between development, testing, and production environments.
+TonyStack uses environment-specific configuration files for better separation
+between development, testing, and production environments.
 
 ## Quick Start
 
@@ -223,7 +224,7 @@ env:
 steps:
   - name: Setup Test Database
     run: deno task test:reset
-  
+
   - name: Run Tests
     run: deno task test
 ```

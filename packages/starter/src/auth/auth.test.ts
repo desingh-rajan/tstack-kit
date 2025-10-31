@@ -77,7 +77,7 @@ Deno.test("Auth API Tests", async (t) => {
     authToken = data.data.token;
     testUserId = data.data.user.id;
 
-    console.log("✅ User registered successfully");
+    console.log("[SUCCESS] User registered successfully");
     console.log(`   User ID: ${testUserId}`);
     console.log(`   Token: ${authToken.substring(0, 20)}...`);
   });
@@ -97,7 +97,7 @@ Deno.test("Auth API Tests", async (t) => {
 
     assertEquals(status, 400);
     assertEquals(data.status, "error");
-    console.log("✅ Duplicate registration blocked correctly");
+    console.log("[SUCCESS] Duplicate registration blocked correctly");
   });
 
   // ============================================
@@ -120,7 +120,7 @@ Deno.test("Auth API Tests", async (t) => {
     // Save admin token for admin API tests
     adminToken = data.data.token;
 
-    console.log("✅ Superadmin logged in successfully");
+    console.log("[SUCCESS] Superadmin logged in successfully");
     console.log(`   Admin Token: ${adminToken.substring(0, 20)}...`);
   });
 
@@ -138,7 +138,7 @@ Deno.test("Auth API Tests", async (t) => {
 
     assertEquals(status, 401);
     assertEquals(data.status, "error");
-    console.log("✅ Invalid credentials blocked correctly");
+    console.log("[SUCCESS] Invalid credentials blocked correctly");
   });
 
   // ============================================
@@ -159,7 +159,7 @@ Deno.test("Auth API Tests", async (t) => {
     // Password should not be returned
     assertEquals(data.data.password, undefined);
 
-    console.log("✅ Current user retrieved successfully");
+    console.log("[SUCCESS] Current user retrieved successfully");
   });
 
   // ============================================
@@ -174,7 +174,7 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 401);
       assertEquals(data.status, "error");
-      console.log("✅ Unauthorized access blocked correctly");
+      console.log("[SUCCESS] Unauthorized access blocked correctly");
     },
   );
 
@@ -193,7 +193,7 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 401);
       assertEquals(data.status, "error");
-      console.log("✅ Invalid token blocked correctly");
+      console.log("[SUCCESS] Invalid token blocked correctly");
     },
   );
 
@@ -214,7 +214,7 @@ Deno.test("Auth API Tests", async (t) => {
 
     assertEquals(status, 200);
     assertEquals(data.status, "success");
-    console.log("✅ Password changed successfully");
+    console.log("[SUCCESS] Password changed successfully");
   });
 
   // ============================================
@@ -231,7 +231,7 @@ Deno.test("Auth API Tests", async (t) => {
 
     assertEquals(status, 401);
     assertEquals(data.status, "error");
-    console.log("✅ Old password rejected after change");
+    console.log("[SUCCESS] Old password rejected after change");
   });
 
   // ============================================
@@ -253,7 +253,7 @@ Deno.test("Auth API Tests", async (t) => {
     // Update token
     authToken = data.data.token;
 
-    console.log("✅ Login with new password successful");
+    console.log("[SUCCESS] Login with new password successful");
   });
 
   // ============================================
@@ -279,7 +279,7 @@ Deno.test("Auth API Tests", async (t) => {
 
     testAdminId = data.data.id;
 
-    console.log("✅ Admin user created successfully");
+    console.log("[SUCCESS] Admin user created successfully");
     console.log(`   Admin ID: ${testAdminId}`);
   });
 
@@ -301,7 +301,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertExists(data.data.page);
     assertExists(data.data.totalPages);
 
-    console.log("✅ Users list retrieved successfully");
+    console.log("[SUCCESS] Users list retrieved successfully");
     console.log(`   Total users: ${data.data.total}`);
   });
 
@@ -321,7 +321,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(data.data.id, testUserId);
     assertEquals(data.data.email, "testuser@example.com");
 
-    console.log("✅ User retrieved by ID successfully");
+    console.log("[SUCCESS] User retrieved by ID successfully");
   });
 
   // ============================================
@@ -343,7 +343,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(data.status, "success");
     assertEquals(data.data.username, "testuser_updated");
 
-    console.log("✅ User updated successfully");
+    console.log("[SUCCESS] User updated successfully");
   });
 
   // ============================================
@@ -367,7 +367,9 @@ Deno.test("Auth API Tests", async (t) => {
       });
 
       // Currently this will succeed - add RBAC in future to restrict
-      console.log(`⚠️  Note: RBAC not implemented yet. Status: ${status}`);
+      console.log(
+        `[WARNING]  Note: RBAC not implemented yet. Status: ${status}`,
+      );
     },
   );
 
@@ -385,7 +387,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(status, 200);
     assertEquals(data.status, "success");
 
-    console.log("✅ User deleted successfully (soft delete)");
+    console.log("[SUCCESS] User deleted successfully (soft delete)");
   });
 
   // ============================================
@@ -402,7 +404,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(status, 200);
     assertEquals(data.data.isActive, false);
 
-    console.log("✅ User is deactivated (soft delete confirmed)");
+    console.log("[SUCCESS] User is deactivated (soft delete confirmed)");
   });
 
   // ============================================
@@ -419,7 +421,7 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(status, 200);
     assertEquals(data.status, "success");
 
-    console.log("✅ User logged out successfully");
+    console.log("[SUCCESS] User logged out successfully");
   });
 
   // ============================================
@@ -436,6 +438,6 @@ Deno.test("Auth API Tests", async (t) => {
     assertEquals(status, 401);
     assertEquals(data.status, "error");
 
-    console.log("✅ Revoked token blocked correctly");
+    console.log("[SUCCESS] Revoked token blocked correctly");
   });
 });

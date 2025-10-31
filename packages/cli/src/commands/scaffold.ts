@@ -124,7 +124,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.warning(
-    "⚠️  IMPORTANT: The model has only id, createdAt, updatedAt by default!",
+    "[WARNING]  IMPORTANT: The model has only id, createdAt, updatedAt by default!",
   );
   Logger.newLine();
 
@@ -156,9 +156,11 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.code(`- Update DTOs in ${names.singular}.dto.ts to match your fields`);
   Logger.newLine();
 
-  Logger.info("4. Routes are auto-registered! 🎉");
-  Logger.code(`✅ Routes automatically available (no manual imports needed)`);
-  Logger.code(`📁 Auto-discovery: entities/*/*.route.ts files`);
+  Logger.info("4. Routes are auto-registered! ");
+  Logger.code(
+    `[SUCCESS] Routes automatically available (no manual imports needed)`,
+  );
+  Logger.code(` Auto-discovery: entities/*/*.route.ts files`);
   Logger.newLine();
 
   Logger.info("5. Start development server:");
@@ -177,6 +179,6 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
 
   Logger.subtitle("Test your API:");
   Logger.code(`deno test --allow-all tests/${names.plural}.test.ts`);
-  Logger.info("⚠️  Remember to update test data in the test file!");
+  Logger.info("[WARNING]  Remember to update test data in the test file!");
   Logger.newLine();
 }

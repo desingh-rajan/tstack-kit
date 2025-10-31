@@ -39,7 +39,7 @@ export async function createProject(options: CreateOptions): Promise<void> {
 
   Logger.title(`Creating new project: ${projectName}`);
   if (withAuth) {
-    Logger.info("🔐 Authentication system will be included");
+    Logger.info(" Authentication system will be included");
   }
   Logger.newLine();
 
@@ -274,7 +274,7 @@ JWT_EXPIRY=7d
   Logger.divider();
   Logger.newLine();
 
-  Logger.subtitle("✅ Setup Complete!");
+  Logger.subtitle("[SUCCESS] Setup Complete!");
   Logger.newLine();
   Logger.subtitle("Database Configuration:");
   Logger.code(`Database: ${dbName}`);
@@ -305,7 +305,7 @@ JWT_EXPIRY=7d
   Logger.newLine();
 
   if (withAuth) {
-    Logger.subtitle("🔐 Authentication System Included:");
+    Logger.subtitle(" Authentication System Included:");
     Logger.newLine();
     Logger.info("Seed superadmin user:");
     Logger.code("deno task db:seed");
@@ -330,7 +330,7 @@ JWT_EXPIRY=7d
     Logger.code("PUT /api/admin/users/:id - Update user");
     Logger.code("DELETE /api/admin/users/:id - Delete user");
     Logger.newLine();
-    Logger.warning("⚠️  Change superadmin password in production!");
+    Logger.warning("[WARNING]  Change superadmin password in production!");
     Logger.newLine();
   }
 

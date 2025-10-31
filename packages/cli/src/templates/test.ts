@@ -60,7 +60,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertExists(data.data.id);
 
     ${names.singular}Id = data.data.id;
-    console.log(\`✅ ${names.pascalSingular} created with ID: \${${names.singular}Id}\`);
+    console.log(\`[SUCCESS] ${names.pascalSingular} created with ID: \${${names.singular}Id}\`);
   });
 
   // ============================================
@@ -74,7 +74,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(Array.isArray(data.data), true);
     assertEquals(data.data.length > 0, true);
 
-    console.log(\`✅ Retrieved \${data.data.length} ${names.plural}\`);
+    console.log(\`[SUCCESS] Retrieved \${data.data.length} ${names.plural}\`);
   });
 
   // ============================================
@@ -89,7 +89,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(data.status, "success");
     assertEquals(data.data.id, ${names.singular}Id);
 
-    console.log(\`✅ ${names.pascalSingular} \${${names.singular}Id} retrieved\`);
+    console.log(\`[SUCCESS] ${names.pascalSingular} \${${names.singular}Id} retrieved\`);
   });
 
   // ============================================
@@ -101,7 +101,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(status, 404);
     assertEquals(data.status, "error");
 
-    console.log("✅ Non-existent ${names.singular} handled correctly");
+    console.log("[SUCCESS] Non-existent ${names.singular} handled correctly");
   });
 
   // ============================================
@@ -120,7 +120,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(data.status, "success");
     assertEquals(data.data.id, ${names.singular}Id);
 
-    console.log("✅ ${names.pascalSingular} updated successfully");
+    console.log("[SUCCESS] ${names.pascalSingular} updated successfully");
   });
 
   // ============================================
@@ -135,7 +135,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(status, 404);
     assertEquals(data.status, "error");
 
-    console.log("✅ Update non-existent ${names.singular} handled correctly");
+    console.log("[SUCCESS] Update non-existent ${names.singular} handled correctly");
   });
 
   // ============================================
@@ -152,7 +152,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
       assertEquals(status === 400 || status === 422, true);
       assertEquals(data.status, "error");
 
-      console.log("✅ Validation working correctly");
+      console.log("[SUCCESS] Validation working correctly");
     },
   );
 
@@ -170,7 +170,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(status, 200);
     assertEquals(data.status, "success");
 
-    console.log(\`✅ ${names.pascalSingular} \${${names.singular}Id} deleted\`);
+    console.log(\`[SUCCESS] ${names.pascalSingular} \${${names.singular}Id} deleted\`);
   });
 
   // ============================================
@@ -184,7 +184,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(status, 404);
     assertEquals(data.status, "error");
 
-    console.log("✅ ${names.pascalSingular} deletion verified");
+    console.log("[SUCCESS] ${names.pascalSingular} deletion verified");
   });
 
   // ============================================
@@ -198,7 +198,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     assertEquals(status, 404);
     assertEquals(data.status, "error");
 
-    console.log("✅ Delete non-existent ${names.singular} handled correctly");
+    console.log("[SUCCESS] Delete non-existent ${names.singular} handled correctly");
   });
 });
 `;

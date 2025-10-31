@@ -12,11 +12,22 @@ export class AdminService {
   /**
    * Create a new admin user (only superadmin can do this)
    */
-  static async createAdmin(data: {
-    email: string;
-    password: string;
-    username: string;
-  }): Promise<SafeUser> {
+  static async createAdmin(
+    data: {
+      email: string;
+      password: string;
+      username: string;
+      role?: "admin" | "moderator";
+    },
+    requestingUser: { role: string },
+  ): Promise<SafeUser> {
+    // Only superadmin can create admins/moderators
+    if (requestingUser.role !== "superadmin") {
+      throw new ForbiddenError(
+        "Only superadmin can create admin or moderator users",
+      );
+    }
+
     // Check if user already exists
     const existingUser = await db
       .select()
@@ -31,13 +42,14 @@ export class AdminService {
     // Hash password
     const hashedPassword = await hashPassword(data.password);
 
-    // Create admin user
+    // Create admin user (default to "admin" role)
     const [newAdmin] = await db
       .insert(users)
       .values({
         email: data.email,
         username: data.username,
         password: hashedPassword,
+        role: data.role || "admin", // Can be admin or moderator, NOT superadmin
         isActive: true,
         isEmailVerified: true, // Admins are verified by default
       })
@@ -122,8 +134,8 @@ export class AdminService {
       throw new NotFoundError("User not found");
     }
 
-    // Check if trying to modify superadmin
-    if (user.email === "superadmin@tstack.in" && userId !== currentUserId) {
+    // Check if trying to modify superadmin (system-defined, cannot be changed)
+    if (user.role === "superadmin" && userId !== currentUserId) {
       throw new ForbiddenError("Cannot modify superadmin account");
     }
 
@@ -172,8 +184,8 @@ export class AdminService {
       throw new NotFoundError("User not found");
     }
 
-    // Prevent deleting superadmin
-    if (user.email === "superadmin@tstack.in") {
+    // Prevent deleting superadmin (system-defined, protected)
+    if (user.role === "superadmin") {
       throw new ForbiddenError("Cannot delete superadmin account");
     }
 

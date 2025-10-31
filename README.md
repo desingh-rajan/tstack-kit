@@ -307,8 +307,8 @@ Done! You have a working blog API. 🎉
 
 - [ ] **Kamal deployment** - YAML setup with deployment instructions
 - [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
-- [ ] **`tstack destroy` command** - Remove scaffolded entities
-- [ ] **Basic JWT authentication** - User entity with auth system (optional addon)
+- ✅ **`tstack destroy` command** - Remove scaffolded entities
+- ✅ **Basic JWT authentication** - User entity with auth system (optional addon)
 
 ### v1.2 (Q1 2026)
 

@@ -11,20 +11,20 @@
 
 import { config } from "./config/env.ts";
 
-console.log("\n🧪 Setting up test environment...\n");
+console.log("\n Setting up test environment...\n");
 console.log(`   NODE_ENV: ${config.nodeEnv}`);
 console.log(`   Database: ${config.databaseUrl}`);
 console.log(`   Port: ${config.port}\n`);
 
 // Verify we're in test mode
 if (config.nodeEnv !== "test") {
-  console.error("❌ ERROR: Tests must run with NODE_ENV=test");
+  console.error("[ERROR] ERROR: Tests must run with NODE_ENV=test");
   console.error(`   Current NODE_ENV: ${config.nodeEnv}`);
   console.error(`   Run: NODE_ENV=test deno task test`);
   Deno.exit(1);
 }
 
-console.log("📊 Running migrations on test database...");
+console.log(" Running migrations on test database...");
 
 // Run migrations using drizzle-kit directly
 const migrateCmd = new Deno.Command("deno", {
@@ -46,13 +46,13 @@ const migrateCmd = new Deno.Command("deno", {
 const migrateResult = await migrateCmd.output();
 
 if (!migrateResult.success) {
-  console.error("\n❌ Migration failed!");
+  console.error("\n[ERROR] Migration failed!");
   console.error("   Make sure test database exists: deno task test:setup");
   Deno.exit(1);
 }
 
 // Seed superadmin for auth tests
-console.log("\n🌱 Seeding superadmin for auth tests...");
+console.log("\n[SEED] Seeding superadmin for auth tests...");
 
 // Get project root (parent of src/)
 const projectRoot = new URL("../", import.meta.url).pathname;
@@ -71,17 +71,46 @@ const seedCmd = new Deno.Command("deno", {
 const seedResult = await seedCmd.output();
 
 if (seedResult.success) {
-  console.log("✓ Superadmin seeded (or already exists)");
+  console.log("[OK] Superadmin seeded (or already exists)");
 } else {
   const stderr = new TextDecoder().decode(seedResult.stderr);
   if (stderr.includes("already exists") || stderr.includes("duplicate")) {
-    console.log("✓ Superadmin already exists");
+    console.log("[OK] Superadmin already exists");
   } else {
     console.warn(
-      "⚠️  Superadmin seeding failed (may not be needed for all tests)",
+      "[WARNING]  Superadmin seeding failed (may not be needed for all tests)",
     );
   }
 }
 
-console.log("\n✅ Test environment ready");
-console.log("🚀 Running tests...\n");
+// Seed alpha user for article tests
+console.log("[SEED] Seeding alpha user for article tests...");
+
+const seedAlphaCmd = new Deno.Command("deno", {
+  args: ["run", "--allow-all", "scripts/seed-alpha-user.ts"],
+  env: {
+    ...Deno.env.toObject(),
+    NODE_ENV: "test",
+  },
+  stdout: "piped",
+  stderr: "piped",
+  cwd: projectRoot,
+});
+
+const seedAlphaResult = await seedAlphaCmd.output();
+
+if (seedAlphaResult.success) {
+  console.log("[OK] Alpha user seeded (or already exists)");
+} else {
+  const stderr = new TextDecoder().decode(seedAlphaResult.stderr);
+  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
+    console.log("[OK] Alpha user already exists");
+  } else {
+    console.warn(
+      "[WARNING]  Alpha user seeding failed (may not be needed for all tests)",
+    );
+  }
+}
+
+console.log("\n[SUCCESS] Test environment ready");
+console.log(" Running tests...\n");

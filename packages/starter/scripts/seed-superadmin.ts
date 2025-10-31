@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
  * Password: TonyStack@2025!
  */
 async function seedSuperAdmin() {
-  console.log("🌱 Seeding superadmin user...");
+  console.log("[SEED] Seeding superadmin user...");
 
   const superadminEmail = "superadmin@tstack.in";
 
@@ -21,36 +21,38 @@ async function seedSuperAdmin() {
     .limit(1);
 
   if (existing.length > 0) {
-    console.log("✓ Superadmin already exists");
+    console.log("[OK] Superadmin already exists");
     return;
   }
 
   // Hash the default password
   const hashedPassword = await hashPassword("TonyStack@2025!");
 
-  // Create superadmin user
+  // Create superadmin user (system-defined role)
   await db.insert(users).values({
     email: superadminEmail,
     username: "superadmin",
     password: hashedPassword,
+    role: "superadmin", // System-defined, cannot be changed via API
     isActive: true,
     isEmailVerified: true,
   });
 
-  console.log("✓ Superadmin user created successfully");
+  console.log("[OK] Superadmin user created successfully");
   console.log(`   Email: ${superadminEmail}`);
   console.log(`   Password: TonyStack@2025!`);
-  console.log("\n⚠️  IMPORTANT: Change this password in production!");
+  console.log(`   Role: superadmin (system-defined)`);
+  console.log("\n[WARNING]  IMPORTANT: Change this password in production!");
 }
 
 // Run seed
 if (import.meta.main) {
   try {
     await seedSuperAdmin();
-    console.log("\n✅ Seeding completed successfully");
+    console.log("\n[SUCCESS] Seeding completed successfully");
     Deno.exit(0);
   } catch (error) {
-    console.error("\n❌ Seeding failed:", error);
+    console.error("\n[ERROR] Seeding failed:", error);
     Deno.exit(1);
   }
 }

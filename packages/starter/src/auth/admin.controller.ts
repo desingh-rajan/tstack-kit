@@ -10,14 +10,15 @@ import { ApiResponse } from "../shared/utils/response.ts";
 
 export class AdminController {
   /**
-   * Create a new admin user
+   * Create a new admin user (only superadmin can do this)
    * POST /admin/users
    */
   static async createAdmin(c: Context) {
+    const user = c.get("user");
     const body = await c.req.json();
     const validatedData = ValidationUtil.validate(CreateAdminSchema, body);
 
-    const admin = await AdminService.createAdmin(validatedData);
+    const admin = await AdminService.createAdmin(validatedData, user);
 
     return c.json(
       ApiResponse.success(admin, "Admin created successfully"),

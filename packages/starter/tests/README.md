@@ -24,9 +24,9 @@ src/
 
 ### Why Colocated?
 
-✅ **Easy to find** - Tests right next to code  
-✅ **Better organized** - Each feature is self-contained  
-✅ **Microservice ready** - Move features with their tests  
+✅ **Easy to find** - Tests right next to code\
+✅ **Better organized** - Each feature is self-contained\
+✅ **Microservice ready** - Move features with their tests\
 ✅ **Standard pattern** - Used by Next.js, Remix, Go, Rust
 
 ### Running Tests
@@ -45,7 +45,8 @@ deno task test:reset
 
 ### Scaffolding Generates Tests
 
-When you scaffold an entity, tests are automatically created **in the entity folder**:
+When you scaffold an entity, tests are automatically created **in the entity
+folder**:
 
 ```bash
 tstack scaffold products
@@ -71,11 +72,11 @@ Deno.test("Product API - create product", async () => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Authorization": `Bearer ${token}`,
     },
-    body: JSON.stringify({ name: "Test", price: 99 })
+    body: JSON.stringify({ name: "Test", price: 99 }),
   });
-  
+
   assertEquals(response.status, 201);
 });
 ```
@@ -95,6 +96,7 @@ mv tests/auth.test.ts src/auth/auth.test.ts
 ---
 
 **This folder** may contain:
+
 - Integration test helpers
 - Shared test utilities
 - Legacy test templates
