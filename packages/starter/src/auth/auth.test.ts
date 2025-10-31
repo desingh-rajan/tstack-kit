@@ -3,6 +3,10 @@ import {
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../main.ts";
+import { db } from "../config/database.ts";
+import { users } from "./user.model.ts";
+import { authTokens } from "./auth-token.model.ts";
+import { sql } from "drizzle-orm";
 
 /**
  * Authentication & Admin API Tests
@@ -19,6 +23,28 @@ let authToken = "";
 let adminToken = "";
 let testUserId = 0;
 let testAdminId = 0;
+
+/**
+ * Clean up test data before running tests
+ * Removes all auth tokens and test users (keeps seeded superadmin and alpha)
+ */
+async function cleanupTestData() {
+  try {
+    // Delete all auth tokens
+    await db.delete(authTokens);
+
+    // Delete test users (keep seeded superadmin and alpha users)
+    await db.execute(sql`
+      DELETE FROM ${users} 
+      WHERE email NOT IN ('superadmin@tstack.in', 'alpha@tstack.in')
+    `);
+
+    console.log("[CLEANUP] Test data cleaned successfully");
+  } catch (error) {
+    console.error("[CLEANUP] Error cleaning test data:", error);
+    throw error;
+  }
+}
 
 /**
  * Helper function to make API requests via Hono app
@@ -53,6 +79,9 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 Deno.test("Auth API Tests", async (t) => {
+  // Clean up test data before starting
+  await cleanupTestData();
+
   // ============================================
   // 1. REGISTER NEW USER
   // ============================================

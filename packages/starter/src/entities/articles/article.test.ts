@@ -3,11 +3,32 @@ import {
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../../main.ts";
+import { db } from "../../config/database.ts";
+import { articles } from "./article.model.ts";
+import { authTokens } from "../../auth/auth-token.model.ts";
 
 let superadminToken = "";
 let alphaToken = "";
 let alphaArticleId = 0;
 let superadminArticleId = 0;
+
+/**
+ * Clean up test articles and auth tokens before running tests
+ */
+async function cleanupTestData() {
+  try {
+    // Delete all articles
+    await db.delete(articles);
+
+    // Delete all auth tokens
+    await db.delete(authTokens);
+
+    console.log("[CLEANUP] Test articles and tokens cleaned successfully");
+  } catch (error) {
+    console.error("[CLEANUP] Error cleaning test data:", error);
+    throw error;
+  }
+}
 
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const fullEndpoint = endpoint.startsWith("/api")
@@ -28,6 +49,9 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 Deno.test("Article API Tests", async (t) => {
+  // Clean up test data before starting
+  await cleanupTestData();
+
   await t.step("Login as superadmin", async () => {
     const result = await apiRequest("/auth/login", {
       method: "POST",
@@ -37,8 +61,8 @@ Deno.test("Article API Tests", async (t) => {
       }),
     });
     assertEquals(result.status, 200);
-    assertExists(result.data.token);
-    superadminToken = result.data.token;
+    assertExists(result.data.data.token);
+    superadminToken = result.data.data.token;
   });
 
   await t.step("Login as alpha user", async () => {
@@ -50,15 +74,8 @@ Deno.test("Article API Tests", async (t) => {
       }),
     });
     assertEquals(result.status, 200);
-    assertExists(result.data.token);
-    alphaToken = result.data.token;
-  });
-
-  await t.step("GET /articles - public route", async () => {
-    const result = await apiRequest("/articles");
-    assertEquals(result.status, 200);
-    assertExists(result.data.data);
-    assertEquals(Array.isArray(result.data.data), true);
+    assertExists(result.data.data.token);
+    alphaToken = result.data.data.token;
   });
 
   await t.step("POST /articles - without auth should fail", async () => {
@@ -85,7 +102,7 @@ Deno.test("Article API Tests", async (t) => {
       }),
     });
     assertEquals(result.status, 201);
-    alphaArticleId = result.data.id;
+    alphaArticleId = result.data.data.id;
   });
 
   await t.step("POST /articles - superadmin creates article", async () => {
@@ -100,13 +117,22 @@ Deno.test("Article API Tests", async (t) => {
       }),
     });
     assertEquals(result.status, 201);
-    superadminArticleId = result.data.id;
+    superadminArticleId = result.data.data.id;
+  });
+
+  await t.step("GET /articles - public route", async () => {
+    const result = await apiRequest("/articles");
+    assertEquals(result.status, 200);
+    assertExists(result.data.data);
+    assertEquals(Array.isArray(result.data.data), true);
+    // Should have articles now
+    assertEquals(result.data.data.length > 0, true);
   });
 
   await t.step("GET /articles/:id - read article", async () => {
     const result = await apiRequest(`/articles/${alphaArticleId}`);
     assertEquals(result.status, 200);
-    assertEquals(result.data.id, alphaArticleId);
+    assertEquals(result.data.data.id, alphaArticleId);
   });
 
   await t.step("PUT /articles/:id - without auth should fail", async () => {

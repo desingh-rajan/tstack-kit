@@ -33,7 +33,7 @@ export class ArticleController {
     const articles = await ArticleService.getAll();
     return c.json(
       ApiResponse.success(
-        { data: articles },
+        articles,
         "Articles retrieved successfully",
       ),
       200,
