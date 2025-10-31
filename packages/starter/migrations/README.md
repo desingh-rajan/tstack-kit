@@ -91,5 +91,4 @@ deno task migrate:run
 - **Migrations are source of truth** - Keep them in version control
 - **Test database separate** - Use `NODE_ENV=test` for test migrations
 
-See [DEVELOPER_NOTES.md](../DEVELOPER_NOTES.md) for detailed migration
-workflows.
+See the project documentation for detailed migration information workflows.

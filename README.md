@@ -123,7 +123,7 @@ deno task migrate:run
 
 ## Project Structure
 
-```
+```text
 my-project/
 ├── src/
 │   ├── main.ts              # App entry point
@@ -328,7 +328,7 @@ Done! You have a working blog API. 🎉
 
 ### v2.0 (Future)
 
-**Must Have (Solo Developer Essentials)**
+#### Must Have (Solo Developer Essentials)
 
 - [ ] **Database seeding** - `tstack seed` command with faker integration
 - [ ] **Migration rollback** - `deno task migrate:rollback`
@@ -338,7 +338,7 @@ Done! You have a working blog API. 🎉
       collections
 - [ ] **Error tracking integration** - Easy Sentry/Rollbar setup
 
-**Good to Have (Productivity Boosters)**
+#### Good to Have (Productivity Boosters)
 
 - [ ] **Relationship scaffolding** - `tstack relate articles comments`
       (auto-setup foreign keys)
@@ -350,7 +350,7 @@ Done! You have a working blog API. 🎉
       APIs)
 - [ ] **Background jobs** - Simple task queue (BullMQ integration)
 
-**Awesome to Have (Game Changers)**
+#### Awesome to Have (Game Changers)
 
 - [ ] **Live reload API docs** - Auto-generated Swagger UI from routes/DTOs
 - [ ] **Database GUI** - Built-in web interface for data management (better than
@@ -364,7 +364,7 @@ Done! You have a working blog API. 🎉
 - [ ] **Database backup/restore** - `tstack db:backup`, `tstack db:restore`
 - [ ] **Multi-tenancy support** - Tenant isolation helpers for SaaS apps
 
-**Nice to Have (Polish)**
+#### Nice to Have (Polish)
 
 - [ ] **File upload helpers** - S3, Cloudinary, local storage abstractions
 - [ ] **Email templates** - Transactional email system (welcome, reset password,
@@ -405,6 +405,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-**Built with ❤️ for the Deno community**
+Built with ❤️ for the Deno community
 
 Clean, Fast, Simple.

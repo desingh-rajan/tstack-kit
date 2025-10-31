@@ -145,7 +145,7 @@ deno task db:seed:superadmin
 
 3. **Authorization Pattern**
 
-   ```
+   ```text
    superadmin > admin > moderator > user
    ```
 
@@ -169,7 +169,10 @@ export const users = pgTable("users", {
 
 Two test users are created for development:
 
-```typescript
+````typescript
+Two test users are created for development:
+
+```text
 // Superadmin
 Email: superadmin@tstack.in
 Password: TonyStack@2025!
@@ -179,7 +182,7 @@ Role: superadmin
 Email: alpha@tstack.in
 Password: Alpha@2025!
 Role: user
-```
+````
 
 ## Best Practices
 

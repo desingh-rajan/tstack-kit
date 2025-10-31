@@ -154,7 +154,7 @@ return c.json({
 
 ### 9. File Organization
 
-```
+```text
 src/
 ├── auth/           # Auth feature
 │   ├── auth.controller.ts
@@ -224,7 +224,7 @@ Before committing:
 - [ ] Tests pass
 - [ ] No commented-out code
 - [ ] Error messages are descriptive
-- [ ] Console logs use proper prefixes ([INFO], [ERROR], etc.)
+- [ ] Console logs use proper prefixes (\[INFO\], \[ERROR\], etc.)
 - [ ] Files formatted with `deno fmt`
 - [ ] No `any` types without lint-ignore
 - [ ] Commit message follows format

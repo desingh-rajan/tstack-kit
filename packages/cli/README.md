@@ -45,7 +45,7 @@ tstack scaffold products
 
 This creates:
 
-```
+```text
 src/entities/products/
 ├── product.model.ts # Drizzle database schema
 ├── product.dto.ts # Data transfer objects + validation
@@ -208,7 +208,7 @@ deno task dev
 
 You can customize the generated templates by modifying the files in:
 
-```
+```text
 packages/cli/src/templates/
 ├── model.ts # Database schema template
 ├── dto.ts # DTO template
@@ -261,8 +261,7 @@ deno task test
 
 ## Contributing
 
-Contributions are welcome! Please read our
-[Contributing Guide](../../CONTRIBUTING.md).
+Contributions are welcome! Please open an issue or submit a pull request.
 
 ## License
 
@@ -277,6 +276,6 @@ MIT License - see [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Made with ️ for the Deno community**
+Made with ️ for the Deno community
 
 > TonyStack CLI - Because scaffolding should be this easy.

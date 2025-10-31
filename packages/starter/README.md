@@ -282,7 +282,7 @@ docker compose down
 
 ### Production Deployment
 
-**Option 1: Docker Compose (Recommended)**
+#### Option 1: Docker Compose (Recommended)
 
 ```bash
 # Use production environment
@@ -302,7 +302,7 @@ docker compose exec app deno task migrate:run
 docker compose exec app deno task db:seed
 ```
 
-**Option 2: Separate Database**
+#### Option 2: Separate Database
 
 Build and run with external PostgreSQL:
 
@@ -414,8 +414,8 @@ deno task dev
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE)
-file for details.
+This project is licensed under the **MIT License** - see the
+[LICENSE](../../LICENSE) file for details.
 
 ---
 
@@ -460,4 +460,4 @@ Built with amazing open-source projects:
 ⭐ **Star this repo if you find it helpful!** ⭐
 
 [Issues](https://github.com/desingh-rajan/tstack-kit/issues) •
-[License](LICENSE)
+[License](../../LICENSE)

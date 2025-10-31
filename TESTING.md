@@ -6,7 +6,7 @@ TonyStack uses **colocated tests** where tests live next to the code they test.
 
 ### Project Structure
 
-```
+```text
 my-api/
 ├── src/
 │   ├── auth/
@@ -109,7 +109,7 @@ tstack scaffold products
 
 **Creates:**
 
-```
+```text
 src/entities/products/
 ├── product.model.ts
 ├── product.dto.ts
@@ -421,4 +421,4 @@ NODE_ENV=test deno task test
 
 ---
 
-**Happy Testing! 🧪**
+Happy Testing! 🧪

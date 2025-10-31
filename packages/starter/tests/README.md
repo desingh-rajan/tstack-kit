@@ -6,7 +6,7 @@ Tests now live **next to the code they test**, not in this folder!
 
 ### New Structure (Current)
 
-```
+```text
 src/
 ├── auth/
 │   ├── auth.service.ts

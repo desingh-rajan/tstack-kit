@@ -54,7 +54,7 @@ NODE_ENV=test deno task migrate:run
 
 ### Database Files
 
-```
+```text
 packages/starter/
 ├── src/
 │   ├── auth/

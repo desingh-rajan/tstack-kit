@@ -57,7 +57,7 @@
 
 ### Public Endpoints (No Auth Required)
 
-```
+```text
 POST /api/auth/register
 Body: { email, password, username?, phone? }
 Response: { user, token }
@@ -69,7 +69,7 @@ Response: { user, token }
 
 ### Protected Endpoints (Requires Authorization Header)
 
-```
+```text
 POST /api/auth/logout
 Header: Authorization: Bearer <token>
 Response: { message: "Logged out successfully" }
@@ -86,7 +86,7 @@ Response: { message: "Password changed successfully" }
 
 ### Admin Endpoints (Requires Auth - Superadmin/Admin Only)
 
-```
+```text
 POST /api/admin/users
 Header: Authorization: Bearer <token>
 Body: { email, username, password }
