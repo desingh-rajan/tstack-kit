@@ -21,7 +21,7 @@
    ```bash
    # Development
    deno task migrate:run
-   
+
    # Test database
    NODE_ENV=test deno task migrate:run
    ```
@@ -124,22 +124,22 @@ Like `article.test.ts`:
 
 ### Issue: "column 'role' does not exist"
 
-**Cause:** Migration missing the column  
+**Cause:** Migration missing the column\
 **Solution:** Regenerate migrations from schema
 
 ### Issue: "relation 'articles' does not exist"
 
-**Cause:** Migrations not run on test database  
+**Cause:** Migrations not run on test database\
 **Solution:** `NODE_ENV=test deno task migrate:run`
 
 ### Issue: Empty model files
 
-**Cause:** Accidental scaffolding or file creation  
+**Cause:** Accidental scaffolding or file creation\
 **Solution:** Check if model exists elsewhere, delete duplicate
 
 ### Issue: SQLite references remain
 
-**Cause:** Old configuration from SQLite days  
+**Cause:** Old configuration from SQLite days\
 **Solution:**
 
 - Remove `data/` folder
@@ -150,8 +150,8 @@ Like `article.test.ts`:
 
 ## Emoji Removal Completed ✓
 
-**Date:** October 31, 2025  
-**Commit:** Removed 200+ emojis from codebase  
+**Date:** October 31, 2025\
+**Commit:** Removed 200+ emojis from codebase\
 **Standard:** See `CODING_STANDARDS.md`
 
 **Replaced:**
@@ -172,7 +172,8 @@ Like `article.test.ts`:
 
 **Active Migration:**
 
-- `0000_square_phalanx.sql` - Initial schema with articles, auth_tokens, users (including role column)
+- `0000_square_phalanx.sql` - Initial schema with articles, auth_tokens, users
+  (including role column)
 
 **What it creates:**
 
@@ -195,7 +196,8 @@ Like `article.test.ts`:
 - ❌ `data/` folder - Not needed for PostgreSQL
 - ❌ `src/entities/users/` - Empty duplicate folder
 - ❌ `migrations/0000_lying_callisto.sql` - Old migration without role column
-- ❌ `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role (not needed after regeneration)
+- ❌ `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role (not
+  needed after regeneration)
 
 ---
 
@@ -364,6 +366,6 @@ grep -r "✅\|❌\|🚀" .     # Check for emojis
 
 ---
 
-**Last Updated:** October 31, 2025  
-**Project:** TonyStack v1.0  
+**Last Updated:** October 31, 2025\
+**Project:** TonyStack v1.0\
 **Branch:** feature/auth-system

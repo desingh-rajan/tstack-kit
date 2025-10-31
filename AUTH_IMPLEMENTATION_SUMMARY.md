@@ -4,32 +4,39 @@
 
 ### Phase 1: Database Models
 
-- ✅ `user.model.ts` - User entity with email, username (optional), password, isActive, isEmailVerified
-- ✅ `auth-token.model.ts` - Token storage with userId FK, expiry, revocation, metadata
+- ✅ `user.model.ts` - User entity with email, username (optional), password,
+  isActive, isEmailVerified
+- ✅ `auth-token.model.ts` - Token storage with userId FK, expiry, revocation,
+  metadata
 - ✅ Proper PostgreSQL schema with indexes and constraints
 
 ### Phase 2: Authentication Utilities
 
-- ✅ `password.ts` - scrypt hashing with random salt (node:crypto, no external deps)
+- ✅ `password.ts` - scrypt hashing with random salt (node:crypto, no external
+  deps)
 - ✅ `jwt.ts` - JWT creation/verification with jose library (npm:jose@^5.9.6)
 - ✅ Token extraction from Authorization header
 
 ### Phase 3: Authentication Service & DTOs
 
-- ✅ `auth.service.ts` - All business logic (register, login, logout, validate, getCurrentUser, changePassword)
+- ✅ `auth.service.ts` - All business logic (register, login, logout, validate,
+  getCurrentUser, changePassword)
 - ✅ `auth.dto.ts` - Zod validation schemas for all endpoints
 - ✅ Token storage in database with revocation support
 
 ### Phase 4: Auth Controllers & Routes
 
 - ✅ `auth.controller.ts` - HTTP handlers for all auth endpoints
-- ✅ `auth.route.ts` - Public (register, login) and protected routes (logout, me, change-password)
+- ✅ `auth.route.ts` - Public (register, login) and protected routes (logout,
+  me, change-password)
 - ✅ Proper error handling and ApiResponse format
 
 ### Phase 5: Middleware & Admin System
 
-- ✅ `requireAuth.ts` - Middleware for protecting routes, attaches user to context
-- ✅ `admin.service.ts` - Admin management (create, list, get, update, delete users)
+- ✅ `requireAuth.ts` - Middleware for protecting routes, attaches user to
+  context
+- ✅ `admin.service.ts` - Admin management (create, list, get, update, delete
+  users)
 - ✅ `admin.controller.ts` - HTTP handlers for admin endpoints
 - ✅ `admin.dto.ts` - Validation schemas for admin operations
 - ✅ `admin.route.ts` - Admin routes (all protected with requireAuth)
@@ -311,13 +318,13 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/your_db
 2. `c3ce19e` - feat(auth): add admin management APIs (Phase 5)
 3. `1853ed7` - feat(cli): add --with-auth flag to create command (Phase 6)
 
-**Branch:** `feature/auth-system`
-**Files Changed:** 19 files
-**Lines Added:** ~1,050+
+**Branch:** `feature/auth-system` **Files Changed:** 19 files **Lines Added:**
+~1,050+
 
 ## ✅ Ready for Testing
 
-The authentication system is fully implemented and ready for end-to-end testing. Once testing is complete and approved, merge to main:
+The authentication system is fully implemented and ready for end-to-end testing.
+Once testing is complete and approved, merge to main:
 
 ```bash
 git checkout main

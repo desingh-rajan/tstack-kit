@@ -131,10 +131,10 @@ let authToken = "";
 let productId = 0;
 
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const fullEndpoint = endpoint.startsWith("/api") 
-    ? endpoint 
+  const fullEndpoint = endpoint.startsWith("/api")
+    ? endpoint
     : `/api${endpoint}`;
-  
+
   const response = await app.request(fullEndpoint, {
     ...options,
     headers: {
@@ -150,7 +150,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   } catch {
     data = { message: text };
   }
-  
+
   return { status: response.status, data };
 }
 
@@ -160,10 +160,10 @@ Deno.test("Product API Tests", async (t) => {
       method: "POST",
       body: JSON.stringify({
         email: "superadmin@tstack.in",
-        password: "TonyStack@2025!"
-      })
+        password: "TonyStack@2025!",
+      }),
     });
-    
+
     assertEquals(result.status, 200);
     assertExists(result.data.token);
     authToken = result.data.token;
@@ -175,10 +175,10 @@ Deno.test("Product API Tests", async (t) => {
       headers: { "Authorization": `Bearer ${authToken}` },
       body: JSON.stringify({
         name: "Test Product",
-        price: 99.99
-      })
+        price: 99.99,
+      }),
     });
-    
+
     assertEquals(result.status, 201);
     assertExists(result.data.id);
     productId = result.data.id;
@@ -186,9 +186,9 @@ Deno.test("Product API Tests", async (t) => {
 
   await t.step("3. Get product by ID", async () => {
     const result = await apiRequest(`/products/${productId}`, {
-      headers: { "Authorization": `Bearer ${authToken}` }
+      headers: { "Authorization": `Bearer ${authToken}` },
     });
-    
+
     assertEquals(result.status, 200);
     assertEquals(result.data.name, "Test Product");
   });
@@ -214,14 +214,14 @@ if (config.nodeEnv !== "test") {
 // 2. Run migrations
 const migrateCmd = new Deno.Command("deno", {
   args: ["task", "migrate:run"],
-  env: { ...Deno.env.toObject(), NODE_ENV: "test" }
+  env: { ...Deno.env.toObject(), NODE_ENV: "test" },
 });
 await migrateCmd.output();
 
 // 3. Seed superadmin (for auth tests)
 const seedCmd = new Deno.Command("deno", {
   args: ["task", "db:seed"],
-  env: { ...Deno.env.toObject(), NODE_ENV: "test" }
+  env: { ...Deno.env.toObject(), NODE_ENV: "test" },
 });
 await seedCmd.output();
 
@@ -303,8 +303,10 @@ Deno.test("Email validation", () => {
 ```typescript
 // ❌ Bad - relies on previous test
 let userId;
-Deno.test("Create user", () => { userId = 1; });
-Deno.test("Get user", () => { /* uses userId */ });
+Deno.test("Create user", () => {
+  userId = 1;
+});
+Deno.test("Get user", () => {/* uses userId */});
 
 // ✅ Good - self-contained
 Deno.test("Get user", async () => {
@@ -329,7 +331,7 @@ Deno.test("User API - should return 401 when token is invalid", () => {});
 ```typescript
 // ❌ Bad - testing implementation
 Deno.test("calls database.query", () => {
-  const spy = sinon.spy(database, 'query');
+  const spy = sinon.spy(database, "query");
   service.getUser(1);
   assert(spy.called);
 });
@@ -347,12 +349,12 @@ Deno.test("returns user data when ID exists", async () => {
 ```typescript
 Deno.test("Product tests", async (t) => {
   const createdIds: number[] = [];
-  
+
   await t.step("Create products", async () => {
     const product = await createProduct({ name: "Test" });
     createdIds.push(product.id);
   });
-  
+
   // Cleanup
   for (const id of createdIds) {
     await deleteProduct(id);

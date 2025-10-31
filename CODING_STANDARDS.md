@@ -8,7 +8,7 @@
 
 - Console.log statements
 - Error messages
-- Comments  
+- Comments
 - Variable names
 - Function names
 - Test output
@@ -129,7 +129,7 @@ await t.step("POST /users - creates user successfully", async () => {
     method: "POST",
     body: JSON.stringify({ email: "test@example.com" }),
   });
-  
+
   assertEquals(result.status, 201);
   assertEquals(result.data.email, "test@example.com");
 });
@@ -148,7 +148,7 @@ await t.step("POST /users - creates user successfully", async () => {
 return c.json({
   status: "success",
   data: user,
-  message: "User created successfully"
+  message: "User created successfully",
 }, 201);
 ```
 

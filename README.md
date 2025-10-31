@@ -2,7 +2,8 @@
 
 > **Rails-like backend toolkit for Deno. Build APIs fast.**
 
-A minimal, production-ready starter for building type-safe REST APIs with Deno, Hono, Drizzle ORM, and PostgreSQL.
+A minimal, production-ready starter for building type-safe REST APIs with Deno,
+Hono, Drizzle ORM, and PostgreSQL.
 
 ---
 
@@ -83,7 +84,13 @@ tstack scaffold articles
 Edit `src/entities/articles/article.model.ts`:
 
 ```typescript
-import { pgTable, integer, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const articles = pgTable("articles", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -167,7 +174,7 @@ deno task lint             # Lint code
 ## Tech Stack
 
 | Layer      | Technology | Version |
-|------------|------------|---------|
+| ---------- | ---------- | ------- |
 | Runtime    | Deno       | 2.5.4+  |
 | Framework  | Hono       | 4.6.3   |
 | ORM        | Drizzle    | 0.33.0  |
@@ -308,7 +315,8 @@ Done! You have a working blog API. 🎉
 - [ ] **Kamal deployment** - YAML setup with deployment instructions
 - [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
 - ✅ **`tstack destroy` command** - Remove scaffolded entities
-- ✅ **Basic JWT authentication** - User entity with auth system (optional addon)
+- ✅ **Basic JWT authentication** - User entity with auth system (optional
+  addon)
 
 ### v1.2 (Q1 2026)
 
@@ -324,35 +332,43 @@ Done! You have a working blog API. 🎉
 
 - [ ] **Database seeding** - `tstack seed` command with faker integration
 - [ ] **Migration rollback** - `deno task migrate:rollback`
-- [ ] **Environment management** - `tstack env` for multi-environment configs (.env.dev, .env.staging, .env.prod)
-- [ ] **Quick CRUD testing** - Auto-generate Thunder Client / REST Client collections
+- [ ] **Environment management** - `tstack env` for multi-environment configs
+      (.env.dev, .env.staging, .env.prod)
+- [ ] **Quick CRUD testing** - Auto-generate Thunder Client / REST Client
+      collections
 - [ ] **Error tracking integration** - Easy Sentry/Rollbar setup
 
 **Good to Have (Productivity Boosters)**
 
-- [ ] **Relationship scaffolding** - `tstack relate articles comments` (auto-setup foreign keys)
+- [ ] **Relationship scaffolding** - `tstack relate articles comments`
+      (auto-setup foreign keys)
 - [ ] **API versioning** - `/api/v1`, `/api/v2` structure generator
 - [ ] **Pagination helper** - Built-in cursor/offset pagination utilities
 - [ ] **Rate limiting** - Simple middleware for API throttling
 - [ ] **CORS presets** - Quick configs for common scenarios
-- [ ] **Health checks** - Enhanced monitoring endpoints (DB, Redis, external APIs)
+- [ ] **Health checks** - Enhanced monitoring endpoints (DB, Redis, external
+      APIs)
 - [ ] **Background jobs** - Simple task queue (BullMQ integration)
 
 **Awesome to Have (Game Changers)**
 
 - [ ] **Live reload API docs** - Auto-generated Swagger UI from routes/DTOs
-- [ ] **Database GUI** - Built-in web interface for data management (better than Drizzle Studio)
+- [ ] **Database GUI** - Built-in web interface for data management (better than
+      Drizzle Studio)
 - [ ] **API playground** - Interactive testing UI (like GraphiQL but for REST)
-- [ ] **Deployment presets** - One-command deploy to Railway, Fly.io, Render, DigitalOcean
+- [ ] **Deployment presets** - One-command deploy to Railway, Fly.io, Render,
+      DigitalOcean
 - [ ] **Monitoring dashboard** - Real-time API metrics, logs, performance
-- [ ] **CLI plugins system** - `tstack plugin add stripe` for common integrations
+- [ ] **CLI plugins system** - `tstack plugin add stripe` for common
+      integrations
 - [ ] **Database backup/restore** - `tstack db:backup`, `tstack db:restore`
 - [ ] **Multi-tenancy support** - Tenant isolation helpers for SaaS apps
 
 **Nice to Have (Polish)**
 
 - [ ] **File upload helpers** - S3, Cloudinary, local storage abstractions
-- [ ] **Email templates** - Transactional email system (welcome, reset password, etc.)
+- [ ] **Email templates** - Transactional email system (welcome, reset password,
+      etc.)
 - [ ] **WebSocket rooms** - Real-time features scaffolding
 - [ ] **Search integration** - Elasticsearch/Meilisearch helpers
 - [ ] **Cache layer** - Redis integration with decorators
