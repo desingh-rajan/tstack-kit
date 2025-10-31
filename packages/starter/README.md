@@ -333,16 +333,43 @@ docker run -d \
 
 ## Testing
 
+### Quick Start
+
 ```bash
-# Run tests
+# Complete test setup + run (recommended)
+deno task test:full
+
+# Just run tests (after setup)
 deno task test
 
-# Run with coverage
-deno test --coverage=coverage tests/
-
-# Test specific file
-deno test tests/unit/entities/users/user.service.test.ts --allow-all
+# Watch mode for development
+deno task test:watch
 ```
+
+### Available Test Commands
+
+| Command | Description |
+|---------|-------------|
+| `deno task test:full` | Complete workflow: setup DB + migrations + seeds + tests |
+| `deno task test` | Run tests only |
+| `deno task test:setup` | Setup test database and migrations |
+| `deno task test:reset` | Clean reset (database + migrations + seeds) |
+| `deno task test:watch` | Run tests in watch mode |
+| `deno task test:coverage` | Run tests with coverage report |
+
+### What Gets Tested
+
+- **Authentication**: 19 test scenarios (register, login, JWT, admin operations)
+- **Articles**: 16 test scenarios (CRUD, authorization, ownership)
+- **Database**: Connection, migrations, seeds
+- **API**: All endpoints with proper HTTP status codes
+
+**Test Users (auto-seeded):**
+
+- `superadmin@tstack.in` / `TonyStack@2025!`
+- `alpha@tstack.in` / `Alpha@2025!`
+
+📖 **[Full Testing Guide →](TESTING.md)**
 
 ---
 
