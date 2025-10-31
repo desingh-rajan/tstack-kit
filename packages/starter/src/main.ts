@@ -10,6 +10,8 @@ import {
 import { requestLogger, securityHeaders } from "./shared/middleware/logger.ts";
 import { ApiResponse } from "./shared/utils/response.ts";
 import { registerEntityRoutes } from "./entities/index.ts";
+import authRoutes from "./auth/auth.route.ts";
+import adminRoutes from "./auth/admin.route.ts";
 
 // Create Hono app
 const app = new Hono();
@@ -46,6 +48,10 @@ app.get("/health", async (c: Context) => {
     statusCode as 200 | 503,
   );
 });
+
+// Auth routes (manual registration)
+app.route("/api", authRoutes);
+app.route("/api", adminRoutes);
 
 // API routes - Auto-registered from entities folder
 // All *.route.ts files in entities/* subdirectories are automatically imported
