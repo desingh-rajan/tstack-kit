@@ -1,5 +1,5 @@
 import { dirname, join } from "@std/path";
-import { copy, exists } from "@std/fs";
+import { copy, ensureDir, exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
 
 export interface CreateOptions {
@@ -164,6 +164,20 @@ JWT_EXPIRY=7d
         );
       }
     }
+
+    // Create migrations meta/_journal.json file
+    const migrationsMetaPath = join(projectPath, "migrations", "meta");
+    await ensureDir(migrationsMetaPath);
+    const journalPath = join(migrationsMetaPath, "_journal.json");
+    const journalContent = {
+      version: "7",
+      dialect: "postgresql",
+      entries: [],
+    };
+    await Deno.writeTextFile(
+      journalPath,
+      JSON.stringify(journalContent, null, 2) + "\n",
+    );
   } catch (error) {
     Logger.error(`Failed to copy starter template: ${error}`);
     Deno.exit(1);
@@ -237,36 +251,54 @@ JWT_EXPIRY=7d
 
   Logger.newLine();
 
-  // Try to create database automatically
-  Logger.step("Setting up database...");
+  // Try to create databases automatically (dev + test)
+  Logger.step("Setting up databases...");
   const databaseUrl =
     `postgresql://${dbUser}:${dbPassword}@localhost:5432/${dbName}`;
 
   try {
-    // Try with sudo -u postgres psql (local PostgreSQL)
+    // Create development database
     const createDbCmd = new Deno.Command("sudo", {
       args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
       stdout: "piped",
       stderr: "piped",
     });
 
-    const { success } = await createDbCmd.output();
+    const { success: devSuccess } = await createDbCmd.output();
 
-    if (success) {
-      Logger.success(`Database "${dbName}" created!`);
+    if (devSuccess) {
+      Logger.success(`Development database "${dbName}" created!`);
     } else {
       Logger.warning(
         `Database "${dbName}" may already exist or PostgreSQL is not accessible`,
       );
-      Logger.info("You can create it manually if needed:");
-      Logger.code(`sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`);
+    }
+
+    // Create test database
+    const createTestDbCmd = new Deno.Command("sudo", {
+      args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${testDbName}`],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success: testSuccess } = await createTestDbCmd.output();
+
+    if (testSuccess) {
+      Logger.success(`Test database "${testDbName}" created!`);
+    } else {
+      Logger.warning(
+        `Database "${testDbName}" may already exist or PostgreSQL is not accessible`,
+      );
     }
   } catch {
-    Logger.warning("Could not auto-create database");
-    Logger.info("Options to create database:");
+    Logger.warning("Could not auto-create databases");
+    Logger.info("Options to create databases:");
     Logger.code(`1. Docker: cd ${projectName} && docker compose up -d`);
     Logger.code(
       `2. Manual: sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`,
+    );
+    Logger.code(
+      `3. Test DB: sudo -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
     );
   }
 
