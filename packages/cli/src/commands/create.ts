@@ -2,6 +2,9 @@ import { dirname, join } from "@std/path";
 import { copy, ensureDir, exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
 
+// TODO: Rework with-auth and without-auth flag and make any mode default
+// Currently auth is optional (--with-auth flag), consider making it default
+// or providing both --with-auth and --without-auth flags for clarity
 export interface CreateOptions {
   projectName: string;
   targetDir?: string;

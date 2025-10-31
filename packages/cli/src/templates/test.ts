@@ -6,6 +6,7 @@ export function generateTestTemplate(names: EntityNames): string {
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../../main.ts";
+import { db } from "../../config/database.ts";
 
 /**
  * ${names.pascalSingular} CRUD API Tests
@@ -52,10 +53,11 @@ async function apiRequest(
 }
 
 Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
-  // ============================================
-  // CREATE
-  // ============================================
-  await t.step("1. Create ${names.singular}", async () => {
+  try {
+    // ============================================
+    // CREATE
+    // ============================================
+    await t.step("1. Create ${names.singular}", async () => {
     const { status, data } = await apiRequest(ENTITY_ENDPOINT, {
       method: "POST",
       body: JSON.stringify(sample${names.pascalSingular}),
@@ -209,6 +211,14 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
 
     console.log("[SUCCESS] Delete non-existent ${names.singular} handled correctly");
   });
+  } finally {
+    // Close database connections to prevent resource leaks
+    try {
+      await db.$client.end();
+    } catch {
+      // Ignore errors when closing
+    }
+  }
 });
 `;
 }
