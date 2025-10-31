@@ -5,7 +5,7 @@ export function generateTestTemplate(names: EntityNames): string {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { app } from "../src/main.ts";
+import { app } from "../../main.ts";
 
 /**
  * ${names.pascalSingular} CRUD API Tests
