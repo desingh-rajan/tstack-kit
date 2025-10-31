@@ -51,5 +51,30 @@ if (!migrateResult.success) {
   Deno.exit(1);
 }
 
+// Seed superadmin for auth tests
+console.log("\n🌱 Seeding superadmin for auth tests...");
+const seedCmd = new Deno.Command("deno", {
+  args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],
+  env: {
+    ...Deno.env.toObject(),
+    NODE_ENV: "test",
+  },
+  stdout: "piped",
+  stderr: "piped",
+});
+
+const seedResult = await seedCmd.output();
+
+if (seedResult.success) {
+  console.log("✓ Superadmin seeded (or already exists)");
+} else {
+  const stderr = new TextDecoder().decode(seedResult.stderr);
+  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
+    console.log("✓ Superadmin already exists");
+  } else {
+    console.warn("⚠️  Superadmin seeding failed (may not be needed for all tests)");
+  }
+}
+
 console.log("\n✅ Test environment ready");
 console.log("🚀 Running tests...\n");

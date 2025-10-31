@@ -2,34 +2,35 @@ import {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { app } from "../src/main.ts";
 
 /**
- * Authentication API Tests
+ * Authentication & Admin API Tests
  *
- * Prerequisites:
- * 1. Server must be running: deno task dev
- * 2. Database must be migrated: deno task migrate:run
- * 3. Superadmin must be seeded: deno task db:seed
+ * Tests run against the Hono app directly (no server needed!)
+ * Uses NODE_ENV=test environment automatically.
+ * Tests superadmin login, JWT tokens, and admin endpoints.
  *
- * Run: deno test --allow-all tests/auth.test.ts
+ * Run: deno task test
+ * Or: NODE_ENV=test deno test --allow-all tests/auth.test.ts
  */
 
-const BASE_URL = "http://localhost:8000/api";
 let authToken = "";
 let adminToken = "";
 let testUserId = 0;
 let testAdminId = 0;
 
 /**
- * Helper function to make API requests
+ * Helper function to make API requests via Hono app
+ * No server required - tests run directly against the app!
  */
-async function apiRequest(
-  endpoint: string,
-  options: RequestInit = {},
-  // deno-lint-ignore no-explicit-any
-): Promise<{ status: number; data: any }> {
-  const url = `${BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
+// Helper function for making API requests - NO SERVER NEEDED!
+// Uses Hono's app.request() method directly
+async function apiRequest(endpoint: string, options: RequestInit = {}) {
+  // Prepend /api to all endpoints
+  const fullEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+  
+  const response = await app.request(fullEndpoint, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -37,7 +38,15 @@ async function apiRequest(
     },
   });
 
-  const data = await response.json();
+  // Get response text first, then try to parse as JSON
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = { message: text };
+  }
+  
   return { status: response.status, data };
 }
 
