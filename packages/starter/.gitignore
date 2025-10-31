@@ -1,5 +1,8 @@
 # Deno
 .env
+.env.local
+.env.*.local
+!.env.example
 deno.lock
 
 # Database

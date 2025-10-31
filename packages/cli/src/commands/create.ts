@@ -1,5 +1,5 @@
 import { dirname, join } from "@std/path";
-import { copy } from "@std/fs";
+import { copy, exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
 
 export interface CreateOptions {
@@ -173,8 +173,10 @@ JWT_EXPIRY=7d
   Logger.success("Project created successfully!");
   Logger.newLine();
 
-  // Copy .env.example to .env automatically
+  // Setup environment files
   Logger.step("Setting up environment...");
+  
+  // 1. Copy .env.example to .env automatically
   const envExamplePath = join(projectPath, ".env.example");
   const envPath = join(projectPath, ".env");
   await Deno.copyFile(envExamplePath, envPath);
@@ -186,8 +188,51 @@ JWT_EXPIRY=7d
     `DATABASE_URL=postgresql://${dbUser}:${dbPassword}@localhost:5432/${dbName}`,
   );
   await Deno.writeTextFile(envPath, envContent);
-
   Logger.info(".env file created");
+
+  // 2. Setup .env.development.local (if exists in starter)
+  const envDevPath = join(projectPath, ".env.development.local");
+  try {
+    if (await exists(envDevPath)) {
+      let envDevContent = await Deno.readTextFile(envDevPath);
+      envDevContent = envDevContent.replace(
+        /DATABASE_URL=postgresql:\/\/[^:]+:[^@]+@[^/]+\/\w+/,
+        `DATABASE_URL=postgresql://${dbUser}:${dbPassword}@localhost:5432/${dbName}`,
+      );
+      await Deno.writeTextFile(envDevPath, envDevContent);
+      Logger.info(".env.development.local configured");
+    }
+  } catch {
+    // File doesn't exist, skip
+  }
+
+  // 3. Setup .env.test.local with test database name
+  const testDbName = `${dbName}_test`;
+  const envTestPath = join(projectPath, ".env.test.local");
+  try {
+    if (await exists(envTestPath)) {
+      let envTestContent = await Deno.readTextFile(envTestPath);
+      envTestContent = envTestContent.replace(
+        /DATABASE_URL=postgresql:\/\/[^:]+:[^@]+@[^/]+\/\w+/,
+        `DATABASE_URL=postgresql://${dbUser}:${dbPassword}@localhost:5432/${testDbName}`,
+      );
+      await Deno.writeTextFile(envTestPath, envTestContent);
+      Logger.info(`.env.test.local configured (database: ${testDbName})`);
+    }
+  } catch {
+    // File doesn't exist, skip
+  }
+
+  // 4. Keep .env.production.local as template (no modifications)
+  const envProdPath = join(projectPath, ".env.production.local");
+  try {
+    if (await exists(envProdPath)) {
+      Logger.info(".env.production.local template ready (requires configuration)");
+    }
+  } catch {
+    // File doesn't exist, skip
+  }
+
   Logger.newLine();
 
   // Try to create database automatically
