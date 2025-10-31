@@ -5,13 +5,10 @@ import { requireAuth } from "../shared/middleware/requireAuth.ts";
 const adminRoutes = new Hono();
 
 // All admin routes require authentication
-adminRoutes.use("*", requireAuth);
-
-// Admin management routes
-adminRoutes.post("/admin/users", AdminController.createAdmin);
-adminRoutes.get("/admin/users", AdminController.getAllUsers);
-adminRoutes.get("/admin/users/:id", AdminController.getUserById);
-adminRoutes.put("/admin/users/:id", AdminController.updateUser);
-adminRoutes.delete("/admin/users/:id", AdminController.deleteUser);
+adminRoutes.post("/admin/users", requireAuth, AdminController.createAdmin);
+adminRoutes.get("/admin/users", requireAuth, AdminController.getAllUsers);
+adminRoutes.get("/admin/users/:id", requireAuth, AdminController.getUserById);
+adminRoutes.put("/admin/users/:id", requireAuth, AdminController.updateUser);
+adminRoutes.delete("/admin/users/:id", requireAuth, AdminController.deleteUser);
 
 export default adminRoutes;
