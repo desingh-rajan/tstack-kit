@@ -11,24 +11,30 @@ import { app } from "../../main.ts";
  * ${names.pascalSingular} CRUD API Tests
  *
  * Tests run against the Hono app directly (no server needed!)
- * Uses NODE_ENV=test environment automatically.
+ * Uses ENVIRONMENT=test environment automatically.
  *
  * Run: deno task test
- * Or: NODE_ENV=test deno test --allow-all tests/${names.plural}.test.ts
+ * Or: ENVIRONMENT=test deno test --allow-all src/entities/${names.plural}/${names.singular}.test.ts
+ *
+ * TODO: Before running tests:
+ * 1. Add fields to your model: src/entities/${names.plural}/${names.singular}.model.ts
+ * 2. Add validation to DTO: src/entities/${names.plural}/${names.singular}.dto.ts  
+ * 3. Update sample data below to match your fields
+ * 4. Run: deno task migrate:generate && deno task migrate:run
  */
 
 const ENTITY_ENDPOINT = "/api/${names.plural}";
 let ${names.singular}Id = 0;
 
-// TODO: Update with your entity's fields
+// TODO: Update these sample objects to match your model fields
 const sample${names.pascalSingular} = {
-  name: "Test ${names.pascalSingular}",
-  // Add your entity fields here
+  // Add your entity fields here (currently only has id, createdAt, updatedAt)
+  // Example: name: "Test ${names.pascalSingular}",
 };
 
 const updated${names.pascalSingular} = {
-  name: "Updated ${names.pascalSingular}",
-  // Add your entity fields here
+  // Add your entity fields here to test updates
+  // Example: name: "Updated ${names.pascalSingular}",
 };
 
 /**
@@ -139,11 +145,14 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
   });
 
   // ============================================
-  // VALIDATION
+  // VALIDATION (TODO: Implement validation in DTO)
   // ============================================
-  await t.step(
-    "7. Create ${names.singular} with invalid data (should fail)",
-    async () => {
+  await t.step({
+    name: "7. Create ${names.singular} with invalid data (should fail)",
+    ignore: true, // Skip until validation is implemented
+    fn: async () => {
+      // TODO: Add validation to your DTO first, then enable this test
+      // Update src/entities/${names.plural}/${names.singular}.dto.ts with proper validation
       const { status, data } = await apiRequest(ENTITY_ENDPOINT, {
         method: "POST",
         body: JSON.stringify({}),
@@ -153,8 +162,8 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
       assertEquals(data.status, "error");
 
       console.log("[SUCCESS] Validation working correctly");
-    },
-  );
+    }
+  });
 
   // ============================================
   // DELETE

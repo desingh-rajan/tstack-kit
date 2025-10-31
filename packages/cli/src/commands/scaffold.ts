@@ -178,7 +178,16 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.subtitle("Test your API:");
-  Logger.code(`deno test --allow-all tests/${names.plural}.test.ts`);
-  Logger.info("[WARNING]  Remember to update test data in the test file!");
+  Logger.code(`deno task test  # Run all tests`);
+  Logger.code(
+    `ENVIRONMENT=test deno test --allow-all src/entities/${names.plural}/${names.singular}.test.ts  # Run specific tests`,
+  );
+  Logger.newLine();
+  Logger.info("[INFO]  Test file created with:");
+  Logger.code("• Basic CRUD tests (ready to run)");
+  Logger.code(
+    "• Validation test (SKIPPED - enable after adding DTO validation)",
+  );
+  Logger.code("• Sample data (TODO - update to match your model fields)");
   Logger.newLine();
 }
