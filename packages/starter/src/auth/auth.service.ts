@@ -126,8 +126,7 @@ export class AuthService {
    */
   static async logout(token: string): Promise<void> {
     await db
-      .update(authTokens)
-      .set({ isRevoked: true })
+      .delete(authTokens)
       .where(eq(authTokens.token, token));
   }
 
@@ -227,10 +226,9 @@ export class AuthService {
       .set({ password: hashedPassword })
       .where(eq(users.id, userId));
 
-    // Revoke all existing tokens for security
+    // Delete all existing tokens for security (force re-login)
     await db
-      .update(authTokens)
-      .set({ isRevoked: true })
+      .delete(authTokens)
       .where(eq(authTokens.userId, userId));
   }
 }
