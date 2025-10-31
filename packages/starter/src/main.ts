@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { config, isDevelopment } from "./config/env.ts";
 import { healthCheck, initDatabase } from "./config/database.ts";
 import {
-  globalErrorHandler,
+  errorHandler,
   notFoundHandler,
 } from "./shared/middleware/errorHandler.ts";
 import { requestLogger, securityHeaders } from "./shared/middleware/logger.ts";
@@ -16,8 +16,10 @@ import adminRoutes from "./auth/admin.route.ts";
 // Create Hono app
 const app = new Hono();
 
+// Register global error handler
+app.onError(errorHandler);
+
 // Global middleware
-app.use("*", globalErrorHandler());
 app.use("*", securityHeaders());
 app.use("*", requestLogger());
 

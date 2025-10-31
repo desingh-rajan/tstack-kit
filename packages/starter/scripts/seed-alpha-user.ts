@@ -36,7 +36,7 @@ async function seedAlphaUser() {
       console.log("[OK] Alpha user already exists");
       console.log(`   Email: ${ALPHA_EMAIL}`);
       console.log(`   User ID: ${existingUser[0].id}`);
-      return;
+      Deno.exit(0);
     }
 
     // Hash password
@@ -65,6 +65,7 @@ async function seedAlphaUser() {
     console.log("[WARNING]  IMPORTANT: This is a development/test user only!");
     console.log("");
     console.log("[SUCCESS] Seeding completed successfully");
+    Deno.exit(0);
   } catch (error) {
     console.error("[ERROR] Error seeding alpha user:", error);
     Deno.exit(1);

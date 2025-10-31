@@ -22,7 +22,7 @@ async function seedSuperAdmin() {
 
   if (existing.length > 0) {
     console.log("[OK] Superadmin already exists");
-    return;
+    return true; // Return success flag
   }
 
   // Hash the default password
