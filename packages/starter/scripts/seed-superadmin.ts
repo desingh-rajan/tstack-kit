@@ -12,7 +12,7 @@ async function seedSuperAdmin() {
   console.log("🌱 Seeding superadmin user...");
 
   const superadminEmail = "superadmin@tstack.in";
-  
+
   // Check if superadmin already exists
   const existing = await db
     .select()

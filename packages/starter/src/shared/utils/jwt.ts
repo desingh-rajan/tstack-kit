@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 
 /**
  * JWT Configuration
@@ -48,13 +48,15 @@ export async function verifyToken(token: string): Promise<TokenPayload> {
  * Extract token from Authorization header
  * Format: "Bearer <token>"
  */
-export function extractTokenFromHeader(header: string | undefined): string | null {
+export function extractTokenFromHeader(
+  header: string | undefined,
+): string | null {
   if (!header) return null;
-  
+
   const parts = header.split(" ");
   if (parts.length !== 2 || parts[0] !== "Bearer") {
     return null;
   }
-  
+
   return parts[1];
 }

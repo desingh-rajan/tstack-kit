@@ -1,8 +1,12 @@
 import { eq } from "drizzle-orm";
 import { db } from "../config/database.ts";
-import { users, type SafeUser } from "./user.model.ts";
+import { type SafeUser, users } from "./user.model.ts";
 import { hashPassword } from "../shared/utils/password.ts";
-import { BadRequestError, NotFoundError, ForbiddenError } from "../shared/utils/errors.ts";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../shared/utils/errors.ts";
 
 export class AdminService {
   /**
@@ -153,7 +157,10 @@ export class AdminService {
   /**
    * Delete user (soft delete by deactivating)
    */
-  static async deleteUser(userId: number, currentUserId: number): Promise<void> {
+  static async deleteUser(
+    userId: number,
+    currentUserId: number,
+  ): Promise<void> {
     // Get user
     const [user] = await db
       .select()

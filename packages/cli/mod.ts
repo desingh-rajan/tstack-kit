@@ -24,14 +24,16 @@ function showHelp() {
   Logger.code("--version, -v              Show version number");
   Logger.newLine();
   Logger.subtitle("Options:");
-  Logger.code("--force, -f Overwrite existing files");
+  Logger.code("--force, -f                Overwrite existing files");
   Logger.code(
-    "--dir <path> Target directory (default: current directory)",
+    "--dir <path>               Target directory (default: current directory)",
   );
+  Logger.code("--with-auth                Include JWT authentication system (create only)");
   Logger.newLine();
 
   Logger.subtitle("Examples:");
   Logger.code("tstack create my-backend");
+  Logger.code("tstack create my-api --with-auth");
   Logger.code("tstack create acme-api --dir ~/projects");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
@@ -48,7 +50,7 @@ function showVersion() {
 
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "version", "force"],
+    boolean: ["help", "version", "force", "with-auth"],
     string: ["dir"],
     alias: {
       h: "help",
@@ -85,6 +87,7 @@ async function main() {
         await createProject({
           projectName,
           targetDir: args.dir,
+          withAuth: args["with-auth"],
         });
         break;
       }

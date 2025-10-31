@@ -1,4 +1,4 @@
-import { scrypt, randomBytes } from "node:crypto";
+import { randomBytes, scrypt } from "node:crypto";
 
 /**
  * Hash a password using scrypt
@@ -28,7 +28,7 @@ export function verifyPassword(
     if (!salt || !key) {
       return reject(new Error("Invalid hash format"));
     }
-    
+
     scrypt(password, salt, 64, (err, derivedKey) => {
       if (err) reject(err);
       resolve(key === derivedKey.toString("hex"));

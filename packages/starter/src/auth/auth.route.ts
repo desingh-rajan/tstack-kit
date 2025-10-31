@@ -11,6 +11,10 @@ authRoutes.post("/auth/login", AuthController.login);
 // Protected routes (authentication required)
 authRoutes.post("/auth/logout", requireAuth, AuthController.logout);
 authRoutes.get("/auth/me", requireAuth, AuthController.getCurrentUser);
-authRoutes.put("/auth/change-password", requireAuth, AuthController.changePassword);
+authRoutes.put(
+  "/auth/change-password",
+  requireAuth,
+  AuthController.changePassword,
+);
 
 export default authRoutes;

@@ -1,6 +1,6 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../config/database.ts";
-import { users, type SafeUser } from "./user.model.ts";
+import { type SafeUser, users } from "./user.model.ts";
 import { authTokens } from "./auth-token.model.ts";
 import { hashPassword, verifyPassword } from "../shared/utils/password.ts";
 import { createToken } from "../shared/utils/jwt.ts";
@@ -209,7 +209,10 @@ export class AuthService {
     }
 
     // Verify current password
-    const isValidPassword = await verifyPassword(currentPassword, user.password);
+    const isValidPassword = await verifyPassword(
+      currentPassword,
+      user.password,
+    );
     if (!isValidPassword) {
       throw new BadRequestError("Current password is incorrect");
     }

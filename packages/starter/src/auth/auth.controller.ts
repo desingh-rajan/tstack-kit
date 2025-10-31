@@ -3,9 +3,9 @@ import { AuthService } from "./auth.service.ts";
 import { ValidationUtil } from "../shared/utils/validation.ts";
 import { ApiResponse } from "../shared/utils/response.ts";
 import {
-  RegisterSchema,
-  LoginSchema,
   ChangePasswordSchema,
+  LoginSchema,
+  RegisterSchema,
 } from "./auth.dto.ts";
 import { extractTokenFromHeader } from "../shared/utils/jwt.ts";
 
@@ -66,7 +66,10 @@ export class AuthController {
   static async changePassword(c: Context) {
     const userId = c.get("userId") as number;
     const body = await c.req.json();
-    const validatedData = ValidationUtil.validateSync(ChangePasswordSchema, body);
+    const validatedData = ValidationUtil.validateSync(
+      ChangePasswordSchema,
+      body,
+    );
 
     await AuthService.changePassword(
       userId,

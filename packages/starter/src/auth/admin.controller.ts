@@ -2,8 +2,8 @@ import { Context } from "hono";
 import { AdminService } from "./admin.service.ts";
 import {
   CreateAdminSchema,
-  UpdateUserSchema,
   GetUsersQuerySchema,
+  UpdateUserSchema,
 } from "./admin.dto.ts";
 import { ValidationUtil } from "../shared/utils/validation.ts";
 import { ApiResponse } from "../shared/utils/response.ts";

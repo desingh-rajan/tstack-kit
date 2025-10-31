@@ -1,5 +1,5 @@
 import { Context, Next } from "hono";
-import { verifyToken, extractTokenFromHeader } from "../utils/jwt.ts";
+import { extractTokenFromHeader, verifyToken } from "../utils/jwt.ts";
 import { AuthService } from "../../auth/auth.service.ts";
 import { UnauthorizedError } from "../utils/errors.ts";
 
