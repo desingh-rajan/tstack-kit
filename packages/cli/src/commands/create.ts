@@ -120,11 +120,13 @@ export async function createProject(options: CreateOptions): Promise<void> {
       Logger.info("Adding authentication configuration...");
       const envExamplePath = join(projectPath, ".env.example");
       let envExampleContent = await Deno.readTextFile(envExamplePath);
-      
+
       // Add JWT configuration if not already present
       if (!envExampleContent.includes("JWT_SECRET")) {
         envExampleContent += `\n# JWT Authentication Configuration
-JWT_SECRET=change-this-to-random-secret-in-production-${Math.random().toString(36).substring(2, 15)}
+JWT_SECRET=change-this-to-random-secret-in-production-${
+          Math.random().toString(36).substring(2, 15)
+        }
 JWT_ISSUER=tonystack
 JWT_EXPIRY=7d
 `;
@@ -135,16 +137,16 @@ JWT_EXPIRY=7d
       const denoJsonPath = join(projectPath, "deno.json");
       const denoJsonContent = await Deno.readTextFile(denoJsonPath);
       const denoJson = JSON.parse(denoJsonContent);
-      
+
       if (!denoJson.imports) {
         denoJson.imports = {};
       }
-      
+
       if (!denoJson.imports["jose"]) {
         denoJson.imports["jose"] = "npm:jose@^5.9.6";
         await Deno.writeTextFile(
           denoJsonPath,
-          JSON.stringify(denoJson, null, 2) + "\n"
+          JSON.stringify(denoJson, null, 2) + "\n",
         );
       }
 
@@ -152,12 +154,13 @@ JWT_EXPIRY=7d
       if (!denoJson.tasks) {
         denoJson.tasks = {};
       }
-      
+
       if (!denoJson.tasks["db:seed"]) {
-        denoJson.tasks["db:seed"] = "deno run --allow-all scripts/seed-superadmin.ts";
+        denoJson.tasks["db:seed"] =
+          "deno run --allow-all scripts/seed-superadmin.ts";
         await Deno.writeTextFile(
           denoJsonPath,
-          JSON.stringify(denoJson, null, 2) + "\n"
+          JSON.stringify(denoJson, null, 2) + "\n",
         );
       }
     }
@@ -269,7 +272,9 @@ JWT_EXPIRY=7d
     Logger.code("POST /api/auth/login - Login user");
     Logger.code("POST /api/auth/logout - Logout (requires token)");
     Logger.code("GET /api/auth/me - Get current user (requires token)");
-    Logger.code("PUT /api/auth/change-password - Change password (requires token)");
+    Logger.code(
+      "PUT /api/auth/change-password - Change password (requires token)",
+    );
     Logger.newLine();
     Logger.info("Admin management endpoints:");
     Logger.code("POST /api/admin/users - Create admin user");

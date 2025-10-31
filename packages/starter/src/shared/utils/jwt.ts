@@ -12,6 +12,7 @@ const secret = new TextEncoder().encode(JWT_SECRET);
 export interface TokenPayload {
   userId: number;
   email: string;
+  [key: string]: unknown; // Index signature for jose JWTPayload compatibility
 }
 
 /**
@@ -37,7 +38,10 @@ export async function verifyToken(token: string): Promise<TokenPayload> {
       issuer: JWT_ISSUER,
     });
 
-    return payload as TokenPayload;
+    return {
+      userId: payload.userId as number,
+      email: payload.email as string,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Invalid token: ${message}`);

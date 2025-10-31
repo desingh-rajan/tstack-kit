@@ -28,7 +28,9 @@ function showHelp() {
   Logger.code(
     "--dir <path>               Target directory (default: current directory)",
   );
-  Logger.code("--with-auth                Include JWT authentication system (create only)");
+  Logger.code(
+    "--with-auth                Include JWT authentication system (create only)",
+  );
   Logger.newLine();
 
   Logger.subtitle("Examples:");

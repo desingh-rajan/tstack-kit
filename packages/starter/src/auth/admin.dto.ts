@@ -13,8 +13,8 @@ export const UpdateUserSchema = z.object({
 });
 
 export const GetUsersQuerySchema = z.object({
-  page: z.string().optional().default("1").transform(Number),
-  limit: z.string().optional().default("20").transform(Number),
+  page: z.coerce.number().default(1),
+  limit: z.coerce.number().default(20),
 });
 
 export type CreateAdminDTO = z.infer<typeof CreateAdminSchema>;

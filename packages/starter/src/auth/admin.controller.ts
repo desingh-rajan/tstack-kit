@@ -30,7 +30,10 @@ export class AdminController {
    * GET /admin/users?page=1&limit=20
    */
   static async getAllUsers(c: Context) {
-    const query = c.req.query();
+    const query = {
+      page: c.req.query("page"),
+      limit: c.req.query("limit"),
+    };
     const { page, limit } = ValidationUtil.validate(
       GetUsersQuerySchema,
       query,
