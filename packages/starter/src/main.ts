@@ -44,7 +44,7 @@ app.get("/health", async (c: Context) => {
       status: "OK",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
-      environment: config.nodeEnv,
+      environment: config.environment,
       database: dbHealthy ? "connected" : "disconnected",
     }, "Service is healthy"),
     statusCode as 200 | 503,
@@ -95,7 +95,7 @@ async function startServer() {
 
     // Start server
     console.log(` Server running on http://localhost:${config.port}`);
-    console.log(` Environment: ${config.nodeEnv}`);
+    console.log(` Environment: ${config.environment}`);
     console.log(` Database: ${config.databaseUrl}`);
 
     if (isDevelopment) {

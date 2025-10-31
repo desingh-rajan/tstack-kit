@@ -1,6 +1,7 @@
 # Testing Guide
 
-This guide covers testing in TonyStack projects built with **Deno** - including setup, running tests, and troubleshooting.
+This guide covers testing in TonyStack projects built with **Deno** - including
+setup, running tests, and troubleshooting.
 
 ## Quick Start
 
@@ -34,14 +35,14 @@ deno task test:reset
 
 ## Available Test Tasks
 
-| Task | Description | Use Case |
-|------|-------------|----------|
-| `deno task test:full` | **Complete test workflow** | First run, CI/CD, clean slate |
-| `deno task test` | Run tests only | Quick testing during development |
-| `deno task test:setup` | Create test DB + migrations + seeds | Initial setup |
-| `deno task test:reset` | Clean reset everything | Fix broken test state |
-| `deno task test:migrate` | Run migrations on test DB | After schema changes |
-| `deno task test:check` | Health check test environment | Validate setup |
+| Task                     | Description                         | Use Case                         |
+| ------------------------ | ----------------------------------- | -------------------------------- |
+| `deno task test:full`    | **Complete test workflow**          | First run, CI/CD, clean slate    |
+| `deno task test`         | Run tests only                      | Quick testing during development |
+| `deno task test:setup`   | Create test DB + migrations + seeds | Initial setup                    |
+| `deno task test:reset`   | Clean reset everything              | Fix broken test state            |
+| `deno task test:migrate` | Run migrations on test DB           | After schema changes             |
+| `deno task test:check`   | Health check test environment       | Validate setup                   |
 
 ## Database Setup
 
@@ -104,7 +105,10 @@ Automatically seeded for testing:
 ### Test File Structure
 
 ```typescript
-import { assertEquals, assertExists } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  assertEquals,
+  assertExists,
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../main.ts";
 import { db } from "../config/database.ts";
 
@@ -115,12 +119,14 @@ async function cleanupTestData() {
 
 // API request helper
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const fullEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+  const fullEndpoint = endpoint.startsWith("/api")
+    ? endpoint
+    : `/api${endpoint}`;
   const response = await app.request(fullEndpoint, {
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers },
   });
-  
+
   const text = await response.text();
   let data;
   try {
@@ -128,18 +134,17 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   } catch {
     data = { message: text };
   }
-  
+
   return { status: response.status, data };
 }
 
 Deno.test("Your Feature Tests", async (t) => {
   try {
     await cleanupTestData();
-    
+
     await t.step("Test scenario 1", async () => {
       // Your test logic
     });
-    
   } finally {
     // Clean up resources
     try {
@@ -235,7 +240,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -248,13 +253,13 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      
+
       - name: Run tests
         run: |
           cd packages/starter
@@ -279,7 +284,7 @@ deno coverage coverage --html
 ### Coverage Goals
 
 - **Controllers**: >90% (HTTP handlers)
-- **Services**: >95% (Business logic)  
+- **Services**: >95% (Business logic)
 - **Models**: >80% (Database schemas)
 - **Overall**: >85%
 
@@ -298,14 +303,14 @@ Deno.test("Load test - create 100 articles", async () => {
       body: JSON.stringify({
         title: `Article ${i}`,
         content: "Test content",
-        isPublished: true
-      })
+        isPublished: true,
+      }),
     }));
   }
-  
+
   const results = await Promise.all(promises);
-  const successful = results.filter(r => r.status === 201);
-  
+  const successful = results.filter((r) => r.status === 201);
+
   assertEquals(successful.length, 100);
 });
 ```
@@ -347,14 +352,17 @@ globalThis.fetch = originalFetch;
 ```typescript
 await t.step("Upload file", async () => {
   const formData = new FormData();
-  formData.append("file", new File(["test"], "test.txt", { type: "text/plain" }));
-  
+  formData.append(
+    "file",
+    new File(["test"], "test.txt", { type: "text/plain" }),
+  );
+
   const result = await apiRequest("/upload", {
     method: "POST",
     body: formData,
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
-  
+
   assertEquals(result.status, 200);
 });
 ```
@@ -364,15 +372,15 @@ await t.step("Upload file", async () => {
 ```typescript
 await t.step("Test rollback on error", async () => {
   const tx = await db.transaction();
-  
+
   try {
     // Perform operations that should fail
-    await tx.insert(users).values({ /* invalid data */ });
+    await tx.insert(users).values({/* invalid data */});
     await tx.rollback();
   } catch (error) {
     await tx.rollback();
   }
-  
+
   // Verify no data was committed
   const count = await db.select().from(users);
   assertEquals(count.length, originalCount);
@@ -384,7 +392,7 @@ await t.step("Test rollback on error", async () => {
 ## Getting Help
 
 1. **Check this guide first** - Common issues are covered
-2. **Run `deno task test:reset`** - Fixes most setup issues  
+2. **Run `deno task test:reset`** - Fixes most setup issues
 3. **Check test output** - Error messages are usually clear
 4. **Open GitHub issue** - Include test output and error messages
 
@@ -394,11 +402,11 @@ await t.step("Test rollback on error", async () => {
 
 ### Quick Mental Model
 
-Think **Deno = Environment**, **Node = NODE_ENV**:
+Think **Deno = Environment**, **Node = ENVIRONMENT**:
 
 ```bash
 # Node.js way (old habits!)
-NODE_ENV=test npm test
+ENVIRONMENT=test npm test
 
 # Deno way (clean and proper)
 ENVIRONMENT=test deno task test
@@ -406,7 +414,7 @@ ENVIRONMENT=test deno task test
 
 ### Key Reminders
 
-1. **We're in Deno-land** - use `ENVIRONMENT` not `NODE_ENV`
+1. **We're in Deno-land** - use `ENVIRONMENT` not `ENVIRONMENT`
 2. **Tests are colocated** - next to the code they test
 3. **One command rules all** - `deno task test:full`
 4. **Always clean up** - try/finally blocks for database connections
@@ -440,7 +448,7 @@ deno task test:reset   → Nuclear reset
 deno task test:watch   → Watch mode
 deno task test:coverage → With coverage
 
-REMEMBER: ENVIRONMENT=test (not NODE_ENV!)
+REMEMBER: ENVIRONMENT=test (not ENVIRONMENT!)
 ```
 
 ---

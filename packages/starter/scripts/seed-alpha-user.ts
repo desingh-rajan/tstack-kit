@@ -1,10 +1,11 @@
 /**
  * Seed Alpha User
  *
- * Creates a regular test user for development:
- * - Email: alpha@tstack.in
- * - Password: Alpha@2025!
- * - Username: Alpha User
+ * Creates a regular test user for development.
+ * Requires environment variables (optional):
+ * - ALPHA_EMAIL (optional, skips if not set)
+ * - ALPHA_PASSWORD (required if ALPHA_EMAIL is set, min 12 chars)
+ * - ALPHA_USERNAME (optional, defaults to "Alpha User")
  *
  * This user is used in article tests to demonstrate:
  * - Regular user authentication
@@ -17,12 +18,40 @@ import { users } from "../src/auth/user.model.ts";
 import { hashPassword } from "../src/shared/utils/password.ts";
 import { eq } from "drizzle-orm";
 
-const ALPHA_EMAIL = "alpha@tstack.in";
-const ALPHA_PASSWORD = "Alpha@2025!";
-const ALPHA_USERNAME = "Alpha User";
-
+/**
+ * Seed Alpha User
+ * Optional: will be skipped if ALPHA_EMAIL is not set
+ */
 async function seedAlphaUser() {
   console.log("[SEED] Seeding Alpha user...");
+
+  const ALPHA_EMAIL = Deno.env.get("ALPHA_EMAIL");
+  const ALPHA_PASSWORD = Deno.env.get("ALPHA_PASSWORD");
+  const ALPHA_USERNAME = Deno.env.get("ALPHA_USERNAME") || "Alpha User";
+
+  if (!ALPHA_EMAIL) {
+    console.log(
+      "[SKIP] ALPHA_EMAIL not set — skipping Alpha user seeding (optional)",
+    );
+    Deno.exit(0);
+  }
+
+  if (!ALPHA_PASSWORD) {
+    console.error(
+      "\n[ERROR] ❌ ALPHA_PASSWORD is required when ALPHA_EMAIL is set",
+    );
+    console.error(
+      "[INFO] Set it before running: export ALPHA_PASSWORD='YourPassword123!'",
+    );
+    Deno.exit(1);
+  }
+
+  if (ALPHA_PASSWORD.length < 12) {
+    console.error(
+      "\n[ERROR] ❌ ALPHA_PASSWORD must be at least 12 characters long",
+    );
+    Deno.exit(1);
+  }
 
   try {
     // Check if user already exists
@@ -57,7 +86,6 @@ async function seedAlphaUser() {
 
     console.log("[OK] Alpha user created successfully");
     console.log(`   Email: ${ALPHA_EMAIL}`);
-    console.log(`   Password: ${ALPHA_PASSWORD}`);
     console.log(`   Username: ${ALPHA_USERNAME}`);
     console.log(`   Role: user (regular user)`);
     console.log(`   User ID: ${newUser.id}`);

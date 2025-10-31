@@ -239,7 +239,7 @@ deno fmt
 deno check src/main.ts
 
 # Run tests
-NODE_ENV=test deno test --allow-all src/
+ENVIRONMENT=test deno test --allow-all src/
 
 # Search for emojis (to remove them)
 grep -r "✅\|❌\|🚀\|⚠️\|💡\|🎉\|🌱" src/

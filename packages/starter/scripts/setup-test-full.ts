@@ -114,13 +114,21 @@ try {
   const { db } = await import("../src/config/database.ts");
 
   // Test query to verify setup
+  const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
+    "test-admin@test.local";
+  const alphaEmail = Deno.env.get("ALPHA_EMAIL");
+
+  const expectedCount = alphaEmail ? 2 : 1;
+
   const users = await db.execute(
-    "SELECT COUNT(*) as count FROM users WHERE email IN ('superadmin@tstack.in', 'alpha@tstack.in')",
+    `SELECT COUNT(*) as count FROM users WHERE email IN ('${superadminEmail}', '${alphaEmail}')`,
   );
 
   const userCount = Number(users[0].count);
-  if (userCount !== 2) {
-    console.error(`❌ Expected 2 test users, found ${userCount}`);
+  if (userCount !== expectedCount) {
+    console.error(
+      `❌ Expected ${expectedCount} test user(s), found ${userCount}`,
+    );
     Deno.exit(1);
   }
 

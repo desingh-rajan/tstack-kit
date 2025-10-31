@@ -6,6 +6,8 @@
     "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts",
     "db:seed:superadmin": "deno run --allow-all scripts/seed-superadmin.ts",
     "db:seed:alpha": "deno run --allow-all scripts/seed-alpha-user.ts",
+    "env:validate": "deno run --allow-env scripts/validate-env.ts",
+    "setup": "deno task env:validate && deno task migrate:run && deno task db:seed",
     "migrate:generate": "deno run --allow-all scripts/migrate-generate.ts",
     "migrate:run": "deno run --allow-all scripts/migrate-run.ts",
     "db:studio": "deno run --allow-all scripts/db-studio.ts",

@@ -12,6 +12,7 @@ export interface Article {
 }
 
 // Interface for creating new Article (without auto-generated fields)
+// deno-lint-ignore no-empty-interface
 export interface CreateArticle {
   // TODO: Add your required fields for creation
   // Example:
@@ -20,6 +21,7 @@ export interface CreateArticle {
 }
 
 // Interface for updating Article (all fields optional except constraints)
+// deno-lint-ignore no-empty-interface
 export interface UpdateArticle {
   // TODO: Add your updatable fields
   // Example:

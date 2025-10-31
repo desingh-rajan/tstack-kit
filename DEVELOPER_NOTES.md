@@ -23,7 +23,7 @@
    deno task migrate:run
 
    # Test database
-   NODE_ENV=test deno task migrate:run
+   ENVIRONMENT=test deno task migrate:run
    ```
 
 #### If Schema and Migration are Out of Sync
@@ -37,7 +37,7 @@ deno task migrate:generate
 
 # Apply to databases
 deno task migrate:run
-NODE_ENV=test deno task migrate:run
+ENVIRONMENT=test deno task migrate:run
 ```
 
 **Common Issues:**
@@ -90,11 +90,11 @@ packages/starter/
 
 ```bash
 # Setup and migrate test database
-NODE_ENV=test deno task test:setup
-NODE_ENV=test deno task migrate:run
+ENVIRONMENT=test deno task test:setup
+ENVIRONMENT=test deno task migrate:run
 
 # Seed test users
-NODE_ENV=test deno task db:seed
+ENVIRONMENT=test deno task db:seed
 ```
 
 ### Test File Patterns
@@ -130,7 +130,7 @@ Like `article.test.ts`:
 ### Issue: "relation 'articles' does not exist"
 
 **Cause:** Migrations not run on test database\
-**Solution:** `NODE_ENV=test deno task migrate:run`
+**Solution:** `ENVIRONMENT=test deno task migrate:run`
 
 ### Issue: Empty model files
 
@@ -208,7 +208,7 @@ Like `article.test.ts`:
 - [ ] Run `deno fmt` to format code
 - [ ] Check no emojis in code: `grep -r "✅\|❌\|🚀" packages/`
 - [ ] Verify migrations match schema
-- [ ] Test database setup works: `NODE_ENV=test deno task test:reset`
+- [ ] Test database setup works: `ENVIRONMENT=test deno task test:reset`
 - [ ] Run tests: `deno task test`
 
 ### Adding New Entity
@@ -225,7 +225,7 @@ Like `article.test.ts`:
 2. Generate migration: `deno task migrate:generate`
 3. Review generated SQL in migrations/
 4. Run on dev: `deno task migrate:run`
-5. Run on test: `NODE_ENV=test deno task migrate:run`
+5. Run on test: `ENVIRONMENT=test deno task migrate:run`
 6. Update seed scripts if schema changes affect them
 
 ---
@@ -341,8 +341,8 @@ deno task migrate:run      # Apply migrations
 deno task db:seed          # Seed database
 
 # Testing
-NODE_ENV=test deno task test:reset    # Reset test database
-NODE_ENV=test deno task migrate:run   # Migrate test database
+ENVIRONMENT=test deno task test:reset    # Reset test database
+ENVIRONMENT=test deno task migrate:run   # Migrate test database
 deno task test                        # Run all tests
 
 # Database

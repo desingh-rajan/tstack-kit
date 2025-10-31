@@ -36,8 +36,8 @@ src/
 deno task test
 
 # Run specific module
-NODE_ENV=test deno test --allow-all src/auth/auth.test.ts
-NODE_ENV=test deno test --allow-all src/entities/articles/article.test.ts
+ENVIRONMENT=test deno test --allow-all src/auth/auth.test.ts
+ENVIRONMENT=test deno test --allow-all src/entities/articles/article.test.ts
 
 # Setup test database
 deno task test:reset

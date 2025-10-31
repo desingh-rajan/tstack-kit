@@ -83,14 +83,14 @@ deno task test
 ### Specific Module
 
 ```bash
-NODE_ENV=test deno test --allow-all src/auth/auth.test.ts
-NODE_ENV=test deno test --allow-all src/entities/articles/
+ENVIRONMENT=test deno test --allow-all src/auth/auth.test.ts
+ENVIRONMENT=test deno test --allow-all src/entities/articles/
 ```
 
 ### Watch Mode
 
 ```bash
-NODE_ENV=test deno test --allow-all --watch src/
+ENVIRONMENT=test deno test --allow-all --watch src/
 ```
 
 ### Setup Test Database
@@ -160,7 +160,7 @@ Deno.test("Product API Tests", async (t) => {
       method: "POST",
       body: JSON.stringify({
         email: "superadmin@tstack.in",
-        password: "TonyStack@2025!",
+        password: "<SUPERADMIN_PASSWORD>",
       }),
     });
 
@@ -205,23 +205,23 @@ import { config } from "./config/env.ts";
 
 console.log("🧪 Setting up test environment...");
 
-// 1. Verify NODE_ENV=test
+// 1. Verify ENVIRONMENT=test
 if (config.nodeEnv !== "test") {
-  console.error("❌ Tests must run with NODE_ENV=test");
+  console.error("❌ Tests must run with ENVIRONMENT=test");
   Deno.exit(1);
 }
 
 // 2. Run migrations
 const migrateCmd = new Deno.Command("deno", {
   args: ["task", "migrate:run"],
-  env: { ...Deno.env.toObject(), NODE_ENV: "test" },
+  env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
 });
 await migrateCmd.output();
 
 // 3. Seed superadmin (for auth tests)
 const seedCmd = new Deno.Command("deno", {
   args: ["task", "db:seed"],
-  env: { ...Deno.env.toObject(), NODE_ENV: "test" },
+  env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
 });
 await seedCmd.output();
 
@@ -238,7 +238,7 @@ Environment-specific database configuration:
 DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test_db
 PORT=8001
 LOG_LEVEL=error
-NODE_ENV=test
+ENVIRONMENT=test
 ```
 
 ### `.env.development.local`
@@ -247,7 +247,7 @@ NODE_ENV=test
 DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_db
 PORT=8000
 LOG_LEVEL=debug
-NODE_ENV=development
+ENVIRONMENT=development
 ```
 
 ## 🎨 Test Examples
@@ -367,13 +367,13 @@ Deno.test("Product tests", async (t) => {
 ### Run with Detailed Output
 
 ```bash
-NODE_ENV=test deno test --allow-all src/ --trace-ops
+ENVIRONMENT=test deno test --allow-all src/ --trace-ops
 ```
 
 ### Run Single Test
 
 ```bash
-NODE_ENV=test deno test --allow-all --filter "User login" src/
+ENVIRONMENT=test deno test --allow-all --filter "User login" src/
 ```
 
 ### Enable Debug Logging
@@ -406,11 +406,11 @@ deno task test:reset
 
 Tests use `app.request()` - no server needed!
 
-### "NODE_ENV not set"
+### "ENVIRONMENT not set"
 
 ```bash
-# Always run with NODE_ENV=test
-NODE_ENV=test deno task test
+# Always run with ENVIRONMENT=test
+ENVIRONMENT=test deno task test
 ```
 
 ## 📚 Resources

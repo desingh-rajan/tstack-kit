@@ -7,13 +7,13 @@
  * - deno task db:studio
  *
  * Environment loading:
- * - Loads from .env.{NODE_ENV}.local based on NODE_ENV
+ * - Loads from .env.{ENVIRONMENT}.local based on ENVIRONMENT
  * - Falls back to DATABASE_URL env var
  *
  * Usage:
  * - Development: deno task migrate:run
- * - Test: NODE_ENV=test deno task migrate:run
- * - Production: NODE_ENV=production deno task migrate:run
+ * - Test: ENVIRONMENT=test deno task migrate:run
+ * - Production: ENVIRONMENT=production deno task migrate:run
  */
 
 import * as fs from "node:fs";
@@ -43,9 +43,11 @@ function loadEnvFile(filePath: string): Record<string, string> {
   }
 }
 
-// Load environment variables
-const nodeEnv = process.env.NODE_ENV || "development";
-const envFiles = [`.env.${nodeEnv}.local`, ".env"];
+// Load environment variables (Deno.env.get() fallback for when running with Deno)
+const environment = process.env.ENVIRONMENT ||
+  (typeof Deno !== "undefined" ? Deno.env.get("ENVIRONMENT") : undefined) ||
+  "development";
+const envFiles = [`.env.${environment}.local`, ".env"];
 
 for (const envFile of envFiles) {
   const envVars = loadEnvFile(envFile);
@@ -55,13 +57,24 @@ for (const envFile of envFiles) {
   }
 }
 
+// Validate DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  console.error(
+    "[ERROR] DATABASE_URL environment variable is required for migrations",
+  );
+  console.error(`   Current ENVIRONMENT: ${environment}`);
+  console.error(
+    `   Expected file: .env.${environment}.local or .env`,
+  );
+  process.exit(1);
+}
+
 export default {
   schema: ["./src/entities/*/*.model.ts", "./src/auth/*.model.ts"],
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ||
-      "postgresql://postgres:password@localhost:5432/tonystack",
+    url: process.env.DATABASE_URL,
   },
   verbose: true,
   strict: true,

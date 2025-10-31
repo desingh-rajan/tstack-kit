@@ -46,13 +46,11 @@ deno task install
 tstack create blog-api
 cd blog-api
 
-# Setup environment
-cp .env.example .env
-
 # Start PostgreSQL
 docker-compose up -d postgres
 
-# Run migrations
+# Generate and run migrations
+deno task migrate:generate
 deno task migrate:run
 
 # Start dev server
@@ -187,7 +185,7 @@ deno task lint             # Lint code
 
 ```bash
 # .env
-NODE_ENV=development
+ENVIRONMENT=development
 PORT=8000
 DATABASE_URL=postgresql://tonystack:password@localhost:5432/tonystack
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
@@ -209,7 +207,7 @@ docker-compose up -d
 Set environment variables:
 
 ```bash
-export NODE_ENV=production
+export ENVIRONMENT=production
 export DATABASE_URL=postgresql://user:pass@host:5432/db
 ```
 
@@ -258,7 +256,8 @@ tstack scaffold categories
 # Add title, content, etc. to article.model.ts
 
 # 5. Register routes in main.ts
-# 6. Run migrations
+
+# 6. Generate and run migrations
 deno task migrate:generate
 deno task migrate:run
 
@@ -293,9 +292,10 @@ Done! You have a working blog API. 🎉
 1. **Create** - `tstack create my-api`
 2. **Scaffold** - `tstack scaffold products`
 3. **Customize** - Edit models, add fields
-4. **Migrate** - `deno task migrate:run`
-5. **Test** - `curl http://localhost:8000/api/products`
-6. **Deploy** - `docker-compose up -d`
+4. **Generate** - `deno task migrate:generate`
+5. **Migrate** - `deno task migrate:run`
+6. **Test** - `curl http://localhost:8000/api/products`
+7. **Deploy** - `docker-compose up -d`
 
 ---
 

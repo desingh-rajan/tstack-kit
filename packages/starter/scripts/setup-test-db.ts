@@ -6,7 +6,7 @@
  * 2. Runs all migrations on the test database
  * 3. Seeds initial test data (optional)
  *
- * Run before tests: NODE_ENV=test deno run --allow-all scripts/setup-test-db.ts
+ * Run before tests: ENVIRONMENT=test deno run --allow-all scripts/setup-test-db.ts
  */
 
 import { config } from "../src/config/env.ts";
@@ -24,7 +24,7 @@ async function setupTestDatabase() {
     `postgresql://${dbUrl.username}:${dbUrl.password}@${dbUrl.host}/postgres`;
 
   console.log(`   Database: ${testDbName}`);
-  console.log(`   Environment: ${config.nodeEnv}\n`);
+  console.log(`   Environment: ${config.environment}\n`);
 
   // Connect to postgres database to create test db
   const adminSql = postgres(baseDbUrl, { max: 1 });
@@ -49,8 +49,10 @@ async function setupTestDatabase() {
 
   console.log("[SUCCESS] Test database setup complete!\n");
   console.log("Next steps:");
-  console.log("  1. Run migrations: NODE_ENV=test deno task migrate:run");
-  console.log("  2. Run tests: NODE_ENV=test deno test --allow-all tests/\n");
+  console.log("  1. Run migrations: ENVIRONMENT=test deno task migrate:run");
+  console.log(
+    "  2. Run tests: ENVIRONMENT=test deno test --allow-all tests/\n",
+  );
 }
 
 if (import.meta.main) {

@@ -187,8 +187,8 @@ deno task db:seed
 
 **Superadmin Credentials:**
 
-- Email: `superadmin@tstack.in`
-- Password: `TonyStack@2025!`
+-- Email: `superadmin@tstack.in` -- Password: set via `SUPERADMIN_PASSWORD`
+environment variable
 
 ⚠️ **Change password in production!**
 
@@ -218,8 +218,8 @@ curl -X POST http://localhost:8000/api/auth/register \
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "superadmin@tstack.in",
-    "password": "TonyStack@2025!"
+  "email": "superadmin@tstack.in",
+  "password": "<SUPERADMIN_PASSWORD> (set via env)"
   }'
 ```
 

@@ -12,15 +12,15 @@
 import { config } from "./config/env.ts";
 
 console.log("\n Setting up test environment...\n");
-console.log(`   NODE_ENV: ${config.nodeEnv}`);
+console.log(`   ENVIRONMENT: ${config.environment}`);
 console.log(`   Database: ${config.databaseUrl}`);
 console.log(`   Port: ${config.port}\n`);
 
 // Verify we're in test mode
-if (config.nodeEnv !== "test") {
-  console.error("[ERROR] ERROR: Tests must run with NODE_ENV=test");
-  console.error(`   Current NODE_ENV: ${config.nodeEnv}`);
-  console.error(`   Run: NODE_ENV=test deno task test`);
+if (config.environment !== "test") {
+  console.error("[ERROR] ERROR: Tests must run with ENVIRONMENT=test");
+  console.error(`   Current ENVIRONMENT: ${config.environment}`);
+  console.error(`   Run: ENVIRONMENT=test deno task test`);
   Deno.exit(1);
 }
 
@@ -37,7 +37,7 @@ const migrateCmd = new Deno.Command("deno", {
   ],
   env: {
     ...Deno.env.toObject(),
-    NODE_ENV: "test",
+    ENVIRONMENT: "test",
   },
   stdout: "inherit", // Show migration output
   stderr: "inherit",
@@ -61,7 +61,7 @@ const seedCmd = new Deno.Command("deno", {
   args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],
   env: {
     ...Deno.env.toObject(),
-    NODE_ENV: "test",
+    ENVIRONMENT: "test",
   },
   stdout: "piped",
   stderr: "piped",
@@ -90,7 +90,7 @@ const seedAlphaCmd = new Deno.Command("deno", {
   args: ["run", "--allow-all", "scripts/seed-alpha-user.ts"],
   env: {
     ...Deno.env.toObject(),
-    NODE_ENV: "test",
+    ENVIRONMENT: "test",
   },
   stdout: "piped",
   stderr: "piped",

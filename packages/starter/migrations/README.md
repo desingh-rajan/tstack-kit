@@ -50,7 +50,7 @@ This will create migration files based on all your `*.model.ts` files:
 deno task migrate:run
 
 # Test database
-NODE_ENV=test deno task migrate:run
+ENVIRONMENT=test deno task migrate:run
 ```
 
 ### 4. Seed Database
@@ -89,6 +89,6 @@ deno task migrate:run
 - **Never edit migration files manually** - Always use
   `deno task migrate:generate`
 - **Migrations are source of truth** - Keep them in version control
-- **Test database separate** - Use `NODE_ENV=test` for test migrations
+- **Test database separate** - Use `ENVIRONMENT=test` for test migrations
 
 See the project documentation for detailed migration information workflows.

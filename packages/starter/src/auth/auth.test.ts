@@ -12,11 +12,11 @@ import { sql } from "drizzle-orm";
  * Authentication & Admin API Tests
  *
  * Tests run against the Hono app directly (no server needed!)
- * Uses NODE_ENV=test environment automatically.
+ * Uses ENVIRONMENT=test environment automatically.
  * Tests superadmin login, JWT tokens, and admin endpoints.
  *
  * Run: deno task test
- * Or: NODE_ENV=test deno test --allow-all tests/auth.test.ts
+ * Or: ENVIRONMENT=test deno test --allow-all tests/auth.test.ts
  */
 
 let authToken = "";
@@ -34,9 +34,13 @@ async function cleanupTestData() {
     await db.delete(authTokens);
 
     // Delete test users (keep seeded superadmin and alpha users)
+    const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
+      "test-admin@test.local";
+    const alphaEmail = Deno.env.get("ALPHA_EMAIL") || "test-user@test.local";
+
     await db.execute(sql`
       DELETE FROM ${users} 
-      WHERE email NOT IN ('superadmin@tstack.in', 'alpha@tstack.in')
+      WHERE email NOT IN (${superadminEmail}, ${alphaEmail})
     `);
 
     console.log("[CLEANUP] Test data cleaned successfully");
@@ -134,18 +138,23 @@ Deno.test("Auth API Tests", async (t) => {
     // 3. LOGIN WITH SUPERADMIN
     // ============================================
     await t.step("3. Login with superadmin", async () => {
+      const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
+        "test-admin@test.local";
+      const superadminPassword = Deno.env.get("SUPERADMIN_PASSWORD") ||
+        "TestPassword123!";
+
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: "superadmin@tstack.in",
-          password: "TonyStack@2025!",
+          email: superadminEmail,
+          password: superadminPassword,
         }),
       });
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
       assertExists(data.data.token);
-      assertEquals(data.data.user.email, "superadmin@tstack.in");
+      assertEquals(data.data.user.email, superadminEmail);
 
       // Save admin token for admin API tests
       adminToken = data.data.token;

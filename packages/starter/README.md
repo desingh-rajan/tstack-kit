@@ -286,7 +286,7 @@ docker compose down
 
 ```bash
 # Use production environment
-export NODE_ENV=production
+export ENVIRONMENT=production
 
 # Set secure credentials in .env
 JWT_SECRET=your-secure-secret-key-at-least-32-characters
@@ -313,7 +313,7 @@ docker build -t tonystack-api .
 # Run with external database
 docker run -d \
   -p 8000:8000 \
-  -e NODE_ENV=production \
+  -e ENVIRONMENT=production \
   -e DATABASE_URL="postgresql://user:pass@db.example.com:5432/mydb" \
   -e JWT_SECRET="your-secure-secret-key" \
   -e PORT=8000 \
@@ -326,7 +326,7 @@ docker run -d \
 - `DATABASE_URL` - PostgreSQL connection string (required)
 - `JWT_SECRET` - Secret key for JWT tokens (required)
 - `JWT_EXPIRES_IN` - Token expiry (default: 7d)
-- `NODE_ENV` - Environment (development/test/production)
+- `ENVIRONMENT` - Environment (development/test/production)
 - `PORT` - Server port (default: 8000)
 
 ---
@@ -348,14 +348,14 @@ deno task test:watch
 
 ### Available Test Commands
 
-| Command | Description |
-|---------|-------------|
-| `deno task test:full` | Complete workflow: setup DB + migrations + seeds + tests |
-| `deno task test` | Run tests only |
-| `deno task test:setup` | Setup test database and migrations |
-| `deno task test:reset` | Clean reset (database + migrations + seeds) |
-| `deno task test:watch` | Run tests in watch mode |
-| `deno task test:coverage` | Run tests with coverage report |
+| Command                   | Description                                              |
+| ------------------------- | -------------------------------------------------------- |
+| `deno task test:full`     | Complete workflow: setup DB + migrations + seeds + tests |
+| `deno task test`          | Run tests only                                           |
+| `deno task test:setup`    | Setup test database and migrations                       |
+| `deno task test:reset`    | Clean reset (database + migrations + seeds)              |
+| `deno task test:watch`    | Run tests in watch mode                                  |
+| `deno task test:coverage` | Run tests with coverage report                           |
 
 ### What Gets Tested
 

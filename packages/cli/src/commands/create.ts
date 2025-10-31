@@ -345,9 +345,9 @@ JWT_EXPIRY=7d
     Logger.info("Seed superadmin user:");
     Logger.code("deno task db:seed");
     Logger.newLine();
-    Logger.info("Superadmin credentials:");
-    Logger.code("Email: superadmin@tstack.in");
-    Logger.code("Password: TonyStack@2025!");
+    Logger.info("Superadmin credentials (set via environment variables):");
+    Logger.code("Email: set via SUPERADMIN_EMAIL environment variable");
+    Logger.code("Password: set via SUPERADMIN_PASSWORD environment variable");
     Logger.newLine();
     Logger.info("Available auth endpoints:");
     Logger.code("POST /api/auth/register - Create new user");

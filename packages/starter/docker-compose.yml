@@ -33,11 +33,15 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
       PORT: ${PORT:-8000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-tonystack}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-tonystack}
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      ALPHA_EMAIL: ${ALPHA_EMAIL:-}
+      ALPHA_PASSWORD: ${ALPHA_PASSWORD:-}
     ports:
       - "${APP_PORT:-8000}:8000"
     restart: unless-stopped

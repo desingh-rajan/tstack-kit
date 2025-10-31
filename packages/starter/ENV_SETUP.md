@@ -5,6 +5,8 @@ between development, testing, and production environments.
 
 ## Quick Start
 
+## 🔐 Security: User Credentials Setup
+
 ### For Development (Default)
 
 ```bash
@@ -35,38 +37,32 @@ deno task test
 cp .env.production.local .env.production.local
 # Edit .env.production.local with real credentials
 
-# Set NODE_ENV and start
-NODE_ENV=production deno task start
+# Set ENVIRONMENT and start
+ENVIRONMENT=production deno task start
 ```
 
 ## Environment Files
 
 ### `.env.development.local`
 
-- Used automatically when `NODE_ENV=development` (default)
+- Used automatically when `ENVIRONMENT=development` (default)
 - Contains development database and local service configs
 - Safe to commit (no real secrets)
 
 ### `.env.test.local`
 
-- Used automatically when `NODE_ENV=test`
+- Used automatically when `ENVIRONMENT=test`
 - Separate test database (`*_test_db`)
 - Tests run on port 8001 to avoid conflicts
 - Isolated from development data
 
 ### `.env.production.local`
 
-- Used when `NODE_ENV=production`
+- Used when `ENVIRONMENT=production`
 - **NEVER commit this file** - contains real secrets
 - Must configure with actual production credentials
 
 ### `.env.example`
-
-- Template showing all available options
-- Safe to commit
-- Use as reference for required variables
-
-### `.env` (fallback)
 
 - Generic environment file
 - Loaded if no environment-specific file exists
@@ -77,17 +73,17 @@ NODE_ENV=production deno task start
 Environment variables are loaded in this order (highest to lowest priority):
 
 1. **System environment variables** (e.g., set in shell or CI/CD)
-2. **`.env.{NODE_ENV}.local`** (environment-specific file)
+2. **`.env.{ENVIRONMENT}.local`** (environment-specific file)
 3. **`.env`** (fallback generic file)
 
 Example:
 
 ```bash
 # This will use .env.test.local
-NODE_ENV=test deno task dev
+ENVIRONMENT=test deno task dev
 
 # This will use .env.production.local
-NODE_ENV=production deno task start
+ENVIRONMENT=production deno task start
 ```
 
 ## Database Setup Per Environment
@@ -119,8 +115,8 @@ deno task test          # Runs tests
 # Configure in .env.production.local
 # Use managed database service (not local PostgreSQL)
 
-NODE_ENV=production deno task migrate:run
-NODE_ENV=production deno task start
+ENVIRONMENT=production deno task migrate:run
+ENVIRONMENT=production deno task start
 ```
 
 ## Security Best Practices
@@ -150,7 +146,7 @@ NODE_ENV=production deno task start
 
 ### Required
 
-- `NODE_ENV` - Environment mode (development, test, production)
+- `ENVIRONMENT` - Environment mode (development, test, production)
 - `PORT` - Server port (default: 8000)
 - `DATABASE_URL` - PostgreSQL connection string
 - `ALLOWED_ORIGINS` - CORS allowed origins (comma-separated)
@@ -179,10 +175,10 @@ deno task test:reset
 deno task test
 
 # 3. Run specific test file
-NODE_ENV=test deno test --allow-all tests/articles.test.ts
+ENVIRONMENT=test deno test --allow-all tests/articles.test.ts
 
 # 4. Run tests with coverage
-NODE_ENV=test deno test --allow-all --coverage=coverage tests/
+ENVIRONMENT=test deno test --allow-all --coverage=coverage tests/
 deno coverage coverage/
 ```
 
@@ -191,7 +187,8 @@ deno coverage coverage/
 ### "DATABASE_URL environment variable is required"
 
 - Make sure you have created the appropriate `.env` file
-- Check that `NODE_ENV` matches your env file (e.g., `test` → `.env.test.local`)
+- Check that `ENVIRONMENT` matches your env file (e.g., `test` →
+  `.env.test.local`)
 - Verify the env file contains `DATABASE_URL`
 
 ### Tests fail with "relation does not exist"
@@ -217,7 +214,7 @@ deno coverage coverage/
 
 ```yaml
 env:
-  NODE_ENV: test
+  ENVIRONMENT: test
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
   JWT_SECRET: test-secret-for-ci
 

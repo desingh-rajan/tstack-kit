@@ -125,7 +125,7 @@ deno task db:seed:superadmin
 
 # Creates:
 # Email: superadmin@tstack.in
-# Password: TonyStack@2025!
+# Password: set via SUPERADMIN_PASSWORD environment variable
 # Role: superadmin (system-defined, protected)
 ```
 
@@ -175,12 +175,12 @@ Two test users are created for development:
 ```text
 // Superadmin
 Email: superadmin@tstack.in
-Password: TonyStack@2025!
+Password: set via SUPERADMIN_PASSWORD environment variable
 Role: superadmin
 
 // Regular User
 Email: alpha@tstack.in
-Password: Alpha@2025!
+Password: set via ALPHA_PASSWORD environment variable
 Role: user
 ````
 

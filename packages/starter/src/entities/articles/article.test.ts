@@ -54,11 +54,16 @@ Deno.test("Article API Tests", async (t) => {
     await cleanupTestData();
 
     await t.step("Login as superadmin", async () => {
+      const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
+        "test-admin@test.local";
+      const superadminPassword = Deno.env.get("SUPERADMIN_PASSWORD") ||
+        "TestPassword123!";
+
       const result = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: "superadmin@tstack.in",
-          password: "TonyStack@2025!",
+          email: superadminEmail,
+          password: superadminPassword,
         }),
       });
       assertEquals(result.status, 200);
@@ -67,11 +72,15 @@ Deno.test("Article API Tests", async (t) => {
     });
 
     await t.step("Login as alpha user", async () => {
+      const alphaEmail = Deno.env.get("ALPHA_EMAIL") || "test-user@test.local";
+      const alphaPassword = Deno.env.get("ALPHA_PASSWORD") ||
+        "TestPassword123!";
+
       const result = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: "alpha@tstack.in",
-          password: "Alpha@2025!",
+          email: alphaEmail,
+          password: alphaPassword,
         }),
       });
       assertEquals(result.status, 200);
