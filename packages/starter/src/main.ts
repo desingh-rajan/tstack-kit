@@ -118,6 +118,9 @@ async function startServer() {
   }
 }
 
+// Export app for testing
+export { app };
+
 // Start the server
 if (import.meta.main) {
   startServer();

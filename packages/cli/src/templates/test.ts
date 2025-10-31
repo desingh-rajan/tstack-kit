@@ -5,19 +5,19 @@ export function generateTestTemplate(names: EntityNames): string {
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { app } from "../src/main.ts";
 
 /**
  * ${names.pascalSingular} CRUD API Tests
  *
- * Prerequisites:
- * 1. Server must be running: deno task dev
- * 2. Database must be migrated: deno task migrate:run
+ * Tests run against the Hono app directly (no server needed!)
+ * Uses NODE_ENV=test environment automatically.
  *
- * Run: deno test --allow-all tests/${names.plural}.test.ts
+ * Run: deno task test
+ * Or: NODE_ENV=test deno test --allow-all tests/${names.plural}.test.ts
  */
 
-const BASE_URL = "http://localhost:8000/api";
-const ENTITY_ENDPOINT = "/${names.plural}";
+const ENTITY_ENDPOINT = "/api/${names.plural}";
 let ${names.singular}Id = 0;
 
 // TODO: Update with your entity's fields
@@ -32,22 +32,15 @@ const updated${names.pascalSingular} = {
 };
 
 /**
- * Helper function to make API requests
+ * Helper function to make API requests via Hono app
+ * No server required - tests run directly against the app!
  */
 async function apiRequest(
   endpoint: string,
   options: RequestInit = {},
 // deno-lint-ignore no-explicit-any
 ): Promise<{ status: number; data: any }> {
-  const url = \`\${BASE_URL}\${endpoint}\`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
+  const response = await app.request(endpoint, options);
   const data = await response.json();
   return { status: response.status, data };
 }
