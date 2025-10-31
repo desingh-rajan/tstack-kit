@@ -58,7 +58,7 @@ deno task migrate:run
 deno task dev
 ```
 
-Server running at **http://localhost:8000** ✨
+Server running at **<http://localhost:8000>** ✨
 
 ---
 
@@ -294,22 +294,72 @@ Done! You have a working blog API. 🎉
 
 ## Roadmap
 
-### v1.0 (Current)
-- ✅ PostgreSQL support
-- ✅ Entity scaffolding
-- ✅ Docker ready
-- ✅ Minimal starter
+### v1.0 (Current - October 2025)
 
-### v1.1 (Next)
-- [ ] `tstack destroy` command
-- [ ] Database choice flag (`--db=postgres|mysql`)
-- [ ] Auth plugin (optional addon)
+- ✅ Auto-discovery route system
+- ✅ PostgreSQL support with proper .env loading
+- ✅ Entity scaffolding with interface templates
+- ✅ Docker ready
+- ✅ Minimal starter with common columns helper
+- ✅ Fail-fast configuration
+
+### v1.1 (Next - Q4 2025)
+
+- [ ] **Kamal deployment** - YAML setup with deployment instructions
+- [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
+- [ ] **`tstack destroy` command** - Remove scaffolded entities
+- [ ] **Basic JWT authentication** - User entity with auth system (optional addon)
+
+### v1.2 (Q1 2026)
+
+- [ ] **Multi-stack support**:
+  - [ ] Node.js + Drizzle + Express
+  - [ ] Node.js + Sequelize + Express
+  - [ ] Node.js + Sequelize + Hono
+  - [ ] Node.js + Drizzle + Hono
 
 ### v2.0 (Future)
-- [ ] Testing utilities
-- [ ] File upload helpers
-- [ ] WebSocket support
-- [ ] Admin dashboard generator
+
+**Must Have (Solo Developer Essentials)**
+
+- [ ] **Database seeding** - `tstack seed` command with faker integration
+- [ ] **Migration rollback** - `deno task migrate:rollback`
+- [ ] **Environment management** - `tstack env` for multi-environment configs (.env.dev, .env.staging, .env.prod)
+- [ ] **Quick CRUD testing** - Auto-generate Thunder Client / REST Client collections
+- [ ] **Error tracking integration** - Easy Sentry/Rollbar setup
+
+**Good to Have (Productivity Boosters)**
+
+- [ ] **Relationship scaffolding** - `tstack relate articles comments` (auto-setup foreign keys)
+- [ ] **API versioning** - `/api/v1`, `/api/v2` structure generator
+- [ ] **Pagination helper** - Built-in cursor/offset pagination utilities
+- [ ] **Rate limiting** - Simple middleware for API throttling
+- [ ] **CORS presets** - Quick configs for common scenarios
+- [ ] **Health checks** - Enhanced monitoring endpoints (DB, Redis, external APIs)
+- [ ] **Background jobs** - Simple task queue (BullMQ integration)
+
+**Awesome to Have (Game Changers)**
+
+- [ ] **Live reload API docs** - Auto-generated Swagger UI from routes/DTOs
+- [ ] **Database GUI** - Built-in web interface for data management (better than Drizzle Studio)
+- [ ] **API playground** - Interactive testing UI (like GraphiQL but for REST)
+- [ ] **Deployment presets** - One-command deploy to Railway, Fly.io, Render, DigitalOcean
+- [ ] **Monitoring dashboard** - Real-time API metrics, logs, performance
+- [ ] **CLI plugins system** - `tstack plugin add stripe` for common integrations
+- [ ] **Database backup/restore** - `tstack db:backup`, `tstack db:restore`
+- [ ] **Multi-tenancy support** - Tenant isolation helpers for SaaS apps
+
+**Nice to Have (Polish)**
+
+- [ ] **File upload helpers** - S3, Cloudinary, local storage abstractions
+- [ ] **Email templates** - Transactional email system (welcome, reset password, etc.)
+- [ ] **WebSocket rooms** - Real-time features scaffolding
+- [ ] **Search integration** - Elasticsearch/Meilisearch helpers
+- [ ] **Cache layer** - Redis integration with decorators
+- [ ] **Testing utilities** - Test generators for entities
+- [ ] **i18n support** - Multi-language response helpers
+- [ ] **Audit logging** - Automatic change tracking for entities
+- [ ] **Database choice flag** - `--db=postgres|mysql|sqlite`
 
 ---
 
@@ -331,11 +381,11 @@ MIT License - Free for personal and commercial use.
 
 ## Links
 
-- **GitHub**: https://github.com/desingh-rajan/tstack-kit
-- **Issues**: https://github.com/desingh-rajan/tstack-kit/issues
-- **Deno**: https://deno.land
-- **Hono**: https://hono.dev
-- **Drizzle**: https://orm.drizzle.team
+- **GitHub**: <https://github.com/desingh-rajan/tstack-kit>
+- **Issues**: <https://github.com/desingh-rajan/tstack-kit/issues>
+- **Deno**: <https://deno.land>
+- **Hono**: <https://hono.dev>
+- **Drizzle**: <https://orm.drizzle.team>
 
 ---
 
