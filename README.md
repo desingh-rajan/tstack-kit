@@ -2,8 +2,93 @@
 
 > **Rails-like backend toolkit for Deno. Build APIs fast.**
 
-A minimal, production-ready starter for building type-safe REST APIs with Deno,
-Hono, Drizzle ORM, and PostgreSQL.
+A minimal, production-ready starter for building type-safe REST APIs with Deno, Hono, Drizzle ORM, and PostgreSQL.
+
+---
+
+## What is TStack?
+
+**TonyStack is a backend scaffolding toolkit** - like what Vite does for frontend, but for Deno backend APIs.
+
+- **Vite** → Scaffolds React/Vue/Svelte projects (frontend)
+- **TStack** → Scaffolds Deno REST API projects (backend)
+
+Think of it as **"Rails generators for Deno"** or **"Laravel Artisan for minimalists"**. Instead of writing boilerplate CRUD code repeatedly, TStack generates complete, production-ready entities (models, controllers, routes, DTOs) with a single command.
+
+**One command** → Full MVC entity with database migrations → **Start building your business logic**
+
+---
+
+## Why TStack?
+
+### The Problem
+
+Every time you start a new backend project, you waste hours on:
+
+- Setting up the same folder structure
+- Writing repetitive CRUD boilerplate
+- Configuring database connections and migrations
+- Setting up validation, error handling, and logging
+- Copy-pasting controller/service patterns from old projects
+
+**This toolkit was born from frustration.** After building dozens of APIs with the same patterns, it became clear: **stop rewriting, start generating**.
+
+### What TStack Solves
+
+- **Saves 2-4 hours per project** - Skip the setup, start coding features
+- **TypeScript first** - Full type safety from database to API responses
+- **Consistency** - Every entity follows the same proven patterns
+- **Focus on problems, not plumbing** - Stop fighting with tools, stop being a CRUD monkey - ship features that matter
+- **Production ready** - Includes error handling, logging, validation out of the box
+- **No vendor lock-in** - Generated code is yours to modify freely
+
+### Default Stack (v1.0)
+
+TStack currently uses this proven stack:
+
+- **Runtime**: Deno 2.0+
+- **Framework**: Hono
+- **ORM**: Drizzle
+- **Database**: PostgreSQL
+
+This is the **default and recommended stack** for new projects. It's fast, type-safe, and production-ready.
+
+### Future: Choose Your Stack
+
+Coming soon, you'll be able to scaffold with different stacks using simple flags:
+
+```bash
+# Current (default) - Deno + Hono + Drizzle + PostgreSQL
+tstack create my-api
+
+# Long form (explicit)
+tstack create my-api --runtime=bun --orm=drizzle --db=sqlite
+tstack create my-api --runtime=node --orm=prisma --db=mysql
+
+# Short form (quick and easy)
+tstack create my-api --stack=bds  # Bun + Drizzle + SQLite
+tstack create my-api --stack=npm  # Node + Prisma + MySQL
+tstack create my-api --stack=dhp  # Deno + Hono + PostgreSQL (default)
+```
+
+**Examples:**
+
+- `dhp` → Deno + Hono + PostgreSQL (default)
+- `bds` → Bun + Drizzle + SQLite
+- `npm` → Node + Prisma + MySQL
+- `nes` → Node + Express + SQLite
+- `dss` → Deno + Sequelize + SQLite
+
+**Planned stack support:**
+
+- **Runtimes**: Node.js, Bun
+- **Frameworks**: Express, Fastify, Fresh
+- **ORMs**: Prisma, Sequelize, TypeORM
+- **Databases**: MySQL, SQLite, MongoDB
+
+**Your contributions are welcome!** Whether you're fixing bugs, adding features, or porting to new stacks - this toolkit grows with the community.
+
+Built by [Desingh Rajan](https://desinghrajan.in) and [contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
 
 ---
 
@@ -269,21 +354,21 @@ Done! You have a working blog API. 🎉
 
 ---
 
-## Why TStack?
+## Is TStack For You?
 
-### For You
+### Perfect If You Want
 
 - ✅ **Zero auth bloat** - Add authentication when YOU need it
 - ✅ **PostgreSQL first** - No SQLite native binding issues
 - ✅ **Minimal defaults** - Clean starting point
 - ✅ **Pure Deno** - No Node.js baggage
-- ✅ **Fast** - Generate entities in seconds
+- ✅ **Fast scaffolding** - Generate entities in seconds
 
-### Not For You If
+### Not Ideal If You Need
 
-- ❌ You want batteries-included auth (add it yourself!)
-- ❌ You need GraphQL (REST only)
-- ❌ You want an all-in-one framework (this is a toolkit)
+- ❌ Batteries-included auth out of the box (add it yourself!)
+- ❌ GraphQL support (REST only for now)
+- ❌ All-in-one framework (this is a toolkit)
 
 ---
 
