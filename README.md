@@ -389,6 +389,95 @@ Found a bug? Want to add a feature?
 
 ---
 
+## For Core Maintainers
+
+### Quick Reference: Managing Issues & Project Board
+
+#### Create a New Issue
+
+```bash
+# Feature request
+gh issue create \
+  --title "Feature: Your feature title" \
+  --label "type:feature,priority:medium,area:cli" \
+  --body "## Problem
+Describe the problem
+
+## Proposed Solution
+Your solution
+
+## Success Criteria
+- [ ] Item 1
+- [ ] Item 2"
+
+# Bug report
+gh issue create \
+  --title "Bug: Something is broken" \
+  --label "type:bug,priority:high" \
+  --body "## Bug Description
+What's broken
+
+## Steps to Reproduce
+1. Step 1
+2. Step 2
+
+## Expected Behavior
+What should happen
+
+## Actual Behavior
+What actually happens"
+```
+
+#### Add Issue to Project Board
+
+```bash
+# After creating an issue, add it to the project board
+gh project item-add 2 --owner desingh-rajan --url https://github.com/desingh-rajan/tstack-kit/issues/NUMBER
+```
+
+#### Available Labels
+
+- **Type**: `type:feature`, `type:bug`
+- **Priority**: `priority:high`, `priority:medium`, `priority:low`
+- **Area**: `area:cli`, `area:auth`, `area:docs`
+
+#### Working on an Issue
+
+```bash
+# 1. Assign to yourself
+gh issue edit NUMBER --add-assignee @me
+
+# 2. Create branch
+git checkout -b feature/NUMBER-short-description
+
+# 3. Work on it and commit
+git commit -m "feat: your changes
+
+Closes #NUMBER"
+
+# 4. Push and create PR
+git push origin feature/NUMBER-short-description
+gh pr create --title "feat: Your PR title" --body "Closes #NUMBER"
+
+# 5. Merge when ready
+gh pr merge --squash --delete-branch
+```
+
+#### View Project Board
+
+```bash
+# List all issues
+gh issue list
+
+# View issues assigned to you
+gh issue list --assignee @me
+
+# View project board
+open https://github.com/users/desingh-rajan/projects/2
+```
+
+---
+
 ## License
 
 MIT License - Free for personal and commercial use.
