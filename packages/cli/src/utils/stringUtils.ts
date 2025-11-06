@@ -78,7 +78,7 @@ export function isValidEntityName(name: string): boolean {
 
 /**
  * Entity naming variations for consistent code generation
- * 
+ *
  * Example: input "site_settings" or "SiteSettings" generates:
  * - Folder: site_settings/ (snake_case, matches database table)
  * - Files: site-setting.*.ts (kebab-case singular, modern TS convention)
@@ -88,26 +88,26 @@ export function isValidEntityName(name: string): boolean {
  * - Table: site_settings (snake_case, SQL standard)
  */
 export interface EntityNames {
-  singular: string;          // camelCase: siteSetting (for variables)
-  plural: string;            // camelCase: siteSettings (for variables)
-  pascalSingular: string;    // PascalCase: SiteSetting (for class names)
-  pascalPlural: string;      // PascalCase: SiteSettings (for class names)
-  kebabSingular: string;     // kebab-case: site-setting (for file names)
-  kebabPlural: string;       // kebab-case: site-settings (for routes)
-  snakeSingular: string;     // snake_case: site_setting (for database columns)
-  snakePlural: string;       // snake_case: site_settings (for folders & tables)
-  tableName: string;         // snake_case: site_settings (alias for snakePlural)
+  singular: string; // camelCase: siteSetting (for variables)
+  plural: string; // camelCase: siteSettings (for variables)
+  pascalSingular: string; // PascalCase: SiteSetting (for class names)
+  pascalPlural: string; // PascalCase: SiteSettings (for class names)
+  kebabSingular: string; // kebab-case: site-setting (for file names)
+  kebabPlural: string; // kebab-case: site-settings (for routes)
+  snakeSingular: string; // snake_case: site_setting (for database columns)
+  snakePlural: string; // snake_case: site_settings (for folders & tables)
+  tableName: string; // snake_case: site_settings (alias for snakePlural)
 }
 
 /**
  * Generate all naming variations for an entity
- * 
+ *
  * Handles any input format (camelCase, PascalCase, snake_case, kebab-case)
  * and generates consistent naming across all conventions.
- * 
+ *
  * @param input - Entity name in any case format
  * @returns EntityNames object with all naming variations
- * 
+ *
  * @example
  * ```ts
  * getEntityNames("site_settings")
@@ -129,23 +129,23 @@ export function getEntityNames(input: string): EntityNames {
   // First normalize the input to get clean base forms
   // This preserves word boundaries: site_settings → site_settings
   const normalizedInput = input.replace(/[-\s]+/g, "_").toLowerCase();
-  
+
   // Apply singularize/pluralize to the normalized form
   const singularBase = singularize(normalizedInput);
   const pluralBase = pluralize(normalizedInput);
-  
+
   // Generate camelCase versions (for variables)
   const singularCamel = camelCase(singularBase);
   const pluralCamel = camelCase(pluralBase);
-  
+
   // Generate PascalCase versions (for classes) - from the base forms to preserve word boundaries
   const singularPascal = pascalCase(singularBase);
   const pluralPascal = pascalCase(pluralBase);
-  
+
   // Generate kebab-case versions - from the ORIGINAL input to preserve user intent
   const kebabSingular = kebabCase(singularBase);
   const kebabPlural = kebabCase(pluralBase);
-  
+
   // Generate snake_case versions - from the base forms
   const snakeSingular = snakeCase(singularBase);
   const snakePlural = snakeCase(pluralBase);

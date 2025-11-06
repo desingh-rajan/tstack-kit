@@ -7,7 +7,6 @@ import {
   writeFiles,
 } from "../utils/fileWriter.ts";
 import { generateModelTemplate } from "../templates/model.ts";
-import { generateInterfaceTemplate } from "../templates/interface.ts";
 import { generateDtoTemplate } from "../templates/dto.ts";
 import { generateServiceTemplate } from "../templates/service.ts";
 import { generateControllerTemplate } from "../templates/controller.ts";
@@ -72,16 +71,6 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       ),
       content: generateModelTemplate(names),
       description: "Database schema",
-    },
-    {
-      path: join(
-        "src",
-        "entities",
-        names.snakePlural,
-        `${names.kebabSingular}.interface.ts`,
-      ),
-      content: generateInterfaceTemplate(names),
-      description: "TypeScript interfaces",
     },
     {
       path: join(

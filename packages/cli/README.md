@@ -47,13 +47,12 @@ This creates:
 
 ```text
 src/entities/products/         # Folder: snake_case (matches database table)
-├── product.model.ts          # Files: kebab-case
-├── product.dto.ts            # (singular form)
-├── product.service.ts
-├── product.controller.ts
+├── product.model.ts          # Files: kebab-case (singular form)
+├── product.dto.ts            # Zod validation schemas + types
+├── product.service.ts        # Business logic
+├── product.controller.ts     # HTTP handlers
 ├── product.route.ts          # Routes: /products (kebab-case plural)
-├── product.interface.ts
-└── product.test.ts
+└── product.test.ts           # API tests
 ```
 
 ### Examples
@@ -182,6 +181,7 @@ The CLI automatically handles different naming conventions following backend bes
 | `product`      | `products/`         | `product.*.ts`       | `/products`         | `Product`            | `product`, `products` | `products`         |
 
 **Why these conventions?**
+
 - **Folders (snake_case)**: Matches database table naming convention
 - **Files (kebab-case)**: Modern TypeScript/Deno convention (like Vite, Next.js)
 - **Routes (kebab-case)**: RESTful API standard (e.g., `/user-profiles`, not `/userProfiles`)
