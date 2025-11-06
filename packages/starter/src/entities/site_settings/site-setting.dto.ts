@@ -1,0 +1,53 @@
+import { z } from "zod";
+import { SETTING_CATEGORIES } from "./site-setting.model.ts";
+
+// JSON value type - can be object, array, string, number, boolean, or null
+type JsonValue = string | number | boolean | null | JsonValue[] | {
+  [key: string]: JsonValue;
+};
+
+// Valid category values
+const CategoryEnum = z.enum([
+  SETTING_CATEGORIES.GENERAL,
+  SETTING_CATEGORIES.EMAIL,
+  SETTING_CATEGORIES.APPEARANCE,
+  SETTING_CATEGORIES.FEATURES,
+  SETTING_CATEGORIES.SECTIONS,
+  SETTING_CATEGORIES.SHOWCASE,
+]);
+
+// Create SiteSetting DTO
+export const CreateSiteSettingSchema = z.object({
+  key: z.string().min(1, "Key is required").max(255),
+  category: CategoryEnum,
+  value: z.record(z.unknown()), // JSON object - generic key-value structure
+  isPublic: z.boolean().optional(),
+  description: z.string().optional().nullable(),
+  updatedBy: z.number().optional().nullable(),
+});
+
+export type CreateSiteSettingDTO = z.infer<typeof CreateSiteSettingSchema>;
+
+// Update SiteSetting DTO
+export const UpdateSiteSettingSchema = z.object({
+  category: CategoryEnum.optional(),
+  value: z.record(z.unknown()).optional(), // JSON object - generic key-value structure
+  isPublic: z.boolean().optional(),
+  description: z.string().optional().nullable(),
+  updatedBy: z.number().optional().nullable(),
+});
+
+export type UpdateSiteSettingDTO = z.infer<typeof UpdateSiteSettingSchema>;
+
+// SiteSetting Response DTO
+export interface SiteSettingResponseDTO {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  key: string;
+  category: string;
+  value: JsonValue; // JSON value
+  isPublic: boolean;
+  description?: string | null;
+  updatedBy?: number | null;
+}

@@ -188,6 +188,122 @@ DELETE /api/products/:id → Delete product
 
 ---
 
+## Built-in Entities
+
+The starter template includes two reference entities to help you understand the patterns:
+
+### 1. **Articles** (`src/entities/articles/`)
+
+Example blog/content entity demonstrating:
+
+- Public routes (GET) - anyone can read
+- Protected routes (POST/PUT/DELETE) - authentication required
+- Author authorization - users can only edit their own articles
+- Superadmin override - superadmin can edit any article
+- Slug generation from title
+
+**Routes:**
+
+```text
+GET    /articles           # Public - list published articles
+GET    /articles/:id       # Public - view single article
+POST   /articles           # Protected - create article (logged-in users)
+PUT    /articles/:id       # Protected - update own article
+DELETE /articles/:id       # Protected - delete own article
+GET    /admin/articles     # Protected - superadmin sees all articles
+```
+
+### 2. **Site Settings** (`src/entities/site_settings/`)
+
+Hybrid key-value configuration system with JSONB storage:
+
+- Public settings accessible to frontend (theme, features, contact info)
+- Private settings for backend only (SMTP, API keys)
+- Dual ID/key lookup (`/site-settings/1` or `/site-settings/hero_section`)
+- Category organization (general, email, appearance, features, sections)
+- Audit trail with `updatedBy` field
+
+**Routes:**
+
+```text
+GET    /site-settings           # Public - all settings (frontend can fetch)
+GET    /site-settings/:idOrKey  # Public - get by ID or key
+POST   /site-settings           # Admin - create setting (superadmin only)
+PUT    /site-settings/:id       # Admin - update setting (superadmin only)
+DELETE /site-settings/:id       # Admin - delete setting (superadmin only)
+```
+
+**Example Usage:**
+
+Frontend fetches public configuration:
+
+```typescript
+// GET /site-settings
+{
+  "site_info": { siteName: "My App", logo: "/logo.svg" },
+  "theme_config": { primaryColor: "#3b82f6", darkMode: false },
+  "feature_flags": { enableComments: true, maintenanceMode: false }
+}
+```
+
+Backend accesses private settings:
+
+```typescript
+const emailConfig = await SiteSettingService.getByKey('email_settings');
+await sendEmail(emailConfig.value, recipient, message);
+```
+
+**Default Settings:**
+
+Run `deno task db:seed:site` to populate with:
+
+- `site_info` - Site name, tagline, logo (public)
+- `contact_info` - Email, phone, social links (public)
+- `theme_config` - UI colors and fonts (public)
+- `feature_flags` - Toggle features on/off (public)
+- `email_settings` - SMTP configuration (private)
+- `api_config` - Rate limits, CORS (private)
+
+**Benefits:**
+
+- ✅ No code changes needed to update site content
+- ✅ Frontend-accessible configuration
+- ✅ Secure private settings (never exposed publicly)
+- ✅ Fast key-based lookups with indexes
+- ✅ Flexible JSONB storage for any data structure
+
+### Setup Instructions
+
+Both entities are **ready to use** but require migration generation:
+
+```bash
+# 1. Generate migrations for all entities (users, articles, site_settings)
+deno task migrate:generate -- --name initial_schema
+
+# 2. Run migrations
+deno task migrate:run
+
+# 3. Seed default data
+deno task db:seed              # Superadmin + alpha user + site settings
+# Or individually:
+deno task db:seed:superadmin   # Create superadmin
+deno task db:seed:alpha        # Create test user
+deno task db:seed:site         # Create default site settings
+
+# 4. Start server
+deno task dev
+```
+
+**Why No Pre-Generated Migrations?**
+
+The starter gives you **models as examples**, but you generate migrations yourself. This lets you:
+
+- Customize fields before first migration
+- Understand your database schema fully
+- Keep migration history clean from day one
+
+---
+
 ## Why TonyStack?
 
 ### Compared to Existing Solutions

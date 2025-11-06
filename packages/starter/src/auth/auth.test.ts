@@ -54,15 +54,8 @@ async function cleanupTestData() {
  * Helper function to make API requests via Hono app
  * No server required - tests run directly against the app!
  */
-// Helper function for making API requests - NO SERVER NEEDED!
-// Uses Hono's app.request() method directly
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  // Prepend /api to all endpoints
-  const fullEndpoint = endpoint.startsWith("/api")
-    ? endpoint
-    : `/api${endpoint}`;
-
-  const response = await app.request(fullEndpoint, {
+  const response = await app.request(endpoint, {
     ...options,
     headers: {
       "Content-Type": "application/json",
