@@ -2,17 +2,17 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateControllerTemplate(names: EntityNames): string {
   return `import { Context } from "hono";
-import { ${names.pascalSingular}Service } from "./${names.singular}.service.ts";
+import { ${names.pascalSingular}Service } from "./${names.kebabSingular}.service.ts";
 import { ValidationUtil } from "../../shared/utils/validation.ts";
 import { ApiResponse } from "../../shared/utils/response.ts";
 import { NotFoundError } from "../../shared/utils/errors.ts";
 import {
  Create${names.pascalSingular}Schema,
  Update${names.pascalSingular}Schema,
-} from "./${names.singular}.dto.ts";
+} from "./${names.kebabSingular}.dto.ts";
 
 export class ${names.pascalSingular}Controller {
- // GET /${names.plural}
+ // GET /${names.kebabPlural}
  static async getAll(c: Context) {
  const ${names.plural} = await ${names.pascalSingular}Service.getAll();
  return c.json(
@@ -21,7 +21,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // GET /${names.plural}/:id
+ // GET /${names.kebabPlural}/:id
  static async getById(c: Context) {
  const id = parseInt(c.req.param("id"));
  const ${names.singular} = await ${names.pascalSingular}Service.getById(id);
@@ -36,7 +36,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // POST /${names.plural}
+ // POST /${names.kebabPlural}
  static async create(c: Context) {
  const body = await c.req.json();
  const validatedData = ValidationUtil.validateSync(Create${names.pascalSingular}Schema, body);
@@ -49,7 +49,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // PUT /${names.plural}/:id
+ // PUT /${names.kebabPlural}/:id
  static async update(c: Context) {
  const id = parseInt(c.req.param("id"));
  const body = await c.req.json();
@@ -67,7 +67,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // DELETE /${names.plural}/:id
+ // DELETE /${names.kebabPlural}/:id
  static async delete(c: Context) {
  const id = parseInt(c.req.param("id"));
  const success = await ${names.pascalSingular}Service.delete(id);

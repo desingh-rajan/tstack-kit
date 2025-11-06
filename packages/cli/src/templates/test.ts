@@ -15,16 +15,16 @@ import { db } from "../../config/database.ts";
  * Uses ENVIRONMENT=test environment automatically.
  *
  * Run: deno task test
- * Or: ENVIRONMENT=test deno test --allow-all src/entities/${names.plural}/${names.singular}.test.ts
+ * Or: ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts
  *
  * TODO: Before running tests:
- * 1. Add fields to your model: src/entities/${names.plural}/${names.singular}.model.ts
- * 2. Add validation to DTO: src/entities/${names.plural}/${names.singular}.dto.ts  
+ * 1. Add fields to your model: src/entities/${names.snakePlural}/${names.kebabSingular}.model.ts
+ * 2. Add validation to DTO: src/entities/${names.snakePlural}/${names.kebabSingular}.dto.ts  
  * 3. Update sample data below to match your fields
  * 4. Run: deno task migrate:generate && deno task migrate:run
  */
 
-const ENTITY_ENDPOINT = "/${names.plural}";
+const ENTITY_ENDPOINT = "/${names.kebabPlural}";
 let ${names.singular}Id = 0;
 
 // TODO: Update these sample objects to match your model fields
@@ -154,7 +154,7 @@ Deno.test("${names.pascalSingular} CRUD API Tests", async (t) => {
     ignore: true, // Skip until validation is implemented
     fn: async () => {
       // TODO: Add validation to your DTO first, then enable this test
-      // Update src/entities/${names.plural}/${names.singular}.dto.ts with proper validation
+      // Update src/entities/${names.snakePlural}/${names.kebabSingular}.dto.ts with proper validation
       const { status, data } = await apiRequest(ENTITY_ENDPOINT, {
         method: "POST",
         body: JSON.stringify({}),

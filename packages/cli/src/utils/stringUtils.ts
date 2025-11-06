@@ -76,30 +76,89 @@ export function isValidEntityName(name: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name);
 }
 
+/**
+ * Entity naming variations for consistent code generation
+ * 
+ * Example: input "site_settings" or "SiteSettings" generates:
+ * - Folder: site_settings/ (snake_case, matches database table)
+ * - Files: site-setting.*.ts (kebab-case singular, modern TS convention)
+ * - Routes: /site-settings (kebab-case plural, RESTful standard)
+ * - Classes: SiteSetting, SiteSettings (PascalCase, TS standard)
+ * - Variables: siteSetting, siteSettings (camelCase, TS standard)
+ * - Table: site_settings (snake_case, SQL standard)
+ */
 export interface EntityNames {
-  singular: string;
-  plural: string;
-  pascalSingular: string;
-  pascalPlural: string;
-  kebab: string;
-  snake: string;
-  tableName: string;
+  singular: string;          // camelCase: siteSetting (for variables)
+  plural: string;            // camelCase: siteSettings (for variables)
+  pascalSingular: string;    // PascalCase: SiteSetting (for class names)
+  pascalPlural: string;      // PascalCase: SiteSettings (for class names)
+  kebabSingular: string;     // kebab-case: site-setting (for file names)
+  kebabPlural: string;       // kebab-case: site-settings (for routes)
+  snakeSingular: string;     // snake_case: site_setting (for database columns)
+  snakePlural: string;       // snake_case: site_settings (for folders & tables)
+  tableName: string;         // snake_case: site_settings (alias for snakePlural)
 }
 
+/**
+ * Generate all naming variations for an entity
+ * 
+ * Handles any input format (camelCase, PascalCase, snake_case, kebab-case)
+ * and generates consistent naming across all conventions.
+ * 
+ * @param input - Entity name in any case format
+ * @returns EntityNames object with all naming variations
+ * 
+ * @example
+ * ```ts
+ * getEntityNames("site_settings")
+ * // Returns:
+ * // {
+ * //   singular: "siteSetting",
+ * //   plural: "siteSettings",
+ * //   pascalSingular: "SiteSetting",
+ * //   pascalPlural: "SiteSettings",
+ * //   kebabSingular: "site-setting",
+ * //   kebabPlural: "site-settings",
+ * //   snakeSingular: "site_setting",
+ * //   snakePlural: "site_settings",
+ * //   tableName: "site_settings"
+ * // }
+ * ```
+ */
 export function getEntityNames(input: string): EntityNames {
-  const singularCamel = camelCase(singularize(input));
-  const pluralCamel = camelCase(pluralize(input));
-  const singularPascal = pascalCase(singularize(input));
-  const pluralPascal = pascalCase(pluralize(input));
-  const kebabName = kebabCase(input);
+  // First normalize the input to get clean base forms
+  // This preserves word boundaries: site_settings → site_settings
+  const normalizedInput = input.replace(/[-\s]+/g, "_").toLowerCase();
+  
+  // Apply singularize/pluralize to the normalized form
+  const singularBase = singularize(normalizedInput);
+  const pluralBase = pluralize(normalizedInput);
+  
+  // Generate camelCase versions (for variables)
+  const singularCamel = camelCase(singularBase);
+  const pluralCamel = camelCase(pluralBase);
+  
+  // Generate PascalCase versions (for classes) - from the base forms to preserve word boundaries
+  const singularPascal = pascalCase(singularBase);
+  const pluralPascal = pascalCase(pluralBase);
+  
+  // Generate kebab-case versions - from the ORIGINAL input to preserve user intent
+  const kebabSingular = kebabCase(singularBase);
+  const kebabPlural = kebabCase(pluralBase);
+  
+  // Generate snake_case versions - from the base forms
+  const snakeSingular = snakeCase(singularBase);
+  const snakePlural = snakeCase(pluralBase);
 
   return {
     singular: singularCamel,
     plural: pluralCamel,
     pascalSingular: singularPascal,
     pascalPlural: pluralPascal,
-    kebab: kebabName,
-    snake: snakeCase(input),
-    tableName: snakeCase(pluralize(input)),
+    kebabSingular,
+    kebabPlural,
+    snakeSingular,
+    snakePlural,
+    tableName: snakePlural,
   };
 }

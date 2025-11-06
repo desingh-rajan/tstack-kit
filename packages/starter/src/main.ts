@@ -109,7 +109,9 @@ async function startServer() {
       console.log("   tstack scaffold products");
       console.log("\n Development mode enabled - routes auto-discovered");
       console.log("\n Note: Routes are clean (e.g., /articles, /users)");
-      console.log("      Deployment prefix handled by reverse proxy (Kamal, nginx)");
+      console.log(
+        "      Deployment prefix handled by reverse proxy (Kamal, nginx)",
+      );
     }
 
     // For Deno Deploy or other platforms that provide the port

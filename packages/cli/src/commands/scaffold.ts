@@ -38,22 +38,25 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.code(`Singular: ${names.singular}`);
   Logger.code(`Plural: ${names.plural}`);
   Logger.code(`PascalCase: ${names.pascalSingular}`);
+  Logger.code(`Folder: ${names.snakePlural}/`);
+  Logger.code(`Files: ${names.kebabSingular}.*.ts`);
+  Logger.code(`Routes: /${names.kebabPlural}`);
   Logger.code(`Table name: ${names.tableName}`);
   Logger.newLine();
 
-  const entityDir = join(targetDir, "src", "entities", names.plural);
+  const entityDir = join(targetDir, "src", "entities", names.snakePlural);
   const exists = await dirExists(entityDir);
 
   if (exists && !force) {
     Logger.error(
-      `Entity "${names.plural}" already exists at ${entityDir}`,
+      `Entity "${names.snakePlural}" already exists at ${entityDir}`,
     );
     Logger.info(`Use --force to overwrite existing files`);
     Deno.exit(1);
   }
 
   if (exists && force) {
-    Logger.warning(`Overwriting existing entity: ${names.plural}`);
+    Logger.warning(`Overwriting existing entity: ${names.snakePlural}`);
   }
 
   Logger.step("Generating files...");
@@ -61,7 +64,12 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
 
   const files: FileToWrite[] = [
     {
-      path: join("src", "entities", names.plural, `${names.singular}.model.ts`),
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.model.ts`,
+      ),
       content: generateModelTemplate(names),
       description: "Database schema",
     },
@@ -69,14 +77,19 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       path: join(
         "src",
         "entities",
-        names.plural,
-        `${names.singular}.interface.ts`,
+        names.snakePlural,
+        `${names.kebabSingular}.interface.ts`,
       ),
       content: generateInterfaceTemplate(names),
       description: "TypeScript interfaces",
     },
     {
-      path: join("src", "entities", names.plural, `${names.singular}.dto.ts`),
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.dto.ts`,
+      ),
       content: generateDtoTemplate(names),
       description: "Data Transfer Objects",
     },
@@ -84,8 +97,8 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       path: join(
         "src",
         "entities",
-        names.plural,
-        `${names.singular}.service.ts`,
+        names.snakePlural,
+        `${names.kebabSingular}.service.ts`,
       ),
       content: generateServiceTemplate(names),
       description: "Business logic",
@@ -94,19 +107,29 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       path: join(
         "src",
         "entities",
-        names.plural,
-        `${names.singular}.controller.ts`,
+        names.snakePlural,
+        `${names.kebabSingular}.controller.ts`,
       ),
       content: generateControllerTemplate(names),
       description: "HTTP handlers",
     },
     {
-      path: join("src", "entities", names.plural, `${names.singular}.route.ts`),
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.route.ts`,
+      ),
       content: generateRouteTemplate(names),
       description: "Route definitions",
     },
     {
-      path: join("src", "entities", names.plural, `${names.singular}.test.ts`),
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.test.ts`,
+      ),
       content: generateTestTemplate(names),
       description: "API tests",
     },
@@ -129,7 +152,9 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.info("1. Add your custom fields to the model:");
-  Logger.code(`src/entities/${names.plural}/${names.singular}.model.ts`);
+  Logger.code(
+    `src/entities/${names.snakePlural}/${names.kebabSingular}.model.ts`,
+  );
   Logger.newLine();
   Logger.code("Example:");
   Logger.code(`import { text, integer } from "drizzle-orm/pg-core";`);
@@ -153,7 +178,9 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.info("3. Update validation schemas:");
-  Logger.code(`- Update DTOs in ${names.singular}.dto.ts to match your fields`);
+  Logger.code(
+    `- Update DTOs in ${names.kebabSingular}.dto.ts to match your fields`,
+  );
   Logger.newLine();
 
   Logger.info("4. Routes are auto-registered! ");
@@ -168,13 +195,13 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.subtitle("Your API endpoints will be available at:");
-  Logger.code(`GET /${names.plural} → List all ${names.plural}`);
+  Logger.code(`GET /${names.kebabPlural} → List all ${names.plural}`);
   Logger.code(
-    `GET /${names.plural}/:id → Get ${names.singular} by ID`,
+    `GET /${names.kebabPlural}/:id → Get ${names.singular} by ID`,
   );
-  Logger.code(`POST /${names.plural} → Create ${names.singular}`);
-  Logger.code(`PUT /${names.plural}/:id → Update ${names.singular}`);
-  Logger.code(`DELETE /${names.plural}/:id → Delete ${names.singular}`);
+  Logger.code(`POST /${names.kebabPlural} → Create ${names.singular}`);
+  Logger.code(`PUT /${names.kebabPlural}/:id → Update ${names.singular}`);
+  Logger.code(`DELETE /${names.kebabPlural}/:id → Delete ${names.singular}`);
   Logger.newLine();
   Logger.info(
     "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
@@ -184,7 +211,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.subtitle("Test your API:");
   Logger.code(`deno task test  # Run all tests`);
   Logger.code(
-    `ENVIRONMENT=test deno test --allow-all src/entities/${names.plural}/${names.singular}.test.ts  # Run specific tests`,
+    `ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts  # Run specific tests`,
   );
   Logger.newLine();
   Logger.info("[INFO]  Test file created with:");

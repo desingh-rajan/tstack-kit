@@ -3,13 +3,13 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 export function generateServiceTemplate(names: EntityNames): string {
   return `import { eq } from "drizzle-orm";
 import { db } from "../../config/database.ts";
-import { ${names.plural}, type ${names.pascalSingular}, type New${names.pascalSingular} } from "./${names.singular}.model.ts";
+import { ${names.plural}, type ${names.pascalSingular}, type New${names.pascalSingular} } from "./${names.kebabSingular}.model.ts";
 import { NotFoundError } from "../../shared/utils/errors.ts";
 import type {
  Create${names.pascalSingular}DTO,
  Update${names.pascalSingular}DTO,
  ${names.pascalSingular}ResponseDTO,
-} from "./${names.singular}.dto.ts";
+} from "./${names.kebabSingular}.dto.ts";
 
 export class ${names.pascalSingular}Service {
  // Get all ${names.plural}

@@ -46,22 +46,27 @@ tstack scaffold products
 This creates:
 
 ```text
-src/entities/products/
-├── product.model.ts # Drizzle database schema
-├── product.dto.ts # Data transfer objects + validation
-├── product.service.ts # Business logic
-├── product.controller.ts # HTTP handlers
-└── product.route.ts # Route definitions
+src/entities/products/         # Folder: snake_case (matches database table)
+├── product.model.ts          # Files: kebab-case
+├── product.dto.ts            # (singular form)
+├── product.service.ts
+├── product.controller.ts
+├── product.route.ts          # Routes: /products (kebab-case plural)
+├── product.interface.ts
+└── product.test.ts
 ```
 
 ### Examples
 
 ```bash
 # Generate a simple entity
-tstack scaffold users
+tstack scaffold users                    # Creates: entities/users/user.*.ts, routes: /users
 
-# Generate entity with kebab-case name
-tstack scaffold blog-posts
+# Generate entity with snake_case input
+tstack scaffold blog_posts               # Creates: entities/blog_posts/blog-post.*.ts, routes: /blog-posts
+
+# Generate with PascalCase input  
+tstack scaffold BlogPost                 # Creates: entities/blog_posts/blog-post.*.ts, routes: /blog-posts
 
 # Force overwrite existing entity
 tstack scaffold products --force
@@ -153,23 +158,36 @@ export class ProductController {
 ### 5. **Routes** (`{entity}.route.ts`)
 
 ```typescript
-// Route definitions
+// Route definitions - uses kebab-case paths (RESTful standard)
 const productRoutes = new Hono();
 productRoutes.get("/products", ProductController.getAll);
+productRoutes.get("/products/:id", ProductController.getById);
 productRoutes.post("/products", ProductController.create);
-// ...
+productRoutes.put("/products/:id", ProductController.update);
+productRoutes.delete("/products/:id", ProductController.delete);
+
+export default productRoutes;
 ```
 
-## Name Transformations
+## Naming Conventions
 
-The CLI automatically handles different naming conventions:
+The CLI automatically handles different naming conventions following backend best practices:
 
-| Input       | Singular   | Plural       | PascalCase | Table Name   |
-| ----------- | ---------- | ------------ | ---------- | ------------ |
-| `user`      | `user`     | `users`      | `User`     | `users`      |
-| `blog-post` | `blogPost` | `blogPosts`  | `BlogPost` | `blog_posts` |
-| `product`   | `product`  | `products`   | `Product`  | `products`   |
-| `category`  | `category` | `categories` | `Category` | `categories` |
+| Input          | Folder (snake_case) | Files (kebab-case)   | Routes (kebab-case) | Classes (PascalCase) | Variables (camelCase) | Table (snake_case) |
+|----------------|---------------------|----------------------|---------------------|----------------------|-----------------------|--------------------|
+| `user`         | `users/`            | `user.*.ts`          | `/users`            | `User`               | `user`, `users`       | `users`            |
+| `blog_post`    | `blog_posts/`       | `blog-post.*.ts`     | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts` | `blog_posts`     |
+| `BlogPost`     | `blog_posts/`       | `blog-post.*.ts`     | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts` | `blog_posts`     |
+| `site_settings`| `site_settings/`    | `site-setting.*.ts`  | `/site-settings`    | `SiteSetting`        | `siteSetting`, `siteSettings` | `site_settings` |
+| `product`      | `products/`         | `product.*.ts`       | `/products`         | `Product`            | `product`, `products` | `products`         |
+
+**Why these conventions?**
+- **Folders (snake_case)**: Matches database table naming convention
+- **Files (kebab-case)**: Modern TypeScript/Deno convention (like Vite, Next.js)
+- **Routes (kebab-case)**: RESTful API standard (e.g., `/user-profiles`, not `/userProfiles`)
+- **Classes (PascalCase)**: TypeScript/JavaScript standard
+- **Variables (camelCase)**: TypeScript/JavaScript standard
+- **Tables (snake_case)**: SQL database standard
 
 ## Post-Scaffold Steps
 
