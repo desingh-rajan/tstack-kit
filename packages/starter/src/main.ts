@@ -51,11 +51,12 @@ app.get("/health", async (c: Context) => {
   );
 });
 
-// Auth routes (manual registration)
-app.route("/api", authRoutes);
-app.route("/api", adminRoutes);
+// Auth routes (manual registration at root level)
+// Deployment path prefix (e.g., /company-be/api) is handled by reverse proxy
+app.route("/", authRoutes);
+app.route("/", adminRoutes);
 
-// API routes - Auto-registered from entities folder
+// Entity routes - Auto-registered from entities folder at root level
 // All *.route.ts files in entities/* subdirectories are automatically imported
 // For manual route registration, see ./entities/index.ts for examples
 await registerEntityRoutes(app);
@@ -102,11 +103,13 @@ async function startServer() {
       console.log("\n Available endpoints:");
       console.log("   GET  /       - API information");
       console.log("   GET  /health - Health check");
-      console.log("   All /api/*   - Auto-registered from entities/");
+      console.log("   All /*       - Auto-registered from entities/");
       console.log("\n Scaffold entities to get started:");
       console.log("   tstack scaffold articles");
       console.log("   tstack scaffold products");
       console.log("\n Development mode enabled - routes auto-discovered");
+      console.log("\n Note: Routes are clean (e.g., /articles, /users)");
+      console.log("      Deployment prefix handled by reverse proxy (Kamal, nginx)");
     }
 
     // For Deno Deploy or other platforms that provide the port

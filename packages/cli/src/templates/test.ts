@@ -24,7 +24,7 @@ import { db } from "../../config/database.ts";
  * 4. Run: deno task migrate:generate && deno task migrate:run
  */
 
-const ENTITY_ENDPOINT = "/api/${names.plural}";
+const ENTITY_ENDPOINT = "/${names.plural}";
 let ${names.singular}Id = 0;
 
 // TODO: Update these sample objects to match your model fields

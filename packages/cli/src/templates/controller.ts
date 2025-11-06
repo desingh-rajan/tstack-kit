@@ -12,7 +12,7 @@ import {
 } from "./${names.singular}.dto.ts";
 
 export class ${names.pascalSingular}Controller {
- // GET /api/${names.plural}
+ // GET /${names.plural}
  static async getAll(c: Context) {
  const ${names.plural} = await ${names.pascalSingular}Service.getAll();
  return c.json(
@@ -21,7 +21,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // GET /api/${names.plural}/:id
+ // GET /${names.plural}/:id
  static async getById(c: Context) {
  const id = parseInt(c.req.param("id"));
  const ${names.singular} = await ${names.pascalSingular}Service.getById(id);
@@ -36,7 +36,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // POST /api/${names.plural}
+ // POST /${names.plural}
  static async create(c: Context) {
  const body = await c.req.json();
  const validatedData = ValidationUtil.validateSync(Create${names.pascalSingular}Schema, body);
@@ -49,7 +49,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // PUT /api/${names.plural}/:id
+ // PUT /${names.plural}/:id
  static async update(c: Context) {
  const id = parseInt(c.req.param("id"));
  const body = await c.req.json();
@@ -67,7 +67,7 @@ export class ${names.pascalSingular}Controller {
  );
  }
 
- // DELETE /api/${names.plural}/:id
+ // DELETE /${names.plural}/:id
  static async delete(c: Context) {
  const id = parseInt(c.req.param("id"));
  const success = await ${names.pascalSingular}Service.delete(id);

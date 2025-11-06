@@ -168,13 +168,17 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.subtitle("Your API endpoints will be available at:");
-  Logger.code(`GET /api/${names.plural} → List all ${names.plural}`);
+  Logger.code(`GET /${names.plural} → List all ${names.plural}`);
   Logger.code(
-    `GET /api/${names.plural}/:id → Get ${names.singular} by ID`,
+    `GET /${names.plural}/:id → Get ${names.singular} by ID`,
   );
-  Logger.code(`POST /api/${names.plural} → Create ${names.singular}`);
-  Logger.code(`PUT /api/${names.plural}/:id → Update ${names.singular}`);
-  Logger.code(`DELETE /api/${names.plural}/:id → Delete ${names.singular}`);
+  Logger.code(`POST /${names.plural} → Create ${names.singular}`);
+  Logger.code(`PUT /${names.plural}/:id → Update ${names.singular}`);
+  Logger.code(`DELETE /${names.plural}/:id → Delete ${names.singular}`);
+  Logger.newLine();
+  Logger.info(
+    "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
+  );
   Logger.newLine();
 
   Logger.subtitle("Test your API:");

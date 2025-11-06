@@ -4,16 +4,24 @@ import { Hono } from "hono";
  * Auto-discovery and registration of all entity routes
  *
  * This function dynamically imports all .route.ts files from entity folders
- * and registers them with the /api prefix
+ * and registers them at the ROOT level (no prefix)
+ *
+ * CLEAN ARCHITECTURE:
+ * - Routes are registered at root: /articles, /users, /products
+ * - Deployment prefix (e.g., /company-be/api) is handled by reverse proxy (Kamal, nginx, etc.)
+ * - Application code stays clean and deployment-agnostic
  *
  * AUTOMATIC CONVENTION:
  * entities/
  *   users/
- *     user.route.ts (exports default Hono router)
+ *     user.route.ts (exports default Hono router with /users paths)
  *   posts/
- *     post.route.ts (exports default Hono router)
+ *     post.route.ts (exports default Hono router with /posts paths)
  *
- * All routes will be automatically available under /api/*
+ * Example:
+ * - Application routes: GET /articles, GET /articles/:id
+ * - With Kamal prefix: GET /company-be/api/articles, GET /company-be/api/articles/:id
+ * - Proxy strips prefix automatically
  *
  * MANUAL OVERRIDE OPTIONS:
  *
@@ -22,8 +30,8 @@ import { Hono } from "hono";
  * // Comment out: await registerEntityRoutes(app);
  * import userRoutes from "./entities/users/user.route.ts";
  * import postRoutes from "./entities/posts/post.route.ts";
- * app.route("/api", userRoutes);
- * app.route("/api", postRoutes);
+ * app.route("/", userRoutes);
+ * app.route("/", postRoutes);
  * ```
  *
  * Option 2: Mix auto-discovery with manual routes
@@ -96,7 +104,7 @@ export async function registerEntityRoutes(app: Hono): Promise<void> {
             const routeModule = await import(`file://${routePath}`);
 
             if (routeModule.default) {
-              app.route("/api", routeModule.default);
+              app.route("/", routeModule.default);
               console.log(
                 `   [OK] Registered routes from ${entry.name}/${file.name}`,
               );
