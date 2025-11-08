@@ -215,62 +215,136 @@ GET    /admin/articles     # Protected - superadmin sees all articles
 
 ### 2. **Site Settings** (`src/entities/site_settings/`)
 
-Hybrid key-value configuration system with JSONB storage:
+Hybrid key-value configuration system with JSONB storage designed for dynamic application settings that can be changed without code deployment.
+
+**Key Features:**
 
 - Public settings accessible to frontend (theme, features, contact info)
-- Private settings for backend only (SMTP, API keys)
-- Dual ID/key lookup (`/site-settings/1` or `/site-settings/hero_section`)
-- Category organization (general, email, appearance, features, sections)
+- Private settings for backend only (SMTP, API keys, rate limits)
+- Dual ID/key lookup (`/site-settings/1` or `/site-settings/site_info`)
+- Category organization (general, email, appearance, features)
 - Audit trail with `updatedBy` field
+- JSONB storage for flexible nested data structures
 
 **Routes:**
 
 ```text
-GET    /site-settings           # Public - all settings (frontend can fetch)
-GET    /site-settings/:idOrKey  # Public - get by ID or key
+GET    /site-settings           # Public - all PUBLIC settings only
+GET    /site-settings/:idOrKey  # Public - get by ID or key (public only)
 POST   /site-settings           # Admin - create setting (superadmin only)
 PUT    /site-settings/:id       # Admin - update setting (superadmin only)
 DELETE /site-settings/:id       # Admin - delete setting (superadmin only)
 ```
 
-**Example Usage:**
+**Frontend Integration:**
 
-Frontend fetches public configuration:
+Fetch public configuration at app initialization:
 
 ```typescript
 // GET /site-settings
-{
-  "site_info": { siteName: "My App", logo: "/logo.svg" },
-  "theme_config": { primaryColor: "#3b82f6", darkMode: false },
-  "feature_flags": { enableComments: true, maintenanceMode: false }
-}
+// Returns only public settings (isPublic: true)
+const response = await fetch('http://localhost:8000/site-settings');
+const settings = await response.json();
+
+// Use in your app
+document.title = settings.site_info.siteName;
+applyTheme(settings.theme_config);
+toggleFeature('comments', settings.feature_flags.enableComments);
 ```
 
-Backend accesses private settings:
+**Backend Usage:**
+
+Access any setting (including private ones):
 
 ```typescript
+// In your service/controller
+import { SiteSettingService } from "./entities/site_settings/site-setting.service.ts";
+
+// Get by key (ID or string key)
 const emailConfig = await SiteSettingService.getByKey('email_settings');
-await sendEmail(emailConfig.value, recipient, message);
+await sendEmail({
+  host: emailConfig.value.smtp_host,
+  port: emailConfig.value.smtp_port,
+  from: emailConfig.value.from_email,
+});
+
+// Get rate limit config
+const apiConfig = await SiteSettingService.getByKey('api_config');
+const maxRequests = apiConfig.value.rateLimit.maxRequests;
 ```
 
 **Default Settings:**
 
-Run `deno task db:seed:site` to populate with:
+Run `deno task db:seed:site` to populate with 6 default settings:
 
-- `site_info` - Site name, tagline, logo (public)
-- `contact_info` - Email, phone, social links (public)
-- `theme_config` - UI colors and fonts (public)
-- `feature_flags` - Toggle features on/off (public)
-- `email_settings` - SMTP configuration (private)
-- `api_config` - Rate limits, CORS (private)
+| Key              | Category   | Public | Data Structure Example                                    |
+| ---------------- | ---------- | ------ | --------------------------------------------------------- |
+| `site_info`      | general    | ✅     | `{ siteName, tagline, description, logo, favicon }`       |
+| `contact_info`   | general    | ✅     | `{ email, phone, address, socialMedia: {...} }`           |
+| `theme_config`   | appearance | ✅     | `{ primaryColor, secondaryColor, darkMode, fontFamily }`  |
+| `feature_flags`  | features   | ✅     | `{ enableContactForm, enableBlog, maintenanceMode }`      |
+| `email_settings` | email      | ❌     | `{ smtp_host, smtp_port, from_email, from_name }`         |
+| `api_config`     | general    | ❌     | `{ rateLimit: {...}, cors: {...} }`                       |
+
+**API Examples:**
+
+```bash
+# Get all public settings
+curl http://localhost:8000/site-settings
+
+# Get specific setting by key
+curl http://localhost:8000/site-settings/theme_config
+
+# Get specific setting by ID
+curl http://localhost:8000/site-settings/1
+
+# Update setting (superadmin only)
+curl -X PUT http://localhost:8000/site-settings/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"value": {"siteName": "New Site Name"}}'
+```
+
+**Customization:**
+
+Add your own settings by modifying `scripts/seed-site-settings.ts`:
+
+```typescript
+const customSettings = [
+  {
+    key: "payment_config",
+    category: "integrations",
+    value: {
+      stripePublicKey: "pk_test_...",
+      stripeWebhookSecret: "whsec_...",
+    },
+    isPublic: false, // Never expose API keys to frontend
+    description: "Stripe payment integration config",
+  },
+  {
+    key: "hero_section",
+    category: "sections",
+    value: {
+      title: "Welcome to Our App",
+      subtitle: "Build amazing things",
+      ctaText: "Get Started",
+      ctaLink: "/signup",
+    },
+    isPublic: true, // Frontend can fetch this
+    description: "Landing page hero section content",
+  },
+];
+```
 
 **Benefits:**
 
-- ✅ No code changes needed to update site content
-- ✅ Frontend-accessible configuration
-- ✅ Secure private settings (never exposed publicly)
-- ✅ Fast key-based lookups with indexes
+- ✅ No code deployment needed to update site content
+- ✅ Frontend-accessible configuration API
+- ✅ Secure private settings (never exposed in public endpoints)
+- ✅ Fast key-based lookups with database indexes
 - ✅ Flexible JSONB storage for any data structure
+- ✅ Built-in versioning via `updatedAt` and `updatedBy` fields
+- ✅ Category-based organization for better management
 
 ### Setup Instructions
 
@@ -469,21 +543,65 @@ deno task test:watch
 | `deno task test:full`     | Complete workflow: setup DB + migrations + seeds + tests |
 | `deno task test`          | Run tests only                                           |
 | `deno task test:setup`    | Setup test database and migrations                       |
+| `deno task test:migrate`  | Run migrations on test database                          |
+| `deno task test:seed`     | Seed test data (superadmin, alpha user, site settings)   |
 | `deno task test:reset`    | Clean reset (database + migrations + seeds)              |
 | `deno task test:watch`    | Run tests in watch mode                                  |
 | `deno task test:coverage` | Run tests with coverage report                           |
+| `deno task test:check`    | Health check test environment                            |
+
+### Database Seeding
+
+#### Development/Production Seeding
+
+```bash
+# Seed all default data (superadmin + alpha user + site settings)
+deno task db:seed
+
+# Or seed individually:
+deno task db:seed:superadmin   # Create superadmin@tstack.in
+deno task db:seed:alpha        # Create alpha@tstack.in (regular user)
+deno task db:seed:site         # Create default site settings
+```
+
+#### Test Environment Seeding
+
+```bash
+# Seed test database
+ENVIRONMENT=test deno task db:seed
+
+# Or use test-specific commands:
+deno task test:seed            # Seeds test database
+deno task test:reset           # Full reset including seed
+```
+
+### Seeded Data
+
+**Test Users (auto-seeded for integration tests):**
+
+| User              | Email                    | Password          | Role       | Purpose                           |
+| ----------------- | ------------------------ | ----------------- | ---------- | --------------------------------- |
+| **Superadmin**    | `superadmin@tstack.in`   | `TonyStack@2025!` | superadmin | Full access, admin operations     |
+| **Alpha User**    | `alpha@tstack.in`        | `Alpha@2025!`     | user       | Regular user, permission testing  |
+
+**Site Settings (auto-seeded):**
+
+| Key                | Category   | Public | Purpose                                      |
+| ------------------ | ---------- | ------ | -------------------------------------------- |
+| `site_info`        | general    | ✅     | Site name, tagline, logo                     |
+| `contact_info`     | general    | ✅     | Email, phone, social media                   |
+| `theme_config`     | appearance | ✅     | UI colors, fonts, dark mode                  |
+| `feature_flags`    | features   | ✅     | Enable/disable features (blog, comments)     |
+| `email_settings`   | email      | ❌     | SMTP config (private - backend only)         |
+| `api_config`       | general    | ❌     | Rate limits, CORS (private - backend only)   |
 
 ### What Gets Tested
 
 - **Authentication**: 19 test scenarios (register, login, JWT, admin operations)
 - **Articles**: 16 test scenarios (CRUD, authorization, ownership)
+- **Site Settings**: CRUD operations, public/private access control
 - **Database**: Connection, migrations, seeds
 - **API**: All endpoints with proper HTTP status codes
-
-**Test Users (auto-seeded):**
-
-- `superadmin@tstack.in` / `TonyStack@2025!`
-- `alpha@tstack.in` / `Alpha@2025!`
 
 📖 **[Full Testing Guide →](TESTING.md)**
 
