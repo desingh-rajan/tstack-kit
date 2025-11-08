@@ -76,6 +76,28 @@ tstack scaffold orders --dir ./my-project
 
 ## Commands
 
+### `create <project-name>`
+
+Create a new project from the starter template.
+
+**Options:**
+
+- `--with-auth` - Include JWT authentication system
+- `--dir <path>, -d` - Target directory (default: current directory)
+
+**Examples:**
+
+```bash
+# Create basic project
+tstack create my-api
+
+# Create with authentication
+tstack create my-api --with-auth
+
+# Create in specific directory
+tstack create acme-api --dir ~/projects
+```
+
 ### `scaffold <entity-name>`
 
 Generate a new entity with all MVC files.
@@ -90,6 +112,49 @@ Generate a new entity with all MVC files.
 ```bash
 tstack scaffold products --force --dir ./backend
 ```
+
+### `destroy <project-name>`
+
+Remove a project and drop its databases.
+
+**Options:**
+
+- `--force, -f` - Skip confirmation prompt
+
+**Safety:**
+
+- Prompts for project name confirmation (unless `--force` is used)
+- Shows what will be deleted before proceeding
+- Searches in current directory and `~/projects`
+
+**What Gets Removed:**
+
+1. **Project Directory**: Complete project folder with all files
+2. **Development Database**: `{project_name}_db` (converts hyphens to underscores)
+3. **Test Database**: `{project_name}_test_db`
+
+**Examples:**
+
+```bash
+# With confirmation prompt
+tstack destroy my-api
+# Type 'my-api' to confirm
+
+# Skip confirmation (use with caution!)
+tstack destroy old-project --force
+
+# What gets deleted for 'blog-api':
+#   - Directory: ./blog-api/ or ~/projects/blog-api/
+#   - Dev DB: blog_api_db
+#   - Test DB: blog_api_test_db
+```
+
+**Important Notes:**
+
+- **Backup first**: This operation is irreversible
+- **Stop Docker services**: Run `docker-compose down -v` before destroying
+- **Database permissions**: May require PostgreSQL access (uses `sudo -u postgres psql`)
+- **Not found error**: Shows searched locations if project doesn't exist
 
 ### `--help, -h`
 

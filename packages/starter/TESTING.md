@@ -35,31 +35,115 @@ deno task test:reset
 
 ## Available Test Tasks
 
-| Task                     | Description                         | Use Case                         |
-| ------------------------ | ----------------------------------- | -------------------------------- |
-| `deno task test:full`    | **Complete test workflow**          | First run, CI/CD, clean slate    |
-| `deno task test`         | Run tests only                      | Quick testing during development |
-| `deno task test:setup`   | Create test DB + migrations + seeds | Initial setup                    |
-| `deno task test:reset`   | Clean reset everything              | Fix broken test state            |
-| `deno task test:migrate` | Run migrations on test DB           | After schema changes             |
-| `deno task test:check`   | Health check test environment       | Validate setup                   |
+All test-related tasks from `deno.json`:
 
-## Database Setup
+| Task                      | Description                                              | Use Case                              |
+| ------------------------- | -------------------------------------------------------- | ------------------------------------- |
+| `deno task test:full`     | **Complete test workflow** (setup + migrate + seed + run)| First run, CI/CD, clean slate         |
+| `deno task test`          | Run tests only                                           | Quick testing during development      |
+| `deno task test:setup`    | Create test DB + run migrations                          | Initial setup or after DB changes     |
+| `deno task test:migrate`  | Run migrations on test database                          | After schema changes                  |
+| `deno task test:seed`     | Seed test data (users + site settings)                   | Populate test database with fixtures  |
+| `deno task test:reset`    | Clean reset (drop + create + migrate + seed)             | Fix broken test state, start fresh    |
+| `deno task test:watch`    | Run tests in watch mode                                  | Development with auto-rerun           |
+| `deno task test:coverage` | Run tests with coverage report                           | Check test coverage                   |
+| `deno task test:check`    | Health check test environment                            | Validate setup before running tests   |
+
+## Database Setup & Seeding
 
 ### Test Database
 
 TonyStack automatically creates a separate test database:
 
-- **Development DB**: `your_project_dev`
-- **Test DB**: `your_project_test`
+- **Development DB**: `your_project_db`
+- **Test DB**: `your_project_test_db`
+
+### Seeding Workflow
+
+**For Development:**
+
+```bash
+# Seed all: superadmin + alpha user + site settings
+deno task db:seed
+
+# Or seed individually:
+deno task db:seed:superadmin   # Creates superadmin@tstack.in
+deno task db:seed:alpha        # Creates alpha@tstack.in (regular user)
+deno task db:seed:site         # Creates 6 default site settings
+```
+
+**For Testing:**
+
+```bash
+# Seed test database (runs all 3 seed scripts with ENVIRONMENT=test)
+deno task test:seed
+
+# Full reset including seed
+deno task test:reset
+```
+
+### Seeded Test Users
+
+These users are automatically created when you run `test:seed` or `test:full`:
+
+| User           | Email                  | Password          | Role       | Purpose                                |
+| -------------- | ---------------------- | ----------------- | ---------- | -------------------------------------- |
+| **Superadmin** | superadmin@tstack.in   | TonyStack@2025!   | superadmin | Full system access, admin operations   |
+| **Alpha User** | alpha@tstack.in        | Alpha@2025!       | user       | Regular user for permission testing    |
+
+**Usage in Tests:**
+
+```typescript
+// Login as superadmin
+const adminToken = await login('superadmin@tstack.in', 'TonyStack@2025!');
+
+// Login as regular user
+const userToken = await login('alpha@tstack.in', 'Alpha@2025!');
+
+// Test admin-only operation
+const result = await apiRequest('/admin/articles', {
+  headers: { Authorization: `Bearer ${adminToken}` }
+});
+```
+
+### Seeded Site Settings
+
+Six default settings are created during seeding:
+
+| Key                | Category   | Public | Purpose                                  |
+| ------------------ | ---------- | ------ | ---------------------------------------- |
+| `site_info`        | general    | ✅     | Site name, tagline, logo                 |
+| `contact_info`     | general    | ✅     | Contact email, phone, social links       |
+| `theme_config`     | appearance | ✅     | UI theme (colors, fonts, dark mode)      |
+| `feature_flags`    | features   | ✅     | Feature toggles (blog, comments, etc)    |
+| `email_settings`   | email      | ❌     | SMTP config (private - backend only)     |
+| `api_config`       | general    | ❌     | Rate limits, CORS (private)              |
+
+**Test Integration:**
+
+```typescript
+// Test fetching public site settings
+await t.step("GET /site-settings returns public settings", async () => {
+  const result = await apiRequest('/site-settings');
+  assertEquals(result.status, 200);
+  assertExists(result.data.site_info);
+  assertExists(result.data.theme_config);
+  // Private settings should NOT be returned
+  assertEquals(result.data.email_settings, undefined);
+});
+```
 
 ### Environment Configuration
 
-Test environment uses:
+Test environment uses `.env.test.local`:
 
-- `ENVIRONMENT=test` (Deno-style environment variable)
-- Separate database connection
-- Test-specific seeds (superadmin + alpha user)
+```bash
+ENVIRONMENT=test
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test_db
+PORT=8001
+LOG_LEVEL=error
+JWT_SECRET=test-secret-key-for-testing-only
+```
 
 ## Test Structure
 
