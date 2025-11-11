@@ -423,7 +423,39 @@ deno task dev
 
 ## Testing
 
-Run tests:
+### For Contributors
+
+**Quick Reference:**
+
+| Mode | Command | Tests | Time | PostgreSQL | Use Case |
+|------|---------|-------|------|------------|----------|
+| **Fast (Default)** | `deno task test` | 118 | ~2s | ❌ Not needed | Quick dev, CI/CD |
+| **Integration** | `deno task test:db` | 127 | ~12s | ✅ Required | Pre-release validation |
+
+**What happens behind the scenes:**
+
+- **Fast mode (`deno task test`)**:
+  - Sets `TONYSTACK_TEST_DB` to undefined
+  - Tests pass `skipDbSetup: true` to commands
+  - Commands skip all `sudo -u postgres psql` operations
+  - 9 DB integration tests are ignored
+  - Perfect for TDD and CI pipelines
+
+- **Integration mode (`deno task test:db`)**:
+  - Sets `TONYSTACK_TEST_DB=true`
+  - Tests pass `skipDbSetup: false` to commands
+  - Commands create/drop real PostgreSQL databases
+  - All databases use `tstack_test_` prefix for safety
+  - Tests actual `CREATE DATABASE` and `DROP DATABASE` SQL
+  - Verifies production-like workflows
+
+**Before submitting a PR:**
+
+1. ✅ Run `deno task test` (should always pass)
+2. ✅ Run `deno task test:db` (if you have PostgreSQL)
+3. ✅ All 127 tests should pass
+
+### Running Tests
 
 ```bash
 # Run all tests (DB integration tests disabled by default for fast runs)
