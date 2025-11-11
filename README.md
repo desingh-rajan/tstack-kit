@@ -244,7 +244,7 @@ TStack starter includes reference entities out of the box:
    - Public read access
    - Protected write operations (auth required)
    - Author-based permissions
-   
+
 2. **Site Settings** - Dynamic configuration system
    - Key-value storage with JSONB
    - Public/private setting separation
@@ -359,6 +359,7 @@ docker-compose --profile prod up -d
 TStack starter includes these pre-built endpoints:
 
 **Site Settings** (Dynamic Configuration):
+
 - `GET /site-settings` - List all public settings
 - `GET /site-settings/:idOrKey` - Get setting by ID or key
 - `POST /site-settings` - Create setting (superadmin only)
@@ -366,6 +367,7 @@ TStack starter includes these pre-built endpoints:
 - `DELETE /site-settings/:id` - Delete setting (superadmin only)
 
 **Articles** (Example Content Entity):
+
 - `GET /api/articles` - List published articles
 - `GET /api/articles/:id` - Get article by ID
 - `POST /api/articles` - Create article (auth required)
