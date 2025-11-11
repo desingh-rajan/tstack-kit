@@ -1,10 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
 import { scaffoldEntity } from "./scaffold.ts";
-import {
-  cleanupTempDir,
-  createTempDir,
-} from "../../tests/helpers/tempDir.ts";
+import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 import { fileExists } from "../utils/fileWriter.ts";
 
 Deno.test("scaffoldEntity - generates all 6 files for simple entity", async () => {

@@ -44,7 +44,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     Logger.info("Searched in:");
     Logger.info(`  - ${currentDirPath}`);
     Logger.info(`  - ${projectsDirPath}`);
-    Deno.exit(1);
+    throw new Error(`Project "${projectName}" not found`);
   }
 
   Logger.info(`Found project at: ${projectPath}`);
@@ -58,7 +58,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
       `   - Development database: ${projectName.replace(/-/g, "_")}_db`,
     );
     Logger.info(
-      `   - Test database: ${projectName.replace(/-/g, "_")}_test_db`,
+      `   - Test database: ${projectName.replace(/-/g, "_")}_db_test`,
     );
     Logger.newLine();
 
@@ -67,14 +67,14 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     );
     if (confirmation !== projectName) {
       Logger.error("Project name doesn't match. Destruction cancelled.");
-      Deno.exit(1);
+      throw new Error("Project name confirmation failed");
     }
     Logger.newLine();
   }
 
   // Extract database names from project name
   const dbName = projectName.replace(/-/g, "_") + "_db";
-  const testDbName = projectName.replace(/-/g, "_") + "_test_db";
+  const testDbName = projectName.replace(/-/g, "_") + "_db_test";
 
   // Step 1: Drop databases
   if (!skipDbSetup) {
@@ -171,7 +171,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     Logger.error(`Failed to remove project directory: ${errorMsg}`);
-    Deno.exit(1);
+    throw new Error(`Failed to remove project directory: ${errorMsg}`);
   }
 
   Logger.newLine();

@@ -1,10 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
 import { createProject } from "./create.ts";
-import {
-  cleanupTempDir,
-  createTempDir,
-} from "../../tests/helpers/tempDir.ts";
+import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 import { fileExists } from "../utils/fileWriter.ts";
 import { loadConfig } from "../utils/config.ts";
 
@@ -56,7 +53,10 @@ Deno.test("createProject - copies all starter files", async () => {
       await fileExists(join(projectPath, "docker-compose.yml")),
       true,
     );
-    assertEquals(await fileExists(join(projectPath, "drizzle.config.ts")), true);
+    assertEquals(
+      await fileExists(join(projectPath, "drizzle.config.ts")),
+      true,
+    );
     assertEquals(await fileExists(join(projectPath, "src", "main.ts")), true);
   } finally {
     await cleanupTempDir(tempDir);
@@ -292,7 +292,7 @@ Deno.test("createProject - copies src directory structure", async () => {
 
     // Check src structure
     assertEquals(await fileExists(join(projectPath, "src", "main.ts")), true);
-    
+
     const configStat = await Deno.stat(join(projectPath, "src", "config"));
     assertEquals(configStat.isDirectory, true);
 
@@ -340,7 +340,7 @@ Deno.test("createProject - includes auth by default (starter template)", async (
 async function databaseExists(dbName: string): Promise<boolean> {
   try {
     const config = await loadConfig();
-    
+
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
         args: [
@@ -377,7 +377,7 @@ async function databaseExists(dbName: string): Promise<boolean> {
 async function dropDatabase(dbName: string): Promise<void> {
   try {
     const config = await loadConfig();
-    
+
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
         args: [
@@ -398,7 +398,7 @@ async function dropDatabase(dbName: string): Promise<void> {
         stdout: "piped",
         stderr: "piped",
       });
-      
+
     await cmd.output();
   } catch {
     // Ignore errors during cleanup
@@ -412,7 +412,7 @@ async function dropDatabase(dbName: string): Promise<void> {
 async function cleanupAllTestDatabases(): Promise<void> {
   try {
     const config = await loadConfig();
-    
+
     // Get list of all databases with tstack_test_ prefix
     const listCmd = config.sudoPassword
       ? new Deno.Command("sh", {
@@ -537,7 +537,11 @@ Deno.test({
       const devExists = await databaseExists(dbName);
       const testExists = await databaseExists(testDbName);
 
-      assertEquals(devExists, true, `Development database ${dbName} should exist`);
+      assertEquals(
+        devExists,
+        true,
+        `Development database ${dbName} should exist`,
+      );
       assertEquals(
         testExists,
         true,
@@ -561,4 +565,3 @@ Deno.test({
     await cleanupAllTestDatabases();
   },
 });
-
