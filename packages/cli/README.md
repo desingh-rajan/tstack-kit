@@ -356,6 +356,34 @@ packages/cli/src/templates/
 
 ## Advanced Usage
 
+### Configuration File
+
+TonyStack CLI uses a configuration file at `~/.tonystack/config.json` for user preferences.
+
+**Create/Edit config:**
+
+```bash
+# File: ~/.tonystack/config.json
+{
+  "sudoPassword": "your-sudo-password",  // Avoid repeated password prompts
+  "defaultDbUser": "postgres",           // Default database user
+  "defaultDbPassword": "password"        // Default database password
+}
+```
+
+**Benefits:**
+
+- **No password prompts**: Set `sudoPassword` to automatically handle database creation/deletion
+- **Faster workflows**: Skip manual password entry during `tstack create` and `tstack destroy`
+- **Your machine, your choice**: Remove `sudoPassword` from config if you prefer manual prompts
+
+**Security Note:**
+
+- Config file is stored in your home directory (`~/.tonystack/`)
+- Only you can read it (standard file permissions)
+- Don't commit this file to git
+- Only set this on your development machine
+
 ### Environment Variables
 
 - `DEBUG=1` - Show detailed error messages
@@ -387,7 +415,53 @@ deno task dev
 Run tests:
 
 ```bash
+# Run all tests (DB integration tests disabled by default for fast runs)
 deno task test
+
+# Run with DATABASE INTEGRATION tests enabled (requires PostgreSQL + sudo config)
+deno task test:db
+
+# Watch mode (fast tests only)
+deno task test:watch
+
+# Clean up test databases (drops all tstack_test_* databases)
+deno task cleanup:test-dbs
+```
+
+### Database Integration Tests
+
+By default, tests **skip database operations** for fast execution and to avoid requiring PostgreSQL setup in CI/CD.
+
+**To enable full database integration tests:**
+
+1. Ensure PostgreSQL is running locally
+2. Configure sudo password in `~/.tonystack/config.json`:
+
+   ```json
+   {
+     "sudoPassword": "your-password"
+   }
+   ```
+
+3. Run with the database integration flag:
+
+   ```bash
+   deno task test:db
+   ```
+
+This will test:
+
+- Actual database creation/deletion
+- PostgreSQL connection validation
+- Database naming conventions
+- Production-like workflows
+
+**Test Database Safety:**
+
+All integration tests use the `tstack_test_` prefix for database names to avoid accidentally affecting your development databases. The test suite automatically cleans up after itself, but you can manually clean up with:
+
+```bash
+deno task cleanup:test-dbs
 ```
 
 ## Documentation

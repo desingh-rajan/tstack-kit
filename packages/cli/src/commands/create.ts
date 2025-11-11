@@ -5,6 +5,7 @@ import {
   extractVersion,
   fetchAllLatestVersions,
 } from "../utils/versionFetcher.ts";
+import { loadConfig } from "../utils/config.ts";
 
 // TODO: Rework with-auth and without-auth flag and make any mode default
 // Currently auth is optional (--with-auth flag), consider making it default
@@ -14,6 +15,7 @@ export interface CreateOptions {
   targetDir?: string;
   withAuth?: boolean;
   latest?: boolean; // Fetch latest stable versions from registries (default: false, uses template versions)
+  skipDbSetup?: boolean; // Skip database creation (for testing)
 }
 
 function promptForCredentials(
@@ -48,6 +50,7 @@ export async function createProject(options: CreateOptions): Promise<void> {
     targetDir = Deno.cwd(),
     withAuth = false,
     latest = false,
+    skipDbSetup = false,
   } = options;
 
   Logger.title(`Creating new project: ${projectName}`);
@@ -339,54 +342,85 @@ JWT_EXPIRY=7d
   Logger.newLine();
 
   // Try to create databases automatically (dev + test)
-  Logger.step("Setting up databases...");
-  const databaseUrl =
-    `postgresql://${dbUser}:${dbPassword}@localhost:5432/${dbName}`;
+  if (!skipDbSetup) {
+    Logger.step("Setting up databases...");
 
-  try {
-    // Create development database
-    const createDbCmd = new Deno.Command("sudo", {
-      args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
-      stdout: "piped",
-      stderr: "piped",
-    });
+    // Load config for sudo password
+    const config = await loadConfig();
 
-    const { success: devSuccess } = await createDbCmd.output();
+    try {
+      // Create development database
+      const createDbCmd = config.sudoPassword
+        ? new Deno.Command("sh", {
+          args: [
+            "-c",
+            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "CREATE DATABASE ${dbName}"`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        })
+        : new Deno.Command("sudo", {
+          args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
+          stdout: "piped",
+          stderr: "piped",
+        });
 
-    if (devSuccess) {
-      Logger.success(`Development database "${dbName}" created!`);
-    } else {
-      Logger.warning(
-        `Database "${dbName}" may already exist or PostgreSQL is not accessible`,
+      const { success: devSuccess } = await createDbCmd.output();
+
+      if (devSuccess) {
+        Logger.success(`Development database "${dbName}" created!`);
+      } else {
+        Logger.warning(
+          `Database "${dbName}" may already exist or PostgreSQL is not accessible`,
+        );
+      }
+
+      // Create test database
+      const createTestDbCmd = config.sudoPassword
+        ? new Deno.Command("sh", {
+          args: [
+            "-c",
+            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        })
+        : new Deno.Command("sudo", {
+          args: [
+            "-u",
+            "postgres",
+            "psql",
+            "-c",
+            `CREATE DATABASE ${testDbName}`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        });
+
+      const { success: testSuccess } = await createTestDbCmd.output();
+
+      if (testSuccess) {
+        Logger.success(`Test database "${testDbName}" created!`);
+      } else {
+        Logger.warning(
+          `Database "${testDbName}" may already exist or PostgreSQL is not accessible`,
+        );
+      }
+    } catch {
+      Logger.warning("Could not auto-create databases");
+      Logger.info("Options to create databases:");
+      Logger.code(`1. Docker: cd ${projectName} && docker compose up -d`);
+      Logger.code(
+        `2. Manual: sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`,
+      );
+      Logger.code(
+        `3. Test DB: sudo -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
+      );
+      Logger.newLine();
+      Logger.info(
+        "Tip: Set 'sudoPassword' in ~/.tonystack/config.json to avoid password prompts",
       );
     }
-
-    // Create test database
-    const createTestDbCmd = new Deno.Command("sudo", {
-      args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${testDbName}`],
-      stdout: "piped",
-      stderr: "piped",
-    });
-
-    const { success: testSuccess } = await createTestDbCmd.output();
-
-    if (testSuccess) {
-      Logger.success(`Test database "${testDbName}" created!`);
-    } else {
-      Logger.warning(
-        `Database "${testDbName}" may already exist or PostgreSQL is not accessible`,
-      );
-    }
-  } catch {
-    Logger.warning("Could not auto-create databases");
-    Logger.info("Options to create databases:");
-    Logger.code(`1. Docker: cd ${projectName} && docker compose up -d`);
-    Logger.code(
-      `2. Manual: sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`,
-    );
-    Logger.code(
-      `3. Test DB: sudo -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
-    );
   }
 
   Logger.newLine();
@@ -395,12 +429,16 @@ JWT_EXPIRY=7d
 
   Logger.subtitle("[SUCCESS] Setup Complete!");
   Logger.newLine();
-  Logger.subtitle("Database Configuration:");
-  Logger.code(`Database: ${dbName}`);
-  Logger.code(`User: ${dbUser}`);
-  Logger.code(`Password: ${dbPassword}`);
-  Logger.code(`URL: ${databaseUrl}`);
-  Logger.newLine();
+  if (!skipDbSetup) {
+    Logger.subtitle("Database Configuration:");
+    Logger.code(`Database: ${dbName}`);
+    Logger.code(`User: ${dbUser}`);
+    Logger.code(`Password: ${dbPassword}`);
+    Logger.code(
+      `URL: postgresql://${dbUser}:${dbPassword}@localhost:5432/${dbName}`,
+    );
+    Logger.newLine();
+  }
 
   Logger.subtitle("Next Steps:");
   Logger.newLine();
