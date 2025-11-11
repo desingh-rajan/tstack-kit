@@ -37,6 +37,39 @@ deno task install
 
 ## Quick Start
 
+### Create a New Project
+
+```bash
+tstack create my-backend
+```
+
+This creates a complete backend project with:
+
+- Pre-configured Hono server
+- Drizzle ORM setup
+- PostgreSQL database configuration
+- Environment files (.env, .env.example, etc.)
+- Docker Compose configuration
+- Migration setup
+
+**With authentication:**
+
+```bash
+tstack create my-api --with-auth
+```
+
+**With latest stable dependencies:**
+
+```bash
+tstack create my-api --latest
+```
+
+**Combine both:**
+
+```bash
+tstack create my-api --with-auth --latest
+```
+
 ### Generate a New Entity
 
 ```bash
@@ -78,25 +111,46 @@ tstack scaffold orders --dir ./my-project
 
 ### `create <project-name>`
 
-Create a new project from the starter template.
+Create a new TonyStack project from the starter template.
 
 **Options:**
 
-- `--with-auth` - Include JWT authentication system
+- `--with-auth` - Include JWT authentication system with user management
+- `--latest` - Fetch latest stable versions from JSR and npm registries (default: use proven template versions)
 - `--dir <path>, -d` - Target directory (default: current directory)
 
 **Examples:**
 
 ```bash
-# Create basic project
-tstack create my-api
+# Create basic project with stable dependencies
+tstack create my-backend
 
 # Create with authentication
 tstack create my-api --with-auth
 
+# Create with latest stable dependency versions
+tstack create my-api --latest
+
+# Create with both auth and latest versions
+tstack create my-api --with-auth --latest
+
 # Create in specific directory
-tstack create acme-api --dir ~/projects
+tstack create my-backend --dir ~/projects
 ```
+
+**Dependency Version Strategy:**
+
+- **Default (stable)**: Uses proven dependency versions from the template. Fast and reliable.
+- **`--latest` flag**: Fetches the newest stable versions from registries (JSR for Deno packages, npm for Node packages). Ensures you start with the most up-to-date dependencies.
+
+The `--latest` flag will:
+
+- Query JSR registry for `@std/dotenv`, `@hono/hono`
+- Query npm registry for `jose`, `drizzle-orm`, `drizzle-kit`, `drizzle-zod`, `postgres`, `zod`
+- Update `deno.json` with the fetched versions
+- Gracefully fallback to template versions if network fails
+- Cache versions for 1 hour to avoid rate limits
+
 
 ### `scaffold <entity-name>`
 

@@ -1,6 +1,10 @@
 import { dirname, join } from "@std/path";
 import { copy, ensureDir, exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
+import {
+  extractVersion,
+  fetchAllLatestVersions,
+} from "../utils/versionFetcher.ts";
 
 // TODO: Rework with-auth and without-auth flag and make any mode default
 // Currently auth is optional (--with-auth flag), consider making it default
@@ -9,6 +13,7 @@ export interface CreateOptions {
   projectName: string;
   targetDir?: string;
   withAuth?: boolean;
+  latest?: boolean; // Fetch latest stable versions from registries (default: false, uses template versions)
 }
 
 function promptForCredentials(
@@ -38,11 +43,19 @@ function promptForCredentials(
 }
 
 export async function createProject(options: CreateOptions): Promise<void> {
-  const { projectName, targetDir = Deno.cwd(), withAuth = false } = options;
+  const {
+    projectName,
+    targetDir = Deno.cwd(),
+    withAuth = false,
+    latest = false,
+  } = options;
 
   Logger.title(`Creating new project: ${projectName}`);
   if (withAuth) {
     Logger.info(" Authentication system will be included");
+  }
+  if (latest) {
+    Logger.info(" Latest stable dependency versions will be fetched");
   }
   Logger.newLine();
 
@@ -75,7 +88,7 @@ export async function createProject(options: CreateOptions): Promise<void> {
     Deno.exit(1);
   }
 
-  Logger.step("Copying starter template...");
+  Logger.step("Cooking your starter template...");
   Logger.newLine();
 
   try {
@@ -84,7 +97,7 @@ export async function createProject(options: CreateOptions): Promise<void> {
       const sourcePath = join(starterPath, entry.name);
       const destPath = join(projectPath, entry.name);
 
-      Logger.info(`Copying ${entry.name}...`);
+      Logger.info(`Cooking ${entry.name}...`);
       await copy(sourcePath, destPath, { overwrite: false });
     }
 
@@ -181,6 +194,77 @@ JWT_EXPIRY=7d
       journalPath,
       JSON.stringify(journalContent, null, 2) + "\n",
     );
+
+    // Update deno.json with latest versions if --latest flag is set
+    if (latest) {
+      const denoJsonPath = join(projectPath, "deno.json");
+      const denoJsonContent = await Deno.readTextFile(denoJsonPath);
+      const denoJson = JSON.parse(denoJsonContent);
+
+      // Extract current versions as fallbacks
+      const fallbackVersions: Record<string, string> = {};
+      if (denoJson.imports) {
+        for (const [key, value] of Object.entries(denoJson.imports)) {
+          if (typeof value === "string") {
+            fallbackVersions[key] = extractVersion(value);
+          }
+        }
+      }
+
+      // Fetch latest versions
+      const latestVersions = await fetchAllLatestVersions(fallbackVersions);
+
+      // Update imports with latest versions
+      if (denoJson.imports) {
+        denoJson.imports["@std/dotenv"] = `jsr:@std/dotenv@^${
+          latestVersions["@std/dotenv"]
+        }`;
+        denoJson.imports["@std/dotenv/load"] = `jsr:@std/dotenv@^${
+          latestVersions["@std/dotenv"]
+        }/load`;
+        denoJson.imports["hono"] = `jsr:@hono/hono@^${latestVersions["hono"]}`;
+        denoJson.imports["hono/cors"] = `jsr:@hono/hono@^${
+          latestVersions["hono"]
+        }/cors`;
+        denoJson.imports["hono/logger"] = `jsr:@hono/hono@^${
+          latestVersions["hono"]
+        }/logger`;
+        denoJson.imports["hono/jwt"] = `jsr:@hono/hono@^${
+          latestVersions["hono"]
+        }/jwt`;
+        denoJson.imports["drizzle-orm"] = `npm:drizzle-orm@^${
+          latestVersions["drizzle-orm"]
+        }`;
+        denoJson.imports["drizzle-orm/pg-core"] = `npm:drizzle-orm@^${
+          latestVersions["drizzle-orm"]
+        }/pg-core`;
+        denoJson.imports["drizzle-orm/postgres-js"] = `npm:drizzle-orm@^${
+          latestVersions["drizzle-orm"]
+        }/postgres-js`;
+        denoJson.imports["drizzle-kit"] = `npm:drizzle-kit@^${
+          latestVersions["drizzle-kit"]
+        }`;
+        denoJson.imports["drizzle-zod"] = `npm:drizzle-zod@^${
+          latestVersions["drizzle-zod"]
+        }`;
+        denoJson.imports["postgres"] = `npm:postgres@^${
+          latestVersions["postgres"]
+        }`;
+        denoJson.imports["zod"] = `npm:zod@^${latestVersions["zod"]}`;
+
+        // Update jose if withAuth is true
+        if (withAuth && latestVersions["jose"]) {
+          denoJson.imports["jose"] = `npm:jose@^${latestVersions["jose"]}`;
+        }
+      }
+
+      await Deno.writeTextFile(
+        denoJsonPath,
+        JSON.stringify(denoJson, null, 2) + "\n",
+      );
+
+      Logger.info("Updated deno.json with latest stable versions");
+    }
   } catch (error) {
     Logger.error(`Failed to copy starter template: ${error}`);
     Deno.exit(1);
