@@ -19,13 +19,19 @@ single command.
 ### Global Installation (Recommended)
 
 ```bash
-deno install --allow-read --allow-write --allow-env -n tstack jsr:@tonystack/cli
+# Install with all permissions (no runtime prompts)
+deno install --allow-all --global -n tstack jsr:@tonystack/cli
+
+# Or install with specific permissions (will prompt during runtime)
+deno install --allow-read --allow-write --allow-env --allow-run --allow-net -n tstack jsr:@tonystack/cli
 ```
+
+**Tip:** Use `--allow-all` to avoid permission prompts when creating projects and databases.
 
 ### Direct Usage (No Installation)
 
 ```bash
-deno run --allow-read --allow-write --allow-env jsr:@tonystack/cli scaffold products
+deno run --allow-all jsr:@tonystack/cli scaffold products
 ```
 
 ### Local Development
