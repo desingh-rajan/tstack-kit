@@ -19,18 +19,24 @@ single command.
 ### Global Installation (Recommended)
 
 ```bash
-# Install with all permissions (no runtime prompts)
-deno install --allow-all --global -n tstack jsr:@tonystack/cli
-
-# Or install with specific permissions (will prompt during runtime)
+# Default: Install and prompt for permissions at runtime (safer)
 deno install --allow-read --allow-write --allow-env --allow-run --allow-net -n tstack jsr:@tonystack/cli
+
+# Skip prompts: Use --allow-all if you don't want to approve each time
+deno install --allow-all --global -n tstack jsr:@tonystack/cli
 ```
 
-**Tip:** Use `--allow-all` to avoid permission prompts when creating projects and databases.
+**Default behavior:** CLI will ask for your approval (y/n/A) when it needs permissions like database creation.
+
+**Skip prompts:** Use `--allow-all` during installation if you trust the CLI and don't want interruptions.
 
 ### Direct Usage (No Installation)
 
 ```bash
+# Will prompt for permissions
+deno run --allow-read --allow-write --allow-env --allow-run --allow-net jsr:@tonystack/cli scaffold products
+
+# Or skip prompts with --allow-all
 deno run --allow-all jsr:@tonystack/cli scaffold products
 ```
 
@@ -38,7 +44,7 @@ deno run --allow-all jsr:@tonystack/cli scaffold products
 
 ```bash
 cd packages/cli
-deno task install
+deno task install  # Uses default (prompts at runtime)
 ```
 
 ## Quick Start
@@ -156,7 +162,6 @@ The `--latest` flag will:
 - Update `deno.json` with the fetched versions
 - Gracefully fallback to template versions if network fails
 - Cache versions for 1 hour to avoid rate limits
-
 
 ### `scaffold <entity-name>`
 

@@ -119,10 +119,16 @@ curl -fsSL https://deno.land/install.sh | sh
 git clone https://github.com/desingh-rajan/tstack-kit.git
 cd tstack-kit
 
-# Install CLI globally
+# Install CLI globally (default: prompts for permissions at runtime)
 cd packages/cli
 deno task install
+
+# Or skip permission prompts (if you trust the CLI)
+deno install --allow-all --global --name tstack --config deno.json mod.ts
 ```
+
+**Default:** CLI asks for permission (y/n/A) when needed - safer for first-time users.
+**Skip prompts:** Use `--allow-all` if you don't want interruptions during project creation.
 
 ### 3. Create Your First Project
 

@@ -9,7 +9,7 @@
     "test:coverage": "deno test --allow-all --coverage=coverage src/ tests/",
     "test:db": "TONYSTACK_TEST_DB=true deno test --allow-all src/ tests/",
     "cleanup:test-dbs": "deno run --allow-all scripts/cleanup-test-dbs.ts",
-    "install": "deno install --global --allow-read --allow-write --allow-env --config deno.json -n tstack -f mod.ts"
+    "install": "deno install --global --allow-read --allow-write --allow-env --allow-run --allow-net --config deno.json -n tstack -f mod.ts"
   },
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.0",
