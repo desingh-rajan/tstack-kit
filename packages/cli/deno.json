@@ -4,7 +4,9 @@
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno run --allow-read --allow-write mod.ts",
-    "test": "deno test --allow-all tests/",
+    "test": "deno test --allow-all src/ tests/",
+    "test:watch": "deno test --allow-all --watch src/ tests/",
+    "test:coverage": "deno test --allow-all --coverage=coverage src/ tests/",
     "install": "deno install --global --allow-read --allow-write --allow-env --config deno.json -n tstack -f mod.ts"
   },
   "imports": {
