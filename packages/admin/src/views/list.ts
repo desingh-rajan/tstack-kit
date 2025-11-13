@@ -6,6 +6,7 @@
 
 import type { PaginationResult, ViewConfig } from "../core/types.ts";
 import { generatePageNumbers } from "../core/pagination.ts";
+import { escapeHtml } from "./utils.ts";
 
 export interface ListViewOptions {
   result: PaginationResult<any>;
@@ -183,9 +184,11 @@ export function renderList(options: ListViewOptions): string {
                   ? '<span class="text-green-600">✓</span>'
                   : '<span class="text-red-600">✗</span>';
               } else if (value instanceof Date) {
-                value = value.toLocaleString();
+                value = escapeHtml(value.toLocaleString());
               } else if (typeof value === "object") {
-                value = JSON.stringify(value);
+                value = escapeHtml(JSON.stringify(value));
+              } else {
+                value = escapeHtml(value);
               }
 
               return `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value}</td>`;

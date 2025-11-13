@@ -5,7 +5,7 @@
  * Supports both number and string (UUID) primary keys.
  */
 
-import { asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type {
   EntityId,
@@ -168,18 +168,10 @@ export class DrizzleAdapter<T extends Record<string, any>>
 
     const parsedIds = ids.map((id) => this.parseId(id));
 
-    // Use SQL IN clause for bulk delete
+    // Use Drizzle's inArray() for safe bulk delete
     const result = await this.db
       .delete(this.table)
-      .where(
-        sql`${this.table[this.idColumn]} = ANY(${
-          sql.raw(`ARRAY[${
-            parsedIds.map((id) => typeof id === "string" ? `'${id}'` : id).join(
-              ",",
-            )
-          }]`)
-        })`,
-      )
+      .where(inArray(this.table[this.idColumn], parsedIds))
       .returning();
 
     return result.length;

@@ -5,6 +5,7 @@
  */
 
 import type { ViewConfig } from "../core/types.ts";
+import { escapeHtml } from "./utils.ts";
 
 export interface FormViewOptions {
   config: ViewConfig;
@@ -173,7 +174,7 @@ function renderFieldInput(
       name="${fieldName}" 
       rows="4"
       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-    >${value || ""}</textarea>
+    >${escapeHtml(value || "")}</textarea>
     `;
   }
 
@@ -187,7 +188,7 @@ function renderFieldInput(
       type="number" 
       id="${fieldId}" 
       name="${fieldName}" 
-      value="${value || ""}"
+      value="${escapeHtml(value || "")}"
       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
     />
     `;
@@ -200,7 +201,7 @@ function renderFieldInput(
       type="email" 
       id="${fieldId}" 
       name="${fieldName}" 
-      value="${value || ""}"
+      value="${escapeHtml(value || "")}"
       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
     />
     `;
@@ -216,7 +217,7 @@ function renderFieldInput(
       type="url" 
       id="${fieldId}" 
       name="${fieldName}" 
-      value="${value || ""}"
+      value="${escapeHtml(value || "")}"
       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
     />
     `;
@@ -228,7 +229,7 @@ function renderFieldInput(
     type="text" 
     id="${fieldId}" 
     name="${fieldName}" 
-    value="${value || ""}"
+    value="${escapeHtml(value || "")}"
     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
   />
   `;
