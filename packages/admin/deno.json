@@ -1,0 +1,35 @@
+{
+  "name": "@tstack/admin",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "test": "ENVIRONMENT=test deno test --allow-all --no-check --unsafely-ignore-certificate-errors src/_test_setup.ts src/",
+    "test:watch": "ENVIRONMENT=test deno test --allow-all --no-check --watch src/_test_setup.ts src/",
+    "test:coverage": "ENVIRONMENT=test deno test --allow-all --no-check --coverage=coverage src/_test_setup.ts src/",
+    "fmt": "deno fmt",
+    "lint": "deno lint"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.0",
+    "@std/path": "jsr:@std/path@^1.0.0",
+    "hono": "jsr:@hono/hono@^4.6.0",
+    "drizzle-orm": "npm:drizzle-orm@^0.36.0",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
+    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",
+    "postgres": "npm:postgres@^3.4.0"
+  },
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  }
+}
