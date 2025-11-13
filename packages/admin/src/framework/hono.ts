@@ -97,7 +97,7 @@ export class HonoAdminAdapter<T> {
 
       // Parse query parameters
       const page = parseInt(c.req.query("page") || "1");
-      const limit = parseInt(c.req.query("limit") || "20");
+      const limit = Math.min(parseInt(c.req.query("limit") || "20"), 100); // Maximum allowed limit is 100
       const search = c.req.query("search") || "";
       const orderBy = c.req.query("orderBy");
       const orderDir = (c.req.query("orderDir") as "asc" | "desc") || "desc";
