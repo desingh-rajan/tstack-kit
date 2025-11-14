@@ -355,14 +355,14 @@ const productAdmin = new HonoAdminAdapter({
 });
 
 // Automatically registers 9 routes:
-// GET    /ts-admin/products          - List view (HTML/JSON)
-// GET    /ts-admin/products/new      - Create form
-// POST   /ts-admin/products          - Create action
-// GET    /ts-admin/products/:id      - Show view
-// GET    /ts-admin/products/:id/edit - Edit form
-// PUT    /ts-admin/products/:id      - Update action
+// GET    /ts-admin/products          - List (JSON API)
+// GET    /ts-admin/products/new      - New endpoint
+// POST   /ts-admin/products          - Create
+// GET    /ts-admin/products/:id      - Show (JSON API)
+// GET    /ts-admin/products/:id/edit - Edit endpoint
+// PUT    /ts-admin/products/:id      - Update
 // PATCH  /ts-admin/products/:id      - Partial update
-// DELETE /ts-admin/products/:id      - Delete action
+// DELETE /ts-admin/products/:id      - Delete
 // POST   /ts-admin/products/bulk-delete - Bulk delete
 ```
 
