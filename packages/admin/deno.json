@@ -1,9 +1,9 @@
 {
   "name": "@tstack/admin",
-  "version": "0.1.2",
+  "version": "2.0.0",
   "exports": "./mod.ts",
   "license": "MIT",
-  "description": "Production-ready admin panel for Hono with Drizzle ORM. Provides instant CRUD interface with Tailwind CSS + htmx UI, pagination, search, sorting, and role-based access control.",
+  "description": "Production-ready admin CRUD API for TStack Kit. Pure JSON API with pagination, search, sorting, and role-based access control. Framework-agnostic, ORM-agnostic architecture.",
   "tasks": {
     "test": "ENVIRONMENT=test deno test --allow-all --no-check --unsafely-ignore-certificate-errors src/_test_setup.ts src/ && deno run --allow-all scripts/cleanup-test-db.ts",
     "test:watch": "ENVIRONMENT=test deno test --allow-all --no-check --watch src/_test_setup.ts src/",

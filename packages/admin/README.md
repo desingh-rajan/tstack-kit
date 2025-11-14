@@ -1,11 +1,11 @@
 # @tstack/admin
 
-> **Production-Ready Admin CRUD System for TStack Kit**
+> **Production-Ready Admin CRUD API for TStack Kit**
 >
-> The missing piece between `tstack scaffold` and a full admin interface
+> Pure JSON API for admin operations - bring your own frontend
 
-**Version:** 1.0.0  
-**Status:** ✅ Production Ready (73/73 tests passing)  
+**Version:** 2.0.0  
+**Status:** ✅ Production Ready (72/72 tests passing)  
 **License:** MIT
 
 ---
@@ -13,7 +13,7 @@
 ## 📚 Documentation
 
 - **[Quick Start](#quick-start)** - Get started in 5 minutes
-- **[COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md)** - Complete documentation (**Read this for everything!**)
+- **[COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md)** - Complete documentation
 - **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** - Security analysis (Grade A)
 - **[STATUS.md](./STATUS.md)** - Implementation status & roadmap
 
@@ -27,9 +27,9 @@ When you run:
 tstack scaffold products
 ```
 
-You get a complete MVC stack, but **NO admin interface**.
+You get a complete MVC stack, but **NO admin API**.
 
-**Add 10 lines of code, get full admin panel:**
+**Add 10 lines of code, get full admin JSON API:**
 
 ```typescript
 import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
@@ -42,15 +42,19 @@ const admin = new HonoAdminAdapter({
   sortable: ["id", "name", "price"],
 });
 
-app.route("/admin/products", admin);
+app.get("/api/admin/products", admin.list());
+app.post("/api/admin/products", admin.create());
+app.get("/api/admin/products/:id", admin.show());
+app.put("/api/admin/products/:id", admin.update());
+app.delete("/api/admin/products/:id", admin.destroy());
 ```
 
 **You Get:**
 
-- ✅ Full CRUD interface with beautiful Tailwind UI
-- ✅ Search, pagination, sorting, bulk delete
+- ✅ Full CRUD JSON API with pagination, search, sorting
+- ✅ Works with ANY frontend (React, Vue, Angular, Svelte, Astro)
 - ✅ Type-safe, framework-agnostic, ORM-agnostic
-- ✅ Production-tested (73 tests, real database, NO MOCKS)
+- ✅ Production-tested (72 tests, real database, NO MOCKS)
 
 ---
 
@@ -62,17 +66,16 @@ app.route("/admin/products", admin);
 - 🎯 Type-safe with full TypeScript generics
 - 🔌 Framework-agnostic (Hono now, Express future)
 - 🗄️ ORM-agnostic (Drizzle now, Sequelize/Prisma future)
-- ✅ Production-ready (73/73 tests passing)
+- ✅ Production-ready (72/72 tests passing)
 
-**UI:**
+**API:**
 
-- 🎨 Beautiful Tailwind CSS design
-- ⚡ htmx for progressive enhancement
-- 📱 Responsive (desktop, tablet, mobile)
+- 📡 Pure JSON responses (API-first architecture)
 - 🔍 Full-text search across columns
 - 📄 Efficient pagination
 - 🔄 Sortable columns
 - 🗑️ Bulk operations
+- 🌐 Works with any frontend framework
 
 **Security:**
 
@@ -194,16 +197,39 @@ app.route("/admin/products", productAdminRoutes);
 export default app;
 ```
 
-### Step 4: Visit Admin Panel
+### Step 4: Use the API
 
-Open: `http://localhost:8000/admin/products`
+**Example with curl:**
 
-**You'll see:**
+```bash
+# List products
+curl http://localhost:8000/admin/products
 
-- Product list with search, pagination, sorting
-- Create/Edit/Delete buttons
-- Bulk delete checkbox selection
-- Beautiful Tailwind UI
+# Create product
+curl -X POST http://localhost:8000/admin/products \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Widget","price":19.99}'
+
+# Search
+curl "http://localhost:8000/admin/products?search=widget&page=1&limit=20"
+```
+
+**JSON Response:**
+
+```json
+{
+  "data": [
+    {"id": 1, "name": "Widget", "price": 19.99, "createdAt": "..."},
+    {"id": 2, "name": "Gadget", "price": 29.99, "createdAt": "..."}
+  ],
+  "total": 42,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 3,
+  "hasPrevious": false,
+  "hasNext": true
+}
+```
 
 ---
 
@@ -543,8 +569,7 @@ MIT License - See [LICENSE](../../LICENSE) file for details.
 
 - [Hono](https://hono.dev/) - Web framework
 - [Drizzle](https://orm.drizzle.team/) - ORM
-- [Tailwind CSS](https://tailwindcss.com/) - UI styling
-- [htmx](https://htmx.org/) - Progressive enhancement
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Deno](https://deno.com/) - Runtime
 
 ---

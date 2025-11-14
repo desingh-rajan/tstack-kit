@@ -5,8 +5,7 @@
  * - CRUD operations with pagination, search, and sorting
  * - Support for multiple ORMs (Drizzle, Sequelize, Prisma)
  * - Support for multiple frameworks (Hono, Express, Fastify)
- * - HTML views with Tailwind CSS and htmx
- * - JSON API responses
+ * - JSON API responses only (API-first architecture)
  * - Type-safe with full TypeScript support
  *
  * @example
@@ -14,8 +13,12 @@
  * import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
  * import { products } from "./schema.ts";
  *
- * const ormAdapter = new DrizzleAdapter(products);
- * const admin = new HonoAdminAdapter({ ormAdapter });
+ * const ormAdapter = new DrizzleAdapter(products, { db });
+ * const admin = new HonoAdminAdapter({
+ *   ormAdapter,
+ *   entityName: "product",
+ *   columns: ["id", "name", "price"],
+ * });
  *
  * app.get("/admin/products", admin.list());
  * ```
@@ -25,11 +28,13 @@
 
 // Core types and utilities
 export type {
+  AuthUser,
   EntityId,
   PaginationParams,
   PaginationResult,
   SearchableColumn,
   SortableColumn,
+  UserRole,
 } from "./src/core/types.ts";
 
 export {
@@ -43,9 +48,3 @@ export { DrizzleAdapter } from "./src/orm/drizzle.ts";
 
 // Framework adapters
 export { type AdminConfig, HonoAdminAdapter } from "./src/framework/hono.ts";
-
-// Views
-export { detectResponseType } from "./src/views/negotiation.ts";
-export { adminLayout } from "./src/views/layout.ts";
-export { renderList } from "./src/views/list.ts";
-export { renderForm } from "./src/views/form.ts";

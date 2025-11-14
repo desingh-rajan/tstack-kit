@@ -2,15 +2,12 @@
  * Hono Framework Adapter
  *
  * Provides HTTP handlers for admin CRUD operations using Hono.
+ * Returns JSON responses only (API-first architecture).
  */
 
 import type { Context } from "hono";
 import type { IORMAdapter } from "../orm/base.ts";
-import type { AuthUser, UserRole, ViewConfig } from "../core/types.ts";
-import { detectResponseType } from "../views/negotiation.ts";
-import { adminLayout } from "../views/layout.ts";
-import { renderList } from "../views/list.ts";
-import { renderForm } from "../views/form.ts";
+import type { AuthUser, UserRole } from "../core/types.ts";
 
 /**
  * Admin configuration for Hono adapter
@@ -45,6 +42,7 @@ export interface AdminConfig<T> {
  * Hono Admin Adapter
  *
  * Creates HTTP handlers for admin CRUD operations.
+ * All methods return JSON responses only.
  *
  * @template T - Entity type
  *
@@ -63,7 +61,6 @@ export interface AdminConfig<T> {
  */
 export class HonoAdminAdapter<T> {
   private config: Required<AdminConfig<T>>;
-  private viewConfig: ViewConfig;
 
   constructor(config: AdminConfig<T>) {
     // Set defaults
@@ -75,21 +72,13 @@ export class HonoAdminAdapter<T> {
       allowedRoles: config.allowedRoles || ["superadmin", "admin"],
       baseUrl: config.baseUrl || `/ts-admin/${config.entityName}s`,
     };
-
-    this.viewConfig = {
-      entityName: this.config.entityName,
-      entityNamePlural: this.config.entityNamePlural,
-      columns: this.config.columns,
-      searchable: this.config.searchable,
-      sortable: this.config.sortable,
-      baseUrl: this.config.baseUrl,
-    };
   }
 
   /**
    * List all records with pagination, search, and sorting
+   * Returns JSON only: { data: [...], meta: { total, page, perPage, totalPages } }
+   *
    * Example: GET /ts-admin/products?page=1&limit=20&search=query&orderBy=name&orderDir=asc
-   * (baseUrl is configurable)
    */
   list(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -113,43 +102,16 @@ export class HonoAdminAdapter<T> {
         orderDir,
       });
 
-      // Detect response type
-      const responseType = detectResponseType(c);
-
-      if (responseType === "json") {
-        return c.json(result);
-      }
-
-      // Render HTML (full page or htmx partial)
-      const listHtml = renderList({
-        result,
-        config: this.viewConfig,
-        currentSearch: search,
-        currentOrderBy: orderBy,
-        currentOrderDir: orderDir,
-      });
-
-      if (responseType === "htmx") {
-        // Return just the table for htmx requests
-        return c.html(listHtml);
-      }
-
-      // Full HTML page
-      const user = c.get("user") as AuthUser | undefined;
-      const fullHtml = adminLayout(listHtml, {
-        title: this.config.entityNamePlural,
-        config: this.viewConfig,
-        currentUser: user ? { email: user.email, role: user.role } : undefined,
-      });
-
-      return c.html(fullHtml);
+      // Return JSON only
+      return c.json(result);
     };
   }
 
   /**
    * Show a single record
+   * Returns JSON only: { id, name, price, ... }
+   *
    * Example: GET /ts-admin/products/:id
-   * (baseUrl is configurable)
    */
   show(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -162,68 +124,37 @@ export class HonoAdminAdapter<T> {
         return c.json({ error: "Not found" }, 404);
       }
 
-      const responseType = detectResponseType(c);
-
-      if (responseType === "json") {
-        return c.json(record);
-      }
-
-      // Render HTML view (implement detail view if needed)
-      const detailHtml = `
-        <div class="bg-white rounded-lg shadow p-6">
-          <pre>${JSON.stringify(record, null, 2)}</pre>
-          <div class="mt-4 space-x-2">
-            <a href="${this.config.baseUrl}/${id}/edit" class="text-blue-600 hover:text-blue-800">Edit</a>
-            <a href="${this.config.baseUrl}" class="text-gray-600 hover:text-gray-800">Back to List</a>
-          </div>
-        </div>
-      `;
-
-      const user = c.get("user") as AuthUser | undefined;
-      const fullHtml = adminLayout(detailHtml, {
-        title: `${this.config.entityName} #${id}`,
-        config: this.viewConfig,
-        currentUser: user ? { email: user.email, role: user.role } : undefined,
-      });
-
-      return c.html(fullHtml);
+      return c.json(record);
     };
   }
 
   /**
-   * Show create form
+   * Show create form metadata (for frontends that need field info)
+   * Returns JSON only: { entityName, columns, searchable, sortable }
+   *
    * Example: GET /ts-admin/products/new
-   * (baseUrl is configurable)
    */
   new(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
-      const formHtml = renderForm({
-        config: this.viewConfig,
+      return c.json({
+        entityName: this.config.entityName,
+        entityNamePlural: this.config.entityNamePlural,
+        columns: this.config.columns,
+        searchable: this.config.searchable,
+        sortable: this.config.sortable,
         mode: "create",
       });
-
-      const responseType = detectResponseType(c);
-      if (responseType === "json") {
-        return c.json({ message: "Use POST to create" });
-      }
-
-      const user = c.get("user") as AuthUser | undefined;
-      const fullHtml = adminLayout(formHtml, {
-        title: `New ${this.config.entityName}`,
-        config: this.viewConfig,
-        currentUser: user ? { email: user.email, role: user.role } : undefined,
-      });
-
-      return c.html(fullHtml);
     };
   }
 
   /**
    * Create new record
+   * Returns JSON only: { id, name, price, createdAt, ... }
+   *
    * Example: POST /ts-admin/products
-   * (baseUrl is configurable)
+   * Body: { name: "Widget", price: 19.99 }
    */
   create(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -236,49 +167,22 @@ export class HonoAdminAdapter<T> {
           body as Partial<T>,
         );
 
-        const responseType = detectResponseType(c);
-        if (responseType === "json") {
-          return c.json(newRecord, 201);
-        }
-
-        // Redirect to list on success
-        return c.redirect(this.config.baseUrl);
+        return c.json(newRecord, 201);
       } catch (error) {
-        const responseType = detectResponseType(c);
         const errorMessage = error instanceof Error
           ? error.message
           : "An error occurred";
 
-        if (responseType === "json") {
-          return c.json({ error: errorMessage }, 400);
-        }
-
-        // Re-render form with errors
-        const formHtml = renderForm({
-          config: this.viewConfig,
-          data: body,
-          errors: { _error: errorMessage },
-          mode: "create",
-        });
-
-        const user = c.get("user") as AuthUser | undefined;
-        const fullHtml = adminLayout(formHtml, {
-          title: `New ${this.config.entityName}`,
-          config: this.viewConfig,
-          currentUser: user
-            ? { email: user.email, role: user.role }
-            : undefined,
-        });
-
-        return c.html(fullHtml, 400);
+        return c.json({ error: errorMessage }, 400);
       }
     };
   }
 
   /**
-   * Show edit form
+   * Show edit form metadata with existing record data
+   * Returns JSON only: { entityName, columns, data: { id, name, ... } }
+   *
    * Example: GET /ts-admin/products/:id/edit
-   * (baseUrl is configurable)
    */
   edit(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -291,26 +195,24 @@ export class HonoAdminAdapter<T> {
         return c.json({ error: "Not found" }, 404);
       }
 
-      const formHtml = renderForm({
-        config: this.viewConfig,
-        data: record as Record<string, any>,
+      return c.json({
+        entityName: this.config.entityName,
+        entityNamePlural: this.config.entityNamePlural,
+        columns: this.config.columns,
+        searchable: this.config.searchable,
+        sortable: this.config.sortable,
+        data: record,
         mode: "edit",
       });
-
-      const user = c.get("user") as AuthUser | undefined;
-      const fullHtml = adminLayout(formHtml, {
-        title: `Edit ${this.config.entityName}`,
-        config: this.viewConfig,
-        currentUser: user ? { email: user.email, role: user.role } : undefined,
-      });
-
-      return c.html(fullHtml);
     };
   }
 
   /**
    * Update existing record
-   * PUT/PATCH /admin/products/:id
+   * Returns JSON only: { id, name, price, updatedAt, ... }
+   *
+   * Example: PUT/PATCH /ts-admin/products/:id
+   * Body: { name: "Updated Widget", price: 24.99 }
    */
   update(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -329,49 +231,22 @@ export class HonoAdminAdapter<T> {
           return c.json({ error: "Not found" }, 404);
         }
 
-        const responseType = detectResponseType(c);
-        if (responseType === "json") {
-          return c.json(updated);
-        }
-
-        // Redirect to list on success
-        return c.redirect(this.config.baseUrl);
+        return c.json(updated);
       } catch (error) {
-        const responseType = detectResponseType(c);
         const errorMessage = error instanceof Error
           ? error.message
           : "An error occurred";
 
-        if (responseType === "json") {
-          return c.json({ error: errorMessage }, 400);
-        }
-
-        // Re-render form with errors
-        const formHtml = renderForm({
-          config: this.viewConfig,
-          data: body,
-          errors: { _error: errorMessage },
-          mode: "edit",
-        });
-
-        const user = c.get("user") as AuthUser | undefined;
-        const fullHtml = adminLayout(formHtml, {
-          title: `Edit ${this.config.entityName}`,
-          config: this.viewConfig,
-          currentUser: user
-            ? { email: user.email, role: user.role }
-            : undefined,
-        });
-
-        return c.html(fullHtml, 400);
+        return c.json({ error: errorMessage }, 400);
       }
     };
   }
 
   /**
    * Delete record
+   * Returns JSON only: { message: "Deleted successfully" }
+   *
    * Example: DELETE /ts-admin/products/:id
-   * (baseUrl is configurable)
    */
   destroy(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
@@ -384,20 +259,15 @@ export class HonoAdminAdapter<T> {
         return c.json({ error: "Not found" }, 404);
       }
 
-      const responseType = detectResponseType(c);
-      if (responseType === "json") {
-        return c.json({ message: "Deleted successfully" });
-      }
-
-      // For htmx, return empty response to remove row
-      return c.body(null, 200);
+      return c.json({ message: "Deleted successfully" });
     };
   }
 
   /**
    * Bulk delete records
+   * Returns JSON only: { message: "Deleted N records", count: N }
+   *
    * Example: POST /ts-admin/products/bulk-delete
-   * (baseUrl is configurable)
    * Body: { ids: [1, 2, 3] }
    */
   bulkDelete(): (c: Context) => Promise<Response> {
@@ -447,7 +317,7 @@ export class HonoAdminAdapter<T> {
       return await c.req.json();
     }
 
-    // Parse form data
+    // Parse form data (for flexibility with form submissions)
     const formData = await c.req.formData();
     const body: Record<string, any> = {};
 

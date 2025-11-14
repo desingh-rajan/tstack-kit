@@ -74,34 +74,6 @@ export interface PaginationResult<T> {
 }
 
 /**
- * Configuration for admin views
- */
-export interface ViewConfig {
-  /** Name of the entity (singular) */
-  entityName: string;
-
-  /** Plural form of entity name */
-  entityNamePlural: string;
-
-  /** Columns to display in list view */
-  columns: string[];
-
-  /** Columns that are searchable */
-  searchable?: SearchableColumn[];
-
-  /** Columns that are sortable */
-  sortable?: SortableColumn[];
-
-  /** Base URL for admin routes */
-  baseUrl: string;
-}
-
-/**
- * Response type detection result
- */
-export type ResponseType = "html" | "json" | "htmx";
-
-/**
  * User role for authorization
  */
 export type UserRole = "superadmin" | "admin" | "moderator" | "user";

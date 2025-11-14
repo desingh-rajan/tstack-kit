@@ -5,12 +5,10 @@
  * No mocking - tests actual HTTP requests with real ORM operations.
  *
  * Tests cover:
- * - HTML responses (browser requests)
- * - JSON responses (API requests with Accept: application/json)
- * - htmx responses (htmx requests with HX-Request header)
+ * - JSON API responses
  * - Configurable path prefixes (/ts-admin/products)
  * - Auth middleware with real users (superadmin, admin, regular user)
- * - Form parsing
+ * - Query parameters (pagination, search, sorting)
  * - Error handling
  */
 
@@ -260,28 +258,7 @@ Deno.test(
 // ============================================================================
 
 Deno.test(
-  "Hono - list() HTML response (browser request)",
-  { sanitizeResources: false, sanitizeOps: false },
-  async () => {
-    const app = createTestApp();
-
-    const res = await makeRequest(app, "/ts-admin/products", {
-      headers: { "Accept": "text/html" },
-    });
-
-    assertEquals(res.status, 200);
-    const contentType = res.headers.get("content-type") || "";
-    assertStringIncludes(contentType, "text/html");
-
-    const html = await res.text();
-    assertStringIncludes(html, "<!DOCTYPE html>");
-    assertStringIncludes(html, "<table");
-    assertStringIncludes(html, "Test Product");
-  },
-);
-
-Deno.test(
-  "Hono - list() JSON response (API request)",
+  "Hono - list() returns JSON",
   { sanitizeResources: false, sanitizeOps: false },
   async () => {
     const app = createTestApp();
@@ -304,7 +281,7 @@ Deno.test(
 );
 
 Deno.test(
-  "Hono - list() htmx response (partial HTML)",
+  "Hono - list() with HX-Request header",
   { sanitizeResources: false, sanitizeOps: false },
   async () => {
     const app = createTestApp();
@@ -314,13 +291,12 @@ Deno.test(
     });
 
     assertEquals(res.status, 200);
-    assertEquals(res.headers.get("content-type"), "text/html; charset=UTF-8");
+    const contentType = res.headers.get("content-type") || "";
+    assertStringIncludes(contentType, "application/json");
 
-    const html = await res.text();
-    assertStringIncludes(html, "<table");
-    assertStringIncludes(html, "Test Product");
-    // htmx response should NOT include full layout
-    assertEquals(html.includes("<!DOCTYPE html>"), false);
+    const json = await res.json();
+    assertEquals(json.data.length, 5);
+    assertExists(json.data[0].name);
   },
 );
 
@@ -368,7 +344,7 @@ Deno.test(
 // ============================================================================
 
 Deno.test(
-  "Hono - show() HTML response",
+  "Hono - show() returns JSON",
   { sanitizeResources: false, sanitizeOps: false },
   async () => {
     const app = createTestApp();
@@ -383,8 +359,8 @@ Deno.test(
     const res = await makeRequest(app, `/ts-admin/products/${productId}`);
 
     assertEquals(res.status, 200);
-    const html = await res.text();
-    assertStringIncludes(html, "Test Product");
+    const body = await res.text();
+    assertStringIncludes(body, "Test Product");
   },
 );
 
@@ -424,26 +400,25 @@ Deno.test(
 );
 
 // ============================================================================
-// TESTS: new() - Create form
+// TESTS: new() - Returns entity metadata for form building
 // ============================================================================
 
 Deno.test(
-  "Hono - new() HTML form",
+  "Hono - new() returns entity metadata",
   { sanitizeResources: false, sanitizeOps: false },
   async () => {
     const app = createTestApp();
 
-    const res = await makeRequest(app, "/ts-admin/products/new", {
-      headers: { "Accept": "text/html" },
-    });
+    const res = await makeRequest(app, "/ts-admin/products/new");
 
     assertEquals(res.status, 200);
     const contentType = res.headers.get("content-type") || "";
-    assertStringIncludes(contentType, "text/html");
+    assertStringIncludes(contentType, "application/json");
 
-    const html = await res.text();
-    assertStringIncludes(html, "<form");
-    assertStringIncludes(html, 'type="submit"');
+    const json = await res.json();
+    assertEquals(json.entityName, "product");
+    assertEquals(json.mode, "create");
+    assertExists(json.columns);
   },
 );
 
@@ -479,30 +454,31 @@ Deno.test(
 );
 
 // ============================================================================
-// TESTS: edit() - Edit form
+// TESTS: edit() - Returns entity metadata with existing data
 // ============================================================================
 
 Deno.test(
-  "Hono - edit() HTML form",
+  "Hono - edit() returns entity metadata with data",
   { sanitizeResources: false, sanitizeOps: false },
   async () => {
     const app = createTestApp();
 
-    const listRes = await makeRequest(app, "/ts-admin/products", {
-      headers: { "Accept": "application/json" },
-    });
+    const listRes = await makeRequest(app, "/ts-admin/products");
     const list = await listRes.json();
     const productId = list.data[0].id;
     const productName = list.data[0].name;
 
-    const res = await makeRequest(app, `/ts-admin/products/${productId}/edit`, {
-      headers: { "Accept": "text/html" },
-    });
+    const res = await makeRequest(app, `/ts-admin/products/${productId}/edit`);
 
     assertEquals(res.status, 200);
-    const html = await res.text();
-    assertStringIncludes(html, "<form");
-    assertStringIncludes(html, productName); // Check for actual product name
+    const contentType = res.headers.get("content-type") || "";
+    assertStringIncludes(contentType, "application/json");
+
+    const json = await res.json();
+    assertEquals(json.entityName, "product");
+    assertEquals(json.mode, "edit");
+    assertEquals(json.data.name, productName);
+    assertExists(json.columns);
   },
 );
 
