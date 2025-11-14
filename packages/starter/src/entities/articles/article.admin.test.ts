@@ -39,7 +39,6 @@ async function cleanupTestData() {
   try {
     await db.delete(articles);
     await db.delete(authTokens);
-    console.log("[CLEANUP] Test articles and tokens cleaned successfully");
   } catch (error) {
     console.error("[CLEANUP] Error cleaning test data:", error);
     throw error;
@@ -489,8 +488,6 @@ Deno.test("Article Admin API Tests", {
         "Should delete 2 articles",
       );
     });
-
-    console.log("[SUCCESS] All article admin tests passed! ✅");
   } catch (error) {
     throw error;
   } finally {

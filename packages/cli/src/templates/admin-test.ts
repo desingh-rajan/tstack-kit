@@ -45,7 +45,6 @@ async function cleanupTestData() {
   try {
     await db.delete(${names.plural});
     await db.delete(authTokens);
-    console.log("[CLEANUP] Test ${names.plural} and tokens cleaned successfully");
   } catch (error) {
     console.error("[CLEANUP] Error cleaning test data:", error);
     throw error;
@@ -218,6 +217,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
 
         const json = await response.json();
         assertExists(json.data, "Should have data property");
+        assertExists(json.data.id, "Should have id property in data");
         assertEquals(json.data.id, test${names.pascalSingular}Id, "Should return correct ID");
       },
     );
@@ -393,8 +393,6 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       const json = await response.json();
       assertEquals(json.data.deletedCount, 2, "Should delete 2 ${names.plural}");
     });
-
-    console.log("[SUCCESS] All ${names.singular} admin tests passed! ✅");
   } catch (error) {
     console.error("[FAILURE] ${names.pascalSingular} admin tests failed:", error);
     throw error;

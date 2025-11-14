@@ -177,8 +177,8 @@ TonyStack automatically creates a separate test database:
 deno task db:seed
 
 # Or seed individually:
-deno task db:seed:superadmin   # Creates superadmin@tstack.in
-deno task db:seed:alpha        # Creates alpha@tstack.in (regular user)
+deno task db:seed:superadmin   # Creates superadmin@tonystack.dev
+deno task db:seed:alpha        # Creates alpha@tonystack.dev (regular user)
 deno task db:seed:site         # Creates 6 default site settings
 ```
 
@@ -196,19 +196,19 @@ deno task test:reset
 
 These users are automatically created when you run `test:seed` or `test:full`:
 
-| User           | Email                    | Password          | Role       | Purpose                                |
-| -------------- | ------------------------ | ----------------- | ---------- | -------------------------------------- |
-| **Superadmin** | `superadmin@tstack.in`   | TonyStack@2025!   | superadmin | Full system access, admin operations   |
-| **Alpha User** | `alpha@tstack.in`        | Alpha@2025!       | user       | Regular user for permission testing    |
+| User           | Email                      | Password          | Role       | Purpose                                |
+| -------------- | -------------------------- | ----------------- | ---------- | -------------------------------------- |
+| **Superadmin** | `superadmin@tonystack.dev` | TonyStack@2025!   | superadmin | Full system access, admin operations   |
+| **Alpha User** | `alpha@tonystack.dev`      | Alpha@2025!       | user       | Regular user for permission testing    |
 
 **Usage in Tests:**
 
 ```typescript
 // Login as superadmin
-const adminToken = await login('superadmin@tstack.in', 'TonyStack@2025!');
+const adminToken = await login('superadmin@tonystack.dev', 'TonyStack@2025!');
 
 // Login as regular user
-const userToken = await login('alpha@tstack.in', 'Alpha@2025!');
+const userToken = await login('alpha@tonystack.dev', 'Alpha@2025!');
 
 // Test admin-only operation
 const result = await apiRequest('/admin/articles', {
@@ -281,14 +281,14 @@ Automatically seeded for testing:
 ```typescript
 // Superadmin (full access)
 {
-  email: "superadmin@tstack.in",
+  email: "superadmin@tonystack.dev",
   password: "TonyStack@2025!",
   role: "superadmin"
 }
 
 // Alpha user (regular user)
 {
-  email: "alpha@tstack.in", 
+  email: "alpha@tonystack.dev", 
   password: "Alpha@2025!",
   role: "user"
 }
