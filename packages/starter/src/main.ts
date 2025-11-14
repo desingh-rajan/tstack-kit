@@ -56,6 +56,10 @@ app.get("/health", async (c: Context) => {
 app.route("/", authRoutes);
 app.route("/", adminRoutes);
 
+// User admin routes (manually registered because user.model.ts is in auth/, not entities/)
+import userAdminRoutes from "./auth/user.admin.route.ts";
+app.route("/", userAdminRoutes);
+
 // Entity routes - Auto-registered from entities folder at root level
 // All *.route.ts files in entities/* subdirectories are automatically imported
 // For manual route registration, see ./entities/index.ts for examples
@@ -103,12 +107,19 @@ async function startServer() {
       console.log("\n Available endpoints:");
       console.log("   GET  /       - API information");
       console.log("   GET  /health - Health check");
-      console.log("   All /*       - Auto-registered from entities/");
+      console.log(
+        "   All /*       - Auto-registered public routes from entities/",
+      );
+      console.log(
+        "   All /ts-admin/* - Auto-registered admin routes (requires auth)",
+      );
       console.log("\n Scaffold entities to get started:");
-      console.log("   tstack scaffold articles");
+      console.log("   tstack scaffold articles  (includes admin panel)");
       console.log("   tstack scaffold products");
+      console.log("   tstack scaffold users --skip-admin  (skip admin panel)");
       console.log("\n Development mode enabled - routes auto-discovered");
       console.log("\n Note: Routes are clean (e.g., /articles, /users)");
+      console.log("      Admin panel: /ts-admin/articles (HTML UI + JSON API)");
       console.log(
         "      Deployment prefix handled by reverse proxy (Kamal, nginx)",
       );

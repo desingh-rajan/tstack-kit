@@ -38,6 +38,9 @@ function showHelp() {
   Logger.code(
     "--latest                   Fetch latest stable dependency versions (create only)",
   );
+  Logger.code(
+    "--skip-admin               Don't generate admin CRUD interface (scaffold only)",
+  );
   Logger.newLine();
 
   Logger.subtitle("Examples:");
@@ -48,6 +51,7 @@ function showHelp() {
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
   Logger.code("tstack scaffold orders --force");
+  Logger.code("tstack scaffold users --skip-admin");
   Logger.code("tstack destroy my-backend");
   Logger.code("tstack destroy old-project --force");
   Logger.newLine();
@@ -62,7 +66,7 @@ function showVersion() {
 
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "version", "force", "with-auth", "latest"],
+    boolean: ["help", "version", "force", "with-auth", "latest", "skip-admin"],
     string: ["dir"],
     alias: {
       h: "help",
@@ -119,6 +123,7 @@ async function main() {
           entityName,
           targetDir: args.dir,
           force: args.force,
+          skipAdmin: args["skip-admin"],
         });
         break;
       }

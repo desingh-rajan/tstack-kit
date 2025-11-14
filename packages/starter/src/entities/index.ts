@@ -7,7 +7,8 @@ import { Hono } from "hono";
  * and registers them at the ROOT level (no prefix)
  *
  * CLEAN ARCHITECTURE:
- * - Routes are registered at root: /articles, /users, /products
+ * - Public API routes: /articles, /users, /products
+ * - Admin panel routes: /ts-admin/articles, /ts-admin/users, /ts-admin/products
  * - Deployment prefix (e.g., /company-be/api) is handled by reverse proxy (Kamal, nginx, etc.)
  * - Application code stays clean and deployment-agnostic
  *
@@ -15,8 +16,10 @@ import { Hono } from "hono";
  * entities/
  *   users/
  *     user.route.ts (exports default Hono router with /users paths)
+ *     user.admin.route.ts (exports default Hono router with /ts-admin/users paths)
  *   posts/
  *     post.route.ts (exports default Hono router with /posts paths)
+ *     post.admin.route.ts (exports default Hono router with /ts-admin/posts paths)
  *
  * Example:
  * - Application routes: GET /articles, GET /articles/:id
@@ -96,17 +99,36 @@ export async function registerEntityRoutes(app: Hono): Promise<void> {
         ? `${entitiesPath}${entry.name}`
         : `${entitiesPath}/${entry.name}`;
 
-      // Look for .route.ts file in the entity directory
+      // Look for .route.ts files in the entity directory
       try {
         for await (const file of Deno.readDir(entityPath)) {
-          if (file.name.endsWith(".route.ts")) {
+          // Register public API routes (*.route.ts, but not *.admin.route.ts)
+          if (
+            file.name.endsWith(".route.ts") &&
+            !file.name.endsWith(".admin.route.ts")
+          ) {
             const routePath = `${entityPath}/${file.name}`;
             const routeModule = await import(`file://${routePath}`);
 
             if (routeModule.default) {
               app.route("/", routeModule.default);
               console.log(
-                `   [OK] Registered routes from ${entry.name}/${file.name}`,
+                `   [OK] Registered public routes from ${entry.name}/${file.name}`,
+              );
+            }
+          }
+
+          // Register admin routes (*.admin.route.ts) - requires authentication
+          if (file.name.endsWith(".admin.route.ts")) {
+            const routePath = `${entityPath}/${file.name}`;
+            const routeModule = await import(`file://${routePath}`);
+
+            if (routeModule.default) {
+              // Admin routes are registered at /ts-admin/{entity} path
+              // The admin route template already includes authentication middleware
+              app.route("/", routeModule.default);
+              console.log(
+                `   [OK] Registered admin routes from ${entry.name}/${file.name}`,
               );
             }
           }

@@ -31,10 +31,7 @@ async function cleanupTestData() {
 
     // Delete all auth tokens
     await db.delete(authTokens);
-
-    console.log("[CLEANUP] Test site_settings and tokens cleaned successfully");
   } catch (error) {
-    console.error("[CLEANUP] Error cleaning test data:", error);
     throw error;
   }
 }
@@ -81,10 +78,14 @@ Deno.test("Site Settings API Tests", async (t) => {
     await cleanupTestData();
 
     await t.step("Login as superadmin", async () => {
-      const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
-        "admin@test.local";
-      const superadminPassword = Deno.env.get("SUPERADMIN_PASSWORD") ||
-        "AdminPassword123!";
+      // Use the same hardcoded credentials that seed scripts use in test env
+      const isTestEnv = Deno.env.get("ENVIRONMENT") === "test";
+      const superadminEmail = isTestEnv
+        ? "superadmin@tonystack.dev"
+        : (Deno.env.get("SUPERADMIN_EMAIL") || "admin@test.local");
+      const superadminPassword = isTestEnv
+        ? "SuperSecurePassword123!"
+        : (Deno.env.get("SUPERADMIN_PASSWORD") || "AdminPassword123!");
 
       const result = await apiRequest("/auth/login", {
         method: "POST",

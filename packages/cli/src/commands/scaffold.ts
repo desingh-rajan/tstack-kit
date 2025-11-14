@@ -12,15 +12,23 @@ import { generateServiceTemplate } from "../templates/service.ts";
 import { generateControllerTemplate } from "../templates/controller.ts";
 import { generateRouteTemplate } from "../templates/route.ts";
 import { generateTestTemplate } from "../templates/test.ts";
+import { generateAdminRouteTemplate } from "../templates/admin-route.ts";
+import { generateAdminTestTemplate } from "../templates/admin-test.ts";
 
 export interface ScaffoldOptions {
   entityName: string;
   targetDir?: string;
   force?: boolean;
+  skipAdmin?: boolean;
 }
 
 export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
-  const { entityName, targetDir = Deno.cwd(), force = false } = options;
+  const {
+    entityName,
+    targetDir = Deno.cwd(),
+    force = false,
+    skipAdmin = false,
+  } = options;
 
   Logger.title(`Scaffolding entity: ${entityName}`);
   Logger.newLine();
@@ -124,6 +132,31 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     },
   ];
 
+  // Add admin route and tests if not skipped (Rails-style: include by default, opt-out with --skip-admin)
+  if (!skipAdmin) {
+    files.push({
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.admin.route.ts`,
+      ),
+      content: generateAdminRouteTemplate(names),
+      description: "Admin CRUD interface",
+    });
+
+    files.push({
+      path: join(
+        "src",
+        "entities",
+        names.snakePlural,
+        `${names.kebabSingular}.admin.test.ts`,
+      ),
+      content: generateAdminTestTemplate(names),
+      description: "Admin API tests (HTML & JSON)",
+    });
+  }
+
   await writeFiles(targetDir, files);
 
   Logger.newLine();
@@ -192,6 +225,33 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.code(`PUT /${names.kebabPlural}/:id → Update ${names.singular}`);
   Logger.code(`DELETE /${names.kebabPlural}/:id → Delete ${names.singular}`);
   Logger.newLine();
+
+  if (!skipAdmin) {
+    Logger.subtitle("Admin panel endpoints (requires superadmin/admin role):");
+    Logger.code(`GET /ts-admin/${names.kebabPlural} → Admin list view`);
+    Logger.code(`GET /ts-admin/${names.kebabPlural}/new → Create form`);
+    Logger.code(
+      `POST /ts-admin/${names.kebabPlural} → Create ${names.singular}`,
+    );
+    Logger.code(`GET /ts-admin/${names.kebabPlural}/:id/edit → Edit form`);
+    Logger.code(
+      `PUT /ts-admin/${names.kebabPlural}/:id → Update ${names.singular}`,
+    );
+    Logger.code(
+      `DELETE /ts-admin/${names.kebabPlural}/:id → Delete ${names.singular}`,
+    );
+    Logger.newLine();
+    Logger.info("Admin panel features:");
+    Logger.code("• Tailwind CSS + htmx UI (works without JavaScript)");
+    Logger.code("• Pagination, search, and sorting");
+    Logger.code("• HTML & JSON responses (content negotiation)");
+    Logger.code("• Role-based access control");
+    Logger.newLine();
+  } else {
+    Logger.info("⚠️  Admin routes skipped (--skip-admin flag used)");
+    Logger.newLine();
+  }
+
   Logger.info(
     "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
   );

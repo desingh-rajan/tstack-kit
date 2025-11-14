@@ -112,5 +112,34 @@ if (seedAlphaResult.success) {
   }
 }
 
+// Seed regular user for tests
+console.log("[SEED] Seeding regular user for tests...");
+
+const seedRegularUserCmd = new Deno.Command("deno", {
+  args: ["run", "--allow-all", "scripts/seed-regular-user.ts"],
+  env: {
+    ...Deno.env.toObject(),
+    ENVIRONMENT: "test",
+  },
+  stdout: "piped",
+  stderr: "piped",
+  cwd: projectRoot,
+});
+
+const seedRegularUserResult = await seedRegularUserCmd.output();
+
+if (seedRegularUserResult.success) {
+  console.log("[OK] Regular user seeded (or already exists)");
+} else {
+  const stderr = new TextDecoder().decode(seedRegularUserResult.stderr);
+  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
+    console.log("[OK] Regular user already exists");
+  } else {
+    console.warn(
+      "[WARNING]  Regular user seeding failed (may not be needed for all tests)",
+    );
+  }
+}
+
 console.log("\n[SUCCESS] Test environment ready");
 console.log(" Running tests...\n");

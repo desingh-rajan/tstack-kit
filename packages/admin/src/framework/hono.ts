@@ -88,9 +88,10 @@ export class HonoAdminAdapter<T> {
 
   /**
    * List all records with pagination, search, and sorting
-   * GET /admin/products?page=1&limit=20&search=query&orderBy=name&orderDir=asc
+   * Example: GET /ts-admin/products?page=1&limit=20&search=query&orderBy=name&orderDir=asc
+   * (baseUrl is configurable)
    */
-  list() {
+  list(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       // Check authorization
       this.checkAuth(c);
@@ -146,10 +147,11 @@ export class HonoAdminAdapter<T> {
   }
 
   /**
-   * Show single record
-   * GET /admin/products/:id
+   * Show a single record
+   * Example: GET /ts-admin/products/:id
+   * (baseUrl is configurable)
    */
-  show() {
+  show(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -190,9 +192,10 @@ export class HonoAdminAdapter<T> {
 
   /**
    * Show create form
-   * GET /admin/products/new
+   * Example: GET /ts-admin/products/new
+   * (baseUrl is configurable)
    */
-  new() {
+  new(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -219,9 +222,10 @@ export class HonoAdminAdapter<T> {
 
   /**
    * Create new record
-   * POST /admin/products
+   * Example: POST /ts-admin/products
+   * (baseUrl is configurable)
    */
-  create() {
+  create(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -273,9 +277,10 @@ export class HonoAdminAdapter<T> {
 
   /**
    * Show edit form
-   * GET /admin/products/:id/edit
+   * Example: GET /ts-admin/products/:id/edit
+   * (baseUrl is configurable)
    */
-  edit() {
+  edit(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -307,7 +312,7 @@ export class HonoAdminAdapter<T> {
    * Update existing record
    * PUT/PATCH /admin/products/:id
    */
-  update() {
+  update(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -365,9 +370,10 @@ export class HonoAdminAdapter<T> {
 
   /**
    * Delete record
-   * DELETE /admin/products/:id
+   * Example: DELETE /ts-admin/products/:id
+   * (baseUrl is configurable)
    */
-  destroy() {
+  destroy(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
@@ -390,10 +396,11 @@ export class HonoAdminAdapter<T> {
 
   /**
    * Bulk delete records
-   * POST /admin/products/bulk-delete
+   * Example: POST /ts-admin/products/bulk-delete
+   * (baseUrl is configurable)
    * Body: { ids: [1, 2, 3] }
    */
-  bulkDelete() {
+  bulkDelete(): (c: Context) => Promise<Response> {
     return async (c: Context) => {
       this.checkAuth(c);
 
