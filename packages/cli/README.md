@@ -101,15 +101,15 @@ src/entities/products/         # Folder: snake_case (matches database table)
 └── product.test.ts           # API tests
 ```
 
-**Admin Panel (Included by Default):**
+**Admin API (Included by Default):**
 
-Every scaffolded entity comes with a fully-functional admin panel at `/ts-admin/{entity}`:
+Every scaffolded entity comes with a fully-functional admin JSON API at `/ts-admin/{entity}`:
 
-- **Tailwind CSS + htmx UI** - Works without JavaScript
-- **Complete CRUD** - List, create, edit, delete operations
+- **RESTful JSON API** - Modern API-first architecture
+- **Complete CRUD** - List, create, read, update, delete operations
 - **Pagination, Search & Sort** - Out of the box
 - **Role-Based Access** - Protected by `superadmin` and `admin` roles
-- **Content Negotiation** - Returns HTML or JSON based on Accept header
+- **Type-Safe Responses** - Full TypeScript support
 
 ### Examples
 
@@ -366,17 +366,17 @@ const productAdmin = new HonoAdminAdapter({
 // POST   /ts-admin/products/bulk-delete - Bulk delete
 ```
 
-**Admin Panel Features:**
+**Admin API Features:**
 
-- ✅ **Tailwind CSS + htmx** - Modern UI that works without JavaScript
-- ✅ **Pagination** - Configurable page size
+- ✅ **RESTful JSON API** - Modern API-first architecture
+- ✅ **Pagination** - Configurable page size with metadata
 - ✅ **Search** - Full-text search across specified columns
-- ✅ **Sorting** - Click column headers to sort
+- ✅ **Sorting** - Sort by any configured column (ASC/DESC)
 - ✅ **Role-Based Access** - Requires `superadmin` or `admin` role
-- ✅ **Content Negotiation** - Returns HTML for browsers, JSON for APIs
+- ✅ **Type-Safe Responses** - Full TypeScript support
 - ✅ **Auto-Discovery** - Routes automatically registered from `*.admin.route.ts` files
 
-**Skip Admin Panel:**
+**Skip Admin API:**
 
 ```bash
 tstack scaffold products --skip-admin  # Generates only 6 files (no admin)

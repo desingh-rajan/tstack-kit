@@ -10,7 +10,7 @@
 - ✅ `deno.json` with dependencies
 - ✅ `mod.ts` with clean exports
 - ✅ `README.md` with usage examples
-- ✅ Organized src/ directory (core, orm, framework, views)
+- ✅ Organized src/ directory (core, orm, framework)
 
 ### 2. Core Types & Interfaces (100%)
 
@@ -34,26 +34,19 @@
 - ✅ Supports number & string IDs
 - ✅ `src/orm/drizzle.test.ts` - 27 comprehensive tests (need database to run)
 
-### 5. HTML Views (Complete)
-
-- ✅ `src/views/negotiation.ts` - HTML/JSON/htmx detection
-- ✅ `src/views/layout.ts` - Tailwind CSS + htmx layout
-- ✅ `src/views/list.ts` - Table with search, sort, pagination
-- ✅ `src/views/form.ts` - Create/edit forms with validation
-
-### 6. Hono Framework Adapter (Complete)
+### 5. Hono Framework Adapter (Complete)
 
 - ✅ `src/framework/hono.ts` - Full implementation
-- ✅ list() - Paginated list view
-- ✅ show() - Single record detail
-- ✅ new() - Show create form
-- ✅ create() - Handle form/JSON submission
-- ✅ edit() - Show edit form  
-- ✅ update() - Handle updates
-- ✅ destroy() - Delete record (with htmx support)
+- ✅ list() - Paginated list (JSON API)
+- ✅ show() - Single record detail (JSON API)
+- ✅ new() - New record endpoint (JSON API)
+- ✅ create() - Handle JSON submission
+- ✅ edit() - Edit record endpoint (JSON API)
+- ✅ update() - Handle updates (JSON API)
+- ✅ destroy() - Delete record (JSON API)
 - ✅ bulkDelete() - Delete multiple records
 - ✅ Auth checking (superadmin/admin roles)
-- ✅ Form data + JSON parsing
+- ✅ JSON request/response handling
 
 ## 📊 Test Coverage
 
@@ -72,22 +65,19 @@
 - ✅ Pagination (skip/take/count/totalPages)
 - ✅ Search across multiple columns
 - ✅ Sorting (ASC/DESC)
-- ✅ Response negotiation (HTML/JSON/htmx)
+- ✅ JSON API responses
 - ✅ Support number & string (UUID) primary keys
 
-### UI Features
+### API Features
 
-- ✅ Tailwind CSS styling
-- ✅ htmx progressive enhancement
-- ✅ Search with real-time updates
-- ✅ Sortable column headers
-- ✅ Pagination controls
-- ✅ Create/edit forms
-- ✅ Delete confirmation
-- ✅ Empty states
-- ✅ Error display
-- ✅ Breadcrumbs
-- ✅ User info display
+- ✅ JSON response format
+- ✅ Search across multiple columns
+- ✅ Sortable results (ASC/DESC)
+- ✅ Pagination with metadata
+- ✅ CRUD operations (create, read, update, delete)
+- ✅ Bulk delete support
+- ✅ Comprehensive error handling
+- ✅ Type-safe responses
 
 ### Auth & Security
 
@@ -161,9 +151,9 @@ adminRoutes.delete("/:id", admin.destroy());
 - [x] All exports documented
 - [x] README with examples
 - [x] Supports multiple ID types
-- [x] Works without JavaScript (progressive enhancement)
-- [x] Tailwind CSS for styling
-- [x] htmx for interactivity
+- [x] Pure JSON API (framework-agnostic clients)
+- [x] RESTful endpoints
+- [x] Comprehensive error responses
 - [x] Role-based access control
 - [ ] Integration tests (pending)
 - [ ] Published to JSR (later)
