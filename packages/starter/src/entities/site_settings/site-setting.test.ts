@@ -31,10 +31,7 @@ async function cleanupTestData() {
 
     // Delete all auth tokens
     await db.delete(authTokens);
-
-    console.log("[CLEANUP] Test site_settings and tokens cleaned successfully");
   } catch (error) {
-    console.error("[CLEANUP] Error cleaning test data:", error);
     throw error;
   }
 }
