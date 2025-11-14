@@ -1,7 +1,6 @@
 import {
   assertEquals,
   assertExists,
-  assertStringIncludes,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../../main.ts";
 import { db } from "../../config/database.ts";
@@ -11,15 +10,14 @@ import { authTokens } from "../../auth/auth-token.model.ts";
 /**
  * REFERENCE IMPLEMENTATION: Admin Route Tests
  *
- * This test file demonstrates how to test admin routes that return both:
- * - HTML responses (for browser access with Tailwind + htmx UI)
- * - JSON responses (for API access with Accept: application/json header)
+ * This test file demonstrates how to test admin routes that return JSON responses.
+ * @tstack/admin v2.0.0+ returns pure JSON (no HTML rendering).
  *
  * When you scaffold a new entity with `tstack scaffold products`,
  * a similar test file (product.admin.test.ts) will be automatically generated.
  *
  * Key testing patterns:
- * 1. Test both HTML and JSON content negotiation
+ * 1. Test JSON API responses
  * 2. Test role-based access control (superadmin, admin, regular user)
  * 3. Test all CRUD operations (list, create, show, edit, update, delete)
  * 4. Test pagination, search, and sorting
@@ -100,41 +98,11 @@ Deno.test("Article Admin API Tests", {
       assertExists(adminToken, "Admin token should exist");
     });
 
-    // Test 1: HTML response for list view
-    await t.step("GET /ts-admin/articles - HTML list view", async () => {
+    // Test 1: JSON list response
+    await t.step("GET /ts-admin/articles - JSON list", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
         superadminToken,
-        {
-          headers: { Accept: "text/html" },
-        },
-      );
-
-      assertEquals(response.status, 200, "Should return 200 OK");
-      assertEquals(
-        response.headers.get("content-type"),
-        "text/html; charset=UTF-8",
-        "Should return HTML",
-      );
-
-      const html = await response.text();
-      assertStringIncludes(html, "articles", "Should contain page title");
-      assertStringIncludes(html, "table", "Should contain table element");
-      assertStringIncludes(
-        html,
-        "htmx",
-        "Should include htmx for interactivity",
-      );
-    });
-
-    // Test 2: JSON response for list view
-    await t.step("GET /ts-admin/articles - JSON list view", async () => {
-      const response = await adminRequest(
-        "/ts-admin/articles",
-        superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
       );
 
       assertEquals(response.status, 200, "Should return 200 OK");
@@ -151,25 +119,22 @@ Deno.test("Article Admin API Tests", {
       assertExists(json.total, "Should have total");
     });
 
-    // Test 3: HTML response for create form
-    await t.step("GET /ts-admin/articles/new - HTML create form", async () => {
+    // Test 2: Entity metadata for create
+    await t.step("GET /ts-admin/articles/new - Entity metadata", async () => {
       const response = await adminRequest(
         "/ts-admin/articles/new",
         superadminToken,
-        {
-          headers: { Accept: "text/html" },
-        },
       );
 
       assertEquals(response.status, 200, "Should return 200 OK");
 
-      const html = await response.text();
-      assertStringIncludes(html, "form", "Should contain form element");
-      assertStringIncludes(html, "New article", "Should show create title");
-      assertStringIncludes(html, "title", "Should have title field");
+      const json = await response.json();
+      assertExists(json.entityName, "Should have entity name");
+      assertEquals(json.mode, "create", "Should be create mode");
+      assertExists(json.columns, "Should have columns definition");
     });
 
-    // Test 4: Create article via JSON API
+    // Test 3: Create article via JSON API
     await t.step("POST /ts-admin/articles - Create via JSON", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
@@ -198,41 +163,13 @@ Deno.test("Article Admin API Tests", {
       testArticleId = json.id;
     });
 
-    // Test 5: Show article HTML view
-    await t.step(
-      "GET /ts-admin/articles/:id - HTML show view",
-      async () => {
-        const response = await adminRequest(
-          `/ts-admin/articles/${testArticleId}`,
-          superadminToken,
-          {
-            headers: { Accept: "text/html" },
-          },
-        );
-
-        assertEquals(response.status, 200, "Should return 200 OK");
-
-        const html = await response.text();
-        assertStringIncludes(
-          html,
-          "Test Article for Admin Panel",
-          "Should show article title",
-        );
-        assertStringIncludes(html, "Edit", "Should have edit link");
-        assertStringIncludes(html, "Back to List", "Should have back link");
-      },
-    );
-
-    // Test 6: Show article JSON response
+    // Test 4: Show article JSON response
     await t.step(
       "GET /ts-admin/articles/:id - JSON response",
       async () => {
         const response = await adminRequest(
           `/ts-admin/articles/${testArticleId}`,
           superadminToken,
-          {
-            headers: { Accept: "application/json" },
-          },
         );
 
         assertEquals(response.status, 200, "Should return 200 OK");
@@ -246,32 +183,30 @@ Deno.test("Article Admin API Tests", {
       },
     );
 
-    // Test 7: Edit form HTML
+    // Test 5: Entity metadata for edit
     await t.step(
-      "GET /ts-admin/articles/:id/edit - HTML edit form",
+      "GET /ts-admin/articles/:id/edit - Entity metadata with data",
       async () => {
         const response = await adminRequest(
           `/ts-admin/articles/${testArticleId}/edit`,
           superadminToken,
-          {
-            headers: { Accept: "text/html" },
-          },
         );
 
         assertEquals(response.status, 200, "Should return 200 OK");
 
-        const html = await response.text();
-        assertStringIncludes(html, "form", "Should contain form element");
-        assertStringIncludes(html, "Edit article", "Should show edit title");
-        assertStringIncludes(
-          html,
+        const json = await response.json();
+        assertExists(json.entityName, "Should have entity name");
+        assertEquals(json.mode, "edit", "Should be edit mode");
+        assertExists(json.data, "Should have data");
+        assertEquals(
+          json.data.title,
           "Test Article for Admin Panel",
-          "Should pre-fill with article data",
+          "Should have article data",
         );
       },
     );
 
-    // Test 8: Update article via JSON
+    // Test 6: Update article via JSON
     await t.step("PUT /ts-admin/articles/:id - Update via JSON", async () => {
       const response = await adminRequest(
         `/ts-admin/articles/${testArticleId}`,
@@ -303,7 +238,7 @@ Deno.test("Article Admin API Tests", {
       );
     });
 
-    // Test 9: Admin role can access admin panel
+    // Test 7: Admin role can access admin panel
     await t.step(
       "Admin role - Can access admin panel",
       async () => {
@@ -323,7 +258,7 @@ Deno.test("Article Admin API Tests", {
       },
     );
 
-    // Test 10: Pagination test
+    // Test 8: Pagination test
     await t.step("Pagination - List with page parameter", async () => {
       const response = await adminRequest(
         "/ts-admin/articles?page=1&limit=10",
@@ -349,7 +284,7 @@ Deno.test("Article Admin API Tests", {
       );
     });
 
-    // Test 11: Search functionality
+    // Test 9: Search functionality
     await t.step("Search - Find articles by title", async () => {
       const response = await adminRequest(
         "/ts-admin/articles?search=Updated",
@@ -369,7 +304,7 @@ Deno.test("Article Admin API Tests", {
       );
     });
 
-    // Test 12: Sorting functionality
+    // Test 10: Sorting functionality
     await t.step("Sort - Order by createdAt desc", async () => {
       const response = await adminRequest(
         "/ts-admin/articles?sortBy=createdAt&sortOrder=desc",
@@ -385,7 +320,7 @@ Deno.test("Article Admin API Tests", {
       assertExists(json.data, "Should have data array");
     });
 
-    // Test 13: Delete article
+    // Test 11: Delete article
     await t.step("DELETE /ts-admin/articles/:id - Delete article", async () => {
       const response = await adminRequest(
         `/ts-admin/articles/${testArticleId}`,
@@ -418,7 +353,7 @@ Deno.test("Article Admin API Tests", {
       );
     });
 
-    // Test 14: Bulk delete
+    // Test 12: Bulk delete
     await t.step("POST /ts-admin/articles/bulk-delete", async () => {
       // Create two articles for bulk delete
       const article1 = await adminRequest(

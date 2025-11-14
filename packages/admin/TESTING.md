@@ -660,4 +660,4 @@ Real databases catch real bugs. Always test with PostgreSQL.
 
 **Happy Testing!** 🧪
 
-*For questions or issues, see [COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md) or open an issue on GitHub.*
+*For questions or issues, open an issue on GitHub.*

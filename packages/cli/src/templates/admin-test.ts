@@ -4,7 +4,6 @@ export function generateAdminTestTemplate(names: EntityNames): string {
   return `import {
   assertEquals,
   assertExists,
-  assertStringIncludes,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../../main.ts";
 import { db } from "../../config/database.ts";
@@ -12,12 +11,10 @@ import { ${names.plural} } from "./${names.kebabSingular}.model.ts";
 import { authTokens } from "../../auth/auth-token.model.ts";
 
 /**
- * ${names.pascalSingular} Admin Panel API Tests
+ * ${names.pascalSingular} Admin API Tests
  *
- * Tests admin CRUD operations with both HTML and JSON responses.
- * The admin panel supports content negotiation:
- * - HTML (text/html): Returns Tailwind CSS + htmx UI
- * - JSON (application/json): Returns structured API responses
+ * Tests admin CRUD operations with JSON API (@tstack/admin v2.0.0+).
+ * All responses are JSON - no HTML rendering.
  *
  * Run: ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.admin.test.ts
  *
@@ -87,46 +84,13 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertExists(superadminToken, "Superadmin token should exist");
     });
 
-    // Test 1: HTML list view
+    // Test 1: List ${names.plural}
     await t.step(
-      "GET /ts-admin/${names.kebabPlural} - HTML list view",
+      "GET /ts-admin/${names.kebabPlural} - JSON list",
       async () => {
-        const response = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
-          headers: { Accept: "text/html" },
-        });
+        const response = await adminRequest(ADMIN_ENDPOINT, superadminToken);
 
         assertEquals(response.status, 200, "Should return 200 OK");
-        assertEquals(
-          response.headers.get("content-type"),
-          "text/html; charset=UTF-8",
-          "Should return HTML",
-        );
-
-        const html = await response.text();
-        assertStringIncludes(
-          html,
-          "${names.pascalPlural}",
-          "Should contain page title",
-        );
-        assertStringIncludes(html, "table", "Should have table element");
-        assertStringIncludes(html, "htmx", "Should include htmx");
-      },
-    );
-
-    // Test 2: JSON list view
-    await t.step(
-      "GET /ts-admin/${names.kebabPlural} - JSON list view",
-      async () => {
-        const response = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
-          headers: { Accept: "application/json" },
-        });
-
-        assertEquals(response.status, 200, "Should return 200 OK");
-        assertEquals(
-          response.headers.get("content-type"),
-          "application/json; charset=UTF-8",
-          "Should return JSON",
-        );
 
         const json = await response.json();
         assertExists(json.data, "Should have data property");
@@ -136,38 +100,31 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       },
     );
 
-    // Test 3: HTML create form
+    // Test 2: Get entity metadata for creation
     await t.step(
-      "GET /ts-admin/${names.kebabPlural}/new - HTML create form",
+      "GET /ts-admin/${names.kebabPlural}/new - Entity metadata",
       async () => {
         const response = await adminRequest(
           \`\${ADMIN_ENDPOINT}/new\`,
           superadminToken,
-          {
-            headers: { Accept: "text/html" },
-          },
         );
 
         assertEquals(response.status, 200, "Should return 200 OK");
 
-        const html = await response.text();
-        assertStringIncludes(html, "form", "Should contain form");
-        assertStringIncludes(
-          html,
-          "New ${names.pascalSingular}",
-          "Should show create title",
-        );
+        const json = await response.json();
+        assertExists(json.entityName, "Should have entity name");
+        assertExists(json.columns, "Should have columns");
+        assertEquals(json.mode, "create", "Should be in create mode");
       },
     );
 
-    // Test 4: Create via JSON API
+    // Test 3: Create via JSON API
     await t.step(
-      "POST /ts-admin/${names.kebabPlural} - Create via JSON",
+      "POST /ts-admin/${names.kebabPlural} - Create",
       async () => {
         const response = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
           method: "POST",
           headers: {
-            Accept: "application/json",
             "Content-Type": "application/json",
           },
           body: JSON.stringify(sample${names.pascalSingular}),
@@ -181,36 +138,13 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       },
     );
 
-    // Test 5: Show HTML view
-    await t.step(
-      "GET /ts-admin/${names.kebabPlural}/:id - HTML show view",
-      async () => {
-        const response = await adminRequest(
-          \`\${ADMIN_ENDPOINT}/\${test${names.pascalSingular}Id}\`,
-          superadminToken,
-          {
-            headers: { Accept: "text/html" },
-          },
-        );
-
-        assertEquals(response.status, 200, "Should return 200 OK");
-
-        const html = await response.text();
-        assertStringIncludes(html, "Edit", "Should have edit button");
-        assertStringIncludes(html, "Delete", "Should have delete button");
-      },
-    );
-
-    // Test 6: Show JSON response
+    // Test 4: Show ${names.singular}
     await t.step(
       "GET /ts-admin/${names.kebabPlural}/:id - JSON response",
       async () => {
         const response = await adminRequest(
           \`\${ADMIN_ENDPOINT}/\${test${names.pascalSingular}Id}\`,
           superadminToken,
-          {
-            headers: { Accept: "application/json" },
-          },
         );
 
         assertEquals(response.status, 200, "Should return 200 OK");
@@ -221,33 +155,29 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       },
     );
 
-    // Test 7: Edit form HTML
+    // Test 5: Get entity metadata for editing
     await t.step(
-      "GET /ts-admin/${names.kebabPlural}/:id/edit - HTML edit form",
+      "GET /ts-admin/${names.kebabPlural}/:id/edit - Entity metadata with data",
       async () => {
         const response = await adminRequest(
           \`\${ADMIN_ENDPOINT}/\${test${names.pascalSingular}Id}/edit\`,
           superadminToken,
-          {
-            headers: { Accept: "text/html" },
-          },
         );
 
         assertEquals(response.status, 200, "Should return 200 OK");
 
-        const html = await response.text();
-        assertStringIncludes(html, "form", "Should contain form");
-        assertStringIncludes(
-          html,
-          "Edit ${names.pascalSingular}",
-          "Should show edit title",
-        );
+        const json = await response.json();
+        assertExists(json.entityName, "Should have entity name");
+        assertExists(json.columns, "Should have columns");
+        assertExists(json.data, "Should have data");
+        assertEquals(json.mode, "edit", "Should be in edit mode");
+        assertEquals(json.data.id, test${names.pascalSingular}Id, "Should return correct ID");
       },
     );
 
-    // Test 8: Update via JSON
+    // Test 6: Update via JSON
     await t.step(
-      "PUT /ts-admin/${names.kebabPlural}/:id - Update via JSON",
+      "PUT /ts-admin/${names.kebabPlural}/:id - Update",
       async () => {
         const response = await adminRequest(
           \`\${ADMIN_ENDPOINT}/\${test${names.pascalSingular}Id}\`,
@@ -255,7 +185,6 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
           {
             method: "PUT",
             headers: {
-              Accept: "application/json",
               "Content-Type": "application/json",
             },
             body: JSON.stringify(sample${names.pascalSingular}),
@@ -269,14 +198,11 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       },
     );
 
-    // Test 9: Pagination
+    // Test 7: Pagination
     await t.step("Pagination - List with page parameter", async () => {
       const response = await adminRequest(
         \`\${ADMIN_ENDPOINT}?page=1&limit=10\`,
         superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
       );
 
       assertEquals(response.status, 200, "Should return 200 OK");
@@ -287,14 +213,11 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertExists(json.limit, "Should have limit");
     });
 
-    // Test 10: Search functionality (customize field name to match your entity)
+    // Test 8: Search functionality (customize field name to match your entity)
     await t.step("Search - Find ${names.plural}", async () => {
       const response = await adminRequest(
         \`\${ADMIN_ENDPOINT}?search=Test\`,
         superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
       );
 
       assertEquals(response.status, 200, "Should return 200 OK");
@@ -304,14 +227,11 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertEquals(Array.isArray(json.data), true, "Data should be an array");
     });
 
-    // Test 11: Sorting
+    // Test 9: Sorting
     await t.step("Sort - Order by createdAt desc", async () => {
       const response = await adminRequest(
         \`\${ADMIN_ENDPOINT}?sortBy=createdAt&sortOrder=desc\`,
         superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
       );
 
       assertEquals(response.status, 200, "Should return 200 OK");
@@ -320,7 +240,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertExists(json.data, "Should have data array");
     });
 
-    // Test 12: Delete ${names.singular}
+    // Test 10: Delete ${names.singular}
     await t.step(
       "DELETE /ts-admin/${names.kebabPlural}/:id - Delete ${names.singular}",
       async () => {
@@ -352,13 +272,12 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       },
     );
 
-    // Test 13: Bulk delete
+    // Test 11: Bulk delete
     await t.step("POST /ts-admin/${names.kebabPlural}/bulk-delete", async () => {
       // Create two ${names.plural} for bulk delete
       const create1 = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
         method: "POST",
         headers: {
-          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(sample${names.pascalSingular}),
@@ -368,7 +287,6 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       const create2 = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
         method: "POST",
         headers: {
-          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(sample${names.pascalSingular}),
@@ -382,7 +300,6 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         {
           method: "POST",
           headers: {
-            Accept: "application/json",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids: [id1, id2] }),

@@ -13,7 +13,6 @@
 ## 📚 Documentation
 
 - **[Quick Start](#quick-start)** - Get started in 5 minutes
-- **[COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md)** - Complete documentation
 - **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** - Security analysis (Grade A)
 - **[STATUS.md](./STATUS.md)** - Implementation status & roadmap
 
@@ -278,7 +277,7 @@ When implementing new adapters, you **MUST**:
 4. ✅ Support both number and string IDs
 5. ✅ Follow the same naming conventions
 
-See **[COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GUIDE.md#8-future-extensions--standards)** for complete standards and patterns.
+See the architecture diagram above for design patterns.
 
 ---
 
@@ -323,7 +322,7 @@ See **[COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GU
 3. **Extensibility** - Add new adapters without touching core
 4. **Type Safety** - Generics flow through all layers
 
-See **[COMPREHENSIVE_GUIDE.md - Section 3: Architecture Deep Dive](./COMPREHENSIVE_GUIDE.md#3-architecture-deep-dive)** for complete explanation.
+The three-layer architecture ensures clean separation and extensibility.
 
 ---
 
@@ -365,7 +364,7 @@ new HonoAdminAdapter<T>({
 - `destroy()` - Delete record (DELETE /:id)
 - `bulkDelete()` - Delete multiple (POST /bulk-delete)
 
-See **[COMPREHENSIVE_GUIDE.md - Section 6: Complete API Reference](./COMPREHENSIVE_GUIDE.md#6-complete-api-reference)** for full documentation.
+See the method descriptions above for usage examples.
 
 ---
 
@@ -390,7 +389,7 @@ See **[COMPREHENSIVE_GUIDE.md - Section 6: Complete API Reference](./COMPREHENSI
        └─> Full CRUD interface ready!
 ```
 
-See **[COMPREHENSIVE_GUIDE.md - Section 5: Integration with TStack Kit](./COMPREHENSIVE_GUIDE.md#5-integration-with-tstack-kit)** for step-by-step guide.
+Follow the steps above for complete TStack Kit integration.
 
 ---
 
@@ -473,7 +472,7 @@ export async function requireAuth(c: Context, next: Next) {
 - Drizzle ORM 0.36+
 - PostgreSQL (MySQL/SQLite planned)
 
-See **[COMPREHENSIVE_GUIDE.md - Section 9: Advanced Usage](./COMPREHENSIVE_GUIDE.md#9-advanced-usage)** for more details.
+More advanced usage patterns coming in future releases.
 
 ---
 
@@ -506,12 +505,12 @@ We welcome contributions! When adding features:
 1. **Follow Existing Patterns** - Match current code style
 2. **Write Tests** - Real database tests, NO MOCKS
 3. **Maintain Type Safety** - Full TypeScript with strict mode
-4. **Document Everything** - Update README and COMPREHENSIVE_GUIDE
+4. **Document Everything** - Update README and add examples
 5. **Test Before PR** - All 73+ tests must pass
 
 **Adding New Adapters:**
 
-- See **[COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GUIDE.md#8-future-extensions--standards)**
+- Follow the adapter pattern shown in existing implementations
 - Follow adapter interface patterns
 - Write minimum 20+ tests per adapter
 - Test with real database (NO MOCKS)
@@ -541,13 +540,12 @@ c.set("user", user);
 allowedRoles: ["superadmin", "admin"]
 ```
 
-See **[COMPREHENSIVE_GUIDE.md - Section 10: Troubleshooting](./COMPREHENSIVE_GUIDE.md#10-troubleshooting)** for complete guide.
+Check the common issues above or create an issue on GitHub.
 
 ---
 
 ## Support
 
-- **Documentation:** [COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md) - **Start here!**
 - **Issues:** <https://github.com/desingh-rajan/tstack-kit/issues>
 - **Discussions:** Create GitHub Discussion for questions
 

@@ -1,6 +1,6 @@
 /**
  * Admin API Tests for Site Settings
- * Tests the @tstack/admin CRUD interface (HTML + JSON responses)
+ * Tests the @tstack/admin JSON API
  */
 
 import {
@@ -68,58 +68,9 @@ Deno.test("Site Setting Admin API Tests", {
       assertExists(superadminToken, "Superadmin token should exist");
     });
 
-    // Test HTML responses
-    await t.step("GET /ts-admin/site_settings - List page (HTML)", async () => {
-      const res = await adminRequest(BASE_URL, superadminToken, {
-        headers: { Accept: "text/html" },
-      });
-      assertEquals(res.status, 200);
-      assertEquals(
-        res.headers.get("content-type")?.includes("text/html"),
-        true,
-      );
-    });
-
-    await t.step(
-      "GET /ts-admin/site_settings/new - New form (HTML)",
-      async () => {
-        const res = await adminRequest(`${BASE_URL}/new`, superadminToken, {
-          headers: { Accept: "text/html" },
-        });
-        assertEquals(res.status, 200);
-        assertEquals(
-          res.headers.get("content-type")?.includes("text/html"),
-          true,
-        );
-      },
-    );
-
-    await t.step(
-      "POST /ts-admin/site_settings - Create (HTML form)",
-      async () => {
-        const formData = new FormData();
-        formData.append("key", "test_key");
-        formData.append("category", "general");
-        formData.append("value", JSON.stringify({ enabled: true }));
-        formData.append("isPublic", "true");
-        formData.append("description", "Test setting");
-
-        const res = await adminRequest(BASE_URL, superadminToken, {
-          method: "POST",
-          body: formData,
-        });
-        // FormData submissions return JSON with 201 by default
-        assertEquals([200, 201, 302].includes(res.status), true);
-      },
-    );
-
     // Test JSON API responses
-    await t.step("GET /ts-admin/site_settings - List (JSON)", async () => {
-      const res = await adminRequest(BASE_URL, superadminToken, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
+    await t.step("GET /ts-admin/site_settings - List", async () => {
+      const res = await adminRequest(BASE_URL, superadminToken);
       assertEquals(res.status, 200);
       const data = await res.json();
       assertEquals(Array.isArray(data.data), true);
@@ -128,12 +79,11 @@ Deno.test("Site Setting Admin API Tests", {
       }
     });
 
-    await t.step("POST /ts-admin/site_settings - Create (JSON)", async () => {
+    await t.step("POST /ts-admin/site_settings - Create", async () => {
       const res = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
           key: "json_test_key",
@@ -149,38 +99,29 @@ Deno.test("Site Setting Admin API Tests", {
       settingId = data.id;
     });
 
-    await t.step("GET /ts-admin/site_settings/:id - Show (JSON)", async () => {
+    await t.step("GET /ts-admin/site_settings/:id - Show", async () => {
       const res = await adminRequest(
         `${BASE_URL}/${settingId}`,
         superadminToken,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        },
       );
       assertEquals(res.status, 200);
       const data = await res.json();
       assertEquals(data.id, settingId);
     });
 
-    await t.step(
-      "GET /ts-admin/site_settings/:id/edit - Edit form (HTML)",
-      async () => {
-        const res = await adminRequest(
-          `${BASE_URL}/${settingId}/edit`,
-          superadminToken,
-        );
-        assertEquals(res.status, 200);
-        assertEquals(
-          res.headers.get("content-type")?.includes("text/html"),
-          true,
-        );
-      },
-    );
+    await t.step("GET /ts-admin/site_settings/:id/edit - Entity metadata", async () => {
+      const res = await adminRequest(
+        `${BASE_URL}/${settingId}/edit`,
+        superadminToken,
+      );
+      assertEquals(res.status, 200);
+      const data = await res.json();
+      assertEquals(data.mode, "edit");
+      assertEquals(data.data.id, settingId);
+    });
 
     await t.step(
-      "PUT /ts-admin/site_settings/:id - Update (JSON)",
+      "PUT /ts-admin/site_settings/:id - Update",
       async () => {
         const res = await adminRequest(
           `${BASE_URL}/${settingId}`,
@@ -189,7 +130,6 @@ Deno.test("Site Setting Admin API Tests", {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              Accept: "application/json",
             },
             body: JSON.stringify({
               description: "Updated description",
@@ -203,16 +143,13 @@ Deno.test("Site Setting Admin API Tests", {
     );
 
     await t.step(
-      "DELETE /ts-admin/site_settings/:id - Delete (JSON)",
+      "DELETE /ts-admin/site_settings/:id - Delete",
       async () => {
         const res = await adminRequest(
           `${BASE_URL}/${settingId}`,
           superadminToken,
           {
             method: "DELETE",
-            headers: {
-              Accept: "application/json",
-            },
           },
         );
         assertEquals(res.status, 200);
@@ -279,11 +216,6 @@ Deno.test("Site Setting Admin API Tests", {
       const res = await adminRequest(
         `${BASE_URL}?page=1&limit=10`,
         superadminToken,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        },
       );
       assertEquals(res.status, 200);
       const data = await res.json();
@@ -296,11 +228,6 @@ Deno.test("Site Setting Admin API Tests", {
       const res = await adminRequest(
         `${BASE_URL}?search=test`,
         superadminToken,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        },
       );
       assertEquals(res.status, 200);
     });
@@ -309,11 +236,6 @@ Deno.test("Site Setting Admin API Tests", {
       const res = await adminRequest(
         `${BASE_URL}?orderBy=key&orderDir=asc`,
         superadminToken,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        },
       );
       assertEquals(res.status, 200);
     });
