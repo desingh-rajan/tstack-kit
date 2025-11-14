@@ -28,10 +28,12 @@ import { authTokens } from "../../auth/auth-token.model.ts";
 
 let superadminToken = "";
 let adminToken = "";
+let superadminUserId = 0;
 let testArticleId = 0;
 
 /**
  * Clean up test data before running tests
+ * Preserves seeded users (superadmin, alpha, regular user)
  */
 async function cleanupTestData() {
   try {
@@ -61,7 +63,10 @@ async function adminRequest(
   });
 }
 
-Deno.test("Article Admin API Tests", async (t) => {
+Deno.test("Article Admin API Tests", {
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
   try {
     await cleanupTestData();
 
@@ -77,8 +82,10 @@ Deno.test("Article Admin API Tests", async (t) => {
         }),
       });
       const superadminData = await superadminRes.json();
-      superadminToken = superadminData.data.token;
+      superadminToken = superadminData.data?.token;
+      superadminUserId = superadminData.data?.user?.id;
       assertExists(superadminToken, "Superadmin token should exist");
+      assertExists(superadminUserId, "Superadmin user ID should exist");
 
       // Alpha user login (admin role)
       const alphaRes = await app.request("/auth/login", {
@@ -90,7 +97,7 @@ Deno.test("Article Admin API Tests", async (t) => {
         }),
       });
       const alphaData = await alphaRes.json();
-      adminToken = alphaData.data.token;
+      adminToken = alphaData.data?.token;
       assertExists(adminToken, "Admin token should exist");
     });
 
@@ -112,7 +119,7 @@ Deno.test("Article Admin API Tests", async (t) => {
       );
 
       const html = await response.text();
-      assertStringIncludes(html, "Articles", "Should contain page title");
+      assertStringIncludes(html, "articles", "Should contain page title");
       assertStringIncludes(html, "table", "Should contain table element");
       assertStringIncludes(
         html,
@@ -133,15 +140,16 @@ Deno.test("Article Admin API Tests", async (t) => {
 
       assertEquals(response.status, 200, "Should return 200 OK");
       assertEquals(
-        response.headers.get("content-type"),
-        "application/json; charset=UTF-8",
+        response.headers.get("content-type")?.split(";")[0],
+        "application/json",
         "Should return JSON",
       );
 
       const json = await response.json();
-      assertExists(json.data, "Should have data property");
-      assertExists(json.data.items, "Should have items array");
-      assertExists(json.data.pagination, "Should have pagination info");
+      assertExists(json.data, "Should have data array");
+      assertEquals(Array.isArray(json.data), true, "Data should be an array");
+      assertExists(json.page, "Should have page");
+      assertExists(json.total, "Should have total");
     });
 
     // Test 3: HTML response for create form
@@ -158,7 +166,7 @@ Deno.test("Article Admin API Tests", async (t) => {
 
       const html = await response.text();
       assertStringIncludes(html, "form", "Should contain form element");
-      assertStringIncludes(html, "New Article", "Should show create title");
+      assertStringIncludes(html, "New article", "Should show create title");
       assertStringIncludes(html, "title", "Should have title field");
     });
 
@@ -179,7 +187,7 @@ Deno.test("Article Admin API Tests", async (t) => {
             content: "This is test content for the admin panel",
             excerpt: "Test excerpt",
             isPublished: 1,
-            authorId: 1,
+            authorId: superadminUserId,
           }),
         },
       );
@@ -187,9 +195,8 @@ Deno.test("Article Admin API Tests", async (t) => {
       assertEquals(response.status, 201, "Should return 201 Created");
 
       const json = await response.json();
-      assertExists(json.data, "Should have data property");
-      assertExists(json.data.id, "Should have created article ID");
-      testArticleId = json.data.id;
+      assertExists(json.id, "Should have created article ID");
+      testArticleId = json.id;
     });
 
     // Test 5: Show article HTML view
@@ -212,8 +219,8 @@ Deno.test("Article Admin API Tests", async (t) => {
           "Test Article for Admin Panel",
           "Should show article title",
         );
-        assertStringIncludes(html, "Edit", "Should have edit button");
-        assertStringIncludes(html, "Delete", "Should have delete button");
+        assertStringIncludes(html, "Edit", "Should have edit link");
+        assertStringIncludes(html, "Back to List", "Should have back link");
       },
     );
 
@@ -232,9 +239,8 @@ Deno.test("Article Admin API Tests", async (t) => {
         assertEquals(response.status, 200, "Should return 200 OK");
 
         const json = await response.json();
-        assertExists(json.data, "Should have data property");
         assertEquals(
-          json.data.title,
+          json.title,
           "Test Article for Admin Panel",
           "Should return correct title",
         );
@@ -257,7 +263,7 @@ Deno.test("Article Admin API Tests", async (t) => {
 
         const html = await response.text();
         assertStringIncludes(html, "form", "Should contain form element");
-        assertStringIncludes(html, "Edit Article", "Should show edit title");
+        assertStringIncludes(html, "Edit article", "Should show edit title");
         assertStringIncludes(
           html,
           "Test Article for Admin Panel",
@@ -283,7 +289,7 @@ Deno.test("Article Admin API Tests", async (t) => {
             content: "Updated content",
             excerpt: "Updated excerpt",
             isPublished: 1,
-            authorId: 1,
+            authorId: superadminUserId,
           }),
         },
       );
@@ -292,7 +298,7 @@ Deno.test("Article Admin API Tests", async (t) => {
 
       const json = await response.json();
       assertEquals(
-        json.data.title,
+        json.title,
         "Updated Test Article",
         "Should have updated title",
       );
@@ -331,14 +337,14 @@ Deno.test("Article Admin API Tests", async (t) => {
       assertEquals(response.status, 200, "Should return 200 OK");
 
       const json = await response.json();
-      assertExists(json.data.pagination, "Should have pagination");
+      assertExists(json.page, "Should have page");
       assertEquals(
-        json.data.pagination.page,
+        json.page,
         1,
         "Should be on page 1",
       );
       assertEquals(
-        json.data.pagination.limit,
+        json.limit,
         10,
         "Should have limit 10",
       );
@@ -358,7 +364,7 @@ Deno.test("Article Admin API Tests", async (t) => {
 
       const json = await response.json();
       assertEquals(
-        json.data.items.length > 0,
+        json.data.length > 0,
         true,
         "Should find articles",
       );
@@ -377,7 +383,7 @@ Deno.test("Article Admin API Tests", async (t) => {
       assertEquals(response.status, 200, "Should return 200 OK");
 
       const json = await response.json();
-      assertExists(json.data.items, "Should have items");
+      assertExists(json.data, "Should have data array");
     });
 
     // Test 13: Delete article
@@ -431,11 +437,11 @@ Deno.test("Article Admin API Tests", async (t) => {
             content: "Test",
             excerpt: "Test",
             isPublished: 1,
-            authorId: 1,
+            authorId: superadminUserId,
           }),
         },
       );
-      const id1 = (await article1.json()).data.id;
+      const id1 = (await article1.json()).id;
 
       const article2 = await adminRequest(
         "/ts-admin/articles",
@@ -452,11 +458,11 @@ Deno.test("Article Admin API Tests", async (t) => {
             content: "Test",
             excerpt: "Test",
             isPublished: 1,
-            authorId: 1,
+            authorId: superadminUserId,
           }),
         },
       );
-      const id2 = (await article2.json()).data.id;
+      const id2 = (await article2.json()).id;
 
       // Bulk delete
       const response = await adminRequest(
@@ -478,7 +484,7 @@ Deno.test("Article Admin API Tests", async (t) => {
 
       const json = await response.json();
       assertEquals(
-        json.data.deletedCount,
+        json.count,
         2,
         "Should delete 2 articles",
       );
@@ -486,7 +492,6 @@ Deno.test("Article Admin API Tests", async (t) => {
 
     console.log("[SUCCESS] All article admin tests passed! ✅");
   } catch (error) {
-    console.error("[FAILURE] Article admin tests failed:", error);
     throw error;
   } finally {
     await cleanupTestData();

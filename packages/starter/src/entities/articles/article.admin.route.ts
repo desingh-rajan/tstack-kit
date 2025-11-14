@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
 import { articles } from "./article.model.ts";
+import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 
 /**
  * REFERENCE IMPLEMENTATION: Article Admin Routes
@@ -23,6 +24,9 @@ import { articles } from "./article.model.ts";
  * 4. Adjust `allowedRoles` based on your access control needs
  * 5. See article.admin.test.ts for how to test admin routes
  */
+
+// Admin base URL constant
+const ADMIN_BASE_URL = "/ts-admin/articles";
 
 // Create ORM adapter for article
 const ormAdapter = new DrizzleAdapter(articles, {
@@ -50,20 +54,28 @@ const articleAdmin = new HonoAdminAdapter({
   searchable: ["title", "slug", "content", "excerpt"],
   sortable: ["id", "title", "isPublished", "createdAt", "updatedAt"],
   allowedRoles: ["superadmin", "admin"], // Admins can manage articles
-  baseUrl: "/ts-admin/articles",
+  baseUrl: ADMIN_BASE_URL,
 });
 
 // Register admin routes (requires authentication)
 const articleAdminRoutes = new Hono();
 
-articleAdminRoutes.get("/", articleAdmin.list());
-articleAdminRoutes.get("/new", articleAdmin.new());
-articleAdminRoutes.post("/", articleAdmin.create());
-articleAdminRoutes.get("/:id", articleAdmin.show());
-articleAdminRoutes.get("/:id/edit", articleAdmin.edit());
-articleAdminRoutes.put("/:id", articleAdmin.update());
-articleAdminRoutes.patch("/:id", articleAdmin.update());
-articleAdminRoutes.delete("/:id", articleAdmin.destroy());
-articleAdminRoutes.post("/bulk-delete", articleAdmin.bulkDelete());
+// Apply authentication middleware to all admin routes
+articleAdminRoutes.use(`${ADMIN_BASE_URL}/*`, requireAuth);
+articleAdminRoutes.use(ADMIN_BASE_URL, requireAuth);
+
+// CRUD routes
+articleAdminRoutes.get(ADMIN_BASE_URL, articleAdmin.list());
+articleAdminRoutes.get(`${ADMIN_BASE_URL}/new`, articleAdmin.new());
+articleAdminRoutes.post(ADMIN_BASE_URL, articleAdmin.create());
+articleAdminRoutes.get(`${ADMIN_BASE_URL}/:id`, articleAdmin.show());
+articleAdminRoutes.get(`${ADMIN_BASE_URL}/:id/edit`, articleAdmin.edit());
+articleAdminRoutes.put(`${ADMIN_BASE_URL}/:id`, articleAdmin.update());
+articleAdminRoutes.patch(`${ADMIN_BASE_URL}/:id`, articleAdmin.update());
+articleAdminRoutes.delete(`${ADMIN_BASE_URL}/:id`, articleAdmin.destroy());
+articleAdminRoutes.post(
+  `${ADMIN_BASE_URL}/bulk-delete`,
+  articleAdmin.bulkDelete(),
+);
 
 export default articleAdminRoutes;

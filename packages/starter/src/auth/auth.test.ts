@@ -4,7 +4,6 @@ import {
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { app } from "../main.ts";
 import { db } from "../config/database.ts";
-import { users } from "./user.model.ts";
 import { authTokens } from "./auth-token.model.ts";
 import { sql } from "drizzle-orm";
 
@@ -33,14 +32,11 @@ async function cleanupTestData() {
     // Delete all auth tokens
     await db.delete(authTokens);
 
-    // Delete test users (keep seeded superadmin and alpha users)
-    const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
-      "test-admin@test.local";
-    const alphaEmail = Deno.env.get("ALPHA_EMAIL") || "test-user@test.local";
-
+    // Delete test users created during tests (keep seeded superadmin, alpha, and regular users)
+    // These users are created by seed scripts in _test_setup.ts
     await db.execute(sql`
-      DELETE FROM ${users} 
-      WHERE email NOT IN (${superadminEmail}, ${alphaEmail})
+      DELETE FROM users 
+      WHERE email NOT IN ('superadmin@tonystack.dev', 'alpha@tonystack.dev', 'user@tonystack.dev')
     `);
 
     console.log("[CLEANUP] Test data cleaned successfully");
@@ -131,10 +127,14 @@ Deno.test("Auth API Tests", async (t) => {
     // 3. LOGIN WITH SUPERADMIN
     // ============================================
     await t.step("3. Login with superadmin", async () => {
-      const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
-        "test-admin@test.local";
-      const superadminPassword = Deno.env.get("SUPERADMIN_PASSWORD") ||
-        "TestPassword123!";
+      // Use the same hardcoded credentials that seed scripts use in test env
+      const isTestEnv = Deno.env.get("ENVIRONMENT") === "test";
+      const superadminEmail = isTestEnv
+        ? "superadmin@tonystack.dev"
+        : (Deno.env.get("SUPERADMIN_EMAIL") || "test-admin@test.local");
+      const superadminPassword = isTestEnv
+        ? "SuperSecurePassword123!"
+        : (Deno.env.get("SUPERADMIN_PASSWORD") || "TestPassword123!");
 
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",

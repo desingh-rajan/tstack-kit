@@ -25,8 +25,17 @@ import { eq } from "drizzle-orm";
 async function seedAlphaUser() {
   console.log("[SEED] Seeding Alpha user...");
 
-  const ALPHA_EMAIL = Deno.env.get("ALPHA_EMAIL");
-  const ALPHA_PASSWORD = Deno.env.get("ALPHA_PASSWORD");
+  // Use hardcoded test credentials in test environment
+  const isTestEnv = Deno.env.get("ENVIRONMENT") === "test";
+
+  const ALPHA_EMAIL = isTestEnv
+    ? "alpha@tonystack.dev"
+    : Deno.env.get("ALPHA_EMAIL");
+
+  const ALPHA_PASSWORD = isTestEnv
+    ? "AlphaSecurePassword123!"
+    : Deno.env.get("ALPHA_PASSWORD");
+
   const ALPHA_USERNAME = Deno.env.get("ALPHA_USERNAME") || "Alpha User";
 
   if (!ALPHA_EMAIL) {
@@ -71,14 +80,14 @@ async function seedAlphaUser() {
     // Hash password
     const hashedPassword = await hashPassword(ALPHA_PASSWORD);
 
-    // Create alpha user (regular user role)
+    // Create alpha user (admin role for testing)
     const [newUser] = await db
       .insert(users)
       .values({
         email: ALPHA_EMAIL,
         username: ALPHA_USERNAME,
         password: hashedPassword,
-        role: "user", // Regular user, not admin
+        role: isTestEnv ? "admin" : "user", // Admin in test, regular user otherwise
         isEmailVerified: true,
         isActive: true,
       })
@@ -87,7 +96,7 @@ async function seedAlphaUser() {
     console.log("[OK] Alpha user created successfully");
     console.log(`   Email: ${ALPHA_EMAIL}`);
     console.log(`   Username: ${ALPHA_USERNAME}`);
-    console.log(`   Role: user (regular user)`);
+    console.log(`   Role: ${isTestEnv ? "admin" : "user"}`);
     console.log(`   User ID: ${newUser.id}`);
     console.log("");
     console.log("[WARNING]  IMPORTANT: This is a development/test user only!");

@@ -12,8 +12,16 @@ import { eq } from "drizzle-orm";
 async function seedSuperAdmin() {
   console.log("[SEED] Seeding superadmin user...");
 
-  const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL");
-  const superadminPassword = Deno.env.get("SUPERADMIN_PASSWORD");
+  // Use hardcoded test credentials in test environment
+  const isTestEnv = Deno.env.get("ENVIRONMENT") === "test";
+
+  const superadminEmail = isTestEnv
+    ? "superadmin@tonystack.dev"
+    : Deno.env.get("SUPERADMIN_EMAIL");
+
+  const superadminPassword = isTestEnv
+    ? "SuperSecurePassword123!"
+    : Deno.env.get("SUPERADMIN_PASSWORD");
 
   if (!superadminEmail) {
     console.error(

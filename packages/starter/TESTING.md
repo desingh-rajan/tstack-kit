@@ -3,7 +3,117 @@
 This guide covers testing in TonyStack projects built with **Deno** - including
 setup, running tests, and troubleshooting.
 
-## Quick Start
+## 🚀 First Time Setup (New Developers)
+
+If you're a new developer and don't have the test environment set up yet, follow these steps **in order**:
+
+### Step 1: Environment Variables
+
+Create a `.env.test.local` file in the `packages/starter` directory:
+
+```bash
+# packages/starter/.env.test.local
+ENVIRONMENT=test
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test_db
+PORT=8001
+LOG_LEVEL=error
+JWT_SECRET=test-secret-key-for-testing-only
+```
+
+**Important Notes:**
+
+- Replace `password` with your actual PostgreSQL password
+- Replace `myproject` with your actual project name
+- The test database name should end with `_test_db` (e.g., `tonystack_test_db`)
+- Make sure PostgreSQL is running on your machine
+
+### Step 2: Check Prerequisites
+
+```bash
+# Ensure Deno is installed
+deno --version
+
+# Ensure PostgreSQL is running
+psql --version
+
+# Check if you can connect to PostgreSQL
+psql -U postgres -c "SELECT version();"
+```
+
+### Step 3: Generate Migrations (If Needed)
+
+If the `migrations/` folder is empty or doesn't exist:
+
+```bash
+# From packages/starter directory
+deno task db:generate
+```
+
+This creates migration files based on your Drizzle schema.
+
+### Step 4: Run Complete Test Setup
+
+```bash
+# This does EVERYTHING in one command:
+# 1. Creates test database
+# 2. Runs all migrations
+# 3. Seeds test data (superadmin, alpha user, site settings)
+# 4. Runs all tests
+deno task test:full
+```
+
+### Step 5: Verify Everything Works
+
+You should see output like:
+
+```text
+✅ Test database created: myproject_test_db
+✅ Migrations applied successfully
+✅ Seeded superadmin user
+✅ Seeded alpha user  
+✅ Seeded site settings
+🧪 Running tests...
+
+ok | 5 passed (81 steps) | 0 failed
+```
+
+### Common First-Time Issues
+
+#### Database does not exist
+
+```bash
+# Solution: Run the full setup
+deno task test:full
+```
+
+#### Migration files not found
+
+```bash
+# Solution: Generate migrations first
+deno task db:generate
+deno task test:full
+```
+
+#### Connection refused or ECONNREFUSED
+
+```bash
+# Solution: PostgreSQL is not running
+# Start PostgreSQL (varies by OS):
+# - macOS: brew services start postgresql
+# - Linux: sudo systemctl start postgresql
+# - Windows: Check Services for PostgreSQL
+```
+
+#### Password authentication failed
+
+```bash
+# Solution: Fix DATABASE_URL in .env.test.local
+# Make sure the password matches your PostgreSQL setup
+```
+
+---
+
+## Quick Start (After Setup)
 
 ### Option 1: Automated Setup (Recommended)
 
@@ -86,10 +196,10 @@ deno task test:reset
 
 These users are automatically created when you run `test:seed` or `test:full`:
 
-| User           | Email                  | Password          | Role       | Purpose                                |
-| -------------- | ---------------------- | ----------------- | ---------- | -------------------------------------- |
-| **Superadmin** | superadmin@tstack.in   | TonyStack@2025!   | superadmin | Full system access, admin operations   |
-| **Alpha User** | alpha@tstack.in        | Alpha@2025!       | user       | Regular user for permission testing    |
+| User           | Email                    | Password          | Role       | Purpose                                |
+| -------------- | ------------------------ | ----------------- | ---------- | -------------------------------------- |
+| **Superadmin** | `superadmin@tstack.in`   | TonyStack@2025!   | superadmin | Full system access, admin operations   |
+| **Alpha User** | `alpha@tstack.in`        | Alpha@2025!       | user       | Regular user for permission testing    |
 
 **Usage in Tests:**
 
@@ -522,7 +632,7 @@ deno task test:reset
 
 ### Cheat Sheet
 
-```
+```text
 DENO TESTING CHEAT SHEET
 ========================
 deno task test:full     → Complete workflow

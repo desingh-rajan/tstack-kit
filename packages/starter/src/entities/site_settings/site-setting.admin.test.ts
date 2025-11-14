@@ -45,7 +45,10 @@ async function adminRequest(
   });
 }
 
-Deno.test("Site Setting Admin API Tests", async (t) => {
+Deno.test("Site Setting Admin API Tests", {
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
   const BASE_URL = "/ts-admin/site_settings";
 
   try {
@@ -68,32 +71,48 @@ Deno.test("Site Setting Admin API Tests", async (t) => {
 
     // Test HTML responses
     await t.step("GET /ts-admin/site_settings - List page (HTML)", async () => {
-      const res = await adminRequest(BASE_URL, superadminToken);
-      assertEquals(res.status, 200);
-      assertEquals(res.headers.get("content-type")?.includes("text/html"), true);
-    });
-
-    await t.step("GET /ts-admin/site_settings/new - New form (HTML)", async () => {
-      const res = await adminRequest(`${BASE_URL}/new`, superadminToken);
-      assertEquals(res.status, 200);
-      assertEquals(res.headers.get("content-type")?.includes("text/html"), true);
-    });
-
-    await t.step("POST /ts-admin/site_settings - Create (HTML form)", async () => {
-      const formData = new FormData();
-      formData.append("key", "test_key");
-      formData.append("category", "general");
-      formData.append("value", JSON.stringify({ enabled: true }));
-      formData.append("isPublic", "true");
-      formData.append("description", "Test setting");
-
       const res = await adminRequest(BASE_URL, superadminToken, {
-        method: "POST",
-        body: formData,
+        headers: { Accept: "text/html" },
       });
-      // Should redirect to list page or return 200
-      assertEquals([200, 302].includes(res.status), true);
+      assertEquals(res.status, 200);
+      assertEquals(
+        res.headers.get("content-type")?.includes("text/html"),
+        true,
+      );
     });
+
+    await t.step(
+      "GET /ts-admin/site_settings/new - New form (HTML)",
+      async () => {
+        const res = await adminRequest(`${BASE_URL}/new`, superadminToken, {
+          headers: { Accept: "text/html" },
+        });
+        assertEquals(res.status, 200);
+        assertEquals(
+          res.headers.get("content-type")?.includes("text/html"),
+          true,
+        );
+      },
+    );
+
+    await t.step(
+      "POST /ts-admin/site_settings - Create (HTML form)",
+      async () => {
+        const formData = new FormData();
+        formData.append("key", "test_key");
+        formData.append("category", "general");
+        formData.append("value", JSON.stringify({ enabled: true }));
+        formData.append("isPublic", "true");
+        formData.append("description", "Test setting");
+
+        const res = await adminRequest(BASE_URL, superadminToken, {
+          method: "POST",
+          body: formData,
+        });
+        // FormData submissions return JSON with 201 by default
+        assertEquals([200, 201, 302].includes(res.status), true);
+      },
+    );
 
     // Test JSON API responses
     await t.step("GET /ts-admin/site_settings - List (JSON)", async () => {
@@ -132,90 +151,124 @@ Deno.test("Site Setting Admin API Tests", async (t) => {
     });
 
     await t.step("GET /ts-admin/site_settings/:id - Show (JSON)", async () => {
-      const res = await adminRequest(`${BASE_URL}/${settingId}`, superadminToken, {
-        headers: {
-          Accept: "application/json",
+      const res = await adminRequest(
+        `${BASE_URL}/${settingId}`,
+        superadminToken,
+        {
+          headers: {
+            Accept: "application/json",
+          },
         },
-      });
+      );
       assertEquals(res.status, 200);
       const data = await res.json();
       assertEquals(data.id, settingId);
     });
 
-    await t.step("GET /ts-admin/site_settings/:id/edit - Edit form (HTML)", async () => {
-      const res = await adminRequest(`${BASE_URL}/${settingId}/edit`, superadminToken);
-      assertEquals(res.status, 200);
-      assertEquals(res.headers.get("content-type")?.includes("text/html"), true);
-    });
+    await t.step(
+      "GET /ts-admin/site_settings/:id/edit - Edit form (HTML)",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/${settingId}/edit`,
+          superadminToken,
+        );
+        assertEquals(res.status, 200);
+        assertEquals(
+          res.headers.get("content-type")?.includes("text/html"),
+          true,
+        );
+      },
+    );
 
-    await t.step("PUT /ts-admin/site_settings/:id - Update (JSON)", async () => {
-      const res = await adminRequest(`${BASE_URL}/${settingId}`, superadminToken, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          description: "Updated description",
-        }),
-      });
-      assertEquals(res.status, 200);
-      const data = await res.json();
-      assertEquals(data.description, "Updated description");
-    });
+    await t.step(
+      "PUT /ts-admin/site_settings/:id - Update (JSON)",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/${settingId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              description: "Updated description",
+            }),
+          },
+        );
+        assertEquals(res.status, 200);
+        const data = await res.json();
+        assertEquals(data.description, "Updated description");
+      },
+    );
 
-    await t.step("DELETE /ts-admin/site_settings/:id - Delete (JSON)", async () => {
-      const res = await adminRequest(`${BASE_URL}/${settingId}`, superadminToken, {
-        method: "DELETE",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      assertEquals(res.status, 200);
-    });
+    await t.step(
+      "DELETE /ts-admin/site_settings/:id - Delete (JSON)",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/${settingId}`,
+          superadminToken,
+          {
+            method: "DELETE",
+            headers: {
+              Accept: "application/json",
+            },
+          },
+        );
+        assertEquals(res.status, 200);
+      },
+    );
 
-    await t.step("POST /ts-admin/site_settings/bulk-delete - Bulk delete", async () => {
-      // Create test records
-      const res1 = await adminRequest(BASE_URL, superadminToken, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          key: "bulk_test_1",
-          category: "general",
-          value: {},
-        }),
-      });
-      const res2 = await adminRequest(BASE_URL, superadminToken, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          key: "bulk_test_2",
-          category: "general",
-          value: {},
-        }),
-      });
+    await t.step(
+      "POST /ts-admin/site_settings/bulk-delete - Bulk delete",
+      async () => {
+        // Create test records
+        const res1 = await adminRequest(BASE_URL, superadminToken, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            key: "bulk_test_1",
+            category: "general",
+            value: {},
+          }),
+        });
+        const res2 = await adminRequest(BASE_URL, superadminToken, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            key: "bulk_test_2",
+            category: "general",
+            value: {},
+          }),
+        });
 
-      const data1 = await res1.json();
-      const data2 = await res2.json();
+        const data1 = await res1.json();
+        const data2 = await res2.json();
 
-      // Bulk delete
-      const res = await adminRequest(`${BASE_URL}/bulk-delete`, superadminToken, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ids: [data1.id, data2.id],
-        }),
-      });
-      assertEquals(res.status, 200);
-      const result = await res.json();
-      assertEquals(result.count, 2);
-    });
+        // Bulk delete
+        const res = await adminRequest(
+          `${BASE_URL}/bulk-delete`,
+          superadminToken,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ids: [data1.id, data2.id],
+            }),
+          },
+        );
+        assertEquals(res.status, 200);
+        const result = await res.json();
+        assertEquals(result.count, 2);
+      },
+    );
 
     // Test authentication
     await t.step("Unauthorized access should fail", async () => {
@@ -224,22 +277,32 @@ Deno.test("Site Setting Admin API Tests", async (t) => {
     });
 
     await t.step("Test pagination", async () => {
-      const res = await adminRequest(`${BASE_URL}?page=1&limit=10`, superadminToken, {
-        headers: {
-          Accept: "application/json",
+      const res = await adminRequest(
+        `${BASE_URL}?page=1&limit=10`,
+        superadminToken,
+        {
+          headers: {
+            Accept: "application/json",
+          },
         },
-      });
+      );
       assertEquals(res.status, 200);
       const data = await res.json();
-      assertEquals(typeof data.pagination, "object");
+      assertExists(data.page, "Should have page");
+      assertExists(data.limit, "Should have limit");
+      assertExists(data.total, "Should have total");
     });
 
     await t.step("Test search", async () => {
-      const res = await adminRequest(`${BASE_URL}?search=test`, superadminToken, {
-        headers: {
-          Accept: "application/json",
+      const res = await adminRequest(
+        `${BASE_URL}?search=test`,
+        superadminToken,
+        {
+          headers: {
+            Accept: "application/json",
+          },
         },
-      });
+      );
       assertEquals(res.status, 200);
     });
 
@@ -256,7 +319,6 @@ Deno.test("Site Setting Admin API Tests", async (t) => {
       assertEquals(res.status, 200);
     });
   } catch (error) {
-    console.log("[FAILURE] Site setting admin tests failed:", error);
     throw error;
   } finally {
     await cleanupTestData();

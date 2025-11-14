@@ -8,6 +8,10 @@ import { HonoAdminAdapter } from "@tstack/admin";
 import { DrizzleAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
 import { siteSettings } from "./site-setting.model.ts";
+import { requireAuth } from "../../shared/middleware/requireAuth.ts";
+
+// Admin base URL constant
+const ADMIN_BASE_URL = "/ts-admin/site_settings";
 
 const app = new Hono();
 
@@ -16,22 +20,35 @@ const adminAdapter = new HonoAdminAdapter({
   ormAdapter: new DrizzleAdapter(siteSettings, { db }),
   entityName: "site_setting",
   entityNamePlural: "site_settings",
-  columns: ["id", "key", "category", "value", "isPublic", "description", "createdAt", "updatedAt"],
+  columns: [
+    "id",
+    "key",
+    "category",
+    "value",
+    "isPublic",
+    "description",
+    "createdAt",
+    "updatedAt",
+  ],
   searchable: ["key", "category", "description"],
   sortable: ["id", "key", "category", "createdAt", "updatedAt"],
   allowedRoles: ["superadmin", "admin"],
-  baseUrl: "/ts-admin/site_settings",
+  baseUrl: ADMIN_BASE_URL,
 });
 
-// Admin CRUD routes
-app.get("/", adminAdapter.list());
-app.get("/new", adminAdapter.new());
-app.post("/", adminAdapter.create());
-app.get("/:id", adminAdapter.show());
-app.get("/:id/edit", adminAdapter.edit());
-app.put("/:id", adminAdapter.update());
-app.patch("/:id", adminAdapter.update());
-app.delete("/:id", adminAdapter.destroy());
-app.post("/bulk-delete", adminAdapter.bulkDelete());
+// Apply authentication middleware to all admin routes
+app.use(`${ADMIN_BASE_URL}/*`, requireAuth);
+app.use(ADMIN_BASE_URL, requireAuth);
+
+// CRUD routes
+app.get(ADMIN_BASE_URL, adminAdapter.list());
+app.get(`${ADMIN_BASE_URL}/new`, adminAdapter.new());
+app.post(ADMIN_BASE_URL, adminAdapter.create());
+app.get(`${ADMIN_BASE_URL}/:id`, adminAdapter.show());
+app.get(`${ADMIN_BASE_URL}/:id/edit`, adminAdapter.edit());
+app.put(`${ADMIN_BASE_URL}/:id`, adminAdapter.update());
+app.patch(`${ADMIN_BASE_URL}/:id`, adminAdapter.update());
+app.delete(`${ADMIN_BASE_URL}/:id`, adminAdapter.destroy());
+app.post(`${ADMIN_BASE_URL}/bulk-delete`, adminAdapter.bulkDelete());
 
 export default app;
