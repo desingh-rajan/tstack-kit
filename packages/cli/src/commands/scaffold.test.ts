@@ -511,11 +511,18 @@ Deno.test("scaffoldEntity - admin route has correct baseUrl", async () => {
     );
     const content = await Deno.readTextFile(adminRoutePath);
 
-    // Should have /ts-admin/products baseUrl
+    // Should have ADMIN_BASE_URL constant
     assertEquals(
-      content.includes('baseUrl: "/ts-admin/products"'),
+      content.includes('const ADMIN_BASE_URL = "/ts-admin/products"'),
       true,
-      "Should have correct baseUrl for admin panel",
+      "Should have ADMIN_BASE_URL constant defined",
+    );
+    
+    // Should use the constant in baseUrl config
+    assertEquals(
+      content.includes('baseUrl: ADMIN_BASE_URL'),
+      true,
+      "Should use ADMIN_BASE_URL constant for baseUrl",
     );
   } finally {
     await cleanupTempDir(tempDir);
@@ -597,10 +604,19 @@ Deno.test("scaffoldEntity - admin route has correct entity references", async ()
       true,
       "Should have camelCase plural entity name",
     );
+    
+    // Should have ADMIN_BASE_URL constant with kebab-case plural
     assertEquals(
-      content.includes('baseUrl: "/ts-admin/blog-posts"'),
+      content.includes('const ADMIN_BASE_URL = "/ts-admin/blog-posts"'),
       true,
-      "Should have kebab-case plural URL",
+      "Should have ADMIN_BASE_URL constant with kebab-case plural URL",
+    );
+    
+    // Should use the constant in baseUrl config
+    assertEquals(
+      content.includes('baseUrl: ADMIN_BASE_URL'),
+      true,
+      "Should use ADMIN_BASE_URL constant for baseUrl",
     );
   } finally {
     await cleanupTempDir(tempDir);
