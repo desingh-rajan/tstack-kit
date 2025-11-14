@@ -517,10 +517,10 @@ Deno.test("scaffoldEntity - admin route has correct baseUrl", async () => {
       true,
       "Should have ADMIN_BASE_URL constant defined",
     );
-    
+
     // Should use the constant in baseUrl config
     assertEquals(
-      content.includes('baseUrl: ADMIN_BASE_URL'),
+      content.includes("baseUrl: ADMIN_BASE_URL"),
       true,
       "Should use ADMIN_BASE_URL constant for baseUrl",
     );
@@ -604,17 +604,17 @@ Deno.test("scaffoldEntity - admin route has correct entity references", async ()
       true,
       "Should have camelCase plural entity name",
     );
-    
+
     // Should have ADMIN_BASE_URL constant with kebab-case plural
     assertEquals(
       content.includes('const ADMIN_BASE_URL = "/ts-admin/blog-posts"'),
       true,
       "Should have ADMIN_BASE_URL constant with kebab-case plural URL",
     );
-    
+
     // Should use the constant in baseUrl config
     assertEquals(
-      content.includes('baseUrl: ADMIN_BASE_URL'),
+      content.includes("baseUrl: ADMIN_BASE_URL"),
       true,
       "Should use ADMIN_BASE_URL constant for baseUrl",
     );
