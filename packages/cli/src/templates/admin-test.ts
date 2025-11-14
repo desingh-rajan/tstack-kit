@@ -130,8 +130,9 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
 
         const json = await response.json();
         assertExists(json.data, "Should have data property");
-        assertExists(json.data.items, "Should have items array");
-        assertExists(json.data.pagination, "Should have pagination");
+        assertEquals(Array.isArray(json.data), true, "Data should be an array");
+        assertExists(json.page, "Should have page");
+        assertExists(json.total, "Should have total");
       },
     );
 
@@ -175,9 +176,8 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         assertEquals(response.status, 201, "Should return 201 Created");
 
         const json = await response.json();
-        assertExists(json.data, "Should have data property");
-        assertExists(json.data.id, "Should have created ${names.singular} ID");
-        test${names.pascalSingular}Id = json.data.id;
+        assertExists(json.id, "Should have created ${names.singular} ID");
+        test${names.pascalSingular}Id = json.id;
       },
     );
 
@@ -216,9 +216,8 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         assertEquals(response.status, 200, "Should return 200 OK");
 
         const json = await response.json();
-        assertExists(json.data, "Should have data property");
-        assertExists(json.data.id, "Should have id property in data");
-        assertEquals(json.data.id, test${names.pascalSingular}Id, "Should return correct ID");
+        assertExists(json.id, "Should have id property");
+        assertEquals(json.id, test${names.pascalSingular}Id, "Should return correct ID");
       },
     );
 
@@ -266,7 +265,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         assertEquals(response.status, 200, "Should return 200 OK");
 
         const json = await response.json();
-        assertExists(json.data, "Should have updated data");
+        assertExists(json, "Should have updated data");
       },
     );
 
@@ -283,8 +282,9 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertEquals(response.status, 200, "Should return 200 OK");
 
       const json = await response.json();
-      assertExists(json.data.pagination, "Should have pagination");
-      assertEquals(json.data.pagination.page, 1, "Should be on page 1");
+      assertExists(json.page, "Should have page");
+      assertEquals(json.page, 1, "Should be on page 1");
+      assertExists(json.limit, "Should have limit");
     });
 
     // Test 10: Search functionality (customize field name to match your entity)
@@ -300,7 +300,8 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertEquals(response.status, 200, "Should return 200 OK");
 
       const json = await response.json();
-      assertExists(json.data.items, "Should have items array");
+      assertExists(json.data, "Should have data array");
+      assertEquals(Array.isArray(json.data), true, "Data should be an array");
     });
 
     // Test 11: Sorting
@@ -316,7 +317,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertEquals(response.status, 200, "Should return 200 OK");
 
       const json = await response.json();
-      assertExists(json.data.items, "Should have items");
+      assertExists(json.data, "Should have data array");
     });
 
     // Test 12: Delete ${names.singular}
@@ -362,7 +363,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         },
         body: JSON.stringify(sample${names.pascalSingular}),
       });
-      const id1 = (await create1.json()).data.id;
+      const id1 = (await create1.json()).id;
 
       const create2 = await adminRequest(ADMIN_ENDPOINT, superadminToken, {
         method: "POST",
@@ -372,7 +373,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
         },
         body: JSON.stringify(sample${names.pascalSingular}),
       });
-      const id2 = (await create2.json()).data.id;
+      const id2 = (await create2.json()).id;
 
       // Bulk delete
       const response = await adminRequest(
@@ -391,7 +392,7 @@ Deno.test("${names.pascalSingular} Admin Panel Tests", async (t) => {
       assertEquals(response.status, 200, "Should delete successfully");
 
       const json = await response.json();
-      assertEquals(json.data.deletedCount, 2, "Should delete 2 ${names.plural}");
+      assertEquals(json.count, 2, "Should delete 2 ${names.plural}");
     });
   } catch (error) {
     console.error("[FAILURE] ${names.pascalSingular} admin tests failed:", error);
