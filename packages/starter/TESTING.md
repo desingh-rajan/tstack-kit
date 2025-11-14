@@ -196,19 +196,19 @@ deno task test:reset
 
 These users are automatically created when you run `test:seed` or `test:full`:
 
-| User           | Email                      | Password          | Role       | Purpose                                |
-| -------------- | -------------------------- | ----------------- | ---------- | -------------------------------------- |
-| **Superadmin** | `superadmin@tonystack.dev` | TonyStack@2025!   | superadmin | Full system access, admin operations   |
-| **Alpha User** | `alpha@tonystack.dev`      | Alpha@2025!       | user       | Regular user for permission testing    |
+| User           | Email                      | Password                   | Role       | Purpose                                |
+| -------------- | -------------------------- | -------------------------- | ---------- | -------------------------------------- |
+| **Superadmin** | `superadmin@tonystack.dev` | SuperSecurePassword123!    | superadmin | Full system access, admin operations   |
+| **Alpha User** | `alpha@tonystack.dev`      | AlphaSecurePassword123!    | user       | Regular user for permission testing    |
 
 **Usage in Tests:**
 
 ```typescript
 // Login as superadmin
-const adminToken = await login('superadmin@tonystack.dev', 'TonyStack@2025!');
+const adminToken = await login('superadmin@tonystack.dev', 'SuperSecurePassword123!');
 
 // Login as regular user
-const userToken = await login('alpha@tonystack.dev', 'Alpha@2025!');
+const userToken = await login('alpha@tonystack.dev', 'AlphaSecurePassword123!');
 
 // Test admin-only operation
 const result = await apiRequest('/admin/articles', {
@@ -282,14 +282,14 @@ Automatically seeded for testing:
 // Superadmin (full access)
 {
   email: "superadmin@tonystack.dev",
-  password: "TonyStack@2025!",
+  password: "SuperSecurePassword123!",
   role: "superadmin"
 }
 
 // Alpha user (regular user)
 {
   email: "alpha@tonystack.dev", 
-  password: "Alpha@2025!",
+  password: "AlphaSecurePassword123!",
   role: "user"
 }
 ```

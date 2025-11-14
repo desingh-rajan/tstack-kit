@@ -4,7 +4,6 @@
     "start": "deno run --allow-all src/main.ts",
     "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
     "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
-    "db:seed:all": "deno task db:seed",
     "db:seed:superadmin": "deno run --allow-all scripts/seed-superadmin.ts",
     "db:seed:alpha": "deno run --allow-all scripts/seed-alpha-user.ts",
     "db:seed:user": "deno run --allow-all scripts/seed-regular-user.ts",
