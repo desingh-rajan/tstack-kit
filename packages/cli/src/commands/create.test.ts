@@ -14,7 +14,7 @@ import { loadConfig } from "../utils/config.ts";
 const SKIP_DB_SETUP = Deno.env.get("TONYSTACK_TEST_DB") !== "true";
 
 // Prefix for test databases to avoid conflicts with real databases
-const TEST_DB_PREFIX = "tstack_test_";
+const TEST_DB_PREFIX = "tstack_cli_test_";
 
 // Basic project creation tests (no flags)
 

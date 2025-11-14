@@ -1,45 +1,33 @@
 #!/usr/bin/env -S deno run --allow-all
 
 /**
- * Cleanup script to drop all test databases with tstack_test_ prefix
+ * Cleanup script to drop all test databases with tstack_cli_test_ prefix
  *
  * Usage:
  *   deno run --allow-all scripts/cleanup-test-dbs.ts
  *
  * This script will:
- * 1. Find all databases with tstack_test_ prefix
+ * 1. Find all databases with tstack_cli_test_ prefix
  * 2. Drop them to clean up after testing
- * 3. Uses sudo password from ~/.tonystack/config.json if available
  */
 
-import { loadConfig } from "../src/utils/config.ts";
-
-const TEST_DB_PREFIX = "tstack_test_";
+const TEST_DB_PREFIX = "tstack_cli_test_";
 
 async function listTestDatabases(): Promise<string[]> {
   try {
-    const config = await loadConfig();
-
-    const cmd = config.sudoPassword
-      ? new Deno.Command("sh", {
-        args: [
-          "-c",
-          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'"`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      })
-      : new Deno.Command("sudo", {
-        args: [
-          "-u",
-          "postgres",
-          "psql",
-          "-tAc",
-          `SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      });
+    const cmd = new Deno.Command("psql", {
+      args: [
+        "-U",
+        "postgres",
+        "-h",
+        "localhost",
+        "-tAc",
+        `SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'`,
+      ],
+      env: { PGPASSWORD: "password" },
+      stdout: "piped",
+      stderr: "piped",
+    });
 
     const { stdout, success } = await cmd.output();
 
@@ -63,28 +51,19 @@ async function listTestDatabases(): Promise<string[]> {
 
 async function dropDatabase(dbName: string): Promise<boolean> {
   try {
-    const config = await loadConfig();
-
-    const cmd = config.sudoPassword
-      ? new Deno.Command("sh", {
-        args: [
-          "-c",
-          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      })
-      : new Deno.Command("sudo", {
-        args: [
-          "-u",
-          "postgres",
-          "psql",
-          "-c",
-          `DROP DATABASE IF EXISTS ${dbName}`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      });
+    const cmd = new Deno.Command("psql", {
+      args: [
+        "-U",
+        "postgres",
+        "-h",
+        "localhost",
+        "-c",
+        `DROP DATABASE IF EXISTS ${dbName}`,
+      ],
+      env: { PGPASSWORD: "password" },
+      stdout: "piped",
+      stderr: "piped",
+    });
 
     const { success } = await cmd.output();
     return success;

@@ -6,7 +6,6 @@
  * Runs before all tests.
  */
 
-import { load } from "@std/dotenv";
 import postgres from "postgres";
 
 // Verify we're in test mode
@@ -19,46 +18,70 @@ if (environment !== "test") {
   Deno.exit(1);
 }
 
-// Try to load .env.test.local from starter directory
-const starterEnvPath = new URL("../../starter/.env.test.local", import.meta.url)
-  .pathname;
+// Admin package uses its own test database
+const adminTestDb = "tstack_admin_test_db";
+const connectionString =
+  `postgresql://postgres:password@localhost:5432/${adminTestDb}`;
 
-try {
-  await load({ envPath: starterEnvPath, export: true });
-  console.log(`\n🧪 @tstack/admin Test Setup`);
-  console.log(`   Environment: ${environment}`);
-  console.log(`   Database: ${Deno.env.get("DATABASE_URL")}\n`);
-} catch {
-  // Fallback: try to use system environment
-  const databaseUrl = Deno.env.get("DATABASE_URL");
-  if (!databaseUrl) {
-    console.error("\n❌ DATABASE_URL is required for tests");
-    console.error("\nOptions:");
-    console.error("  1. Create ../starter/.env.test.local with:");
-    console.error(
-      "     DATABASE_URL=postgresql://tonystack:password@localhost:5432/tonystack_test_db",
-    );
-    console.error("\n  2. Or set DATABASE_URL environment variable");
-    Deno.exit(1);
+// Set DATABASE_URL for tests that expect it
+Deno.env.set("DATABASE_URL", connectionString);
+
+console.log(`\n🧪 @tstack/admin Test Setup`);
+console.log(`   Environment: ${environment}`);
+console.log(`   Database: ${connectionString}\n`);
+
+// Helper: Create database if it doesn't exist
+async function ensureDatabase(dbName: string): Promise<void> {
+  try {
+    // Try to create database using PGPASSWORD
+    const cmd = new Deno.Command("psql", {
+      args: [
+        "-U",
+        "postgres",
+        "-h",
+        "localhost",
+        "-c",
+        `CREATE DATABASE ${dbName}`,
+      ],
+      env: { PGPASSWORD: "password" },
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success, stderr } = await cmd.output();
+    const errorOutput = new TextDecoder().decode(stderr);
+
+    if (success) {
+      console.log(`   ✅ Database "${dbName}" created`);
+    } else if (errorOutput.includes("already exists")) {
+      console.log(`   ℹ️  Database "${dbName}" already exists`);
+    } else {
+      console.error(`   ⚠️  Could not verify database "${dbName}"`);
+    }
+  } catch (error) {
+    console.error(`   ⚠️  Database check failed:`, error);
   }
-  console.log(`\n🧪 @tstack/admin Test Setup`);
-  console.log(`   Using DATABASE_URL from environment\n`);
 }
 
 // Create test tables
-const connectionString = Deno.env.get("DATABASE_URL");
-if (connectionString) {
-  const sql = postgres(connectionString, { max: 1 });
+// Use the admin test database connectionString
+const dbName = "tstack_admin_test_db";
 
-  try {
-    console.log("   Creating test tables...");
+// Ensure database exists
+console.log("   Ensuring test database exists...");
+await ensureDatabase(dbName);
 
-    // Drop existing tables
-    await sql`DROP TABLE IF EXISTS test_admin_products CASCADE`;
-    await sql`DROP TABLE IF EXISTS test_admin_users_uuid CASCADE`;
+const sql = postgres(connectionString, { max: 1 });
 
-    // Create test tables
-    await sql`
+try {
+  console.log("   Creating test tables...");
+
+  // Drop existing tables
+  await sql`DROP TABLE IF EXISTS test_admin_products CASCADE`;
+  await sql`DROP TABLE IF EXISTS test_admin_users_uuid CASCADE`;
+
+  // Create test tables
+  await sql`
       CREATE TABLE test_admin_products (
         id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         name TEXT NOT NULL,
@@ -69,7 +92,7 @@ if (connectionString) {
       )
     `;
 
-    await sql`
+  await sql`
       CREATE TABLE test_admin_users_uuid (
         uuid TEXT PRIMARY KEY,
         email TEXT NOT NULL,
@@ -78,13 +101,12 @@ if (connectionString) {
       )
     `;
 
-    console.log("   ✅ Test tables created\n");
-  } catch (error) {
-    console.error("   ❌ Error creating test tables:", error);
-    Deno.exit(1);
-  } finally {
-    await sql.end();
-  }
+  console.log("   ✅ Test tables created\n");
+} catch (error) {
+  console.error("   ❌ Error creating test tables:", error);
+  Deno.exit(1);
+} finally {
+  await sql.end();
 }
 
 console.log("✅ Test environment ready");

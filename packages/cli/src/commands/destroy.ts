@@ -1,11 +1,159 @@
 import { join } from "@std/path";
 import { Logger } from "../utils/logger.ts";
-import { loadConfig } from "../utils/config.ts";
 
 export interface DestroyOptions {
   projectName: string;
   force?: boolean;
   skipDbSetup?: boolean; // Skip database operations (for testing)
+}
+
+/**
+ * Try to drop database using PGPASSWORD environment variable
+ */
+async function dropDatabaseWithPassword(
+  dbName: string,
+  dbUser: string,
+  dbPassword: string,
+): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("psql", {
+      args: [
+        "-U",
+        dbUser,
+        "-h",
+        "localhost",
+        "-c",
+        `DROP DATABASE IF EXISTS ${dbName}`,
+      ],
+      env: { PGPASSWORD: dbPassword },
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if PostgreSQL is running in Docker
+ */
+async function isDockerPostgresRunning(): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("docker", {
+      args: ["ps", "--filter", "name=postgres", "--format", "{{.Names}}"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success, stdout } = await cmd.output();
+    if (!success) return false;
+
+    const output = new TextDecoder().decode(stdout).trim();
+    return output.includes("postgres");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Try to drop database using Docker exec
+ */
+async function dropDatabaseWithDocker(dbName: string): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("docker", {
+      args: [
+        "exec",
+        "-i",
+        "postgres",
+        "psql",
+        "-U",
+        "postgres",
+        "-c",
+        `DROP DATABASE IF EXISTS ${dbName}`,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Try to drop database using sudo (allows interactive password prompt)
+ */
+async function dropDatabaseWithSudo(dbName: string): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("sudo", {
+      args: [
+        "-u",
+        "postgres",
+        "psql",
+        "-c",
+        `DROP DATABASE IF EXISTS ${dbName}`,
+      ],
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Drop databases using multiple fallback methods
+ */
+async function dropDatabases(
+  dbName: string,
+  testDbName: string,
+): Promise<void> {
+  const databases = [
+    { name: dbName, label: "Development database" },
+    { name: testDbName, label: "Test database" },
+  ];
+
+  const dbUser = "postgres";
+  const dbPassword = "password";
+
+  for (const { name, label } of databases) {
+    let dropped = false;
+
+    // Method 1: Try PGPASSWORD
+    dropped = await dropDatabaseWithPassword(name, dbUser, dbPassword);
+    if (dropped) {
+      Logger.success(`${label} "${name}" dropped!`);
+      continue;
+    }
+
+    // Method 2: Try Docker
+    if (await isDockerPostgresRunning()) {
+      dropped = await dropDatabaseWithDocker(name);
+      if (dropped) {
+        Logger.success(`${label} "${name}" dropped via Docker!`);
+        continue;
+      }
+    }
+
+    // Method 3: Try sudo
+    dropped = await dropDatabaseWithSudo(name);
+    if (dropped) {
+      Logger.success(`${label} "${name}" dropped via sudo!`);
+      continue;
+    }
+
+    // All methods failed
+    Logger.warning(`Could not drop ${name} (may not exist)`);
+  }
 }
 
 export async function destroyProject(options: DestroyOptions): Promise<void> {
@@ -79,84 +227,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   // Step 1: Drop databases
   if (!skipDbSetup) {
     Logger.step("Dropping databases...");
-
-    // Load config for sudo password
-    const config = await loadConfig();
-
-    try {
-      // Drop development database
-      const dropDevDb = config.sudoPassword
-        ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
-        : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-c",
-            `DROP DATABASE IF EXISTS ${dbName}`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
-      const devResult = await dropDevDb.output();
-
-      if (devResult.success) {
-        Logger.info(`[OK] Dropped development database: ${dbName}`);
-      } else {
-        Logger.warning(`Could not drop ${dbName} (may not exist)`);
-      }
-
-      // Drop test database
-      const dropTestDb = config.sudoPassword
-        ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${testDbName}"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
-        : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-c",
-            `DROP DATABASE IF EXISTS ${testDbName}`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
-      const testResult = await dropTestDb.output();
-
-      if (testResult.success) {
-        Logger.info(`[OK] Dropped test database: ${testDbName}`);
-      } else {
-        Logger.warning(`Could not drop ${testDbName} (may not exist)`);
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      Logger.warning(`Failed to drop databases: ${errorMsg}`);
-      Logger.info("You may need to drop them manually:");
-      Logger.info(
-        `  sudo -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
-      );
-      Logger.info(
-        `  sudo -u postgres psql -c "DROP DATABASE IF EXISTS ${testDbName}"`,
-      );
-      Logger.newLine();
-      Logger.info(
-        "Tip: Set 'sudoPassword' in ~/.tonystack/config.json to avoid password prompts",
-      );
-    }
-
+    await dropDatabases(dbName, testDbName);
     Logger.newLine();
   }
 

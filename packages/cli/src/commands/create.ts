@@ -5,7 +5,6 @@ import {
   extractVersion,
   fetchAllLatestVersions,
 } from "../utils/versionFetcher.ts";
-import { loadConfig } from "../utils/config.ts";
 
 // TODO: Rework with-auth and without-auth flag and make any mode default
 // Currently auth is optional (--with-auth flag), consider making it default
@@ -42,6 +41,166 @@ function promptForCredentials(
     dbUser: "postgres",
     dbPassword: "password",
   };
+}
+
+/**
+ * Try to create database using PGPASSWORD environment variable
+ */
+async function createDatabaseWithPassword(
+  dbName: string,
+  dbUser: string,
+  dbPassword: string,
+): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("psql", {
+      args: [
+        "-U",
+        dbUser,
+        "-h",
+        "localhost",
+        "-c",
+        `CREATE DATABASE ${dbName}`,
+      ],
+      env: { PGPASSWORD: dbPassword },
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if PostgreSQL is running in Docker
+ */
+async function isDockerPostgresRunning(): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("docker", {
+      args: ["ps", "--filter", "name=postgres", "--format", "{{.Names}}"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success, stdout } = await cmd.output();
+    if (!success) return false;
+
+    const output = new TextDecoder().decode(stdout).trim();
+    return output.includes("postgres");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Try to create database using Docker exec
+ */
+async function createDatabaseWithDocker(dbName: string): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("docker", {
+      args: [
+        "exec",
+        "-i",
+        "postgres",
+        "psql",
+        "-U",
+        "postgres",
+        "-c",
+        `CREATE DATABASE ${dbName}`,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Try to create database using sudo (allows interactive password prompt)
+ */
+async function createDatabaseWithSudo(dbName: string): Promise<boolean> {
+  try {
+    Logger.info(
+      "Attempting to create database with sudo (you may be prompted for your password)...",
+    );
+
+    const cmd = new Deno.Command("sudo", {
+      args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
+      stdin: "inherit", // Allow interactive password input
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+
+    const { success } = await cmd.output();
+    return success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Main database setup orchestrator - tries multiple methods
+ */
+async function setupDatabases(
+  dbName: string,
+  testDbName: string,
+  dbUser: string,
+  dbPassword: string,
+): Promise<void> {
+  const databases = [
+    { name: dbName, label: "Development database" },
+    { name: testDbName, label: "Test database" },
+  ];
+
+  for (const { name, label } of databases) {
+    let created = false;
+
+    // Method 1: Try PGPASSWORD (fastest, no prompts)
+    created = await createDatabaseWithPassword(name, dbUser, dbPassword);
+    if (created) {
+      Logger.success(`${label} "${name}" created!`);
+      continue;
+    }
+
+    // Method 2: Try Docker (if running)
+    if (await isDockerPostgresRunning()) {
+      created = await createDatabaseWithDocker(name);
+      if (created) {
+        Logger.success(`${label} "${name}" created via Docker!`);
+        continue;
+      }
+    }
+
+    // Method 3: Try sudo (interactive, may prompt for password)
+    created = await createDatabaseWithSudo(name);
+    if (created) {
+      Logger.success(`${label} "${name}" created via sudo!`);
+      continue;
+    }
+
+    // All methods failed
+    Logger.warning(
+      `Could not create ${label} "${name}" (may already exist or PostgreSQL is not accessible)`,
+    );
+  }
+
+  Logger.newLine();
+  Logger.info("If databases were not created, you have these options:");
+  Logger.code(
+    `1. Docker: cd ${dbName.replace(/_db$/, "")} && docker compose up -d`,
+  );
+  Logger.code(
+    `2. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${dbName}"`,
+  );
+  Logger.code(
+    `3. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${testDbName}"`,
+  );
 }
 
 export async function createProject(options: CreateOptions): Promise<void> {
@@ -344,83 +503,7 @@ JWT_EXPIRY=7d
   // Try to create databases automatically (dev + test)
   if (!skipDbSetup) {
     Logger.step("Setting up databases...");
-
-    // Load config for sudo password
-    const config = await loadConfig();
-
-    try {
-      // Create development database
-      const createDbCmd = config.sudoPassword
-        ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "CREATE DATABASE ${dbName}"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
-        : new Deno.Command("sudo", {
-          args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
-          stdout: "piped",
-          stderr: "piped",
-        });
-
-      const { success: devSuccess } = await createDbCmd.output();
-
-      if (devSuccess) {
-        Logger.success(`Development database "${dbName}" created!`);
-      } else {
-        Logger.warning(
-          `Database "${dbName}" may already exist or PostgreSQL is not accessible`,
-        );
-      }
-
-      // Create test database
-      const createTestDbCmd = config.sudoPassword
-        ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
-        : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-c",
-            `CREATE DATABASE ${testDbName}`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
-
-      const { success: testSuccess } = await createTestDbCmd.output();
-
-      if (testSuccess) {
-        Logger.success(`Test database "${testDbName}" created!`);
-      } else {
-        Logger.warning(
-          `Database "${testDbName}" may already exist or PostgreSQL is not accessible`,
-        );
-      }
-    } catch {
-      Logger.warning("Could not auto-create databases");
-      Logger.info("Options to create databases:");
-      Logger.code(`1. Docker: cd ${projectName} && docker compose up -d`);
-      Logger.code(
-        `2. Manual: sudo -u postgres psql -c "CREATE DATABASE ${dbName}"`,
-      );
-      Logger.code(
-        `3. Test DB: sudo -u postgres psql -c "CREATE DATABASE ${testDbName}"`,
-      );
-      Logger.newLine();
-      Logger.info(
-        "Tip: Set 'sudoPassword' in ~/.tonystack/config.json to avoid password prompts",
-      );
-    }
+    await setupDatabases(dbName, testDbName, dbUser, dbPassword);
   }
 
   Logger.newLine();
