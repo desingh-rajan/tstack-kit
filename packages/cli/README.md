@@ -97,20 +97,34 @@ src/entities/products/         # Folder: snake_case (matches database table)
 ├── product.service.ts        # Business logic
 ├── product.controller.ts     # HTTP handlers
 ├── product.route.ts          # Routes: /products (kebab-case plural)
+├── product.admin.route.ts    # Admin panel: /ts-admin/products (Rails-style)
 └── product.test.ts           # API tests
 ```
+
+**Admin Panel (Included by Default):**
+
+Every scaffolded entity comes with a fully-functional admin panel at `/ts-admin/{entity}`:
+
+- **Tailwind CSS + htmx UI** - Works without JavaScript
+- **Complete CRUD** - List, create, edit, delete operations
+- **Pagination, Search & Sort** - Out of the box
+- **Role-Based Access** - Protected by `superadmin` and `admin` roles
+- **Content Negotiation** - Returns HTML or JSON based on Accept header
 
 ### Examples
 
 ```bash
-# Generate a simple entity
-tstack scaffold users                    # Creates: entities/users/user.*.ts, routes: /users
+# Generate a simple entity (includes admin panel)
+tstack scaffold users                    # Creates: entities/users/user.*.ts, routes: /users, admin: /ts-admin/users
 
 # Generate entity with snake_case input
 tstack scaffold blog_posts               # Creates: entities/blog_posts/blog-post.*.ts, routes: /blog-posts
 
 # Generate with PascalCase input  
 tstack scaffold BlogPost                 # Creates: entities/blog_posts/blog-post.*.ts, routes: /blog-posts
+
+# Skip admin panel generation (Rails-style --skip-* flag)
+tstack scaffold products --skip-admin    # Creates 6 files (no admin route)
 
 # Force overwrite existing entity
 tstack scaffold products --force
@@ -165,18 +179,42 @@ The `--latest` flag will:
 
 ### `scaffold <entity-name>`
 
-Generate a new entity with all MVC files.
+Generate a new entity with all MVC files and an admin panel.
 
 **Options:**
 
 - `--force, -f` - Overwrite existing files
+- `--skip-admin` - Skip admin panel generation (Rails-style flag)
 - `--dir <path>, -d` - Target directory (default: current directory)
 
-**Example:**
+**Examples:**
 
 ```bash
+# Default: Generate with admin panel (7 files)
+tstack scaffold products
+
+# Skip admin panel (6 files)
+tstack scaffold products --skip-admin
+
+# Force overwrite with custom directory
 tstack scaffold products --force --dir ./backend
 ```
+
+**What Gets Generated:**
+
+By default (7 files):
+
+- `product.model.ts` - Drizzle ORM schema
+- `product.dto.ts` - Zod validation
+- `product.service.ts` - Business logic
+- `product.controller.ts` - HTTP handlers
+- `product.route.ts` - Public API routes
+- `product.admin.route.ts` - Admin panel (NEW!)
+- `product.test.ts` - API tests
+
+With `--skip-admin` (6 files):
+
+- Same as above, but without `product.admin.route.ts`
 
 ### `destroy <project-name>`
 
@@ -296,6 +334,52 @@ productRoutes.put("/products/:id", ProductController.update);
 productRoutes.delete("/products/:id", ProductController.delete);
 
 export default productRoutes;
+```
+
+### 6. Admin Panel Routes (`{entity}.admin.route.ts`)
+
+```typescript
+// Admin CRUD interface using @tstack/admin package
+import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+
+const ormAdapter = new DrizzleAdapter(products, { db, idColumn: "id" });
+
+const productAdmin = new HonoAdminAdapter({
+  ormAdapter,
+  entityName: "product",
+  columns: ["id", "name", "description", "createdAt"],
+  searchable: ["name", "description"],
+  sortable: ["id", "name", "createdAt"],
+  allowedRoles: ["superadmin", "admin"],
+  baseUrl: "/ts-admin/products",
+});
+
+// Automatically registers 9 routes:
+// GET    /ts-admin/products          - List view (HTML/JSON)
+// GET    /ts-admin/products/new      - Create form
+// POST   /ts-admin/products          - Create action
+// GET    /ts-admin/products/:id      - Show view
+// GET    /ts-admin/products/:id/edit - Edit form
+// PUT    /ts-admin/products/:id      - Update action
+// PATCH  /ts-admin/products/:id      - Partial update
+// DELETE /ts-admin/products/:id      - Delete action
+// POST   /ts-admin/products/bulk-delete - Bulk delete
+```
+
+**Admin Panel Features:**
+
+- ✅ **Tailwind CSS + htmx** - Modern UI that works without JavaScript
+- ✅ **Pagination** - Configurable page size
+- ✅ **Search** - Full-text search across specified columns
+- ✅ **Sorting** - Click column headers to sort
+- ✅ **Role-Based Access** - Requires `superadmin` or `admin` role
+- ✅ **Content Negotiation** - Returns HTML for browsers, JSON for APIs
+- ✅ **Auto-Discovery** - Routes automatically registered from `*.admin.route.ts` files
+
+**Skip Admin Panel:**
+
+```bash
+tstack scaffold products --skip-admin  # Generates only 6 files (no admin)
 ```
 
 ## Naming Conventions

@@ -35,16 +35,8 @@
     "strict": true
   },
   "publish": {
-    "include": [
-      "mod.ts",
-      "src/**/*.ts",
-      "README.md",
-      "LICENSE"
-    ],
-    "exclude": [
-      "**/*test.ts",
-      "**/_test_setup.ts"
-    ]
+    "include": ["mod.ts", "src/**/*.ts", "README.md", "LICENSE"],
+    "exclude": ["**/*test.ts", "**/_test_setup.ts"]
   },
   "unstable": ["kv"]
 }
