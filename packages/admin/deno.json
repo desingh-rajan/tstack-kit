@@ -1,6 +1,6 @@
 {
   "name": "@tstack/admin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "exports": "./mod.ts",
   "license": "MIT",
   "description": "Production-ready admin panel for Hono with Drizzle ORM. Provides instant CRUD interface with Tailwind CSS + htmx UI, pagination, search, sorting, and role-based access control.",
