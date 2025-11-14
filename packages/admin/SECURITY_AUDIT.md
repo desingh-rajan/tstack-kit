@@ -68,7 +68,7 @@ export interface AdminConfig<T> {
 
 ### 3. CSRF Protection ℹ️ CLIENT RESPONSIBILITY
 
-**Status:** JSON API - CSRF protection is client/framework responsibility
+**Status:** JSON API - CSRF protection is the client/framework's responsibility
 
 **Note:** As a pure JSON API, CSRF protection should be implemented by:
 - The client application using standard CSRF tokens
