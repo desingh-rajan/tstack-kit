@@ -229,11 +229,15 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   if (!skipAdmin) {
     Logger.subtitle("Admin panel endpoints (requires superadmin/admin role):");
     Logger.code(`GET /ts-admin/${names.kebabPlural} → JSON list`);
-    Logger.code(`GET /ts-admin/${names.kebabPlural}/new → Entity metadata for creation`);
+    Logger.code(
+      `GET /ts-admin/${names.kebabPlural}/new → Entity metadata for creation`,
+    );
     Logger.code(
       `POST /ts-admin/${names.kebabPlural} → Create ${names.singular}`,
     );
-    Logger.code(`GET /ts-admin/${names.kebabPlural}/:id/edit → Entity metadata with data`);
+    Logger.code(
+      `GET /ts-admin/${names.kebabPlural}/:id/edit → Entity metadata with data`,
+    );
     Logger.code(
       `PUT /ts-admin/${names.kebabPlural}/:id → Update ${names.singular}`,
     );
@@ -244,7 +248,9 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     Logger.info("Admin panel features:");
     Logger.code("• Pure JSON API (@tstack/admin v2.0.0+)");
     Logger.code("• Pagination, search, and sorting");
-    Logger.code("• Works with ANY frontend (React, Vue, Angular, Svelte, etc.)");
+    Logger.code(
+      "• Works with ANY frontend (React, Vue, Angular, Svelte, etc.)",
+    );
     Logger.code("• Role-based access control");
     Logger.newLine();
   } else {

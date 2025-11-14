@@ -109,16 +109,19 @@ Deno.test("Site Setting Admin API Tests", {
       assertEquals(data.id, settingId);
     });
 
-    await t.step("GET /ts-admin/site_settings/:id/edit - Entity metadata", async () => {
-      const res = await adminRequest(
-        `${BASE_URL}/${settingId}/edit`,
-        superadminToken,
-      );
-      assertEquals(res.status, 200);
-      const data = await res.json();
-      assertEquals(data.mode, "edit");
-      assertEquals(data.data.id, settingId);
-    });
+    await t.step(
+      "GET /ts-admin/site_settings/:id/edit - Entity metadata",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/${settingId}/edit`,
+          superadminToken,
+        );
+        assertEquals(res.status, 200);
+        const data = await res.json();
+        assertEquals(data.mode, "edit");
+        assertEquals(data.data.id, settingId);
+      },
+    );
 
     await t.step(
       "PUT /ts-admin/site_settings/:id - Update",

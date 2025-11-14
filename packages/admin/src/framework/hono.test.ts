@@ -21,6 +21,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { AuthUser } from "../core/types.ts";
 
+// Hono context type with user
+type HonoContext = {
+  Variables: {
+    user: AuthUser;
+  };
+};
+
 // Test product table schema (same as drizzle.test.ts)
 const testAdminProducts = pgTable("test_admin_products", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -65,7 +72,7 @@ function createTestApp(options?: {
   basePath?: string;
   allowedRoles?: ("superadmin" | "admin" | "moderator" | "user")[];
 }) {
-  const app = new Hono();
+  const app = new Hono<HonoContext>();
 
   // Middleware to set user context (simulates auth middleware)
   app.use("*", async (c, next) => {
@@ -116,7 +123,7 @@ function createTestApp(options?: {
 
 // Helper to make request
 async function makeRequest(
-  app: Hono,
+  app: Hono<HonoContext>,
   path: string,
   options?: {
     method?: string;
