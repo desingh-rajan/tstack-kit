@@ -119,7 +119,7 @@ async function startServer() {
       console.log("   tstack scaffold users --skip-admin  (skip admin panel)");
       console.log("\n Development mode enabled - routes auto-discovered");
       console.log("\n Note: Routes are clean (e.g., /articles, /users)");
-      console.log("      Admin panel: /ts-admin/articles (HTML UI + JSON API)");
+      console.log("      Admin API: /ts-admin/articles (JSON API)");
       console.log(
         "      Deployment prefix handled by reverse proxy (Kamal, nginx)",
       );

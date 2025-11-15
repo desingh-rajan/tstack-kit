@@ -8,9 +8,8 @@ import { requireAuth } from "../../shared/middleware/requireAuth.ts";
  * REFERENCE IMPLEMENTATION: Article Admin Routes
  *
  * This file demonstrates how to create an admin panel for your entities using @tstack/admin.
- * The admin panel provides a full-featured CRUD interface with:
- * - HTML UI (Tailwind CSS + htmx) at /ts-admin/articles
- * - JSON API at /ts-admin/articles (with Accept: application/json header)
+ * The admin panel provides a full-featured CRUD JSON API with:
+ * - RESTful JSON API at /ts-admin/articles
  * - Pagination, search, and sorting
  * - Role-based access control
  *
