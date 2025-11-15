@@ -42,11 +42,11 @@ ENVIRONMENT=test deno task migrate:run
 
 **Common Issues:**
 
-- ❌ Manually editing migration SQL files
-- ❌ Forgetting to generate migrations after model changes
-- ❌ Running old migrations with new schema
-- ✅ Always use Drizzle Kit to generate migrations
-- ✅ Keep schema models as single source of truth
+- [ERROR] Manually editing migration SQL files
+- [ERROR] Forgetting to generate migrations after model changes
+- [ERROR] Running old migrations with new schema
+- [SUCCESS] Always use Drizzle Kit to generate migrations
+- [SUCCESS] Keep schema models as single source of truth
 
 ---
 
@@ -58,20 +58,20 @@ ENVIRONMENT=test deno task migrate:run
 packages/starter/
 ├── src/
 │   ├── auth/
-│   │   ├── user.model.ts          ✅ User schema (NOT in entities!)
-│   │   ├── auth-token.model.ts    ✅ Auth token schema
-│   │   └── auth.*.ts              ✅ Auth logic
+│   │   ├── user.model.ts          [SUCCESS] User schema (NOT in entities!)
+│   │   ├── auth-token.model.ts    [SUCCESS] Auth token schema
+│   │   └── auth.*.ts              [SUCCESS] Auth logic
 │   └── entities/
-│       └── articles/              ✅ Example entity
-│           ├── article.model.ts   ✅ Article schema
-│           ├── article.*.ts       ✅ Controller, service, routes
-│           └── article.test.ts    ✅ Tests with auth
-├── migrations/                     ✅ Generated SQL (DO NOT EDIT!)
+│       └── articles/              [SUCCESS] Example entity
+│           ├── article.model.ts   [SUCCESS] Article schema
+│           ├── article.*.ts       [SUCCESS] Controller, service, routes
+│           └── article.test.ts    [SUCCESS] Tests with auth
+├── migrations/                     [SUCCESS] Generated SQL (DO NOT EDIT!)
 │   └── 0000_*.sql
 └── scripts/
-    ├── create-db.ts               ✅ Database creation
-    ├── seed-*.ts                  ✅ Seeding scripts
-    └── setup-test-db.ts           ✅ Test database setup
+    ├── create-db.ts               [SUCCESS] Database creation
+    ├── seed-*.ts                  [SUCCESS] Seeding scripts
+    └── setup-test-db.ts           [SUCCESS] Test database setup
 ```
 
 **Key Points:**
@@ -148,7 +148,7 @@ Like `article.test.ts`:
 
 ---
 
-## Emoji Removal Completed ✓
+## Emoji Removal Completed [OK]
 
 **Date:** October 31, 2025\
 **Commit:** Removed 200+ emojis from codebase\
@@ -156,11 +156,11 @@ Like `article.test.ts`:
 
 **Replaced:**
 
-- `✅` → `[SUCCESS]`
-- `✓` → `[OK]`
-- `❌` → `[ERROR]`
-- `⚠️` → `[WARNING]`
-- `🚀` `🎉` `🌱` `💡` → removed or replaced with `[SEED]` `[TIP]`
+- `[SUCCESS]` → `[SUCCESS]`
+- `[OK]` → `[OK]`
+- `[ERROR]` → `[ERROR]`
+- `[WARNING]` → `[WARNING]`
+- `` `` `🌱` `` → removed or replaced with `[SEED]` `[TIP]`
 
 **Rule:** NO emojis in code, logs, or console output. Ever.
 
@@ -192,11 +192,11 @@ Like `article.test.ts`:
 
 ## Deleted/Removed
 
-- ❌ `data/dev.db` - Old SQLite database
-- ❌ `data/` folder - Not needed for PostgreSQL
-- ❌ `src/entities/users/` - Empty duplicate folder
-- ❌ `migrations/0000_lying_callisto.sql` - Old migration without role column
-- ❌ `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role (not
+- [ERROR] `data/dev.db` - Old SQLite database
+- [ERROR] `data/` folder - Not needed for PostgreSQL
+- [ERROR] `src/entities/users/` - Empty duplicate folder
+- [ERROR] `migrations/0000_lying_callisto.sql` - Old migration without role column
+- [ERROR] `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role (not
   needed after regeneration)
 
 ---
@@ -206,7 +206,7 @@ Like `article.test.ts`:
 ### Before Committing
 
 - [ ] Run `deno fmt` to format code
-- [ ] Check no emojis in code: `grep -r "✅\|❌\|🚀" packages/`
+- [ ] Check no emojis in code: `grep -r "[SUCCESS]\|[ERROR]\|" packages/`
 - [ ] Verify migrations match schema
 - [ ] Test database setup works: `ENVIRONMENT=test deno task test:reset`
 - [ ] Run tests: `deno task test`
@@ -284,10 +284,10 @@ Like `article.test.ts`:
 
 ### Key Changes from SQLite
 
-- ❌ Removed `RUN mkdir -p data` (no SQLite)
-- ✅ Uses PostgreSQL via DATABASE_URL
-- ✅ Healthcheck uses /health endpoint
-- ✅ App waits for postgres to be healthy
+- [ERROR] Removed `RUN mkdir -p data` (no SQLite)
+- [SUCCESS] Uses PostgreSQL via DATABASE_URL
+- [SUCCESS] Healthcheck uses /health endpoint
+- [SUCCESS] App waits for postgres to be healthy
 
 ### Usage
 
@@ -361,7 +361,7 @@ docker compose down -v                      # Stop + delete data
 # Code Quality
 deno fmt                   # Format code
 deno lint                  # Lint code
-grep -r "✅\|❌\|🚀" .     # Check for emojis
+grep -r "[SUCCESS]\|[ERROR]\|" .     # Check for emojis
 ```
 
 ---

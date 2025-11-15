@@ -43,7 +43,7 @@ const password = url.password;
 const host = url.hostname;
 const port = parseInt(url.port || "5432");
 
-console.log("📦 Database Configuration:");
+console.log("[INFO] Database Configuration:");
 console.log(`   Host: ${host}:${port}`);
 console.log(`   Database: ${dbName}`);
 console.log(`   User: ${username}`);
@@ -58,17 +58,17 @@ const adminUrl = pgPassword
   : `postgres://${pgUser}@${host}:${port}/postgres`;
 
 try {
-  console.log("🔌 Connecting to PostgreSQL as superuser...");
+  console.log("[INFO] Connecting to PostgreSQL as superuser...");
   const sql = postgres(adminUrl, { max: 1 });
 
   // Check if user exists
-  console.log(`🔍 Checking if user "${username}" exists...`);
+  console.log(`[INFO] Checking if user "${username}" exists...`);
   const userResult = await sql`
     SELECT 1 FROM pg_user WHERE usename = ${username}
   `;
 
   if (userResult.length === 0) {
-    console.log(`📝 Creating user "${username}"...`);
+    console.log(`[INFO] Creating user "${username}"...`);
     await sql.unsafe(
       `CREATE USER "${username}" WITH PASSWORD '${password}'`,
     );
@@ -78,7 +78,7 @@ try {
   }
 
   // Check if database exists
-  console.log(`🔍 Checking if database "${dbName}" exists...`);
+  console.log(`[INFO] Checking if database "${dbName}" exists...`);
   const result = await sql`
     SELECT 1 FROM pg_database WHERE datname = ${dbName}
   `;
@@ -86,7 +86,7 @@ try {
   if (result.length > 0) {
     console.log(`[SUCCESS] Database "${dbName}" already exists!`);
   } else {
-    console.log(`📝 Creating database "${dbName}"...`);
+    console.log(`[INFO] Creating database "${dbName}"...`);
     await sql.unsafe(`CREATE DATABASE "${dbName}" OWNER "${username}"`);
     console.log(`[SUCCESS] Database "${dbName}" created successfully!`);
   }
@@ -100,7 +100,7 @@ try {
 
   await sql.end();
   console.log();
-  console.log("✨ Done! You can now run migrations:");
+  console.log("[SUCCESS] Done! You can now run migrations:");
   console.log("   deno task migrate:generate");
   console.log("   deno task migrate:run");
 } catch (error) {

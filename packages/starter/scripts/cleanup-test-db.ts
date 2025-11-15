@@ -24,8 +24,8 @@ try {
 
   const { success } = await cmd.output();
   if (success) {
-    console.log(`\n🧹 Cleanup: Database "${dbName}" dropped`);
+    console.log(`\n[CLEANUP] Cleanup: Database "${dbName}" dropped`);
   }
 } catch (error) {
-  console.error(`⚠️  Could not drop database: ${error}`);
+  console.error(`[WARNING]  Could not drop database: ${error}`);
 }

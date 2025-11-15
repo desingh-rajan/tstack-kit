@@ -52,14 +52,14 @@ async function ensureDatabase(dbName: string): Promise<void> {
     const errorOutput = new TextDecoder().decode(stderr);
 
     if (success) {
-      console.log(`   ✅ Database "${dbName}" created`);
+      console.log(`   [SUCCESS] Database "${dbName}" created`);
     } else if (errorOutput.includes("already exists")) {
-      console.log(`   ℹ️  Database "${dbName}" already exists`);
+      console.log(`     Database "${dbName}" already exists`);
     } else {
-      console.error(`   ⚠️  Could not verify database "${dbName}"`);
+      console.error(`   [WARNING]  Could not verify database "${dbName}"`);
     }
   } catch (error) {
-    console.error(`   ⚠️  Database check failed:`, error);
+    console.error(`   [WARNING]  Database check failed:`, error);
   }
 }
 
@@ -101,13 +101,13 @@ try {
       )
     `;
 
-  console.log("   ✅ Test tables created\n");
+  console.log("   [SUCCESS] Test tables created\n");
 } catch (error) {
-  console.error("   ❌ Error creating test tables:", error);
+  console.error("   [ERROR] Error creating test tables:", error);
   Deno.exit(1);
 } finally {
   await sql.end();
 }
 
-console.log("✅ Test environment ready");
+console.log("[SUCCESS] Test environment ready");
 console.log("   Running tests...\n");

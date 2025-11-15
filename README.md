@@ -94,13 +94,13 @@ Built by [Desingh Rajan](https://desinghrajan.in) and [contributors](https://git
 
 ## Features
 
-- ⚡ **Fast Setup** - Create new projects in seconds
-- 🎯 **CLI Scaffolding** - Generate complete MVC entities with one command
+-  **Fast Setup** - Create new projects in seconds
+-  **CLI Scaffolding** - Generate complete MVC entities with one command
 - 🔒 **Type-Safe** - Full TypeScript with Drizzle ORM
-- 🗄️ **PostgreSQL** - Production-ready from day 1
+-  **PostgreSQL** - Production-ready from day 1
 - 🐳 **Docker Ready** - Includes docker-compose setup
 - 🎨 **Clean MVC** - Organized entity structure
-- 📦 **Minimal** - No auth bloat, add what you need
+-  **Minimal** - No auth bloat, add what you need
 
 ---
 
@@ -148,7 +148,7 @@ deno task migrate:run
 deno task dev
 ```
 
-Server running at **<http://localhost:8000>** ✨
+Server running at **<http://localhost:8000>** 
 
 ---
 
@@ -161,11 +161,11 @@ Generate complete MVC structures:
 tstack scaffold articles
 
 # This creates:
-# ✓ src/entities/articles/article.model.ts    (Drizzle schema)
-# ✓ src/entities/articles/article.dto.ts      (Zod validation)
-# ✓ src/entities/articles/article.service.ts  (Business logic)
-# ✓ src/entities/articles/article.controller.ts (HTTP handlers)
-# ✓ src/entities/articles/article.route.ts    (Hono routes)
+# [OK] src/entities/articles/article.model.ts    (Drizzle schema)
+# [OK] src/entities/articles/article.dto.ts      (Zod validation)
+# [OK] src/entities/articles/article.service.ts  (Business logic)
+# [OK] src/entities/articles/article.controller.ts (HTTP handlers)
+# [OK] src/entities/articles/article.route.ts    (Hono routes)
 ```
 
 ### Customize the Model
@@ -438,12 +438,12 @@ Run `deno task db:seed:site` to create 6 default settings:
 
 | Setting          | Public | Use Case                                  |
 | ---------------- | ------ | ----------------------------------------- |
-| site_info        | ✅     | Site name, tagline, logo - display in UI  |
-| contact_info     | ✅     | Email, phone, social links - contact page |
-| theme_config     | ✅     | Colors, fonts - apply to frontend theme   |
-| feature_flags    | ✅     | Toggle features - enable/disable features |
-| email_settings   | ❌     | SMTP config - backend email sending       |
-| api_config       | ❌     | Rate limits, CORS - API configuration     |
+| site_info        | [SUCCESS]     | Site name, tagline, logo - display in UI  |
+| contact_info     | [SUCCESS]     | Email, phone, social links - contact page |
+| theme_config     | [SUCCESS]     | Colors, fonts - apply to frontend theme   |
+| feature_flags    | [SUCCESS]     | Toggle features - enable/disable features |
+| email_settings   | [ERROR]     | SMTP config - backend email sending       |
+| api_config       | [ERROR]     | Rate limits, CORS - API configuration     |
 
 **Updating Settings:**
 
@@ -487,7 +487,7 @@ deno task migrate:run
 deno task dev
 ```
 
-Done! You have a working blog API. 🎉
+Done! You have a working blog API. 
 
 ---
 
@@ -559,17 +559,17 @@ tstack destroy my-blog-api
 
 ### Perfect If You Want
 
-- ✅ **Zero auth bloat** - Add authentication when YOU need it
-- ✅ **PostgreSQL first** - No SQLite native binding issues
-- ✅ **Minimal defaults** - Clean starting point
-- ✅ **Pure Deno** - No Node.js baggage
-- ✅ **Fast scaffolding** - Generate entities in seconds
+- [SUCCESS] **Zero auth bloat** - Add authentication when YOU need it
+- [SUCCESS] **PostgreSQL first** - No SQLite native binding issues
+- [SUCCESS] **Minimal defaults** - Clean starting point
+- [SUCCESS] **Pure Deno** - No Node.js baggage
+- [SUCCESS] **Fast scaffolding** - Generate entities in seconds
 
 ### Not Ideal If You Need
 
-- ❌ Batteries-included auth out of the box (add it yourself!)
-- ❌ GraphQL support (REST only for now)
-- ❌ All-in-one framework (this is a toolkit)
+- [ERROR] Batteries-included auth out of the box (add it yourself!)
+- [ERROR] GraphQL support (REST only for now)
+- [ERROR] All-in-one framework (this is a toolkit)
 
 ---
 
@@ -589,19 +589,19 @@ tstack destroy my-blog-api
 
 ### v1.0 (Current - October 2025)
 
-- ✅ Auto-discovery route system
-- ✅ PostgreSQL support with proper .env loading
-- ✅ Entity scaffolding with interface templates
-- ✅ Docker ready
-- ✅ Minimal starter with common columns helper
-- ✅ Fail-fast configuration
+- [SUCCESS] Auto-discovery route system
+- [SUCCESS] PostgreSQL support with proper .env loading
+- [SUCCESS] Entity scaffolding with interface templates
+- [SUCCESS] Docker ready
+- [SUCCESS] Minimal starter with common columns helper
+- [SUCCESS] Fail-fast configuration
 
 ### v1.1 (Next - Q4 2025)
 
 - [ ] **Kamal deployment** - YAML setup with deployment instructions
 - [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
-- ✅ **`tstack destroy` command** - Remove scaffolded entities
-- ✅ **Basic JWT authentication** - User entity with auth system (optional
+- [SUCCESS] **`tstack destroy` command** - Remove scaffolded entities
+- [SUCCESS] **Basic JWT authentication** - User entity with auth system (optional
   addon)
 
 ### v1.2 (Q1 2026)
@@ -780,6 +780,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-Built with ❤️ for the Deno community
+Built with  for the Deno community
 
 Clean, Fast, Simple.

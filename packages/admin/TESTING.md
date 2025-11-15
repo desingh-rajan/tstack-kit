@@ -4,7 +4,7 @@
 >
 > Last Updated: November 14, 2025
 
-## 🎯 Testing Philosophy
+##  Testing Philosophy
 
 ### The "No Mocks" Rule
 
@@ -13,7 +13,7 @@
 #### Why No Mocks?
 
 ```typescript
-// ❌ BAD: Mocking database
+// [ERROR] BAD: Mocking database
 const mockDB = {
   query: jest.fn().mockResolvedValue({ rows: [{ id: 1 }] })
 };
@@ -27,7 +27,7 @@ const mockDB = {
 ```
 
 ```typescript
-// ✅ GOOD: Real PostgreSQL database
+// [SUCCESS] GOOD: Real PostgreSQL database
 const db = drizzle(postgres(Deno.env.get("DATABASE_URL")));
 
 await t.step("findMany returns paginated results", async () => {
@@ -63,14 +63,14 @@ await t.step("findMany returns paginated results", async () => {
 
 ---
 
-## 📊 Test Results
+##  Test Results
 
 ### Current Status: 100% Passing
 
 ```text
-✅ Core Pagination:   22/22 tests
-✅ Drizzle Adapter:   26/26 tests (real PostgreSQL)
-✅ Hono Adapter:      25/25 tests (real HTTP + DB)
+[SUCCESS] Core Pagination:   22/22 tests
+[SUCCESS] Drizzle Adapter:   26/26 tests (real PostgreSQL)
+[SUCCESS] Hono Adapter:      25/25 tests (real HTTP + DB)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    TOTAL:            73/73 passing | 0 failed
 ```
@@ -121,7 +121,7 @@ Tests full HTTP + database integration:
 
 ---
 
-## 🚀 Running Tests
+##  Running Tests
 
 ### Prerequisites
 
@@ -416,7 +416,7 @@ Deno.test("HonoAdminAdapter - HTTP integration", async (t) => {
 
 ---
 
-## 🔧 Test Infrastructure
+##  Test Infrastructure
 
 ### Global Test Setup (`_test_setup.ts`)
 
@@ -429,18 +429,18 @@ console.log("🧪 Setting up @tstack/admin test environment...");
 
 // 1. Verify ENVIRONMENT=test
 if (Deno.env.get("ENVIRONMENT") !== "test") {
-  console.error("❌ Tests must run with ENVIRONMENT=test");
+  console.error("[ERROR] Tests must run with ENVIRONMENT=test");
   Deno.exit(1);
 }
 
 // 2. Verify DATABASE_URL is set
 if (!Deno.env.get("DATABASE_URL")) {
-  console.error("❌ DATABASE_URL not set in environment");
+  console.error("[ERROR] DATABASE_URL not set in environment");
   Deno.exit(1);
 }
 
-console.log("✅ Test environment ready");
-console.log(`📦 Database: ${Deno.env.get("DATABASE_URL")}`);
+console.log("[SUCCESS] Test environment ready");
+console.log(` Database: ${Deno.env.get("DATABASE_URL")}`);
 ```
 
 ### Test Database Management
@@ -479,30 +479,30 @@ Each test gets a fresh database state:
 ### 1. Always Use Real Databases
 
 ```typescript
-// ✅ GOOD
+// [SUCCESS] GOOD
 const db = drizzle(postgres(Deno.env.get("DATABASE_URL")));
 
-// ❌ BAD
+// [ERROR] BAD
 const mockDB = { query: jest.fn() };
 ```
 
 ### 2. Clean Up After Tests
 
 ```typescript
-// ✅ GOOD
+// [SUCCESS] GOOD
 await t.step("Cleanup", async () => {
   await sql`DROP TABLE IF EXISTS test_products CASCADE`;
   await sql.end();
 });
 
-// ❌ BAD - Leaves connections open
+// [ERROR] BAD - Leaves connections open
 // (No cleanup step)
 ```
 
 ### 3. Test Real-World Scenarios
 
 ```typescript
-// ✅ GOOD - Tests real SQL
+// [SUCCESS] GOOD - Tests real SQL
 await t.step("search with special characters", async () => {
   const result = await adapter.findMany({
     search: "MacBook Pro 15\"",
@@ -511,7 +511,7 @@ await t.step("search with special characters", async () => {
   // Verifies ILIKE properly escapes quotes
 });
 
-// ❌ BAD - Mocks don't catch this
+// [ERROR] BAD - Mocks don't catch this
 mockDB.query.mockResolvedValue({ rows: [] });
 ```
 
@@ -532,12 +532,12 @@ await t.step("create - throws on duplicate email", async () => {
 ### 5. Use Descriptive Test Names
 
 ```typescript
-// ✅ GOOD
+// [SUCCESS] GOOD
 await t.step("findMany - returns empty array when no results", async () => {
   // Test implementation
 });
 
-// ❌ BAD
+// [ERROR] BAD
 await t.step("test 1", async () => {
   // Test implementation
 });
@@ -625,7 +625,7 @@ open coverage/html/index.html
 
 ---
 
-## 🚀 Contributing
+##  Contributing
 
 When adding new adapters or features:
 
@@ -650,7 +650,7 @@ When adding new adapters or features:
 
 ---
 
-## 🎯 The Golden Rule
+##  The Golden Rule
 
 > **"If you're mocking the database, you're not testing the code that matters."**
 

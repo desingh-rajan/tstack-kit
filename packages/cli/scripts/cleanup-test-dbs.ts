@@ -32,7 +32,7 @@ async function listTestDatabases(): Promise<string[]> {
     const { stdout, success } = await cmd.output();
 
     if (!success) {
-      console.error("❌ Failed to list databases. Is PostgreSQL running?");
+      console.error("[ERROR] Failed to list databases. Is PostgreSQL running?");
       Deno.exit(1);
     }
 
@@ -42,7 +42,7 @@ async function listTestDatabases(): Promise<string[]> {
     return databases;
   } catch (error) {
     console.error(
-      "❌ Error listing databases:",
+      "[ERROR] Error listing databases:",
       error instanceof Error ? error.message : String(error),
     );
     Deno.exit(1);
@@ -73,13 +73,13 @@ async function dropDatabase(dbName: string): Promise<boolean> {
 }
 
 // Main execution
-console.log("🔍 Searching for test databases with prefix:", TEST_DB_PREFIX);
+console.log("[INFO] Searching for test databases with prefix:", TEST_DB_PREFIX);
 console.log("");
 
 const databases = await listTestDatabases();
 
 if (databases.length === 0) {
-  console.log("✅ No test databases found. Nothing to clean up!");
+  console.log("[SUCCESS] No test databases found. Nothing to clean up!");
   Deno.exit(0);
 }
 
@@ -87,7 +87,7 @@ console.log(`Found ${databases.length} test database(s):`);
 databases.forEach((db) => console.log(`  - ${db}`));
 console.log("");
 
-console.log("🗑️  Dropping test databases...");
+console.log("[INFO] Dropping test databases...");
 console.log("");
 
 let successCount = 0;
@@ -96,19 +96,19 @@ let failCount = 0;
 for (const db of databases) {
   const success = await dropDatabase(db);
   if (success) {
-    console.log(`✅ Dropped: ${db}`);
+    console.log(`[SUCCESS] Dropped: ${db}`);
     successCount++;
   } else {
-    console.log(`❌ Failed: ${db}`);
+    console.log(`[ERROR] Failed: ${db}`);
     failCount++;
   }
 }
 
 console.log("");
 console.log("=".repeat(50));
-console.log(`✅ Successfully dropped: ${successCount}`);
+console.log(`[SUCCESS] Successfully dropped: ${successCount}`);
 if (failCount > 0) {
-  console.log(`❌ Failed to drop: ${failCount}`);
+  console.log(`[ERROR] Failed to drop: ${failCount}`);
 }
 console.log("=".repeat(50));
 

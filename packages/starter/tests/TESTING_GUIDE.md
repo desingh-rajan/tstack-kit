@@ -26,12 +26,12 @@ deno test --allow-all tests/auth.test.ts
 
 **What it tests:**
 
-- ✅ User registration & duplicate prevention
-- ✅ Login with valid/invalid credentials
-- ✅ Protected route access with tokens
-- ✅ Password change & token revocation
-- ✅ Admin user creation & management
-- ✅ User CRUD operations (list, get, update, delete)
+- [SUCCESS] User registration & duplicate prevention
+- [SUCCESS] Login with valid/invalid credentials
+- [SUCCESS] Protected route access with tokens
+- [SUCCESS] Password change & token revocation
+- [SUCCESS] Admin user creation & management
+- [SUCCESS] User CRUD operations (list, get, update, delete)
 
 ---
 
@@ -87,16 +87,16 @@ deno test --allow-all tests/articles.test.ts
 
 **What it tests:**
 
-- ✅ Create entity
-- ✅ Get all entities
-- ✅ Get entity by ID
-- ✅ Get non-existent (404)
-- ✅ Update entity
-- ✅ Update non-existent (404)
-- ✅ Validation (invalid data)
-- ✅ Delete entity
-- ✅ Verify deletion
-- ✅ Delete non-existent (404)
+- [SUCCESS] Create entity
+- [SUCCESS] Get all entities
+- [SUCCESS] Get entity by ID
+- [SUCCESS] Get non-existent (404)
+- [SUCCESS] Update entity
+- [SUCCESS] Update non-existent (404)
+- [SUCCESS] Validation (invalid data)
+- [SUCCESS] Delete entity
+- [SUCCESS] Verify deletion
+- [SUCCESS] Delete non-existent (404)
 
 ---
 
@@ -169,23 +169,23 @@ deno test --allow-all tests/articles.test.ts
 
 ## Troubleshooting
 
-### ❌ Error: Connection refused
+### [ERROR] Error: Connection refused
 
 **Solution:** Start server with `deno task dev`
 
-### ❌ Error: Database connection failed
+### [ERROR] Error: Database connection failed
 
 **Solution:** Start PostgreSQL with `docker compose up -d`
 
-### ❌ Error: relation "users" does not exist
+### [ERROR] Error: relation "users" does not exist
 
 **Solution:** Run migrations with `deno task migrate:run`
 
-### ❌ Error: Invalid credentials (superadmin)
+### [ERROR] Error: Invalid credentials (superadmin)
 
 **Solution:** Seed superadmin with `deno task db:seed`
 
-### ❌ Error: 404 Not Found on entity endpoint
+### [ERROR] Error: 404 Not Found on entity endpoint
 
 **Solution:** Make sure entity is scaffolded and migrations are applied
 
@@ -218,10 +218,10 @@ ok | 2 passed (29 steps) | 0 failed (710ms)
 
 ## Next Steps
 
-1. ✅ Run auth tests to verify authentication system
-2. ✅ Scaffold your entities: `tstack scaffold products`
-3. ✅ Create entity tests using the template
-4. ✅ Run all tests before deployment
-5. ✅ Set up CI/CD with test automation
+1. [SUCCESS] Run auth tests to verify authentication system
+2. [SUCCESS] Scaffold your entities: `tstack scaffold products`
+3. [SUCCESS] Create entity tests using the template
+4. [SUCCESS] Run all tests before deployment
+5. [SUCCESS] Set up CI/CD with test automation
 
-Happy testing! 🚀
+Happy testing! 

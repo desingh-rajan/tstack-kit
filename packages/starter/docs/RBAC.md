@@ -189,10 +189,10 @@ Role: user
 1. **Always Use Middleware**
 
    ```typescript
-   // ✅ Good
+   // [SUCCESS] Good
    app.post("/admin/users", requireAuth, requireSuperadmin, handler);
 
-   // ❌ Bad - checking in controller
+   // [ERROR] Bad - checking in controller
    app.post("/admin/users", requireAuth, async (c) => {
      if (c.get("user").role !== "superadmin") throw new Error("...");
    });

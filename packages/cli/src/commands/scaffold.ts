@@ -254,7 +254,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     Logger.code("• Role-based access control");
     Logger.newLine();
   } else {
-    Logger.info("⚠️  Admin routes skipped (--skip-admin flag used)");
+    Logger.info("[WARNING] Admin routes skipped (--skip-admin flag used)");
     Logger.newLine();
   }
 

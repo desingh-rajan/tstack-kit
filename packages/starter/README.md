@@ -77,28 +77,28 @@ tstack scaffold comments
 
 ## Features
 
-### 🗄️ Database
+###  Database
 
 - **PostgreSQL** - Production-ready relational database
 - Drizzle ORM with full type safety
 - Automatic migrations with `drizzle-kit`
 - Type inference from schema
 
-### 🏗️ Architecture
+###  Architecture
 
 - **MVC Pattern** - Model, Service, Controller separation
 - **Domain-Driven** - Entities organized by feature
 - **Type-Safe** - Full TypeScript with inference
 - **Testable** - Services isolated from HTTP layer
 
-### ⚡️ Developer Experience
+###  Developer Experience
 
 - **Scaffolding CLI** - Generate entities in seconds
 - **Hot Reload** - Fast development with `--watch`
 - **Drizzle Studio** - Visual database browser
 - **Docker Ready** - PostgreSQL included
 
-### 🛡️ Production Ready
+###  Production Ready
 
 - Comprehensive error handling
 - Request logging middleware
@@ -142,11 +142,11 @@ tstack-kit/
 tstack scaffold products
 
 # Creates 5 files:
-# ✓ src/entities/products/product.model.ts (Drizzle schema - minimal)
-# ✓ src/entities/products/product.dto.ts (Validation)
-# ✓ src/entities/products/product.service.ts (Business logic)
-# ✓ src/entities/products/product.controller.ts (HTTP handlers)
-# ✓ src/entities/products/product.route.ts (Routes)
+# [OK] src/entities/products/product.model.ts (Drizzle schema - minimal)
+# [OK] src/entities/products/product.dto.ts (Validation)
+# [OK] src/entities/products/product.service.ts (Business logic)
+# [OK] src/entities/products/product.controller.ts (HTTP handlers)
+# [OK] src/entities/products/product.route.ts (Routes)
 ```
 
 Add your fields to `product.model.ts`:
@@ -279,12 +279,12 @@ Run `deno task db:seed:site` to populate with 6 default settings:
 
 | Key              | Category   | Public | Data Structure Example                                    |
 | ---------------- | ---------- | ------ | --------------------------------------------------------- |
-| `site_info`      | general    | ✅     | `{ siteName, tagline, description, logo, favicon }`       |
-| `contact_info`   | general    | ✅     | `{ email, phone, address, socialMedia: {...} }`           |
-| `theme_config`   | appearance | ✅     | `{ primaryColor, secondaryColor, darkMode, fontFamily }`  |
-| `feature_flags`  | features   | ✅     | `{ enableContactForm, enableBlog, maintenanceMode }`      |
-| `email_settings` | email      | ❌     | `{ smtp_host, smtp_port, from_email, from_name }`         |
-| `api_config`     | general    | ❌     | `{ rateLimit: {...}, cors: {...} }`                       |
+| `site_info`      | general    | [SUCCESS]     | `{ siteName, tagline, description, logo, favicon }`       |
+| `contact_info`   | general    | [SUCCESS]     | `{ email, phone, address, socialMedia: {...} }`           |
+| `theme_config`   | appearance | [SUCCESS]     | `{ primaryColor, secondaryColor, darkMode, fontFamily }`  |
+| `feature_flags`  | features   | [SUCCESS]     | `{ enableContactForm, enableBlog, maintenanceMode }`      |
+| `email_settings` | email      | [ERROR]     | `{ smtp_host, smtp_port, from_email, from_name }`         |
+| `api_config`     | general    | [ERROR]     | `{ rateLimit: {...}, cors: {...} }`                       |
 
 **API Examples:**
 
@@ -338,13 +338,13 @@ const customSettings = [
 
 **Benefits:**
 
-- ✅ No code deployment needed to update site content
-- ✅ Frontend-accessible configuration API
-- ✅ Secure private settings (never exposed in public endpoints)
-- ✅ Fast key-based lookups with database indexes
-- ✅ Flexible JSONB storage for any data structure
-- ✅ Built-in versioning via `updatedAt` and `updatedBy` fields
-- ✅ Category-based organization for better management
+- [SUCCESS] No code deployment needed to update site content
+- [SUCCESS] Frontend-accessible configuration API
+- [SUCCESS] Secure private settings (never exposed in public endpoints)
+- [SUCCESS] Fast key-based lookups with database indexes
+- [SUCCESS] Flexible JSONB storage for any data structure
+- [SUCCESS] Built-in versioning via `updatedAt` and `updatedBy` fields
+- [SUCCESS] Category-based organization for better management
 
 ### Setup Instructions
 
@@ -387,10 +387,10 @@ The starter gives you **models as examples**, but you generate migrations yourse
 | **Runtime**          | Deno                | Deno      | Node.js        | Deno          |
 | **Framework Weight** | Lightweight         | Medium    | Light          | Heavy         |
 | **Type Safety**      | Full                | Partial   | Minimal        | Full          |
-| **Scaffolding**      | Built-in            | ❌ Manual | ❌ Manual      | ✅ Via CLI    |
+| **Scaffolding**      | Built-in            | [ERROR] Manual | [ERROR] Manual      | [SUCCESS] Via CLI    |
 | **ORM**              | Drizzle (type-safe) | Manual    | Prisma/TypeORM | TypeORM       |
 | **Learning Curve**   | Low                 | Medium    | Low            | High          |
-| **Production Ready** | ✅                  | ✅        | ✅             | ✅            |
+| **Production Ready** | [SUCCESS]                  | [SUCCESS]        | [SUCCESS]             | [SUCCESS]            |
 
 ### Perfect For
 
@@ -588,12 +588,12 @@ deno task test:reset           # Full reset including seed
 
 | Key                | Category   | Public | Purpose                                      |
 | ------------------ | ---------- | ------ | -------------------------------------------- |
-| `site_info`        | general    | ✅     | Site name, tagline, logo                     |
-| `contact_info`     | general    | ✅     | Email, phone, social media                   |
-| `theme_config`     | appearance | ✅     | UI colors, fonts, dark mode                  |
-| `feature_flags`    | features   | ✅     | Enable/disable features (blog, comments)     |
-| `email_settings`   | email      | ❌     | SMTP config (private - backend only)         |
-| `api_config`       | general    | ❌     | Rate limits, CORS (private - backend only)   |
+| `site_info`        | general    | [SUCCESS]     | Site name, tagline, logo                     |
+| `contact_info`     | general    | [SUCCESS]     | Email, phone, social media                   |
+| `theme_config`     | appearance | [SUCCESS]     | UI colors, fonts, dark mode                  |
+| `feature_flags`    | features   | [SUCCESS]     | Enable/disable features (blog, comments)     |
+| `email_settings`   | email      | [ERROR]     | SMTP config (private - backend only)         |
+| `api_config`       | general    | [ERROR]     | Rate limits, CORS (private - backend only)   |
 
 ### What Gets Tested
 
@@ -607,9 +607,9 @@ deno task test:reset           # Full reset including seed
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
-### ✅ Phase 1: Core (Completed)
+### [SUCCESS] Phase 1: Core (Completed)
 
 - [x] CLI scaffolding tool (`create`, `scaffold`)
 - [x] Starter template with MVC architecture

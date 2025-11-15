@@ -6,13 +6,13 @@
 
 This is the **root-level testing guide** for the entire TonyStack project. For package-specific testing instructions, see:
 
-- 📦 **[CLI Testing](./packages/cli/TESTING.md)** - Command-line tool tests
-- 📦 **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests  
-- 📦 **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with setup guide
+-  **[CLI Testing](./packages/cli/TESTING.md)** - Command-line tool tests
+-  **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests  
+-  **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with setup guide
 
 ---
 
-## 🎯 Testing Philosophy
+##  Testing Philosophy
 
 ### 1. Colocated Tests
 
@@ -47,12 +47,12 @@ src/
 **We test against real PostgreSQL databases:**
 
 ```typescript
-// ❌ BAD: Mocking database
+// [ERROR] BAD: Mocking database
 const mockDB = {
   query: () => Promise.resolve({ rows: [] })
 };
 
-// ✅ GOOD: Real database
+// [SUCCESS] GOOD: Real database
 const db = drizzle(postgres(Deno.env.get("DATABASE_URL")));
 const result = await db.select().from(users);
 ```
@@ -76,7 +76,7 @@ Each package uses separate test databases:
 
 ---
 
-## 🚀 Quick Start (New Developers)
+##  Quick Start (New Developers)
 
 ### Prerequisites
 
@@ -241,7 +241,7 @@ Deno.test("Feature Name Tests", async (t) => {
 
 ### What to Test
 
-✅ **DO Test:**
+[SUCCESS] **DO Test:**
 
 - Public API behavior
 - Edge cases (null, undefined, empty strings)
@@ -251,7 +251,7 @@ Deno.test("Feature Name Tests", async (t) => {
 - HTTP status codes and response formats
 - Pagination, search, and filtering
 
-❌ **DON'T Test:**
+[ERROR] **DON'T Test:**
 
 - Implementation details
 - Third-party library internals
@@ -261,7 +261,7 @@ Deno.test("Feature Name Tests", async (t) => {
 
 ---
 
-## 🔧 Environment Setup
+##  Environment Setup
 
 ### Environment Variables
 
@@ -313,13 +313,13 @@ deno task test:setup
 
 ---
 
-## 🎯 Test Coverage Goals
+##  Test Coverage Goals
 
 | Package | Target Coverage | Current Status |
 |---------|----------------|----------------|
-| **CLI** | 85%+ | ✅ 90% |
-| **Admin** | 90%+ | ✅ 100% (73/73 tests) |
-| **Starter** | 85%+ | ✅ 100% (5 suites, 81 steps) |
+| **CLI** | 85%+ | [SUCCESS] 90% |
+| **Admin** | 90%+ | [SUCCESS] 100% (73/73 tests) |
+| **Starter** | 85%+ | [SUCCESS] 100% (5 suites, 81 steps) |
 
 ### Viewing Coverage
 
@@ -388,7 +388,7 @@ Deno.test({
 
 ---
 
-## 📊 Continuous Integration
+##  Continuous Integration
 
 ### GitHub Actions Workflow
 
@@ -451,7 +451,7 @@ jobs:
 Each test should be completely independent:
 
 ```typescript
-// ❌ BAD: Tests depend on execution order
+// [ERROR] BAD: Tests depend on execution order
 let userId: number;
 
 Deno.test("Create user", async () => {
@@ -462,7 +462,7 @@ Deno.test("Get user", async () => {
   const user = await getUser(userId); // Depends on previous test
 });
 
-// ✅ GOOD: Self-contained tests
+// [SUCCESS] GOOD: Self-contained tests
 Deno.test("Get user - returns user data", async () => {
   const userId = await createTestUser();
   const user = await getUser(userId);
@@ -474,10 +474,10 @@ Deno.test("Get user - returns user data", async () => {
 ### 2. Descriptive Assertions
 
 ```typescript
-// ❌ BAD: Generic assertion
+// [ERROR] BAD: Generic assertion
 assertEquals(result, true);
 
-// ✅ GOOD: Descriptive assertion
+// [SUCCESS] GOOD: Descriptive assertion
 assertEquals(
   result.isAuthenticated,
   true,
@@ -488,7 +488,7 @@ assertEquals(
 ### 3. Cleanup in finally Blocks
 
 ```typescript
-// ✅ GOOD: Always cleanup, even on failure
+// [SUCCESS] GOOD: Always cleanup, even on failure
 Deno.test("Article CRUD", async () => {
   const articleId = await createArticle();
   

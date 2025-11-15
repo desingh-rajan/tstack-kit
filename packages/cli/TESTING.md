@@ -29,7 +29,7 @@ packages/cli/
 │   │   ├── fileWriter.ts
 │   │   ├── fileWriter.test.ts
 │   │   ├── versionFetcher.ts
-│   │   └── versionFetcher.test.ts  ← ✅ Already done!
+│   │   └── versionFetcher.test.ts  ← [SUCCESS] Already done!
 │   └── templates/
 ├── tests/
 │   ├── helpers/
@@ -166,7 +166,7 @@ Example: "toKebabCase - converts BlogPost to blog-post"
 
 ## What to Test
 
-✅ **DO Test:**
+[SUCCESS] **DO Test:**
 
 - Public API behavior
 - Edge cases (empty strings, invalid input)
@@ -174,7 +174,7 @@ Example: "toKebabCase - converts BlogPost to blog-post"
 - File generation correctness
 - Naming convention conversions
 
-❌ **DON'T Test:**
+[ERROR] **DON'T Test:**
 
 - Implementation details
 - Third-party libraries (Deno std, etc.)
@@ -274,7 +274,7 @@ A: Mock database commands or use test databases. Keep CLI tests focused on file/
 
 See these files for reference:
 
-- ✅ `src/utils/versionFetcher.test.ts` - Unit tests with network calls
+- [SUCCESS] `src/utils/versionFetcher.test.ts` - Unit tests with network calls
 - 🔜 `src/utils/stringUtils.test.ts` - Pure function tests
 - 🔜 `tests/integration/full-workflow.test.ts` - E2E tests
 

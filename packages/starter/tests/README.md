@@ -1,6 +1,6 @@
-# ⚠️ Testing Pattern Change
+# [WARNING] Testing Pattern Change
 
-## TonyStack now uses **Colocated Tests** 🎯
+## TonyStack now uses **Colocated Tests** 
 
 Tests now live **next to the code they test**, not in this folder!
 
@@ -24,10 +24,10 @@ src/
 
 ### Why Colocated?
 
-✅ **Easy to find** - Tests right next to code\
-✅ **Better organized** - Each feature is self-contained\
-✅ **Microservice ready** - Move features with their tests\
-✅ **Standard pattern** - Used by Next.js, Remix, Go, Rust
+[SUCCESS] **Easy to find** - Tests right next to code\
+[SUCCESS] **Better organized** - Each feature is self-contained\
+[SUCCESS] **Microservice ready** - Move features with their tests\
+[SUCCESS] **Standard pattern** - Used by Next.js, Remix, Go, Rust
 
 ### Running Tests
 
@@ -101,4 +101,4 @@ mv tests/auth.test.ts src/auth/auth.test.ts
 - Shared test utilities
 - Legacy test templates
 
-For **feature tests**, use the colocated pattern above! 🚀
+For **feature tests**, use the colocated pattern above! 

@@ -25,7 +25,7 @@ async function seedSuperAdmin() {
 
   if (!superadminEmail) {
     console.error(
-      "\n[ERROR] ❌ SUPERADMIN_EMAIL environment variable is required!",
+      "\n[ERROR] SUPERADMIN_EMAIL environment variable is required!",
     );
     console.error(
       "[INFO] Set it before running: export SUPERADMIN_EMAIL='admin@example.com'",
@@ -35,7 +35,7 @@ async function seedSuperAdmin() {
 
   if (!superadminPassword) {
     console.error(
-      "\n[ERROR] ❌ SUPERADMIN_PASSWORD environment variable is required!",
+      "\n[ERROR] SUPERADMIN_PASSWORD environment variable is required!",
     );
     console.error(
       "[INFO] Set it before running: export SUPERADMIN_PASSWORD='YourPassword123!'",
@@ -46,7 +46,7 @@ async function seedSuperAdmin() {
 
   if (superadminPassword.length < 12) {
     console.error(
-      "\n[ERROR] ❌ SUPERADMIN_PASSWORD must be at least 12 characters long",
+      "\n[ERROR] SUPERADMIN_PASSWORD must be at least 12 characters long",
     );
     Deno.exit(1);
   }

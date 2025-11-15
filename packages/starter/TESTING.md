@@ -3,7 +3,7 @@
 This guide covers testing in TonyStack projects built with **Deno** - including
 setup, running tests, and troubleshooting.
 
-## 🚀 First Time Setup (New Developers)
+##  First Time Setup (New Developers)
 
 If you're a new developer and don't have the test environment set up yet, follow these steps **in order**:
 
@@ -67,11 +67,11 @@ deno task test:full
 You should see output like:
 
 ```text
-✅ Test database created: myproject_test_db
-✅ Migrations applied successfully
-✅ Seeded superadmin user
-✅ Seeded alpha user  
-✅ Seeded site settings
+[SUCCESS] Test database created: myproject_test_db
+[SUCCESS] Migrations applied successfully
+[SUCCESS] Seeded superadmin user
+[SUCCESS] Seeded alpha user  
+[SUCCESS] Seeded site settings
 🧪 Running tests...
 
 ok | 5 passed (81 steps) | 0 failed
@@ -222,12 +222,12 @@ Six default settings are created during seeding:
 
 | Key                | Category   | Public | Purpose                                  |
 | ------------------ | ---------- | ------ | ---------------------------------------- |
-| `site_info`        | general    | ✅     | Site name, tagline, logo                 |
-| `contact_info`     | general    | ✅     | Contact email, phone, social links       |
-| `theme_config`     | appearance | ✅     | UI theme (colors, fonts, dark mode)      |
-| `feature_flags`    | features   | ✅     | Feature toggles (blog, comments, etc)    |
-| `email_settings`   | email      | ❌     | SMTP config (private - backend only)     |
-| `api_config`       | general    | ❌     | Rate limits, CORS (private)              |
+| `site_info`        | general    | [SUCCESS]     | Site name, tagline, logo                 |
+| `contact_info`     | general    | [SUCCESS]     | Contact email, phone, social links       |
+| `theme_config`     | appearance | [SUCCESS]     | UI theme (colors, fonts, dark mode)      |
+| `feature_flags`    | features   | [SUCCESS]     | Feature toggles (blog, comments, etc)    |
+| `email_settings`   | email      | [ERROR]     | SMTP config (private - backend only)     |
+| `api_config`       | general    | [ERROR]     | Rate limits, CORS (private)              |
 
 **Test Integration:**
 

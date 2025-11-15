@@ -21,25 +21,25 @@ let allGood = true;
 console.log("\n📁 Checking environment files...");
 try {
   loadSync({ envPath: ".env.test", export: true });
-  console.log("   ✅ .env.test loaded");
+  console.log("   [SUCCESS] .env.test loaded");
 } catch {
   try {
     loadSync({ envPath: ".env", export: true });
-    console.log("   ⚠️  Using .env (no .env.test found)");
+    console.log("   [WARNING]  Using .env (no .env.test found)");
   } catch {
-    console.log("   ❌ No environment file found");
+    console.log("   [ERROR] No environment file found");
     allGood = false;
   }
 }
 
 // Check 2: Database connection
-console.log("\n🗄️  Checking database connection...");
+console.log("\n  Checking database connection...");
 try {
   const { db } = await import("../src/config/database.ts");
 
   // Test basic connection
   await db.execute("SELECT 1");
-  console.log("   ✅ Database connection successful");
+  console.log("   [SUCCESS] Database connection successful");
 
   // Check test users
   const users = await db.execute(
@@ -47,16 +47,16 @@ try {
   );
 
   if (users.length === 2) {
-    console.log("   ✅ Test users present");
+    console.log("   [SUCCESS] Test users present");
   } else {
-    console.log(`   ⚠️  Only ${users.length}/2 test users found`);
-    console.log("   💡 Run: deno task test:seed");
+    console.log(`   [WARNING]  Only ${users.length}/2 test users found`);
+    console.log("   [TIP] Run: deno task test:seed");
   }
 
   await db.$client.end();
 } catch (error) {
-  console.log("   ❌ Database connection failed");
-  console.log(`   💡 Run: deno task test:setup`);
+  console.log("   [ERROR] Database connection failed");
+  console.log(`   [TIP] Run: deno task test:setup`);
   console.log(
     `   Error: ${error instanceof Error ? error.message : String(error)}`,
   );
@@ -67,30 +67,30 @@ try {
 console.log("\n🧪 Checking test files...");
 try {
   await Deno.stat("src/auth/auth.test.ts");
-  console.log("   ✅ auth.test.ts found");
+  console.log("   [SUCCESS] auth.test.ts found");
 } catch {
-  console.log("   ⚠️  auth.test.ts not found");
+  console.log("   [WARNING]  auth.test.ts not found");
 }
 
 try {
   await Deno.stat("src/entities/articles/article.test.ts");
-  console.log("   ✅ article.test.ts found");
+  console.log("   [SUCCESS] article.test.ts found");
 } catch {
-  console.log("   ⚠️  article.test.ts not found");
+  console.log("   [WARNING]  article.test.ts not found");
 }
 
 // Final verdict
 console.log("\n" + "=".repeat(40));
 if (allGood) {
-  console.log("🎉 Test environment is healthy!");
+  console.log("[SUCCESS] Test environment is healthy!");
   console.log("");
-  console.log("🚀 Ready to run:");
+  console.log("[INFO] Ready to run:");
   console.log("   deno task test");
   console.log("   deno task test:watch");
 } else {
-  console.log("🔧 Test environment needs setup!");
+  console.log(" Test environment needs setup!");
   console.log("");
-  console.log("🛠️  Try these commands:");
+  console.log("  Try these commands:");
   console.log("   deno task test:full    # Complete setup + tests");
   console.log("   deno task test:reset   # Reset everything");
 }

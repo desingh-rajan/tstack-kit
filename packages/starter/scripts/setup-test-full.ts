@@ -22,7 +22,7 @@ console.log("🧪 TonyStack Test Setup");
 console.log("=".repeat(50));
 
 // Step 1: Create test database
-console.log("\n📊 Step 1: Creating test database...");
+console.log("\n[INFO] Step 1: Creating test database...");
 try {
   const createDb = new Deno.Command("deno", {
     args: ["run", "--allow-all", "scripts/setup-test-db.ts"],
@@ -31,13 +31,13 @@ try {
   const { success: createSuccess } = await createDb.output();
 
   if (!createSuccess) {
-    console.error("❌ Failed to create test database");
+    console.error("[ERROR] Failed to create test database");
     Deno.exit(1);
   }
-  console.log("✅ Test database created successfully");
+  console.log("[SUCCESS] Test database created successfully");
 } catch (error) {
   console.error(
-    "❌ Error creating test database:",
+    "[ERROR] Error creating test database:",
     error instanceof Error ? error.message : String(error),
   );
   Deno.exit(1);
@@ -59,13 +59,13 @@ try {
   const { success: migrateSuccess } = await migrate.output();
 
   if (!migrateSuccess) {
-    console.error("❌ Failed to run migrations");
+    console.error("[ERROR] Failed to run migrations");
     Deno.exit(1);
   }
-  console.log("✅ Migrations completed successfully");
+  console.log("[SUCCESS] Migrations completed successfully");
 } catch (error) {
   console.error(
-    "❌ Error running migrations:",
+    "[ERROR] Error running migrations:",
     error instanceof Error ? error.message : String(error),
   );
   Deno.exit(1);
@@ -82,7 +82,7 @@ try {
   const { success: seedSuperSuccess } = await seedSuper.output();
 
   if (!seedSuperSuccess) {
-    console.error("❌ Failed to seed superadmin");
+    console.error("[ERROR] Failed to seed superadmin");
     Deno.exit(1);
   }
 
@@ -94,21 +94,21 @@ try {
   const { success: seedAlphaSuccess } = await seedAlpha.output();
 
   if (!seedAlphaSuccess) {
-    console.error("❌ Failed to seed alpha user");
+    console.error("[ERROR] Failed to seed alpha user");
     Deno.exit(1);
   }
 
-  console.log("✅ Test data seeded successfully");
+  console.log("[SUCCESS] Test data seeded successfully");
 } catch (error) {
   console.error(
-    "❌ Error seeding test data:",
+    "[ERROR] Error seeding test data:",
     error instanceof Error ? error.message : String(error),
   );
   Deno.exit(1);
 }
 
 // Step 4: Validate setup
-console.log("\n🔍 Step 4: Validating setup...");
+console.log("\n[INFO] Step 4: Validating setup...");
 try {
   // Import database to test connection
   const { db } = await import("../src/config/database.ts");
@@ -127,32 +127,32 @@ try {
   const userCount = Number(users[0].count);
   if (userCount !== expectedCount) {
     console.error(
-      `❌ Expected ${expectedCount} test user(s), found ${userCount}`,
+      `[ERROR] Expected ${expectedCount} test user(s), found ${userCount}`,
     );
     Deno.exit(1);
   }
 
-  console.log("✅ Setup validation passed");
+  console.log("[SUCCESS] Setup validation passed");
 
   // Close database connection
   await db.$client.end();
 } catch (error) {
   console.error(
-    "❌ Setup validation failed:",
+    "[ERROR] Setup validation failed:",
     error instanceof Error ? error.message : String(error),
   );
   Deno.exit(1);
 }
 
 console.log("\n" + "=".repeat(50));
-console.log("🎉 Test environment setup complete!");
+console.log("[SUCCESS] Test environment setup complete!");
 console.log("");
 console.log("📋 What's ready:");
 console.log("   • Test database created and migrated");
 console.log("   • Test users seeded (superadmin + alpha)");
 console.log("   • All connections verified");
 console.log("");
-console.log("🚀 Next steps:");
+console.log("[INFO] Next steps:");
 console.log("   deno task test          # Run tests");
 console.log("   deno task test:watch    # Run tests in watch mode");
 console.log("   deno task test:coverage # Run with coverage");

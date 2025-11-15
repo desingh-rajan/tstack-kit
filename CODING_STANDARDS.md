@@ -24,9 +24,9 @@
 **Bad**:
 
 ```typescript
-console.log("✅ User created successfully");
-console.error("❌ Database connection failed");
-Logger.info("🚀 Server started!");
+console.log("[SUCCESS] User created successfully");
+console.error("[ERROR] Database connection failed");
+Logger.info(" Server started!");
 ```
 
 **Good**:
@@ -242,7 +242,7 @@ deno check src/main.ts
 ENVIRONMENT=test deno test --allow-all src/
 
 # Search for emojis (to remove them)
-grep -r "✅\|❌\|🚀\|⚠️\|💡\|🎉\|🌱" src/
+grep -r "[SUCCESS]\|[ERROR]\|\|[WARNING]\|\|\|🌱" src/
 ```
 
 ## Why These Standards Matter

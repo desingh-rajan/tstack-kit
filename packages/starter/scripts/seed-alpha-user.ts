@@ -47,7 +47,7 @@ async function seedAlphaUser() {
 
   if (!ALPHA_PASSWORD) {
     console.error(
-      "\n[ERROR] ❌ ALPHA_PASSWORD is required when ALPHA_EMAIL is set",
+      "\n[ERROR] ALPHA_PASSWORD is required when ALPHA_EMAIL is set",
     );
     console.error(
       "[INFO] Set it before running: export ALPHA_PASSWORD='YourPassword123!'",
@@ -57,7 +57,7 @@ async function seedAlphaUser() {
 
   if (ALPHA_PASSWORD.length < 12) {
     console.error(
-      "\n[ERROR] ❌ ALPHA_PASSWORD must be at least 12 characters long",
+      "\n[ERROR] ALPHA_PASSWORD must be at least 12 characters long",
     );
     Deno.exit(1);
   }

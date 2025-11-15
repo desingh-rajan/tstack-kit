@@ -368,13 +368,13 @@ const productAdmin = new HonoAdminAdapter({
 
 **Admin API Features:**
 
-- ✅ **RESTful JSON API** - Modern API-first architecture
-- ✅ **Pagination** - Configurable page size with metadata
-- ✅ **Search** - Full-text search across specified columns
-- ✅ **Sorting** - Sort by any configured column (ASC/DESC)
-- ✅ **Role-Based Access** - Requires `superadmin` or `admin` role
-- ✅ **Type-Safe Responses** - Full TypeScript support
-- ✅ **Auto-Discovery** - Routes automatically registered from `*.admin.route.ts` files
+- [SUCCESS] **RESTful JSON API** - Modern API-first architecture
+- [SUCCESS] **Pagination** - Configurable page size with metadata
+- [SUCCESS] **Search** - Full-text search across specified columns
+- [SUCCESS] **Sorting** - Sort by any configured column (ASC/DESC)
+- [SUCCESS] **Role-Based Access** - Requires `superadmin` or `admin` role
+- [SUCCESS] **Type-Safe Responses** - Full TypeScript support
+- [SUCCESS] **Auto-Discovery** - Routes automatically registered from `*.admin.route.ts` files
 
 **Skip Admin API:**
 
@@ -513,8 +513,8 @@ deno task dev
 
 | Mode | Command | Tests | Time | PostgreSQL | Use Case |
 |------|---------|-------|------|------------|----------|
-| **Fast (Default)** | `deno task test` | 118 | ~2s | ❌ Not needed | Quick dev, CI/CD |
-| **Integration** | `deno task test:db` | 127 | ~12s | ✅ Required | Pre-release validation |
+| **Fast (Default)** | `deno task test` | 118 | ~2s | [ERROR] Not needed | Quick dev, CI/CD |
+| **Integration** | `deno task test:db` | 127 | ~12s | [SUCCESS] Required | Pre-release validation |
 
 **What happens behind the scenes:**
 
@@ -535,9 +535,9 @@ deno task dev
 
 **Before submitting a PR:**
 
-1. ✅ Run `deno task test` (should always pass)
-2. ✅ Run `deno task test:db` (if you have PostgreSQL)
-3. ✅ All 127 tests should pass
+1. [SUCCESS] Run `deno task test` (should always pass)
+2. [SUCCESS] Run `deno task test:db` (if you have PostgreSQL)
+3. [SUCCESS] All 127 tests should pass
 
 ### Running Tests
 
@@ -605,7 +605,7 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 MIT License - see [LICENSE](../../LICENSE) for details.
 
-## ‍♂️ Support
+##  Support
 
 - Email: <support@tonystack.dev>
 - GitHub Issues:
@@ -614,6 +614,6 @@ MIT License - see [LICENSE](../../LICENSE) for details.
 
 ---
 
-Made with ️ for the Deno community
+Made with  for the Deno community
 
 > TonyStack CLI - Because scaffolding should be this easy.

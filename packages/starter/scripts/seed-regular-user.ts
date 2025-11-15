@@ -48,7 +48,7 @@ async function seedRegularUser() {
 
   if (!REGULAR_USER_PASSWORD) {
     console.error(
-      "\n[ERROR] ❌ REGULAR_USER_PASSWORD is required when REGULAR_USER_EMAIL is set",
+      "\n[ERROR] REGULAR_USER_PASSWORD is required when REGULAR_USER_EMAIL is set",
     );
     console.error(
       "[INFO] Set it before running: export REGULAR_USER_PASSWORD='YourPassword123!'",
@@ -58,7 +58,7 @@ async function seedRegularUser() {
 
   if (REGULAR_USER_PASSWORD.length < 12) {
     console.error(
-      "\n[ERROR] ❌ REGULAR_USER_PASSWORD must be at least 12 characters long",
+      "\n[ERROR] REGULAR_USER_PASSWORD must be at least 12 characters long",
     );
     Deno.exit(1);
   }

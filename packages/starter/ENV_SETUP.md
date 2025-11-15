@@ -5,7 +5,7 @@ between development, testing, and production environments.
 
 ## Quick Start
 
-## 🔐 Security: User Credentials Setup
+##  Security: User Credentials Setup
 
 ### For Development (Default)
 
@@ -123,24 +123,24 @@ ENVIRONMENT=production deno task start
 
 ### Development
 
-- ✅ Use `.env.development.local` with safe defaults
-- ✅ Commit `.env.development.local` to git
-- ✅ Share same dev config across team
+- [SUCCESS] Use `.env.development.local` with safe defaults
+- [SUCCESS] Commit `.env.development.local` to git
+- [SUCCESS] Share same dev config across team
 
 ### Test
 
-- ✅ Use `.env.test.local` with test-specific config
-- ✅ Commit `.env.test.local` to git
-- ✅ Separate test database from development
+- [SUCCESS] Use `.env.test.local` with test-specific config
+- [SUCCESS] Commit `.env.test.local` to git
+- [SUCCESS] Separate test database from development
 
 ### Production
 
-- ❌ **NEVER** commit `.env.production.local`
-- ✅ Use strong random secrets (e.g., `openssl rand -hex 64`)
-- ✅ Use environment variables in CI/CD instead of files
-- ✅ Rotate secrets regularly
-- ✅ Use different credentials for each environment
-- ✅ Use managed database services (not local PostgreSQL)
+- [ERROR] **NEVER** commit `.env.production.local`
+- [SUCCESS] Use strong random secrets (e.g., `openssl rand -hex 64`)
+- [SUCCESS] Use environment variables in CI/CD instead of files
+- [SUCCESS] Rotate secrets regularly
+- [SUCCESS] Use different credentials for each environment
+- [SUCCESS] Use managed database services (not local PostgreSQL)
 
 ## Environment Variables Reference
 
