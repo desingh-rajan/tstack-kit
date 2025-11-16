@@ -5,7 +5,7 @@
 
 import "@std/dotenv/load";
 
-const dbName = "tstack_starter_test_db";
+const dbName = "tonystack_test";
 
 try {
   const cmd = new Deno.Command("psql", {

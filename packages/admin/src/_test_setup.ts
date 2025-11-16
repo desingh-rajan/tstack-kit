@@ -19,7 +19,7 @@ if (environment !== "test") {
 }
 
 // Admin package uses its own test database
-const adminTestDb = "tstack_admin_test_db";
+const adminTestDb = "tstack_admin_test";
 const connectionString =
   `postgresql://postgres:password@localhost:5432/${adminTestDb}`;
 
@@ -65,7 +65,7 @@ async function ensureDatabase(dbName: string): Promise<void> {
 
 // Create test tables
 // Use the admin test database connectionString
-const dbName = "tstack_admin_test_db";
+const dbName = "tstack_admin_test";
 
 // Ensure database exists
 console.log("   Ensuring test database exists...");

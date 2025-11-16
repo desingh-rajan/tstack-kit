@@ -4,7 +4,7 @@
  */
 
 // Admin package uses its own test database
-const dbName = "tstack_admin_test_db";
+const dbName = "tstack_admin_test";
 
 try {
   const cmd = new Deno.Command("psql", {

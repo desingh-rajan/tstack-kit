@@ -605,7 +605,7 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 MIT License - see [LICENSE](../../LICENSE) for details.
 
-##  Support
+## Support
 
 - Email: <support@tonystack.dev>
 - GitHub Issues:

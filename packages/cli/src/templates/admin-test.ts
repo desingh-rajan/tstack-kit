@@ -13,7 +13,7 @@ import { authTokens } from "../../auth/auth-token.model.ts";
 /**
  * ${names.pascalSingular} Admin API Tests
  *
- * Tests admin CRUD operations with JSON API (@tstack/admin v2.0.0+).
+ * Tests admin CRUD operations with JSON API (@tstack/admin v2.0.1+).
  * All responses are JSON - no HTML rendering.
  *
  * Run: ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.admin.test.ts
