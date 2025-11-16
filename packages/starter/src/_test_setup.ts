@@ -11,6 +11,9 @@
 
 import { config } from "./config/env.ts";
 
+// Get project root (parent of src/)
+const projectRoot = new URL("../", import.meta.url).pathname;
+
 console.log("\n Setting up test environment...\n");
 console.log(`   ENVIRONMENT: ${config.environment}`);
 console.log(`   Database: ${config.databaseUrl}`);
@@ -24,6 +27,33 @@ if (config.environment !== "test") {
   Deno.exit(1);
 }
 
+// Ensure test database exists before running migrations
+console.log(" Ensuring test database exists...");
+
+const setupDbCmd = new Deno.Command("deno", {
+  args: ["run", "--allow-all", "scripts/setup-test-db.ts"],
+  env: {
+    ...Deno.env.toObject(),
+    ENVIRONMENT: "test",
+  },
+  stdout: "piped",
+  stderr: "piped",
+  cwd: projectRoot,
+});
+
+const setupDbResult = await setupDbCmd.output();
+
+if (!setupDbResult.success) {
+  const stderr = new TextDecoder().decode(setupDbResult.stderr);
+  // Ignore "already exists" errors - that's fine
+  if (!stderr.includes("already exists") && !stderr.includes("duplicate")) {
+    console.error("\n[ERROR] Database setup failed!");
+    console.error(stderr);
+    Deno.exit(1);
+  }
+}
+
+console.log(" [OK] Test database ready");
 console.log(" Running migrations on test database...");
 
 // Run migrations using drizzle-kit directly
@@ -53,9 +83,6 @@ if (!migrateResult.success) {
 
 // Seed superadmin for auth tests
 console.log("\n[SEED] Seeding superadmin for auth tests...");
-
-// Get project root (parent of src/)
-const projectRoot = new URL("../", import.meta.url).pathname;
 
 const seedCmd = new Deno.Command("deno", {
   args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],

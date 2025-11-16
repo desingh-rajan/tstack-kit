@@ -1,10 +1,57 @@
 import { Context, Next } from "hono";
 import { ApiResponse } from "../utils/response.ts";
-import { AppError } from "../utils/errors.ts";
+import { AppError, ValidationError } from "../utils/errors.ts";
 import { isDevelopment } from "../../config/env.ts";
+import { ZodError } from "zod";
+
+// Generate unique request ID for correlation
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+// Extract and format Zod validation errors
+function formatZodErrors(zodError: ZodError, isProduction: boolean) {
+  if (isProduction) {
+    // Production: Sanitized errors (no internal details)
+    return zodError.errors.map((err) => ({
+      field: err.path.join(".") || "unknown",
+      message: err.message,
+      code: err.code,
+    }));
+  } else {
+    // Development: Full error details for debugging
+    return zodError.errors.map((err) => ({
+      ...err, // Include all Zod error details in dev mode
+      code: err.code,
+      message: err.message,
+      path: err.path,
+    }));
+  }
+}
 
 export function errorHandler(err: Error, c: Context) {
-  console.error("Error:", err);
+  const requestId = generateRequestId();
+  const isProduction = !isDevelopment;
+
+  // Log error with request correlation
+  console.error(`[${requestId}] Error:`, {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+    timestamp: new Date().toISOString(),
+  });
+
+  // Handle ValidationError (from our app code)
+  if (err instanceof ValidationError) {
+    return c.json(
+      ApiResponse.error(
+        err.message,
+        null,
+        err.errors, // Always return array (could be empty)
+      ),
+      err.statusCode as 400,
+    );
+  }
 
   // Handle custom app errors
   if (err instanceof AppError) {
@@ -14,20 +61,27 @@ export function errorHandler(err: Error, c: Context) {
     );
   }
 
-  // Handle validation errors from Zod
-  if (err.name === "ZodError") {
+  // Handle Zod validation errors
+  if (err instanceof ZodError || err.name === "ZodError") {
+    const zodError = err as ZodError;
+    const formattedErrors = formatZodErrors(zodError, isProduction);
+
     return c.json(
-      ApiResponse.error("Validation failed", null, err),
+      ApiResponse.error("Validation failed", null, formattedErrors),
       400,
     );
   }
 
-  // Generic server error
-  const message = isDevelopment ? err.message : "Internal server error";
-  return c.json(
-    ApiResponse.error(message),
-    500,
-  );
+  // Generic server error (sanitize in production)
+  const message = isProduction
+    ? "Internal server error"
+    : `${err.name}: ${err.message}`;
+
+  const errorResponse = isProduction
+    ? ApiResponse.error(message)
+    : ApiResponse.error(message, { stack: err.stack });
+
+  return c.json(errorResponse, 500);
 }
 
 // Global error handler middleware

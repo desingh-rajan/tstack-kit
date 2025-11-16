@@ -12,9 +12,13 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, _errors?: unknown) {
+  public errors: unknown[];
+
+  constructor(message: string, errors?: unknown) {
     super(message, 400);
     this.name = "ValidationError";
+    // Store errors as an array for consistent handling
+    this.errors = Array.isArray(errors) ? errors : errors ? [errors] : [];
   }
 }
 
