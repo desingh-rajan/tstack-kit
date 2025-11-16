@@ -1,5 +1,5 @@
 import { dirname, join } from "@std/path";
-import { copy, ensureDir, exists } from "@std/fs";
+import { copy, exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
 import {
   extractVersion,
@@ -20,13 +20,16 @@ export interface CreateOptions {
 function promptForCredentials(
   projectName: string,
 ): { dbName: string; dbUser: string; dbPassword: string } {
-  // Convert project name to database name: shoes-be -> shoes_be_db
-  const defaultDbName = projectName.replace(/-/g, "_") + "_db";
+  // Convert project name to database name: blog-api -> blog_api_dev
+  const defaultDbName = projectName.replace(/-/g, "_") + "_dev";
 
   Logger.subtitle("Database Configuration:");
   Logger.newLine();
   Logger.info(
-    `Database: ${defaultDbName} (created per project)`,
+    `Development: ${defaultDbName}`,
+  );
+  Logger.info(
+    `Test: ${projectName.replace(/-/g, "_")}_test`,
   );
   Logger.info(
     `User: postgres (shared for all projects)`,
@@ -150,12 +153,14 @@ async function createDatabaseWithSudo(dbName: string): Promise<boolean> {
 async function setupDatabases(
   dbName: string,
   testDbName: string,
+  prodDbName: string,
   dbUser: string,
   dbPassword: string,
 ): Promise<void> {
   const databases = [
     { name: dbName, label: "Development database" },
     { name: testDbName, label: "Test database" },
+    { name: prodDbName, label: "Production database" },
   ];
 
   for (const { name, label } of databases) {
@@ -193,13 +198,18 @@ async function setupDatabases(
   Logger.newLine();
   Logger.info("If databases were not created, you have these options:");
   Logger.code(
-    `1. Docker: cd ${dbName.replace(/_db$/, "")} && docker compose up -d`,
+    `1. Docker: cd ${dbName.replace(/_dev$/, "")} && docker compose up -d`,
   );
   Logger.code(
     `2. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${dbName}"`,
   );
   Logger.code(
     `3. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${testDbName}"`,
+  );
+  Logger.code(
+    `4. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${
+      databases[2].name
+    }"`,
   );
 }
 
@@ -237,6 +247,8 @@ export async function createProject(options: CreateOptions): Promise<void> {
 
   // Set database credentials
   const { dbName, dbUser, dbPassword } = promptForCredentials(projectName);
+  const testDbName = projectName.replace(/-/g, "_") + "_test"; // Derive from projectName, not dbName
+  const prodDbName = projectName.replace(/-/g, "_") + "_prod"; // Derive from projectName for production
   Logger.newLine();
 
   const cliPath = dirname(dirname(dirname(new URL(import.meta.url).pathname)));
@@ -343,19 +355,9 @@ JWT_EXPIRY=7d
       }
     }
 
-    // Create migrations meta/_journal.json file
-    const migrationsMetaPath = join(projectPath, "migrations", "meta");
-    await ensureDir(migrationsMetaPath);
-    const journalPath = join(migrationsMetaPath, "_journal.json");
-    const journalContent = {
-      version: "7",
-      dialect: "postgresql",
-      entries: [],
-    };
-    await Deno.writeTextFile(
-      journalPath,
-      JSON.stringify(journalContent, null, 2) + "\n",
-    );
+    // migrations meta/_journal.json is already copied from starter template
+    // No need to overwrite it - starter template contains the initial migration entry
+    // Related fix: https://github.com/desingh-rajan/tstack-kit/issues/31
 
     // Update deno.json with latest versions if --latest flag is set
     if (latest) {
@@ -470,7 +472,6 @@ JWT_EXPIRY=7d
   }
 
   // 3. Setup .env.test.local with test database name
-  const testDbName = `${dbName}_test`;
   const envTestPath = join(projectPath, ".env.test.local");
   try {
     if (await exists(envTestPath)) {
@@ -486,12 +487,19 @@ JWT_EXPIRY=7d
     // File doesn't exist, skip
   }
 
-  // 4. Keep .env.production.local as template (no modifications)
+  // 4. Setup .env.production.local template with correct database name
   const envProdPath = join(projectPath, ".env.production.local");
   try {
     if (await exists(envProdPath)) {
+      let envProdContent = await Deno.readTextFile(envProdPath);
+      const prodDbName = projectName.replace(/-/g, "_") + "_prod";
+      envProdContent = envProdContent.replace(
+        /your_project_prod/g,
+        prodDbName,
+      );
+      await Deno.writeTextFile(envProdPath, envProdContent);
       Logger.info(
-        ".env.production.local template ready (requires configuration)",
+        `.env.production.local template ready (database: ${prodDbName})`,
       );
     }
   } catch {
@@ -500,10 +508,10 @@ JWT_EXPIRY=7d
 
   Logger.newLine();
 
-  // Try to create databases automatically (dev + test)
+  // Try to create databases automatically (dev + test + prod)
   if (!skipDbSetup) {
     Logger.step("Setting up databases...");
-    await setupDatabases(dbName, testDbName, dbUser, dbPassword);
+    await setupDatabases(dbName, testDbName, prodDbName, dbUser, dbPassword);
   }
 
   Logger.newLine();

@@ -91,7 +91,7 @@ ENVIRONMENT=production deno task start
 ### Development Database
 
 ```bash
-# Database: project_name_db
+# Database: project_name_dev
 # Created automatically by tstack create
 
 deno task migrate:run
@@ -102,7 +102,7 @@ deno task dev
 ### Test Database
 
 ```bash
-# Database: project_name_test_db
+# Database: project_name_test
 # Separate from development to prevent data pollution
 
 deno task test:reset    # Creates db + runs migrations
@@ -112,6 +112,7 @@ deno task test          # Runs tests
 ### Production Database
 
 ```bash
+# Database: project_name_prod
 # Configure in .env.production.local
 # Use managed database service (not local PostgreSQL)
 

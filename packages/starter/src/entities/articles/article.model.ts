@@ -1,4 +1,4 @@
-import { integer, pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { commonColumns } from "../../shared/utils/columns.ts";
 import { users } from "../../auth/user.model.ts";
@@ -20,7 +20,7 @@ export const articles = pgTable("articles", {
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   content: text("content"),
   excerpt: text("excerpt"),
-  isPublished: integer("is_published").default(0).notNull(), // 0 = draft, 1 = published
+  isPublished: boolean("is_published").default(false).notNull(), // Boolean: true = published, false = draft
 
   // Foreign key to users table (author)
   authorId: integer("author_id").references(() => users.id).notNull(),

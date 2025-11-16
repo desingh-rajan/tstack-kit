@@ -74,7 +74,7 @@ app.get("/", (c: Context) => {
   return c.json(
     ApiResponse.success({
       name: "TonyStack API",
-      version: "1.0.0",
+      version: "1.0.0", // Your API version - increment as you develop
       description:
         "A lightweight, type-safe backend service built with Deno, Hono, Drizzle, and PostgreSQL",
       documentation: "/api/docs",

@@ -14,7 +14,7 @@ Create a `.env.test.local` file in the `packages/starter` directory:
 ```bash
 # packages/starter/.env.test.local
 ENVIRONMENT=test
-DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test_db
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test
 PORT=8001
 LOG_LEVEL=error
 JWT_SECRET=test-secret-key-for-testing-only
@@ -24,7 +24,7 @@ JWT_SECRET=test-secret-key-for-testing-only
 
 - Replace `password` with your actual PostgreSQL password
 - Replace `myproject` with your actual project name
-- The test database name should end with `_test_db` (e.g., `tonystack_test_db`)
+- The database name should follow the pattern `{project}_test` (e.g., `tonystack_test`)
 - Make sure PostgreSQL is running on your machine
 
 ### Step 2: Check Prerequisites
@@ -67,7 +67,7 @@ deno task test:full
 You should see output like:
 
 ```text
-[SUCCESS] Test database created: myproject_test_db
+[SUCCESS] Test database created: myproject_test
 [SUCCESS] Migrations applied successfully
 [SUCCESS] Seeded superadmin user
 [SUCCESS] Seeded alpha user  
@@ -165,8 +165,9 @@ All test-related tasks from `deno.json`:
 
 TonyStack automatically creates a separate test database:
 
-- **Development DB**: `your_project_db`
-- **Test DB**: `your_project_test_db`
+- **Development DB**: `your_project_dev`
+- **Test DB**: `your_project_test`
+- **Production DB**: `your_project_prod`
 
 ### Seeding Workflow
 
@@ -249,7 +250,7 @@ Test environment uses `.env.test.local`:
 
 ```bash
 ENVIRONMENT=test
-DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test_db
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myproject_test
 PORT=8001
 LOG_LEVEL=error
 JWT_SECRET=test-secret-key-for-testing-only

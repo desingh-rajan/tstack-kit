@@ -283,8 +283,9 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}destroy_dev`;
-    const dbName = `${TEST_DB_PREFIX}destroy_dev_db`;
-    const testDbName = `${TEST_DB_PREFIX}destroy_dev_db_test`;
+    const dbName = `${TEST_DB_PREFIX}destroy_dev_dev`;
+    const testDbName = `${TEST_DB_PREFIX}destroy_dev_test`;
+    const prodDbName = `${TEST_DB_PREFIX}destroy_dev_prod`;
 
     try {
       // Create project with databases
@@ -318,6 +319,7 @@ Deno.test({
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -329,8 +331,9 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}destroy_test`;
-    const dbName = `${TEST_DB_PREFIX}destroy_test_db`;
-    const testDbName = `${TEST_DB_PREFIX}destroy_test_db_test`;
+    const dbName = `${TEST_DB_PREFIX}destroy_test_dev`;
+    const testDbName = `${TEST_DB_PREFIX}destroy_test_test`;
+    const prodDbName = `${TEST_DB_PREFIX}destroy_test_prod`;
 
     try {
       // Create project with databases
@@ -364,6 +367,7 @@ Deno.test({
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -375,8 +379,9 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}destroy_both`;
-    const dbName = `${TEST_DB_PREFIX}destroy_both_db`;
-    const testDbName = `${TEST_DB_PREFIX}destroy_both_db_test`;
+    const dbName = `${TEST_DB_PREFIX}destroy_both_dev`;
+    const testDbName = `${TEST_DB_PREFIX}destroy_both_test`;
+    const prodDbName = `${TEST_DB_PREFIX}destroy_both_prod`;
 
     try {
       // Create project with databases
@@ -386,7 +391,7 @@ Deno.test({
         skipDbSetup: false,
       });
 
-      // Verify both databases exist
+      // Verify all databases exist
       assertEquals(
         await databaseExists(dbName),
         true,
@@ -397,6 +402,11 @@ Deno.test({
         true,
         `Test database should exist`,
       );
+      assertEquals(
+        await databaseExists(prodDbName),
+        true,
+        `Prod database should exist`,
+      );
 
       // Destroy project
       await destroyInDir(tempDir, {
@@ -405,7 +415,7 @@ Deno.test({
         skipDbSetup: false,
       });
 
-      // Verify both databases were dropped
+      // Verify all databases were dropped
       assertEquals(
         await databaseExists(dbName),
         false,
@@ -416,10 +426,16 @@ Deno.test({
         false,
         `Test database should be dropped`,
       );
+      assertEquals(
+        await databaseExists(prodDbName),
+        false,
+        `Prod database should be dropped`,
+      );
     } finally {
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -432,8 +448,9 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}my-api`;
-    const dbName = `${TEST_DB_PREFIX}my_api_db`; // Hyphens converted to underscores
-    const testDbName = `${TEST_DB_PREFIX}my_api_db_test`;
+    const dbName = `${TEST_DB_PREFIX}my_api_dev`; // Hyphens converted to underscores
+    const testDbName = `${TEST_DB_PREFIX}my_api_test`;
+    const prodDbName = `${TEST_DB_PREFIX}my_api_prod`;
 
     try {
       // Create project with databases
@@ -446,6 +463,7 @@ Deno.test({
       // Verify databases exist with correct naming
       assertEquals(await databaseExists(dbName), true);
       assertEquals(await databaseExists(testDbName), true);
+      assertEquals(await databaseExists(prodDbName), true);
 
       // Destroy project
       await destroyInDir(tempDir, {
@@ -457,10 +475,12 @@ Deno.test({
       // Verify databases dropped with correct naming
       assertEquals(await databaseExists(dbName), false);
       assertEquals(await databaseExists(testDbName), false);
+      assertEquals(await databaseExists(prodDbName), false);
     } finally {
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -473,8 +493,9 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}no_dbs`;
-    const dbName = `${TEST_DB_PREFIX}no_dbs_db`;
-    const testDbName = `${TEST_DB_PREFIX}no_dbs_db_test`;
+    const dbName = `${TEST_DB_PREFIX}no_dbs_dev`;
+    const testDbName = `${TEST_DB_PREFIX}no_dbs_test`;
+    const prodDbName = `${TEST_DB_PREFIX}no_dbs_prod`;
 
     try {
       // Create project WITHOUT databases
@@ -500,6 +521,7 @@ Deno.test({
       // Cleanup just in case
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },

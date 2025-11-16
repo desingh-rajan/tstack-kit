@@ -116,10 +116,12 @@ async function dropDatabaseWithSudo(dbName: string): Promise<boolean> {
 async function dropDatabases(
   dbName: string,
   testDbName: string,
+  prodDbName: string,
 ): Promise<void> {
   const databases = [
     { name: dbName, label: "Development database" },
     { name: testDbName, label: "Test database" },
+    { name: prodDbName, label: "Production database" },
   ];
 
   const dbUser = "postgres";
@@ -203,10 +205,13 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     Logger.warning("[WARNING]  This will permanently delete:");
     Logger.info(`   - Project directory: ${projectPath}`);
     Logger.info(
-      `   - Development database: ${projectName.replace(/-/g, "_")}_db`,
+      `   - Development database: ${projectName.replace(/-/g, "_")}_dev`,
     );
     Logger.info(
-      `   - Test database: ${projectName.replace(/-/g, "_")}_db_test`,
+      `   - Test database: ${projectName.replace(/-/g, "_")}_test`,
+    );
+    Logger.info(
+      `   - Production database: ${projectName.replace(/-/g, "_")}_prod`,
     );
     Logger.newLine();
 
@@ -221,13 +226,14 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   }
 
   // Extract database names from project name
-  const dbName = projectName.replace(/-/g, "_") + "_db";
-  const testDbName = projectName.replace(/-/g, "_") + "_db_test";
+  const dbName = projectName.replace(/-/g, "_") + "_dev";
+  const testDbName = projectName.replace(/-/g, "_") + "_test";
+  const prodDbName = projectName.replace(/-/g, "_") + "_prod";
 
   // Step 1: Drop databases
   if (!skipDbSetup) {
     Logger.step("Dropping databases...");
-    await dropDatabases(dbName, testDbName);
+    await dropDatabases(dbName, testDbName, prodDbName);
     Logger.newLine();
   }
 

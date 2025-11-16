@@ -3,9 +3,12 @@
 /**
  * Wrapper script for drizzle-kit migrate command
  * Ensures graceful exit after running migrations
+ *
+ * FIX: Uses stdin: "piped" and closes stdin to prevent hanging
+ * Related issue: https://github.com/desingh-rajan/tstack-kit/issues/31
  */
 
-const command = new Deno.Command("deno", {
+const migrateCommand = new Deno.Command("deno", {
   args: [
     "run",
     "-A",
@@ -13,12 +16,19 @@ const command = new Deno.Command("deno", {
     "npm:drizzle-kit@0.28.0",
     "migrate",
   ],
-  stdin: "null", // Prevent hanging by closing stdin
+  stdin: "piped", // Fixed - use piped instead of null
   stdout: "inherit",
   stderr: "inherit",
 });
 
-const { code } = await command.output();
+const migrateProcess = migrateCommand.spawn();
+
+// Fixed - explicitly close stdin to signal EOF
+if (migrateProcess.stdin) {
+  await migrateProcess.stdin.close();
+}
+
+const { code } = await migrateProcess.output();
 
 // Ensure graceful exit
 Deno.exit(code);

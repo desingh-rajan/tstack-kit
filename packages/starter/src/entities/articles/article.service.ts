@@ -38,12 +38,12 @@ export class ArticleService {
       })
       .from(articles)
       .leftJoin(users, eq(articles.authorId, users.id))
-      .where(eq(articles.isPublished, 1)); // Only published
+      .where(eq(articles.isPublished, true)); // Only published
 
     return result.map((row) => ({
       ...row,
       authorName: row.authorName ?? undefined,
-      isPublished: row.isPublished === 1,
+      isPublished: row.isPublished, // Already boolean
     }));
   }
 
@@ -74,7 +74,7 @@ export class ArticleService {
     return {
       ...result[0],
       authorName: result[0].authorName ?? undefined,
-      isPublished: result[0].isPublished === 1,
+      isPublished: result[0].isPublished, // Already boolean
     };
   }
 
@@ -104,7 +104,7 @@ export class ArticleService {
         slug,
         content: data.content || null,
         excerpt: data.excerpt || null,
-        isPublished: (data.isPublished ?? false) ? 1 : 0,
+        isPublished: data.isPublished ?? false, // Boolean directly
         authorId,
       })
       .returning();
@@ -112,7 +112,7 @@ export class ArticleService {
     return {
       ...newRecord[0],
       authorName: undefined,
-      isPublished: newRecord[0].isPublished === 1,
+      isPublished: newRecord[0].isPublished, // Already boolean
     };
   }
 
@@ -137,7 +137,7 @@ export class ArticleService {
       slug?: string;
       content?: string;
       excerpt?: string;
-      isPublished?: number;
+      isPublished?: boolean;
       updatedAt: Date;
     } = {
       updatedAt: new Date(),
@@ -148,7 +148,7 @@ export class ArticleService {
     if (data.content !== undefined) updateData.content = data.content;
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.isPublished !== undefined) {
-      updateData.isPublished = data.isPublished ? 1 : 0;
+      updateData.isPublished = data.isPublished; // Boolean directly
     }
 
     const updated = await db
@@ -164,7 +164,7 @@ export class ArticleService {
     return {
       ...updated[0],
       authorName: undefined,
-      isPublished: updated[0].isPublished === 1,
+      isPublished: updated[0].isPublished, // Already boolean
     };
   }
 

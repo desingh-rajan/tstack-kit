@@ -97,8 +97,8 @@ Deno.test("createProject - sets custom database name in .env", async () => {
     const envPath = join(projectPath, ".env");
     const envContent = await Deno.readTextFile(envPath);
 
-    // Should contain my_api_db (hyphens converted to underscores)
-    assertEquals(envContent.includes("my_api_db"), true);
+    // Should contain my_api_dev (hyphens converted to underscores)
+    assertEquals(envContent.includes("my_api_dev"), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
@@ -167,10 +167,10 @@ Deno.test("createProject - handles project names with hyphens", async () => {
     const stat = await Deno.stat(projectPath);
     assertEquals(stat.isDirectory, true);
 
-    // Database name should be my_cool_app_db
+    // Database name should be my_cool_app_dev
     const envPath = join(projectPath, ".env");
     const envContent = await Deno.readTextFile(envPath);
-    assertEquals(envContent.includes("my_cool_app_db"), true);
+    assertEquals(envContent.includes("my_cool_app_dev"), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
@@ -191,7 +191,7 @@ Deno.test("createProject - handles project names with underscores", async () => 
 
     const envPath = join(projectPath, ".env");
     const envContent = await Deno.readTextFile(envPath);
-    assertEquals(envContent.includes("my_app_db"), true);
+    assertEquals(envContent.includes("my_app_dev"), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
@@ -454,13 +454,15 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}dev_app`;
-    const dbName = `${TEST_DB_PREFIX}dev_app_db`;
-    const testDbName = `${TEST_DB_PREFIX}dev_app_db_test`;
+    const dbName = `${TEST_DB_PREFIX}dev_app_dev`;
+    const testDbName = `${TEST_DB_PREFIX}dev_app_test`;
+    const prodDbName = `${TEST_DB_PREFIX}dev_app_prod`;
 
     try {
       // Ensure databases don't exist before test
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
 
       await createProject({
         projectName,
@@ -475,6 +477,7 @@ Deno.test({
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -486,13 +489,15 @@ Deno.test({
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}test_app`;
-    const dbName = `${TEST_DB_PREFIX}test_app_db`;
-    const testDbName = `${TEST_DB_PREFIX}test_app_db_test`;
+    const dbName = `${TEST_DB_PREFIX}test_app_dev`;
+    const testDbName = `${TEST_DB_PREFIX}test_app_test`;
+    const prodDbName = `${TEST_DB_PREFIX}test_app_prod`;
 
     try {
       // Ensure databases don't exist before test
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
 
       await createProject({
         projectName,
@@ -507,6 +512,7 @@ Deno.test({
       // Cleanup
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },
@@ -514,18 +520,20 @@ Deno.test({
 
 Deno.test({
   name:
-    "createProject - creates BOTH dev and test databases (integration test)",
+    "createProject - creates ALL dev, test, and prod databases (integration test)",
   ignore: SKIP_DB_SETUP, // Only runs when TONYSTACK_TEST_DB=true
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}full_app`;
-    const dbName = `${TEST_DB_PREFIX}full_app_db`;
-    const testDbName = `${TEST_DB_PREFIX}full_app_db_test`;
+    const dbName = `${TEST_DB_PREFIX}full_app_dev`;
+    const testDbName = `${TEST_DB_PREFIX}full_app_test`;
+    const prodDbName = `${TEST_DB_PREFIX}full_app_prod`;
 
     try {
       // Ensure databases don't exist before test
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
 
       await createProject({
         projectName,
@@ -533,9 +541,10 @@ Deno.test({
         skipDbSetup: false, // Actually create the databases
       });
 
-      // Verify BOTH databases were created
+      // Verify ALL databases were created
       const devExists = await databaseExists(dbName);
       const testExists = await databaseExists(testDbName);
+      const prodExists = await databaseExists(prodDbName);
 
       assertEquals(
         devExists,
@@ -547,10 +556,16 @@ Deno.test({
         true,
         `Test database ${testDbName} should exist`,
       );
+      assertEquals(
+        prodExists,
+        true,
+        `Production database ${prodDbName} should exist`,
+      );
     } finally {
-      // Cleanup both databases
+      // Cleanup all databases
       await dropDatabase(dbName);
       await dropDatabase(testDbName);
+      await dropDatabase(prodDbName);
       await cleanupTempDir(tempDir);
     }
   },

@@ -66,13 +66,13 @@ const result = await db.select().from(users);
 
 ### 3. Test Environment Separation
 
-Each package uses separate test databases:
+Each package uses separate test databases following the naming convention: `{project}_dev`, `{project}_test`, `{project}_prod`:
 
-| Package | Dev Database | Test Database |
-|---------|-------------|---------------|
-| Starter | `tonystack_db` | `tonystack_test_db` |
-| Admin   | `admin_dev_db` | `admin_test_db` |
-| CLI     | N/A | Uses temp dirs |
+| Package | Dev Database | Test Database | Prod Database |
+|---------|-------------|---------------|---------------|
+| Starter | `tonystack_dev` | `tonystack_test` | `tonystack_prod` |
+| Admin   | N/A | `tstack_admin_test` | N/A |
+| CLI     | N/A | Uses temp dirs with pattern `tstack_cli_test_*` | N/A |
 
 ---
 
@@ -272,7 +272,7 @@ Each package needs a `.env.test.local` file:
 ```bash
 # packages/starter/.env.test.local
 ENVIRONMENT=test
-DATABASE_URL=postgresql://postgres:password@localhost:5432/tonystack_test_db
+DATABASE_URL=postgresql://postgres:password@localhost:5432/tonystack_test
 PORT=8001
 LOG_LEVEL=error
 JWT_SECRET=test-secret-key-for-testing-only
@@ -283,7 +283,7 @@ JWT_SECRET=test-secret-key-for-testing-only
 ```bash
 # packages/admin/.env.test.local
 ENVIRONMENT=test
-DATABASE_URL=postgresql://postgres:password@localhost:5432/admin_test_db
+DATABASE_URL=postgresql://postgres:password@localhost:5432/tstack_admin_test
 LOG_LEVEL=error
 ```
 
@@ -293,10 +293,10 @@ LOG_LEVEL=error
 
 ```bash
 # Starter test database
-psql -U postgres -c "CREATE DATABASE tonystack_test_db;"
+psql -U postgres -c "CREATE DATABASE tonystack_test;"
 
 # Admin test database
-psql -U postgres -c "CREATE DATABASE admin_test_db;"
+psql -U postgres -c "CREATE DATABASE tstack_admin_test;"
 ```
 
 **Run migrations:**
@@ -432,14 +432,14 @@ jobs:
           cd packages/admin
           deno task test:full
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/admin_test_db
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/tstack_admin_test
       
       - name: Test Starter
         run: |
           cd packages/starter
           deno task test:full
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/tonystack_test_db
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/tonystack_test
 ```
 
 ---
