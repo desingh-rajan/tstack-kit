@@ -3,7 +3,7 @@
 This guide covers testing in TonyStack projects built with **Deno** - including
 setup, running tests, and troubleshooting.
 
-##  First Time Setup (New Developers)
+## First Time Setup (New Developers)
 
 If you're a new developer and don't have the test environment set up yet, follow these steps **in order**:
 

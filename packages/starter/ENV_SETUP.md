@@ -5,7 +5,7 @@ between development, testing, and production environments.
 
 ## Quick Start
 
-##  Security: User Credentials Setup
+## Security: User Credentials Setup
 
 ### For Development (Default)
 

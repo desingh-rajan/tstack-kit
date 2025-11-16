@@ -6,13 +6,13 @@
 
 This is the **root-level testing guide** for the entire TonyStack project. For package-specific testing instructions, see:
 
--  **[CLI Testing](./packages/cli/TESTING.md)** - Command-line tool tests
--  **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests  
--  **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with setup guide
+- **[CLI Testing](./packages/cli/TESTING.md)** - Command-line tool tests
+- **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests  
+- **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with setup guide
 
 ---
 
-##  Testing Philosophy
+## Testing Philosophy
 
 ### 1. Colocated Tests
 
@@ -76,7 +76,7 @@ Each package uses separate test databases following the naming convention: `{pro
 
 ---
 
-##  Quick Start (New Developers)
+## Quick Start (New Developers)
 
 ### Prerequisites
 
@@ -261,7 +261,7 @@ Deno.test("Feature Name Tests", async (t) => {
 
 ---
 
-##  Environment Setup
+## Environment Setup
 
 ### Environment Variables
 
@@ -313,7 +313,7 @@ deno task test:setup
 
 ---
 
-##  Test Coverage Goals
+## Test Coverage Goals
 
 | Package | Target Coverage | Current Status |
 |---------|----------------|----------------|
@@ -388,7 +388,7 @@ Deno.test({
 
 ---
 
-##  Continuous Integration
+## Continuous Integration
 
 ### GitHub Actions Workflow
 
