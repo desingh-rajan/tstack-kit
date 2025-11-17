@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "jsr:@std/assert@^1.0.0";
+import { assertEquals, assertExists } from "@std/assert";
 import { Hono } from "hono";
 import { z } from "zod";
 import { errorHandler } from "./errorHandler.ts";

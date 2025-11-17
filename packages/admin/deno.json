@@ -28,7 +28,8 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
+      "tags": ["recommended", "workspace"],
+      "include": ["no-unversioned-import", "no-import-prefix"]
     }
   },
   "compilerOptions": {

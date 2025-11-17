@@ -1,7 +1,7 @@
 import {
   assertEquals,
   assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+} from "@std/assert";
 import { app } from "../../main.ts";
 import { db } from "../../config/database.ts";
 import { siteSettings } from "./site-setting.model.ts";
