@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertExists,
-} from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { app } from "../main.ts";
 import { db } from "../config/database.ts";
 import { authTokens } from "./auth-token.model.ts";

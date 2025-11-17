@@ -3,10 +3,7 @@
  * Tests the @tstack/admin JSON API
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { app } from "../../main.ts";
 import { db } from "../../config/database.ts";
 import { siteSettings } from "./site-setting.model.ts";
