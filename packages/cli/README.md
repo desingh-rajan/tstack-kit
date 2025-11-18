@@ -64,22 +64,16 @@ This creates a complete backend project with:
 - Docker Compose configuration
 - Migration setup
 
-**With authentication:**
+**Create a new project:**
 
 ```bash
-tstack create my-api --with-auth
+tstack create my-api
 ```
 
 **With latest stable dependencies:**
 
 ```bash
 tstack create my-api --latest
-```
-
-**Combine both:**
-
-```bash
-tstack create my-api --with-auth --latest
 ```
 
 ### Generate a New Entity
@@ -137,28 +131,21 @@ tstack scaffold orders --dir ./my-project
 
 ### `create <project-name>`
 
-Create a new TonyStack project from the starter template.
+Create a new TonyStack project from the starter template (includes authentication by default).
 
 **Options:**
 
-- `--with-auth` - Include JWT authentication system with user management
 - `--latest` - Fetch latest stable versions from JSR and npm registries (default: use proven template versions)
 - `--dir <path>, -d` - Target directory (default: current directory)
 
 **Examples:**
 
 ```bash
-# Create basic project with stable dependencies
+# Create a new project (auth included by default)
 tstack create my-backend
-
-# Create with authentication
-tstack create my-api --with-auth
 
 # Create with latest stable dependency versions
 tstack create my-api --latest
-
-# Create with both auth and latest versions
-tstack create my-api --with-auth --latest
 
 # Create in specific directory
 tstack create my-backend --dir ~/projects

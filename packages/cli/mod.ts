@@ -80,7 +80,7 @@ function showVersion() {
 
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "version", "force", "with-auth", "latest", "skip-admin", "skip-tests", "skip-auth", "skip-validation"],
+    boolean: ["help", "version", "force", "latest", "skip-admin", "skip-tests", "skip-auth", "skip-validation"],
     string: ["dir"],
     alias: {
       h: "help",
@@ -117,7 +117,6 @@ async function main() {
         await createProject({
           projectName,
           targetDir: args.dir,
-          withAuth: args["with-auth"],
           latest: args.latest,
         });
         break;
