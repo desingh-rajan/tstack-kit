@@ -155,7 +155,7 @@ export async function fetchAllLatestVersions(
     { registry: "npm" as const, name: "jose", key: "jose" },
     { registry: "npm" as const, name: "drizzle-orm", key: "drizzle-orm" },
     { registry: "npm" as const, name: "drizzle-kit", key: "drizzle-kit" },
-    { registry: "npm" as const, name: "drizzle-zod", key: "drizzle-zod" },
+    // Note: drizzle-zod removed from template - schemas defined manually in DTOs
     { registry: "npm" as const, name: "postgres", key: "postgres" },
     { registry: "npm" as const, name: "zod", key: "zod" },
   ];
