@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS "site_settings" (
 	"key" text NOT NULL,
 	"category" text NOT NULL,
 	"value" jsonb NOT NULL,
+	"is_system" boolean DEFAULT false NOT NULL,
+	"value_schema" jsonb,
 	"is_public" boolean DEFAULT false NOT NULL,
 	"description" text,
 	"updated_by" integer,

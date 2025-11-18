@@ -256,6 +256,82 @@ Deno.test("Site Settings API Tests", async (t) => {
         assertEquals(result.status, 404);
       },
     );
+
+    // NEW TESTS: System settings functionality
+    await t.step(
+      "GET /site-settings/theme_config - auto-seed system setting",
+      async () => {
+        const result = await apiRequest(`/site-settings/theme_config`);
+        assertEquals(result.status, 200);
+        assertExists(result.data.data);
+        assertEquals(result.data.data.key, "theme_config");
+        assertEquals(result.data.data.isSystem, true);
+        assertExists(result.data.data.value.primaryColor);
+      },
+    );
+
+    await t.step(
+      "DELETE /site-settings - cannot delete system setting",
+      async () => {
+        // Get theme_config ID
+        const getResult = await apiRequest(`/site-settings/theme_config`);
+        const themeId = getResult.data.data.id;
+
+        // Try to delete (should fail)
+        const result = await apiRequest(`/site-settings/${themeId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${superadminToken}` },
+        });
+        assertEquals(result.status, 400);
+      },
+    );
+
+    await t.step(
+      "PUT /site-settings - validate system setting value",
+      async () => {
+        // Get theme_config ID
+        const getResult = await apiRequest(`/site-settings/theme_config`);
+        const themeId = getResult.data.data.id;
+
+        // Try to update with invalid value (should fail validation)
+        const result = await apiRequest(`/site-settings/${themeId}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${superadminToken}` },
+          body: JSON.stringify({
+            value: {
+              primaryColor: "invalid-color", // Should fail hex color validation
+            },
+          }),
+        });
+        assertEquals(result.status, 400);
+      },
+    );
+
+    await t.step(
+      "POST /site-settings/theme_config/reset - reset to default",
+      async () => {
+        const result = await apiRequest(`/site-settings/theme_config/reset`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${superadminToken}` },
+        });
+        assertEquals(result.status, 200);
+        assertExists(result.data.data);
+        assertEquals(result.data.data.value.primaryColor, "#3b82f6"); // Default value
+      },
+    );
+
+    await t.step(
+      "POST /site-settings/reset-all - reset all system settings",
+      async () => {
+        const result = await apiRequest(`/site-settings/reset-all`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${superadminToken}` },
+        });
+        assertEquals(result.status, 200);
+        assertExists(result.data.data);
+        assertEquals(result.data.data.count, 6); // 6 system settings
+      },
+    );
   } finally {
     // Close database connections to prevent resource leaks
     try {

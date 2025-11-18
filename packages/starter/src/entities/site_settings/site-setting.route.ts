@@ -13,9 +13,11 @@ const siteSettingRoutes = new Hono();
  *   GET /site-settings/:idOrKey  - Get single setting by ID or key (frontend can access)
  *
  * ADMIN ROUTES (superadmin only):
- *   POST /site-settings          - Create new setting
- *   PUT /site-settings/:id       - Update setting
- *   DELETE /site-settings/:id    - Delete setting
+ *   POST /site-settings             - Create new setting
+ *   PUT /site-settings/:id          - Update setting
+ *   DELETE /site-settings/:id       - Delete setting
+ *   POST /site-settings/:key/reset  - Reset system setting to default
+ *   POST /site-settings/reset-all   - Reset all system settings to defaults
  */
 
 // PUBLIC ROUTES - Frontend can access to fetch site configuration
@@ -40,6 +42,18 @@ siteSettingRoutes.delete(
   requireAuth,
   requireSuperadmin,
   SiteSettingController.delete,
+);
+siteSettingRoutes.post(
+  "/site-settings/:key/reset",
+  requireAuth,
+  requireSuperadmin,
+  SiteSettingController.resetToDefault,
+);
+siteSettingRoutes.post(
+  "/site-settings/reset-all",
+  requireAuth,
+  requireSuperadmin,
+  SiteSettingController.resetAllToDefaults,
 );
 
 export default siteSettingRoutes;

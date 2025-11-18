@@ -1,6 +1,6 @@
 # [WARNING] Testing Pattern Change
 
-## TonyStack now uses **Colocated Tests** 
+## TonyStack now uses **Colocated Tests**
 
 Tests now live **next to the code they test**, not in this folder!
 
@@ -101,4 +101,4 @@ mv tests/auth.test.ts src/auth/auth.test.ts
 - Shared test utilities
 - Legacy test templates
 
-For **feature tests**, use the colocated pattern above! 
+For **feature tests**, use the colocated pattern above!

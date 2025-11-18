@@ -31,7 +31,9 @@ for (const varName of required) {
     hasErrors = true;
   } else {
     console.log(
-      `[SUCCESS] ${varName}: ${varName.includes("PASSWORD") ? "********" : value}`,
+      `[SUCCESS] ${varName}: ${
+        varName.includes("PASSWORD") ? "********" : value
+      }`,
     );
   }
 }
@@ -41,7 +43,9 @@ for (const varName of optional) {
   const value = Deno.env.get(varName);
   if (value) {
     console.log(
-      `[SUCCESS] ${varName}: ${varName.includes("PASSWORD") ? "********" : value}`,
+      `[SUCCESS] ${varName}: ${
+        varName.includes("PASSWORD") ? "********" : value
+      }`,
     );
   } else {
     console.log(`[WARNING]  ${varName}: not set (optional)`);

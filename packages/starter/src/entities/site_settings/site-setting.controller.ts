@@ -123,4 +123,45 @@ export class SiteSettingController {
       200,
     );
   }
+
+  /**
+   * POST /site-settings/:key/reset
+   * Resets a system setting to its default value
+   * Requires authentication and superadmin role
+   *
+   * @example POST /site-settings/theme_config/reset
+   */
+  static async resetToDefault(c: Context) {
+    const key = c.req.param("key");
+    const siteSetting = await SiteSettingService.resetToDefault(key);
+
+    if (!siteSetting) {
+      throw new NotFoundError("System setting not found");
+    }
+
+    return c.json(
+      ApiResponse.success(
+        siteSetting,
+        "System setting reset to default successfully",
+      ),
+      200,
+    );
+  }
+
+  /**
+   * POST /site-settings/reset-all
+   * Resets all system settings to their default values
+   * Requires authentication and superadmin role
+   */
+  static async resetAllToDefaults(c: Context) {
+    const count = await SiteSettingService.resetAllToDefaults();
+
+    return c.json(
+      ApiResponse.success(
+        { count },
+        `${count} system settings reset to defaults successfully`,
+      ),
+      200,
+    );
+  }
 }

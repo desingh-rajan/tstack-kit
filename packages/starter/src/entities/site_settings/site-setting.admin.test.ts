@@ -137,7 +137,9 @@ Deno.test("Site Setting Admin API Tests", {
           },
         );
         assertEquals(res.status, 200);
-        const data = await res.json();
+        const result = await res.json();
+        // Our controller wraps response in ApiResponse format
+        const data = result.data || result;
         assertEquals(data.description, "Updated description");
       },
     );
@@ -239,6 +241,88 @@ Deno.test("Site Setting Admin API Tests", {
       );
       assertEquals(res.status, 200);
     });
+
+    // NEW TESTS: System settings reset functionality
+    await t.step("Auto-seed and get system setting by key", async () => {
+      // Use public API to get by key (admin API doesn't support key lookup)
+      const res = await app.request("/site-settings/theme_config");
+      assertEquals(res.status, 200);
+      const data = await res.json();
+      assertEquals(data.data.key, "theme_config");
+      assertEquals(data.data.isSystem, true);
+      assertExists(data.data.value.primaryColor);
+    });
+
+    await t.step("Cannot delete system setting via admin", async () => {
+      // Get theme_config via public API first
+      const getRes = await app.request("/site-settings/theme_config");
+      const responseData = await getRes.json();
+      const themeId = responseData.data.id;
+
+      // Try to delete via admin API (should fail)
+      const res = await adminRequest(
+        `${BASE_URL}/${themeId}`,
+        superadminToken,
+        {
+          method: "DELETE",
+        },
+      );
+      assertEquals(res.status, 400);
+    });
+
+    await t.step("Validate system setting on update via admin", async () => {
+      // Get theme_config via public API
+      const getRes = await app.request("/site-settings/theme_config");
+      const responseData = await getRes.json();
+      const themeId = responseData.data.id;
+
+      // Try to update with invalid value (should fail validation)
+      const res = await adminRequest(
+        `${BASE_URL}/${themeId}`,
+        superadminToken,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            value: {
+              primaryColor: "invalid-color", // Should fail hex color validation
+            },
+          }),
+        },
+      );
+      assertEquals(res.status, 400);
+    });
+
+    await t.step("Reset system setting to default via admin", async () => {
+      const res = await adminRequest(
+        `${BASE_URL}/theme_config/reset`,
+        superadminToken,
+        {
+          method: "POST",
+        },
+      );
+      assertEquals(res.status, 200);
+      const data = await res.json();
+      assertEquals(data.data.value.primaryColor, "#3b82f6"); // Default value
+    });
+
+    await t.step(
+      "Reset all system settings to defaults via admin",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/reset-all`,
+          superadminToken,
+          {
+            method: "POST",
+          },
+        );
+        assertEquals(res.status, 200);
+        const data = await res.json();
+        assertEquals(data.data.count, 6); // 6 system settings
+      },
+    );
   } catch (error) {
     throw error;
   } finally {

@@ -20,6 +20,12 @@ export const siteSettings = pgTable("site_settings", {
   // The actual configuration data stored as JSON
   value: jsonb("value").notNull(),
 
+  // Whether this is a system-defined setting (protected from deletion)
+  isSystem: boolean("is_system").default(false).notNull(),
+
+  // Optional schema definition for custom settings (simple type validation)
+  valueSchema: jsonb("value_schema"),
+
   // Whether this setting can be accessed by frontend (public API)
   isPublic: boolean("is_public").default(false).notNull(),
 

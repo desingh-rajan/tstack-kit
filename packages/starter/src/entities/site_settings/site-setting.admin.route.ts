@@ -9,6 +9,8 @@ import { DrizzleAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
 import { siteSettings } from "./site-setting.model.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
+import { SiteSettingController } from "./site-setting.controller.ts";
+import { requireSuperadmin } from "../../shared/middleware/requireRole.ts";
 
 // Admin base URL constant
 const ADMIN_BASE_URL = "/ts-admin/site_settings";
@@ -46,9 +48,25 @@ app.get(`${ADMIN_BASE_URL}/new`, adminAdapter.new());
 app.post(ADMIN_BASE_URL, adminAdapter.create());
 app.get(`${ADMIN_BASE_URL}/:id`, adminAdapter.show());
 app.get(`${ADMIN_BASE_URL}/:id/edit`, adminAdapter.edit());
-app.put(`${ADMIN_BASE_URL}/:id`, adminAdapter.update());
-app.patch(`${ADMIN_BASE_URL}/:id`, adminAdapter.update());
-app.delete(`${ADMIN_BASE_URL}/:id`, adminAdapter.destroy());
+// Note: Using custom update to enforce system setting validation
+app.put(`${ADMIN_BASE_URL}/:id`, SiteSettingController.update);
+app.patch(`${ADMIN_BASE_URL}/:id`, SiteSettingController.update);
+// Note: Using custom delete to enforce system setting protection
+app.delete(`${ADMIN_BASE_URL}/:id`, SiteSettingController.delete);
 app.post(`${ADMIN_BASE_URL}/bulk-delete`, adminAdapter.bulkDelete());
+
+// Custom routes for system settings reset functionality
+app.post(
+  `${ADMIN_BASE_URL}/:key/reset`,
+  requireAuth,
+  requireSuperadmin,
+  SiteSettingController.resetToDefault,
+);
+app.post(
+  `${ADMIN_BASE_URL}/reset-all`,
+  requireAuth,
+  requireSuperadmin,
+  SiteSettingController.resetAllToDefaults,
+);
 
 export default app;

@@ -5,7 +5,8 @@ setup, running tests, and troubleshooting.
 
 ## First Time Setup (New Developers)
 
-If you're a new developer and don't have the test environment set up yet, follow these steps **in order**:
+If you're a new developer and don't have the test environment set up yet, follow
+these steps **in order**:
 
 ### Step 1: Environment Variables
 
@@ -24,7 +25,8 @@ JWT_SECRET=test-secret-key-for-testing-only
 
 - Replace `password` with your actual PostgreSQL password
 - Replace `myproject` with your actual project name
-- The database name should follow the pattern `{project}_test` (e.g., `tonystack_test`)
+- The database name should follow the pattern `{project}_test` (e.g.,
+  `tonystack_test`)
 - Make sure PostgreSQL is running on your machine
 
 ### Step 2: Check Prerequisites
@@ -147,17 +149,17 @@ deno task test:reset
 
 All test-related tasks from `deno.json`:
 
-| Task                      | Description                                              | Use Case                              |
-| ------------------------- | -------------------------------------------------------- | ------------------------------------- |
-| `deno task test:full`     | **Complete test workflow** (setup + migrate + seed + run)| First run, CI/CD, clean slate         |
-| `deno task test`          | Run tests only                                           | Quick testing during development      |
-| `deno task test:setup`    | Create test DB + run migrations                          | Initial setup or after DB changes     |
-| `deno task test:migrate`  | Run migrations on test database                          | After schema changes                  |
-| `deno task test:seed`     | Seed test data (users + site settings)                   | Populate test database with fixtures  |
-| `deno task test:reset`    | Clean reset (drop + create + migrate + seed)             | Fix broken test state, start fresh    |
-| `deno task test:watch`    | Run tests in watch mode                                  | Development with auto-rerun           |
-| `deno task test:coverage` | Run tests with coverage report                           | Check test coverage                   |
-| `deno task test:check`    | Health check test environment                            | Validate setup before running tests   |
+| Task                      | Description                                               | Use Case                             |
+| ------------------------- | --------------------------------------------------------- | ------------------------------------ |
+| `deno task test:full`     | **Complete test workflow** (setup + migrate + seed + run) | First run, CI/CD, clean slate        |
+| `deno task test`          | Run tests only                                            | Quick testing during development     |
+| `deno task test:setup`    | Create test DB + run migrations                           | Initial setup or after DB changes    |
+| `deno task test:migrate`  | Run migrations on test database                           | After schema changes                 |
+| `deno task test:seed`     | Seed test data (users + site settings)                    | Populate test database with fixtures |
+| `deno task test:reset`    | Clean reset (drop + create + migrate + seed)              | Fix broken test state, start fresh   |
+| `deno task test:watch`    | Run tests in watch mode                                   | Development with auto-rerun          |
+| `deno task test:coverage` | Run tests with coverage report                            | Check test coverage                  |
+| `deno task test:check`    | Health check test environment                             | Validate setup before running tests  |
 
 ## Database Setup & Seeding
 
@@ -197,23 +199,26 @@ deno task test:reset
 
 These users are automatically created when you run `test:seed` or `test:full`:
 
-| User           | Email                      | Password                   | Role       | Purpose                                |
-| -------------- | -------------------------- | -------------------------- | ---------- | -------------------------------------- |
-| **Superadmin** | `superadmin@tonystack.dev` | SuperSecurePassword123!    | superadmin | Full system access, admin operations   |
-| **Alpha User** | `alpha@tonystack.dev`      | AlphaSecurePassword123!    | user       | Regular user for permission testing    |
+| User           | Email                      | Password                | Role       | Purpose                              |
+| -------------- | -------------------------- | ----------------------- | ---------- | ------------------------------------ |
+| **Superadmin** | `superadmin@tonystack.dev` | SuperSecurePassword123! | superadmin | Full system access, admin operations |
+| **Alpha User** | `alpha@tonystack.dev`      | AlphaSecurePassword123! | user       | Regular user for permission testing  |
 
 **Usage in Tests:**
 
 ```typescript
 // Login as superadmin
-const adminToken = await login('superadmin@tonystack.dev', 'SuperSecurePassword123!');
+const adminToken = await login(
+  "superadmin@tonystack.dev",
+  "SuperSecurePassword123!",
+);
 
 // Login as regular user
-const userToken = await login('alpha@tonystack.dev', 'AlphaSecurePassword123!');
+const userToken = await login("alpha@tonystack.dev", "AlphaSecurePassword123!");
 
 // Test admin-only operation
-const result = await apiRequest('/admin/articles', {
-  headers: { Authorization: `Bearer ${adminToken}` }
+const result = await apiRequest("/admin/articles", {
+  headers: { Authorization: `Bearer ${adminToken}` },
 });
 ```
 
@@ -221,21 +226,21 @@ const result = await apiRequest('/admin/articles', {
 
 Six default settings are created during seeding:
 
-| Key                | Category   | Public | Purpose                                  |
-| ------------------ | ---------- | ------ | ---------------------------------------- |
-| `site_info`        | general    | [SUCCESS]     | Site name, tagline, logo                 |
-| `contact_info`     | general    | [SUCCESS]     | Contact email, phone, social links       |
-| `theme_config`     | appearance | [SUCCESS]     | UI theme (colors, fonts, dark mode)      |
-| `feature_flags`    | features   | [SUCCESS]     | Feature toggles (blog, comments, etc)    |
-| `email_settings`   | email      | [ERROR]     | SMTP config (private - backend only)     |
-| `api_config`       | general    | [ERROR]     | Rate limits, CORS (private)              |
+| Key              | Category   | Public    | Purpose                               |
+| ---------------- | ---------- | --------- | ------------------------------------- |
+| `site_info`      | general    | [SUCCESS] | Site name, tagline, logo              |
+| `contact_info`   | general    | [SUCCESS] | Contact email, phone, social links    |
+| `theme_config`   | appearance | [SUCCESS] | UI theme (colors, fonts, dark mode)   |
+| `feature_flags`  | features   | [SUCCESS] | Feature toggles (blog, comments, etc) |
+| `email_settings` | email      | [ERROR]   | SMTP config (private - backend only)  |
+| `api_config`     | general    | [ERROR]   | Rate limits, CORS (private)           |
 
 **Test Integration:**
 
 ```typescript
 // Test fetching public site settings
 await t.step("GET /site-settings returns public settings", async () => {
-  const result = await apiRequest('/site-settings');
+  const result = await apiRequest("/site-settings");
   assertEquals(result.status, 200);
   assertExists(result.data.site_info);
   assertExists(result.data.theme_config);

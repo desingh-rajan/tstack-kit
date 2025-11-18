@@ -21,6 +21,8 @@ export const CreateSiteSettingSchema = z.object({
   key: z.string().min(1, "Key is required").max(255),
   category: CategoryEnum,
   value: z.record(z.unknown()), // JSON object - generic key-value structure
+  isSystem: z.boolean().optional(),
+  valueSchema: z.record(z.string()).optional(), // Simple schema: { field: "type" }
   isPublic: z.boolean().optional(),
   description: z.string().optional().nullable(),
   updatedBy: z.number().optional().nullable(),
@@ -32,6 +34,7 @@ export type CreateSiteSettingDTO = z.infer<typeof CreateSiteSettingSchema>;
 export const UpdateSiteSettingSchema = z.object({
   category: CategoryEnum.optional(),
   value: z.record(z.unknown()).optional(), // JSON object - generic key-value structure
+  valueSchema: z.record(z.string()).optional(), // Simple schema: { field: "type" }
   isPublic: z.boolean().optional(),
   description: z.string().optional().nullable(),
   updatedBy: z.number().optional().nullable(),
@@ -47,6 +50,8 @@ export interface SiteSettingResponseDTO {
   key: string;
   category: string;
   value: JsonValue; // JSON value
+  isSystem: boolean;
+  valueSchema?: Record<string, string> | null;
   isPublic: boolean;
   description?: string | null;
   updatedBy?: number | null;

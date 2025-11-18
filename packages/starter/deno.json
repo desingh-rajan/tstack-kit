@@ -1,6 +1,7 @@
 {
   "name": "@tonystack/starter",
   "version": "0.1.0",
+  "exports": "./src/main.ts",
   "tasks": {
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
