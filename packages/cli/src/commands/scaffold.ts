@@ -20,6 +20,7 @@ export interface ScaffoldOptions {
   targetDir?: string;
   force?: boolean;
   skipAdmin?: boolean;
+  skipTests?: boolean;
 }
 
 export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
@@ -28,6 +29,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     targetDir = Deno.cwd(),
     force = false,
     skipAdmin = false,
+    skipTests = false,
   } = options;
 
   Logger.title(`Scaffolding entity: ${entityName}`);
@@ -120,7 +122,11 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       content: generateRouteTemplate(names),
       description: "Route definitions",
     },
-    {
+  ];
+
+  // Add test file if not skipped (Rails-style: include by default, opt-out with --skip-tests)
+  if (!skipTests) {
+    files.push({
       path: join(
         "src",
         "entities",
@@ -129,8 +135,8 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       ),
       content: generateTestTemplate(names),
       description: "API tests",
-    },
-  ];
+    });
+  }
 
   // Add admin route and tests if not skipped (Rails-style: include by default, opt-out with --skip-admin)
   if (!skipAdmin) {
@@ -145,16 +151,19 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       description: "Admin CRUD interface",
     });
 
-    files.push({
-      path: join(
-        "src",
-        "entities",
-        names.snakePlural,
-        `${names.kebabSingular}.admin.test.ts`,
-      ),
-      content: generateAdminTestTemplate(names),
-      description: "Admin API tests (JSON)",
-    });
+    // Add admin test if tests are not skipped
+    if (!skipTests) {
+      files.push({
+        path: join(
+          "src",
+          "entities",
+          names.snakePlural,
+          `${names.kebabSingular}.admin.test.ts`,
+        ),
+        content: generateAdminTestTemplate(names),
+        description: "Admin API tests (JSON)",
+      });
+    }
   }
 
   await writeFiles(targetDir, files);
@@ -263,17 +272,22 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   );
   Logger.newLine();
 
-  Logger.subtitle("Test your API:");
-  Logger.code(`deno task test  # Run all tests`);
-  Logger.code(
-    `ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts  # Run specific tests`,
-  );
-  Logger.newLine();
-  Logger.info("[INFO]  Test file created with:");
-  Logger.code("• Basic CRUD tests (ready to run)");
-  Logger.code(
-    "• Validation test (SKIPPED - enable after adding DTO validation)",
-  );
-  Logger.code("• Sample data (TODO - update to match your model fields)");
-  Logger.newLine();
+  if (!skipTests) {
+    Logger.subtitle("Test your API:");
+    Logger.code(`deno task test  # Run all tests`);
+    Logger.code(
+      `ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts  # Run specific tests`,
+    );
+    Logger.newLine();
+    Logger.info("[INFO]  Test file created with:");
+    Logger.code("• Basic CRUD tests (ready to run)");
+    Logger.code(
+      "• Validation test (SKIPPED - enable after adding DTO validation)",
+    );
+    Logger.code("• Sample data (TODO - update to match your model fields)");
+    Logger.newLine();
+  } else {
+    Logger.info("[WARNING] Test files skipped (--skip-tests flag used)");
+    Logger.newLine();
+  }
 }
