@@ -1,5 +1,4 @@
 import { boolean, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { commonColumns } from "../../shared/utils/columns.ts";
 import { users } from "../../auth/user.model.ts";
 
@@ -39,10 +38,6 @@ export const siteSettings = pgTable("site_settings", {
 // Type inference from schema
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type NewSiteSetting = typeof siteSettings.$inferInsert;
-
-// Zod schemas for validation
-export const insertSiteSettingSchema = createInsertSchema(siteSettings);
-export const selectSiteSettingSchema = createSelectSchema(siteSettings);
 
 /**
  * Common setting categories

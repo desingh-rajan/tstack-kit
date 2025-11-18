@@ -121,7 +121,7 @@ Deno.test("Site Setting Admin API Tests", {
     );
 
     await t.step(
-      "PUT /ts-admin/site_settings/:id - Update",
+      "PUT /ts-admin/site_settings/:id - Update description",
       async () => {
         const res = await adminRequest(
           `${BASE_URL}/${settingId}`,
@@ -141,6 +141,30 @@ Deno.test("Site Setting Admin API Tests", {
         // Our controller wraps response in ApiResponse format
         const data = result.data || result;
         assertEquals(data.description, "Updated description");
+      },
+    );
+
+    await t.step(
+      "PUT /ts-admin/site_settings/:id - Update value field",
+      async () => {
+        const res = await adminRequest(
+          `${BASE_URL}/${settingId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              value: { testKey: "testValue", nested: { data: 123 } },
+            }),
+          },
+        );
+        assertEquals(res.status, 200);
+        const result = await res.json();
+        const data = result.data || result;
+        assertEquals(data.value.testKey, "testValue");
+        assertEquals(data.value.nested.data, 123);
       },
     );
 
@@ -321,6 +345,229 @@ Deno.test("Site Setting Admin API Tests", {
         assertEquals(res.status, 200);
         const data = await res.json();
         assertEquals(data.data.count, 6); // 6 system settings
+      },
+    );
+
+    // Test each system setting schema validation
+    await t.step(
+      "System Settings: site_info - update and validate",
+      async () => {
+        const getRes = await app.request("/site-settings/site_info");
+        const responseData = await getRes.json();
+        const siteInfoId = responseData.data.id;
+
+        // Valid update
+        const validRes = await adminRequest(
+          `${BASE_URL}/${siteInfoId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                siteName: "Updated Site",
+                tagline: "New tagline",
+                description: "Updated description",
+                logo: "/new-logo.svg",
+                favicon: "/new-favicon.ico",
+              },
+            }),
+          },
+        );
+        assertEquals(validRes.status, 200);
+
+        // Invalid update - siteName too short
+        const invalidRes = await adminRequest(
+          `${BASE_URL}/${siteInfoId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                siteName: "", // Empty string should fail
+                tagline: "Test",
+                description: "Test",
+                logo: "/logo.svg",
+                favicon: "/favicon.ico",
+              },
+            }),
+          },
+        );
+        assertEquals(invalidRes.status, 400);
+      },
+    );
+
+    await t.step(
+      "System Settings: contact_info - update and validate",
+      async () => {
+        const getRes = await app.request("/site-settings/contact_info");
+        const responseData = await getRes.json();
+        const contactId = responseData.data.id;
+
+        // Valid update
+        const validRes = await adminRequest(
+          `${BASE_URL}/${contactId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                email: "contact@example.com",
+                phone: "+1-234-567-8900",
+                address: "456 Test Ave",
+                socialMedia: {
+                  twitter: "https://twitter.com/test",
+                  github: "https://github.com/test",
+                },
+              },
+            }),
+          },
+        );
+        assertEquals(validRes.status, 200);
+
+        // Invalid update - bad email format
+        const invalidRes = await adminRequest(
+          `${BASE_URL}/${contactId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                email: "not-an-email", // Invalid email
+              },
+            }),
+          },
+        );
+        assertEquals(invalidRes.status, 400);
+      },
+    );
+
+    await t.step(
+      "System Settings: theme_config - update and validate",
+      async () => {
+        const getRes = await app.request("/site-settings/theme_config");
+        const responseData = await getRes.json();
+        const themeId = responseData.data.id;
+
+        // Valid update with hex colors
+        const validRes = await adminRequest(
+          `${BASE_URL}/${themeId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                primaryColor: "#ff5733",
+                secondaryColor: "#33c3ff",
+                darkMode: true,
+                fontFamily: "Roboto, sans-serif",
+              },
+            }),
+          },
+        );
+        assertEquals(validRes.status, 200);
+
+        // Invalid update - non-hex color
+        const invalidRes = await adminRequest(
+          `${BASE_URL}/${themeId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                primaryColor: "red", // Should be hex
+              },
+            }),
+          },
+        );
+        assertEquals(invalidRes.status, 400);
+      },
+    );
+
+    await t.step(
+      "System Settings: feature_flags - update and validate",
+      async () => {
+        const getRes = await app.request("/site-settings/feature_flags");
+        const responseData = await getRes.json();
+        const featureId = responseData.data.id;
+
+        // Valid update - toggle features
+        const validRes = await adminRequest(
+          `${BASE_URL}/${featureId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                enableBlog: false,
+                enableComments: true,
+                maintenanceMode: true,
+                enableNewsletter: false,
+                enableContactForm: true,
+              },
+            }),
+          },
+        );
+        assertEquals(validRes.status, 200);
+
+        // Invalid update - wrong type for boolean
+        const invalidRes = await adminRequest(
+          `${BASE_URL}/${featureId}`,
+          superadminToken,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              value: {
+                enableBlog: "yes", // Should be boolean
+              },
+            }),
+          },
+        );
+        assertEquals(invalidRes.status, 400);
+      },
+    );
+
+    await t.step(
+      "System Settings: email_settings and api_config - verify private",
+      async () => {
+        // Both email_settings and api_config are private (isPublic: false)
+        // They should be accessible via admin API with isPublic=false
+        const adminRes = await adminRequest(BASE_URL, superadminToken);
+        assertEquals(adminRes.status, 200);
+        const adminJson = await adminRes.json();
+        const adminSettings = Array.isArray(adminJson.data)
+          ? adminJson.data
+          : [];
+
+        const emailSettingAdmin = adminSettings.find((s: { key: string }) =>
+          s.key === "email_settings"
+        );
+        assertExists(
+          emailSettingAdmin,
+          "email_settings should be in admin API",
+        );
+        assertEquals(
+          emailSettingAdmin?.isPublic,
+          false,
+          "email_settings should be private",
+        );
+
+        const apiSettingAdmin = adminSettings.find((s: { key: string }) =>
+          s.key === "api_config"
+        );
+        assertExists(apiSettingAdmin, "api_config should be in admin API");
+        assertEquals(
+          apiSettingAdmin?.isPublic,
+          false,
+          "api_config should be private",
+        );
       },
     );
   } catch (error) {

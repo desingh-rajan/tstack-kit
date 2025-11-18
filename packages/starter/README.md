@@ -588,7 +588,7 @@ docker run -d \
 
 - `DATABASE_URL` - PostgreSQL connection string (required)
 - `JWT_SECRET` - Secret key for JWT tokens (required)
-- `JWT_EXPIRES_IN` - Token expiry (default: 7d)
+- `JWT_EXPIRY` - Token expiry (default: 1h, test: 1d)
 - `ENVIRONMENT` - Environment (development/test/production)
 - `PORT` - Server port (default: 8000)
 

@@ -16,13 +16,25 @@ const CategoryEnum = z.enum([
   SETTING_CATEGORIES.SHOWCASE,
 ]);
 
+// JSON value validator - accepts any valid JSON: object, array, string, number, boolean, or null
+const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(JsonValueSchema),
+    z.record(z.string(), JsonValueSchema),
+  ])
+);
+
 // Create SiteSetting DTO
 export const CreateSiteSettingSchema = z.object({
   key: z.string().min(1, "Key is required").max(255),
   category: CategoryEnum,
-  value: z.record(z.unknown()), // JSON object - generic key-value structure
+  value: JsonValueSchema, // Any valid JSON value
   isSystem: z.boolean().optional(),
-  valueSchema: z.record(z.string()).optional(), // Simple schema: { field: "type" }
+  valueSchema: z.record(z.string(), z.string()).optional().nullable(), // Simple schema: { field: "type" }
   isPublic: z.boolean().optional(),
   description: z.string().optional().nullable(),
   updatedBy: z.number().optional().nullable(),
@@ -33,8 +45,8 @@ export type CreateSiteSettingDTO = z.infer<typeof CreateSiteSettingSchema>;
 // Update SiteSetting DTO
 export const UpdateSiteSettingSchema = z.object({
   category: CategoryEnum.optional(),
-  value: z.record(z.unknown()).optional(), // JSON object - generic key-value structure
-  valueSchema: z.record(z.string()).optional(), // Simple schema: { field: "type" }
+  value: JsonValueSchema.optional(), // Any valid JSON value
+  valueSchema: z.record(z.string(), z.string()).optional().nullable(), // Simple schema: { field: "type" }
   isPublic: z.boolean().optional(),
   description: z.string().optional().nullable(),
   updatedBy: z.number().optional().nullable(),

@@ -5,7 +5,7 @@ import { jwtVerify, SignJWT } from "jose";
  */
 const JWT_SECRET = Deno.env.get("JWT_SECRET") || "change-me-in-production";
 const JWT_ISSUER = Deno.env.get("JWT_ISSUER") || "tonystack";
-const JWT_EXPIRY = Deno.env.get("JWT_EXPIRY") || "7d"; // 7 days default
+const JWT_EXPIRY = Deno.env.get("JWT_EXPIRY") || "1h"; // 1 hour default
 
 const secret = new TextEncoder().encode(JWT_SECRET);
 
