@@ -106,7 +106,16 @@ export class SiteSettingService {
       }
     } else if (data.valueSchema && data.value) {
       // Validate custom setting against simple schema
-      this.validateCustomSchema(data.value, data.valueSchema);
+      // Custom schema validation only works for object values
+      if (
+        typeof data.value === "object" && data.value !== null &&
+        !Array.isArray(data.value)
+      ) {
+        this.validateCustomSchema(
+          data.value as Record<string, unknown>,
+          data.valueSchema,
+        );
+      }
     }
 
     const newRecord = await db
@@ -150,7 +159,16 @@ export class SiteSettingService {
       }
     } else if (data.value && existing.valueSchema) {
       // Validate custom setting
-      this.validateCustomSchema(data.value, existing.valueSchema);
+      // Custom schema validation only works for object values
+      if (
+        typeof data.value === "object" && data.value !== null &&
+        !Array.isArray(data.value)
+      ) {
+        this.validateCustomSchema(
+          data.value as Record<string, unknown>,
+          existing.valueSchema,
+        );
+      }
     }
 
     const updated = await db
