@@ -1,7 +1,8 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
-export function generateDtoTemplate(names: EntityNames): string {
-  return `import { z } from "zod";
+export function generateDtoTemplate(names: EntityNames, withValidation = true): string {
+  if (withValidation) {
+    return `import { z } from "zod";
 
 // Create ${names.pascalSingular} DTO
 export const Create${names.pascalSingular}Schema = z.object({
@@ -38,4 +39,37 @@ export interface ${names.pascalSingular}ResponseDTO {
   // isActive: boolean;
 }
 `;
+  } else {
+    return `// Create ${names.pascalSingular} DTO (no validation)
+export interface Create${names.pascalSingular}DTO {
+  // TODO: Add your fields here
+  // Example:
+  // name: string;
+  // description?: string;
+  // isActive?: boolean;
+}
+
+// Update ${names.pascalSingular} DTO (no validation)
+export interface Update${names.pascalSingular}DTO {
+  // TODO: Add your updatable fields here (all optional)
+  // Example:
+  // name?: string;
+  // description?: string;
+  // isActive?: boolean;
+}
+
+// ${names.pascalSingular} Response DTO
+export interface ${names.pascalSingular}ResponseDTO {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // TODO: Add your response fields here
+  // Example:
+  // name: string;
+  // description?: string | null;
+  // isActive: boolean;
+}
+`;
+  }
 }

@@ -6,13 +6,9 @@ import {
   fetchAllLatestVersions,
 } from "../utils/versionFetcher.ts";
 
-// TODO: Rework with-auth and without-auth flag and make any mode default
-// Currently auth is optional (--with-auth flag), consider making it default
-// or providing both --with-auth and --without-auth flags for clarity
 export interface CreateOptions {
   projectName: string;
   targetDir?: string;
-  withAuth?: boolean;
   latest?: boolean; // Fetch latest stable versions from registries (default: false, uses template versions)
   skipDbSetup?: boolean; // Skip database creation (for testing)
 }

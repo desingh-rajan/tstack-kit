@@ -223,7 +223,7 @@ my-project/
 │   ├── entities/            # Your domain entities
 │   │   ├── articles/        # Example: Blog/content entity
 │   │   ├── site_settings/   # Built-in: Dynamic app configuration
-│   │   └── users/           # Built-in: User management (if --with-auth)
+│   │   └── users/           # Built-in: User management
 │   └── shared/
 │       ├── middleware/      # Error handling, logging
 │       └── utils/           # Response, validation helpers
@@ -251,7 +251,7 @@ TStack starter includes reference entities out of the box:
    - Frontend-accessible configuration API
    - Default settings: site_info, contact_info, theme_config, feature_flags, email_settings, api_config
 
-3. **Users** *(optional, with `--with-auth`)* - User management & JWT authentication
+3. **Users** - User management & JWT authentication
    - Registration and login
    - Role-based access (user, superadmin)
    - Password hashing with Argon2

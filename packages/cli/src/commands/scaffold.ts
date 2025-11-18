@@ -20,6 +20,9 @@ export interface ScaffoldOptions {
   targetDir?: string;
   force?: boolean;
   skipAdmin?: boolean;
+  skipTests?: boolean;
+  skipAuth?: boolean;
+  skipValidation?: boolean;
 }
 
 export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
@@ -28,6 +31,9 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     targetDir = Deno.cwd(),
     force = false,
     skipAdmin = false,
+    skipTests = false,
+    skipAuth = false,
+    skipValidation = false,
   } = options;
 
   Logger.title(`Scaffolding entity: ${entityName}`);
@@ -87,7 +93,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.dto.ts`,
       ),
-      content: generateDtoTemplate(names),
+      content: generateDtoTemplate(names, !skipValidation),
       description: "Data Transfer Objects",
     },
     {
@@ -107,7 +113,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.controller.ts`,
       ),
-      content: generateControllerTemplate(names),
+      content: generateControllerTemplate(names, !skipValidation),
       description: "HTTP handlers",
     },
     {
@@ -117,10 +123,14 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.route.ts`,
       ),
-      content: generateRouteTemplate(names),
+      content: generateRouteTemplate(names, !skipAuth),
       description: "Route definitions",
     },
-    {
+  ];
+
+  // Add test file if not skipped (Rails-style: include by default, opt-out with --skip-tests)
+  if (!skipTests) {
+    files.push({
       path: join(
         "src",
         "entities",
@@ -129,8 +139,8 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       ),
       content: generateTestTemplate(names),
       description: "API tests",
-    },
-  ];
+    });
+  }
 
   // Add admin route and tests if not skipped (Rails-style: include by default, opt-out with --skip-admin)
   if (!skipAdmin) {
@@ -145,16 +155,19 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
       description: "Admin CRUD interface",
     });
 
-    files.push({
-      path: join(
-        "src",
-        "entities",
-        names.snakePlural,
-        `${names.kebabSingular}.admin.test.ts`,
-      ),
-      content: generateAdminTestTemplate(names),
-      description: "Admin API tests (JSON)",
-    });
+    // Add admin test if tests are not skipped
+    if (!skipTests) {
+      files.push({
+        path: join(
+          "src",
+          "entities",
+          names.snakePlural,
+          `${names.kebabSingular}.admin.test.ts`,
+        ),
+        content: generateAdminTestTemplate(names),
+        description: "Admin API tests (JSON)",
+      });
+    }
   }
 
   await writeFiles(targetDir, files);
@@ -200,9 +213,18 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.info("3. Update validation schemas:");
-  Logger.code(
-    `- Update DTOs in ${names.kebabSingular}.dto.ts to match your fields`,
-  );
+  if (!skipValidation) {
+    Logger.code(
+      `- Update DTOs in ${names.kebabSingular}.dto.ts to match your fields`,
+    );
+  } else {
+    Logger.code(
+      `[WARNING] Validation skipped - DTOs are plain TypeScript interfaces`,
+    );
+    Logger.code(
+      `- Add Zod schemas manually in ${names.kebabSingular}.dto.ts for validation`,
+    );
+  }
   Logger.newLine();
 
   Logger.info("4. Routes are auto-registered! ");
@@ -210,6 +232,11 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     `[SUCCESS] Routes automatically available (no manual imports needed)`,
   );
   Logger.code(` Auto-discovery: entities/*/*.route.ts files`);
+  if (!skipAuth) {
+    Logger.code(` Protected with authentication middleware`);
+  } else {
+    Logger.code(` [WARNING] Public routes (--skip-auth flag used)`);
+  }
   Logger.newLine();
 
   Logger.info("5. Start development server:");
@@ -263,17 +290,22 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   );
   Logger.newLine();
 
-  Logger.subtitle("Test your API:");
-  Logger.code(`deno task test  # Run all tests`);
-  Logger.code(
-    `ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts  # Run specific tests`,
-  );
-  Logger.newLine();
-  Logger.info("[INFO]  Test file created with:");
-  Logger.code("• Basic CRUD tests (ready to run)");
-  Logger.code(
-    "• Validation test (SKIPPED - enable after adding DTO validation)",
-  );
-  Logger.code("• Sample data (TODO - update to match your model fields)");
-  Logger.newLine();
+  if (!skipTests) {
+    Logger.subtitle("Test your API:");
+    Logger.code(`deno task test  # Run all tests`);
+    Logger.code(
+      `ENVIRONMENT=test deno test --allow-all src/entities/${names.snakePlural}/${names.kebabSingular}.test.ts  # Run specific tests`,
+    );
+    Logger.newLine();
+    Logger.info("[INFO]  Test file created with:");
+    Logger.code("• Basic CRUD tests (ready to run)");
+    Logger.code(
+      "• Validation test (SKIPPED - enable after adding DTO validation)",
+    );
+    Logger.code("• Sample data (TODO - update to match your model fields)");
+    Logger.newLine();
+  } else {
+    Logger.info("[WARNING] Test files skipped (--skip-tests flag used)");
+    Logger.newLine();
+  }
 }
