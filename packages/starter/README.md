@@ -222,12 +222,14 @@ settings that can be changed without code deployment.
 
 **Key Features:**
 
-- **Two-Tier System**: System settings (protected, validated) vs Custom settings (deletable)
+- **Two-Tier System**: System settings (protected, validated) vs Custom settings
+  (deletable)
 - **Auto-Seeding**: Missing system settings automatically created with defaults
 - **Schema Validation**: Zod schemas ensure data integrity for system settings
 - **Reset Functionality**: Restore system settings to defaults without deletion
 - **Public/Private**: Frontend-accessible vs backend-only settings
-- **Dual Lookup**: Access by ID (`/site-settings/1`) or key (`/site-settings/theme_config`)
+- **Dual Lookup**: Access by ID (`/site-settings/1`) or key
+  (`/site-settings/theme_config`)
 - **Category Organization**: general, email, appearance, features
 - **Audit Trail**: Track changes with `updatedBy` field
 - **Type-Safe**: Full TypeScript types inferred from Zod schemas
@@ -290,12 +292,12 @@ Six system settings come pre-configured with Zod schemas and defaults:
 
 | Key              | Category   | Public | Schema Validated | Auto-Seeded |
 | ---------------- | ---------- | ------ | ---------------- | ----------- |
-| `site_info`      | general    | ✅      | ✅                | ✅           |
-| `contact_info`   | general    | ✅      | ✅                | ✅           |
-| `theme_config`   | appearance | ✅      | ✅                | ✅           |
-| `feature_flags`  | features   | ✅      | ✅                | ✅           |
-| `email_settings` | email      | ❌      | ✅                | ✅           |
-| `api_config`     | general    | ❌      | ✅                | ✅           |
+| `site_info`      | general    | ✅     | ✅               | ✅          |
+| `contact_info`   | general    | ✅     | ✅               | ✅          |
+| `theme_config`   | appearance | ✅     | ✅               | ✅          |
+| `feature_flags`  | features   | ✅     | ✅               | ✅          |
+| `email_settings` | email      | ❌     | ✅               | ✅          |
+| `api_config`     | general    | ❌     | ✅               | ✅          |
 
 **System Settings Behavior:**
 
@@ -347,12 +349,16 @@ curl -X DELETE http://localhost:8000/site-settings/1 \
 
 **Schema Definitions:**
 
-System settings are defined with Zod schemas in `src/entities/site_settings/schemas/`:
+System settings are defined with Zod schemas in
+`src/entities/site_settings/schemas/`:
 
 ```typescript
 // schemas/appearance.schemas.ts
 export const ThemeConfigSchema = z.object({
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
+  primaryColor: z.string().regex(
+    /^#[0-9a-fA-F]{6}$/,
+    "Must be a valid hex color",
+  ),
   secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   darkMode: z.boolean(),
   fontFamily: z.string(),
@@ -368,7 +374,8 @@ export const DEFAULT_THEME_CONFIG: ThemeConfig = {
 
 **Adding New System Settings:**
 
-1. Create schema in appropriate category file (e.g., `schemas/features.schemas.ts`)
+1. Create schema in appropriate category file (e.g.,
+   `schemas/features.schemas.ts`)
 2. Add to registry in `schemas/index.ts`
 3. Restart server - auto-seeding handles the rest!
 

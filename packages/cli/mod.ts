@@ -33,9 +33,6 @@ function showHelp() {
     "--dir <path>               Target directory (default: current directory)",
   );
   Logger.code(
-    "--with-auth                Include JWT authentication system (create only)",
-  );
-  Logger.code(
     "--latest                   Fetch latest stable dependency versions (create only)",
   );
   Logger.code(
@@ -54,8 +51,7 @@ function showHelp() {
 
   Logger.subtitle("Examples:");
   Logger.code("tstack create my-backend");
-  Logger.code("tstack create my-api --with-auth");
-  Logger.code("tstack create acme-api --with-auth --latest");
+  Logger.code("tstack create my-api --latest");
   Logger.code("tstack create acme-api --dir ~/projects");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
@@ -80,7 +76,16 @@ function showVersion() {
 
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "version", "force", "latest", "skip-admin", "skip-tests", "skip-auth", "skip-validation"],
+    boolean: [
+      "help",
+      "version",
+      "force",
+      "latest",
+      "skip-admin",
+      "skip-tests",
+      "skip-auth",
+      "skip-validation",
+    ],
     string: ["dir"],
     alias: {
       h: "help",

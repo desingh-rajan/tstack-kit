@@ -28,10 +28,6 @@ const testUsersWithUUID = pgTable("test_admin_users_uuid", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Database connection (shared across all tests)
-let sql: ReturnType<typeof postgres>;
-let db: ReturnType<typeof drizzle>;
-
 // Connect to test database (tables already created by _test_setup.ts)
 const connectionString = Deno.env.get("DATABASE_URL");
 if (!connectionString) {
@@ -40,8 +36,9 @@ if (!connectionString) {
   );
 }
 
-sql = postgres(connectionString);
-db = drizzle(sql);
+// Database connection (shared across all tests)
+const sql: ReturnType<typeof postgres> = postgres(connectionString);
+const db: ReturnType<typeof drizzle> = drizzle(sql);
 
 // Cleanup: Close connection after all tests
 globalThis.addEventListener("unload", async () => {

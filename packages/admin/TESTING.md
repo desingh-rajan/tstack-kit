@@ -4,7 +4,7 @@
 >
 > Last Updated: November 14, 2025
 
-##  Testing Philosophy
+## Testing Philosophy
 
 ### The "No Mocks" Rule
 
@@ -15,7 +15,7 @@
 ```typescript
 // [ERROR] BAD: Mocking database
 const mockDB = {
-  query: jest.fn().mockResolvedValue({ rows: [{ id: 1 }] })
+  query: jest.fn().mockResolvedValue({ rows: [{ id: 1 }] }),
 };
 
 // Problems:
@@ -36,20 +36,20 @@ await t.step("findMany returns paginated results", async () => {
     { name: "iPhone", price: 999 },
     { name: "MacBook", price: 1999 },
   ]);
-  
+
   // Query real database
   const adapter = new DrizzleAdapter(testProducts, { db });
-  const result = await adapter.findMany({ 
-    page: 1, 
+  const result = await adapter.findMany({
+    page: 1,
     limit: 10,
     search: "iPhone",
     searchColumns: ["name"],
   });
-  
+
   // Verify real results
   assertEquals(result.data.length, 1);
   assertEquals(result.data[0].name, "iPhone");
-  assertEquals(result.total, 1);  // Real COUNT(*) query!
+  assertEquals(result.total, 1); // Real COUNT(*) query!
 });
 ```
 
@@ -63,7 +63,7 @@ await t.step("findMany returns paginated results", async () => {
 
 ---
 
-##  Test Results
+## Test Results
 
 ### Current Status: 100% Passing
 
@@ -121,7 +121,7 @@ Tests full HTTP + database integration:
 
 ---
 
-##  Running Tests
+## Running Tests
 
 ### Prerequisites
 
@@ -130,7 +130,7 @@ Tests full HTTP + database integration:
    ```bash
    # Check if PostgreSQL is running
    psql --version
-   
+
    # Start PostgreSQL (varies by OS)
    # macOS: brew services start postgresql
    # Linux: sudo systemctl start postgresql
@@ -256,16 +256,16 @@ Deno.test("Feature Tests", async (t) => {
       price INTEGER
     )`;
   });
-  
+
   // Test cases
   await t.step("Test case 1", async () => {
     // Test implementation
   });
-  
+
   await t.step("Test case 2", async () => {
     // Test implementation
   });
-  
+
   // Cleanup: Drop tables and close connections
   await t.step("Cleanup", async () => {
     await sql`DROP TABLE IF EXISTS test_products CASCADE`;
@@ -282,58 +282,58 @@ import { testProducts } from "../test-schemas.ts";
 
 Deno.test("DrizzleAdapter - CRUD operations", async (t) => {
   let productId: number;
-  
+
   await t.step("Setup database", async () => {
     // Create test table
     await sql`DROP TABLE IF EXISTS test_products CASCADE`;
     await sql`CREATE TABLE test_products (...)`;
   });
-  
+
   await t.step("create - inserts new record", async () => {
     const adapter = new DrizzleAdapter(testProducts, { db });
-    
+
     const product = await adapter.create({
       name: "iPhone 15",
       price: 999,
     });
-    
+
     assertExists(product.id);
     assertEquals(product.name, "iPhone 15");
     productId = product.id;
   });
-  
+
   await t.step("findById - retrieves by ID", async () => {
     const adapter = new DrizzleAdapter(testProducts, { db });
-    
+
     const product = await adapter.findById(productId);
-    
+
     assertExists(product);
     assertEquals(product.id, productId);
     assertEquals(product.name, "iPhone 15");
   });
-  
+
   await t.step("update - modifies record", async () => {
     const adapter = new DrizzleAdapter(testProducts, { db });
-    
+
     const updated = await adapter.update(productId, {
       price: 899,
     });
-    
+
     assertExists(updated);
     assertEquals(updated.price, 899);
     assertEquals(updated.name, "iPhone 15"); // Unchanged
   });
-  
+
   await t.step("delete - removes record", async () => {
     const adapter = new DrizzleAdapter(testProducts, { db });
-    
+
     const deleted = await adapter.delete(productId);
     assertEquals(deleted, true);
-    
+
     const notFound = await adapter.findById(productId);
     assertEquals(notFound, null);
   });
-  
+
   await t.step("Cleanup", async () => {
     await sql`DROP TABLE IF EXISTS test_products CASCADE`;
     await sql.end();
@@ -351,33 +351,33 @@ import { DrizzleAdapter } from "../orm/drizzle.ts";
 Deno.test("HonoAdminAdapter - HTTP integration", async (t) => {
   const app = new Hono();
   let productId: number;
-  
+
   await t.step("Setup", async () => {
     // Create test table and adapter
     await sql`DROP TABLE IF EXISTS test_products CASCADE`;
     await sql`CREATE TABLE test_products (...)`;
-    
+
     const ormAdapter = new DrizzleAdapter(testProducts, { db });
     const adminAdapter = new HonoAdminAdapter(app, ormAdapter, {
       basePath: "/admin/products",
     });
-    
+
     adminAdapter.registerRoutes();
   });
-  
+
   await t.step("GET /admin/products - returns JSON list", async () => {
     const response = await app.request("/admin/products", {
       headers: { "Accept": "application/json" },
     });
-    
+
     assertEquals(response.status, 200);
-    
+
     const json = await response.json();
     assertExists(json.data);
     assertExists(json.page);
     assertExists(json.total);
   });
-  
+
   await t.step("POST /admin/products - creates record", async () => {
     const response = await app.request("/admin/products", {
       method: "POST",
@@ -387,26 +387,26 @@ Deno.test("HonoAdminAdapter - HTTP integration", async (t) => {
         price: 1999,
       }),
     });
-    
+
     assertEquals(response.status, 201);
-    
+
     const json = await response.json();
     assertExists(json.id);
     productId = json.id;
   });
-  
+
   await t.step("GET /admin/products/:id - returns single record", async () => {
     const response = await app.request(`/admin/products/${productId}`, {
       headers: { "Accept": "application/json" },
     });
-    
+
     assertEquals(response.status, 200);
-    
+
     const json = await response.json();
     assertEquals(json.id, productId);
     assertEquals(json.name, "MacBook Pro");
   });
-  
+
   await t.step("Cleanup", async () => {
     await sql`DROP TABLE IF EXISTS test_products CASCADE`;
     await sql.end();
@@ -416,7 +416,7 @@ Deno.test("HonoAdminAdapter - HTTP integration", async (t) => {
 
 ---
 
-##  Test Infrastructure
+## Test Infrastructure
 
 ### Global Test Setup (`_test_setup.ts`)
 
@@ -505,7 +505,7 @@ await t.step("Cleanup", async () => {
 // [SUCCESS] GOOD - Tests real SQL
 await t.step("search with special characters", async () => {
   const result = await adapter.findMany({
-    search: "MacBook Pro 15\"",
+    search: 'MacBook Pro 15"',
     searchColumns: ["name"],
   });
   // Verifies ILIKE properly escapes quotes
@@ -520,7 +520,7 @@ mockDB.query.mockResolvedValue({ rows: [] });
 ```typescript
 await t.step("create - throws on duplicate email", async () => {
   await adapter.create({ email: "test@test.com" });
-  
+
   await assertRejects(
     async () => await adapter.create({ email: "test@test.com" }),
     Error,
@@ -625,7 +625,7 @@ open coverage/html/index.html
 
 ---
 
-##  Contributing
+## Contributing
 
 When adding new adapters or features:
 
@@ -650,9 +650,10 @@ When adding new adapters or features:
 
 ---
 
-##  The Golden Rule
+## The Golden Rule
 
-> **"If you're mocking the database, you're not testing the code that matters."**
+> **"If you're mocking the database, you're not testing the code that
+> matters."**
 
 Real databases catch real bugs. Always test with PostgreSQL.
 
@@ -660,4 +661,4 @@ Real databases catch real bugs. Always test with PostgreSQL.
 
 **Happy Testing!** 🧪
 
-*For questions or issues, open an issue on GitHub.*
+_For questions or issues, open an issue on GitHub._

@@ -160,7 +160,7 @@ Like `article.test.ts`:
 - `[OK]` → `[OK]`
 - `[ERROR]` → `[ERROR]`
 - `[WARNING]` → `[WARNING]`
-- `` `` `🌱` `` → removed or replaced with `[SEED]` `[TIP]`
+- `` `🌱` `` → removed or replaced with `[SEED]` `[TIP]`
 
 **Rule:** NO emojis in code, logs, or console output. Ever.
 
@@ -195,9 +195,10 @@ Like `article.test.ts`:
 - [ERROR] `data/dev.db` - Old SQLite database
 - [ERROR] `data/` folder - Not needed for PostgreSQL
 - [ERROR] `src/entities/users/` - Empty duplicate folder
-- [ERROR] `migrations/0000_lying_callisto.sql` - Old migration without role column
-- [ERROR] `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role (not
-  needed after regeneration)
+- [ERROR] `migrations/0000_lying_callisto.sql` - Old migration without role
+  column
+- [ERROR] `migrations/0001_adorable_jasper_sitwell.sql` - ALTER TABLE for role
+  (not needed after regeneration)
 
 ---
 

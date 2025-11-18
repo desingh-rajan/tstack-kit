@@ -1,6 +1,9 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
-export function generateControllerTemplate(names: EntityNames, withValidation = true): string {
+export function generateControllerTemplate(
+  names: EntityNames,
+  withValidation = true,
+): string {
   if (withValidation) {
     return `import { Context } from "hono";
 import { ${names.pascalSingular}Service } from "./${names.kebabSingular}.service.ts";

@@ -2,20 +2,26 @@
 
 > **Rails-like backend toolkit for Deno. Build APIs fast.**
 
-A minimal, production-ready starter for building type-safe REST APIs with Deno, Hono, Drizzle ORM, and PostgreSQL.
+A minimal, production-ready starter for building type-safe REST APIs with Deno,
+Hono, Drizzle ORM, and PostgreSQL.
 
 ---
 
 ## What is TStack?
 
-**TonyStack is a backend scaffolding toolkit** - like what Vite does for frontend, but for Deno backend APIs.
+**TonyStack is a backend scaffolding toolkit** - like what Vite does for
+frontend, but for Deno backend APIs.
 
 - **Vite** → Scaffolds React/Vue/Svelte projects (frontend)
 - **TStack** → Scaffolds Deno REST API projects (backend)
 
-Think of it as **"Rails generators for Deno"** or **"Laravel Artisan for minimalists"**. Instead of writing boilerplate CRUD code repeatedly, TStack generates complete, production-ready entities (models, controllers, routes, DTOs) with a single command.
+Think of it as **"Rails generators for Deno"** or **"Laravel Artisan for
+minimalists"**. Instead of writing boilerplate CRUD code repeatedly, TStack
+generates complete, production-ready entities (models, controllers, routes,
+DTOs) with a single command.
 
-**One command** → Full MVC entity with database migrations → **Start building your business logic**
+**One command** → Full MVC entity with database migrations → **Start building
+your business logic**
 
 ---
 
@@ -31,15 +37,18 @@ Every time you start a new backend project, you waste hours on:
 - Setting up validation, error handling, and logging
 - Copy-pasting controller/service patterns from old projects
 
-**This toolkit was born from frustration.** After building dozens of APIs with the same patterns, it became clear: **stop rewriting, start generating**.
+**This toolkit was born from frustration.** After building dozens of APIs with
+the same patterns, it became clear: **stop rewriting, start generating**.
 
 ### What TStack Solves
 
 - **Saves 2-4 hours per project** - Skip the setup, start coding features
 - **TypeScript first** - Full type safety from database to API responses
 - **Consistency** - Every entity follows the same proven patterns
-- **Focus on problems, not plumbing** - Stop fighting with tools, stop being a CRUD monkey - ship features that matter
-- **Production ready** - Includes error handling, logging, validation out of the box
+- **Focus on problems, not plumbing** - Stop fighting with tools, stop being a
+  CRUD monkey - ship features that matter
+- **Production ready** - Includes error handling, logging, validation out of the
+  box
 - **No vendor lock-in** - Generated code is yours to modify freely
 
 ### Default Stack (v1.0)
@@ -51,11 +60,13 @@ TStack currently uses this proven stack:
 - **ORM**: Drizzle
 - **Database**: PostgreSQL
 
-This is the **default and recommended stack** for new projects. It's fast, type-safe, and production-ready.
+This is the **default and recommended stack** for new projects. It's fast,
+type-safe, and production-ready.
 
 ### Future: Choose Your Stack
 
-Coming soon, you'll be able to scaffold with different stacks using simple flags:
+Coming soon, you'll be able to scaffold with different stacks using simple
+flags:
 
 ```bash
 # Current (default) - Deno + Hono + Drizzle + PostgreSQL
@@ -86,21 +97,23 @@ tstack create my-api --stack=dhp  # Deno + Hono + PostgreSQL (default)
 - **ORMs**: Prisma, Sequelize, TypeORM
 - **Databases**: MySQL, SQLite, MongoDB
 
-**Your contributions are welcome!** Whether you're fixing bugs, adding features, or porting to new stacks - this toolkit grows with the community.
+**Your contributions are welcome!** Whether you're fixing bugs, adding features,
+or porting to new stacks - this toolkit grows with the community.
 
-Built by [Desingh Rajan](https://desinghrajan.in) and [contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
+Built by [Desingh Rajan](https://desinghrajan.in) and
+[contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
 
 ---
 
 ## Features
 
--  **Fast Setup** - Create new projects in seconds
--  **CLI Scaffolding** - Generate complete MVC entities with one command
+- **Fast Setup** - Create new projects in seconds
+- **CLI Scaffolding** - Generate complete MVC entities with one command
 - 🔒 **Type-Safe** - Full TypeScript with Drizzle ORM
--  **PostgreSQL** - Production-ready from day 1
+- **PostgreSQL** - Production-ready from day 1
 - 🐳 **Docker Ready** - Includes docker-compose setup
 - 🎨 **Clean MVC** - Organized entity structure
--  **Minimal** - No auth bloat, add what you need
+- **Minimal** - No auth bloat, add what you need
 
 ---
 
@@ -127,8 +140,9 @@ deno task install
 deno install --allow-all --global --name tstack --config deno.json mod.ts
 ```
 
-**Default:** CLI asks for permission (y/n/A) when needed - safer for first-time users.
-**Skip prompts:** Use `--allow-all` if you don't want interruptions during project creation.
+**Default:** CLI asks for permission (y/n/A) when needed - safer for first-time
+users. **Skip prompts:** Use `--allow-all` if you don't want interruptions
+during project creation.
 
 ### 3. Create Your First Project
 
@@ -148,7 +162,7 @@ deno task migrate:run
 deno task dev
 ```
 
-Server running at **<http://localhost:8000>** 
+Server running at **<http://localhost:8000>**
 
 ---
 
@@ -160,12 +174,15 @@ Generate complete MVC structures:
 # Scaffold articles entity
 tstack scaffold articles
 
-# This creates:
-# [OK] src/entities/articles/article.model.ts    (Drizzle schema)
-# [OK] src/entities/articles/article.dto.ts      (Zod validation)
-# [OK] src/entities/articles/article.service.ts  (Business logic)
-# [OK] src/entities/articles/article.controller.ts (HTTP handlers)
-# [OK] src/entities/articles/article.route.ts    (Hono routes)
+# This creates (7 files by default):
+# [OK] src/entities/articles/article.model.ts         (Drizzle schema)
+# [OK] src/entities/articles/article.dto.ts           (Zod validation)
+# [OK] src/entities/articles/article.service.ts       (Business logic)
+# [OK] src/entities/articles/article.controller.ts    (HTTP handlers)
+# [OK] src/entities/articles/article.route.ts         (Public routes: /articles)
+# [OK] src/entities/articles/article.admin.route.ts   (Admin API: /ts-admin/articles)
+# [OK] src/entities/articles/article.test.ts          (API tests)
+# [OK] src/entities/articles/article.admin.test.ts    (Admin tests)
 ```
 
 ### Customize the Model
@@ -249,7 +266,8 @@ TStack starter includes reference entities out of the box:
    - Key-value storage with JSONB
    - Public/private setting separation
    - Frontend-accessible configuration API
-   - Default settings: site_info, contact_info, theme_config, feature_flags, email_settings, api_config
+   - Default settings: site_info, contact_info, theme_config, feature_flags,
+     email_settings, api_config
 
 3. **Users** - User management & JWT authentication
    - Registration and login
@@ -395,14 +413,17 @@ Site settings provide a dynamic configuration API for your frontend:
 
 ```typescript
 // Fetch public configuration at app startup
-const config = await fetch('http://localhost:8000/site-settings')
-  .then(res => res.json());
+const config = await fetch("http://localhost:8000/site-settings")
+  .then((res) => res.json());
 
 // Use configuration in your app
 const { site_info, theme_config, feature_flags } = config;
 
 // Apply theme
-document.documentElement.style.setProperty('--primary-color', theme_config.primaryColor);
+document.documentElement.style.setProperty(
+  "--primary-color",
+  theme_config.primaryColor,
+);
 
 // Toggle features
 if (feature_flags.enableComments) {
@@ -421,14 +442,14 @@ Access private settings (not exposed to frontend):
 import { SiteSettingService } from "./entities/site_settings/site-setting.service.ts";
 
 // Get email configuration
-const emailConfig = await SiteSettingService.getByKey('email_settings');
+const emailConfig = await SiteSettingService.getByKey("email_settings");
 sendEmail({
   host: emailConfig.value.smtp_host,
   port: emailConfig.value.smtp_port,
 });
 
 // Get API rate limits
-const apiConfig = await SiteSettingService.getByKey('api_config');
+const apiConfig = await SiteSettingService.getByKey("api_config");
 const maxRequests = apiConfig.value.rateLimit.maxRequests;
 ```
 
@@ -436,14 +457,14 @@ const maxRequests = apiConfig.value.rateLimit.maxRequests;
 
 Run `deno task db:seed:site` to create 6 default settings:
 
-| Setting          | Public | Use Case                                  |
-| ---------------- | ------ | ----------------------------------------- |
-| site_info        | [SUCCESS]     | Site name, tagline, logo - display in UI  |
-| contact_info     | [SUCCESS]     | Email, phone, social links - contact page |
-| theme_config     | [SUCCESS]     | Colors, fonts - apply to frontend theme   |
-| feature_flags    | [SUCCESS]     | Toggle features - enable/disable features |
-| email_settings   | [ERROR]     | SMTP config - backend email sending       |
-| api_config       | [ERROR]     | Rate limits, CORS - API configuration     |
+| Setting        | Public    | Use Case                                  |
+| -------------- | --------- | ----------------------------------------- |
+| site_info      | [SUCCESS] | Site name, tagline, logo - display in UI  |
+| contact_info   | [SUCCESS] | Email, phone, social links - contact page |
+| theme_config   | [SUCCESS] | Colors, fonts - apply to frontend theme   |
+| feature_flags  | [SUCCESS] | Toggle features - enable/disable features |
+| email_settings | [ERROR]   | SMTP config - backend email sending       |
+| api_config     | [ERROR]   | Rate limits, CORS - API configuration     |
 
 **Updating Settings:**
 
@@ -487,7 +508,7 @@ deno task migrate:run
 deno task dev
 ```
 
-Done! You have a working blog API. 
+Done! You have a working blog API.
 
 ---
 
@@ -519,8 +540,10 @@ tstack destroy blog-api --force
 
 **What Gets Deleted:**
 
-1. **Project Directory**: The entire project folder (searched in current directory and ~/projects)
-2. **Development Database**: `{project_name}_db` (hyphens replaced with underscores)
+1. **Project Directory**: The entire project folder (searched in current
+   directory and ~/projects)
+2. **Development Database**: `{project_name}_db` (hyphens replaced with
+   underscores)
 3. **Test Database**: `{project_name}_test_db`
 
 **Examples:**
@@ -601,8 +624,8 @@ tstack destroy my-blog-api
 - [ ] **Kamal deployment** - YAML setup with deployment instructions
 - [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
 - [SUCCESS] **`tstack destroy` command** - Remove scaffolded entities
-- [SUCCESS] **Basic JWT authentication** - User entity with auth system (optional
-  addon)
+- [SUCCESS] **Basic JWT authentication** - User entity with auth system
+  (optional addon)
 
 ### v1.2 (Q1 2026)
 
@@ -780,6 +803,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-Built with  for the Deno community
+Built with for the Deno community
 
 Clean, Fast, Simple.

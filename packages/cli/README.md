@@ -26,9 +26,11 @@ deno install --allow-read --allow-write --allow-env --allow-run --allow-net -n t
 deno install --allow-all --global -n tstack jsr:@tonystack/cli
 ```
 
-**Default behavior:** CLI will ask for your approval (y/n/A) when it needs permissions like database creation.
+**Default behavior:** CLI will ask for your approval (y/n/A) when it needs
+permissions like database creation.
 
-**Skip prompts:** Use `--allow-all` during installation if you trust the CLI and don't want interruptions.
+**Skip prompts:** Use `--allow-all` during installation if you trust the CLI and
+don't want interruptions.
 
 ### Direct Usage (No Installation)
 
@@ -97,7 +99,8 @@ src/entities/products/         # Folder: snake_case (matches database table)
 
 **Admin API (Included by Default):**
 
-Every scaffolded entity comes with a fully-functional admin JSON API at `/ts-admin/{entity}`:
+Every scaffolded entity comes with a fully-functional admin JSON API at
+`/ts-admin/{entity}`:
 
 - **RESTful JSON API** - Modern API-first architecture
 - **Complete CRUD** - List, create, read, update, delete operations
@@ -131,11 +134,13 @@ tstack scaffold orders --dir ./my-project
 
 ### `create <project-name>`
 
-Create a new TonyStack project from the starter template (includes authentication by default).
+Create a new TonyStack project from the starter template (includes
+authentication by default).
 
 **Options:**
 
-- `--latest` - Fetch latest stable versions from JSR and npm registries (default: use proven template versions)
+- `--latest` - Fetch latest stable versions from JSR and npm registries
+  (default: use proven template versions)
 - `--dir <path>, -d` - Target directory (default: current directory)
 
 **Examples:**
@@ -153,13 +158,17 @@ tstack create my-backend --dir ~/projects
 
 **Dependency Version Strategy:**
 
-- **Default (stable)**: Uses proven dependency versions from the template. Fast and reliable.
-- **`--latest` flag**: Fetches the newest stable versions from registries (JSR for Deno packages, npm for Node packages). Ensures you start with the most up-to-date dependencies.
+- **Default (stable)**: Uses proven dependency versions from the template. Fast
+  and reliable.
+- **`--latest` flag**: Fetches the newest stable versions from registries (JSR
+  for Deno packages, npm for Node packages). Ensures you start with the most
+  up-to-date dependencies.
 
 The `--latest` flag will:
 
 - Query JSR registry for `@std/dotenv`, `@hono/hono`
-- Query npm registry for `jose`, `drizzle-orm`, `drizzle-kit`, `drizzle-zod`, `postgres`, `zod`
+- Query npm registry for `jose`, `drizzle-orm`, `drizzle-kit`, `drizzle-zod`,
+  `postgres`, `zod`
 - Update `deno.json` with the fetched versions
 - Gracefully fallback to template versions if network fails
 - Cache versions for 1 hour to avoid rate limits
@@ -220,7 +229,8 @@ Remove a project and drop its databases.
 **What Gets Removed:**
 
 1. **Project Directory**: Complete project folder with all files
-2. **Development Database**: `{project_name}_db` (converts hyphens to underscores)
+2. **Development Database**: `{project_name}_db` (converts hyphens to
+   underscores)
 3. **Test Database**: `{project_name}_test_db`
 
 **Examples:**
@@ -243,7 +253,8 @@ tstack destroy old-project --force
 
 - **Backup first**: This operation is irreversible
 - **Stop Docker services**: Run `docker-compose down -v` before destroying
-- **Database permissions**: May require PostgreSQL access (uses `sudo -u postgres psql`)
+- **Database permissions**: May require PostgreSQL access (uses
+  `sudo -u postgres psql`)
 - **Not found error**: Shows searched locations if project doesn't exist
 
 ### `--help, -h`
@@ -327,7 +338,7 @@ export default productRoutes;
 
 ```typescript
 // Admin CRUD interface using @tstack/admin package
-import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 
 const ormAdapter = new DrizzleAdapter(products, { db, idColumn: "id" });
 
@@ -361,7 +372,8 @@ const productAdmin = new HonoAdminAdapter({
 - [SUCCESS] **Sorting** - Sort by any configured column (ASC/DESC)
 - [SUCCESS] **Role-Based Access** - Requires `superadmin` or `admin` role
 - [SUCCESS] **Type-Safe Responses** - Full TypeScript support
-- [SUCCESS] **Auto-Discovery** - Routes automatically registered from `*.admin.route.ts` files
+- [SUCCESS] **Auto-Discovery** - Routes automatically registered from
+  `*.admin.route.ts` files
 
 **Skip Admin API:**
 
@@ -371,21 +383,23 @@ tstack scaffold products --skip-admin  # Generates only 6 files (no admin)
 
 ## Naming Conventions
 
-The CLI automatically handles different naming conventions following backend best practices:
+The CLI automatically handles different naming conventions following backend
+best practices:
 
-| Input          | Folder (snake_case) | Files (kebab-case)   | Routes (kebab-case) | Classes (PascalCase) | Variables (camelCase) | Table (snake_case) |
-|----------------|---------------------|----------------------|---------------------|----------------------|-----------------------|--------------------|
-| `user`         | `users/`            | `user.*.ts`          | `/users`            | `User`               | `user`, `users`       | `users`            |
-| `blog_post`    | `blog_posts/`       | `blog-post.*.ts`     | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts` | `blog_posts`     |
-| `BlogPost`     | `blog_posts/`       | `blog-post.*.ts`     | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts` | `blog_posts`     |
-| `site_settings`| `site_settings/`    | `site-setting.*.ts`  | `/site-settings`    | `SiteSetting`        | `siteSetting`, `siteSettings` | `site_settings` |
-| `product`      | `products/`         | `product.*.ts`       | `/products`         | `Product`            | `product`, `products` | `products`         |
+| Input           | Folder (snake_case) | Files (kebab-case)  | Routes (kebab-case) | Classes (PascalCase) | Variables (camelCase)         | Table (snake_case) |
+| --------------- | ------------------- | ------------------- | ------------------- | -------------------- | ----------------------------- | ------------------ |
+| `user`          | `users/`            | `user.*.ts`         | `/users`            | `User`               | `user`, `users`               | `users`            |
+| `blog_post`     | `blog_posts/`       | `blog-post.*.ts`    | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts`       | `blog_posts`       |
+| `BlogPost`      | `blog_posts/`       | `blog-post.*.ts`    | `/blog-posts`       | `BlogPost`           | `blogPost`, `blogPosts`       | `blog_posts`       |
+| `site_settings` | `site_settings/`    | `site-setting.*.ts` | `/site-settings`    | `SiteSetting`        | `siteSetting`, `siteSettings` | `site_settings`    |
+| `product`       | `products/`         | `product.*.ts`      | `/products`         | `Product`            | `product`, `products`         | `products`         |
 
 **Why these conventions?**
 
 - **Folders (snake_case)**: Matches database table naming convention
 - **Files (kebab-case)**: Modern TypeScript/Deno convention (like Vite, Next.js)
-- **Routes (kebab-case)**: RESTful API standard (e.g., `/user-profiles`, not `/userProfiles`)
+- **Routes (kebab-case)**: RESTful API standard (e.g., `/user-profiles`, not
+  `/userProfiles`)
 - **Classes (PascalCase)**: TypeScript/JavaScript standard
 - **Variables (camelCase)**: TypeScript/JavaScript standard
 - **Tables (snake_case)**: SQL database standard
@@ -440,7 +454,8 @@ packages/cli/src/templates/
 
 ### Configuration File
 
-TonyStack CLI uses a configuration file at `~/.tonystack/config.json` for user preferences.
+TonyStack CLI uses a configuration file at `~/.tonystack/config.json` for user
+preferences.
 
 **Create/Edit config:**
 
@@ -455,9 +470,12 @@ TonyStack CLI uses a configuration file at `~/.tonystack/config.json` for user p
 
 **Benefits:**
 
-- **No password prompts**: Set `sudoPassword` to automatically handle database creation/deletion
-- **Faster workflows**: Skip manual password entry during `tstack create` and `tstack destroy`
-- **Your machine, your choice**: Remove `sudoPassword` from config if you prefer manual prompts
+- **No password prompts**: Set `sudoPassword` to automatically handle database
+  creation/deletion
+- **Faster workflows**: Skip manual password entry during `tstack create` and
+  `tstack destroy`
+- **Your machine, your choice**: Remove `sudoPassword` from config if you prefer
+  manual prompts
 
 **Security Note:**
 
@@ -498,10 +516,10 @@ deno task dev
 
 **Quick Reference:**
 
-| Mode | Command | Tests | Time | PostgreSQL | Use Case |
-|------|---------|-------|------|------------|----------|
-| **Fast (Default)** | `deno task test` | 118 | ~2s | [ERROR] Not needed | Quick dev, CI/CD |
-| **Integration** | `deno task test:db` | 127 | ~12s | [SUCCESS] Required | Pre-release validation |
+| Mode               | Command             | Tests | Time | PostgreSQL         | Use Case               |
+| ------------------ | ------------------- | ----- | ---- | ------------------ | ---------------------- |
+| **Fast (Default)** | `deno task test`    | 118   | ~2s  | [ERROR] Not needed | Quick dev, CI/CD       |
+| **Integration**    | `deno task test:db` | 127   | ~12s | [SUCCESS] Required | Pre-release validation |
 
 **What happens behind the scenes:**
 
@@ -544,7 +562,8 @@ deno task cleanup:test-dbs
 
 ### Database Integration Tests
 
-By default, tests **skip database operations** for fast execution and to avoid requiring PostgreSQL setup in CI/CD.
+By default, tests **skip database operations** for fast execution and to avoid
+requiring PostgreSQL setup in CI/CD.
 
 **To enable full database integration tests:**
 
@@ -572,7 +591,9 @@ This will test:
 
 **Test Database Safety:**
 
-All integration tests use the `tstack_test_` prefix for database names to avoid accidentally affecting your development databases. The test suite automatically cleans up after itself, but you can manually clean up with:
+All integration tests use the `tstack_test_` prefix for database names to avoid
+accidentally affecting your development databases. The test suite automatically
+cleans up after itself, but you can manually clean up with:
 
 ```bash
 deno task cleanup:test-dbs
@@ -601,6 +622,6 @@ MIT License - see [LICENSE](../../LICENSE) for details.
 
 ---
 
-Made with  for the Deno community
+Made with for the Deno community
 
 > TonyStack CLI - Because scaffolding should be this easy.

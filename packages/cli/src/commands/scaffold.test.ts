@@ -654,7 +654,7 @@ Deno.test("scaffoldEntity - skipTests flag skips test file generation", async ()
       true,
     );
     assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    
+
     // Test files should NOT exist
     assertEquals(
       await fileExists(join(basePath, "product.test.ts")),
@@ -696,7 +696,7 @@ Deno.test("scaffoldEntity - skipTests and skipAdmin combined", async () => {
       true,
     );
     assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    
+
     // Test and admin files should NOT exist
     assertEquals(
       await fileExists(join(basePath, "product.test.ts")),
@@ -953,7 +953,9 @@ Deno.test("scaffoldEntity - skipValidation controller skips ValidationUtil", asy
     );
     assertEquals(
       content.includes("CreateProductDTO = await c.req.json()") ||
-      content.includes("Create${names.pascalSingular}DTO = await c.req.json()"),
+        content.includes(
+          "Create${names.pascalSingular}DTO = await c.req.json()",
+        ),
       true,
       "Should use type assertion instead of validation",
     );
@@ -976,7 +978,7 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
     });
 
     const basePath = join(tempDir, "src", "entities", "products");
-    
+
     // Core files should exist
     assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
     assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
@@ -986,7 +988,7 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
       true,
     );
     assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    
+
     // Optional files should NOT exist
     assertEquals(
       await fileExists(join(basePath, "product.test.ts")),
@@ -1003,7 +1005,7 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
       false,
       "Admin test should NOT be generated",
     );
-    
+
     // Check route is public
     const routePath = join(basePath, "product.route.ts");
     const routeContent = await Deno.readTextFile(routePath);
@@ -1012,7 +1014,7 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
       false,
       "Route should NOT have auth",
     );
-    
+
     // Check DTO has no validation
     const dtoPath = join(basePath, "product.dto.ts");
     const dtoContent = await Deno.readTextFile(dtoPath);

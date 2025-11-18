@@ -135,7 +135,7 @@ export class HonoAdminAdapter<T> {
    * Example: GET /ts-admin/products/new
    */
   new(): (c: Context) => Promise<Response> {
-    return async (c: Context) => {
+    return (c: Context) => {
       this.checkAuth(c);
 
       return c.json({
@@ -310,6 +310,7 @@ export class HonoAdminAdapter<T> {
   /**
    * Parse request body (handles both JSON and form data)
    */
+  // deno-lint-ignore no-explicit-any
   private async parseBody(c: Context): Promise<Record<string, any>> {
     const contentType = c.req.header("Content-Type") || "";
 
@@ -319,6 +320,7 @@ export class HonoAdminAdapter<T> {
 
     // Parse form data (for flexibility with form submissions)
     const formData = await c.req.formData();
+    // deno-lint-ignore no-explicit-any
     const body: Record<string, any> = {};
 
     for (const [key, value] of formData.entries()) {

@@ -20,6 +20,7 @@ import type { IORMAdapter, ORMAdapterConfig } from "./base.ts";
  */
 export interface DrizzleAdapterConfig extends ORMAdapterConfig {
   /** Drizzle database instance */
+  // deno-lint-ignore no-explicit-any
   db: any;
 }
 
@@ -40,11 +41,14 @@ export interface DrizzleAdapterConfig extends ORMAdapterConfig {
  * });
  * ```
  */
+// deno-lint-ignore no-explicit-any
 export class DrizzleAdapter<T extends Record<string, any>>
   implements IORMAdapter<T> {
+  // deno-lint-ignore no-explicit-any
   private table: any; // Using any to allow dynamic column access
   private idColumn: string;
   private idType: "number" | "string";
+  // deno-lint-ignore no-explicit-any
   private db: any;
 
   constructor(
@@ -132,6 +136,7 @@ export class DrizzleAdapter<T extends Record<string, any>>
     const parsedId = this.parseId(id);
 
     // Add updated timestamp if table has updatedAt column
+    // deno-lint-ignore no-explicit-any
     const updateData: any = { ...data };
     if ("updatedAt" in this.table) {
       updateData.updatedAt = new Date();

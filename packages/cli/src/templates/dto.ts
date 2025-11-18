@@ -1,6 +1,9 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
-export function generateDtoTemplate(names: EntityNames, withValidation = true): string {
+export function generateDtoTemplate(
+  names: EntityNames,
+  withValidation = true,
+): string {
   if (withValidation) {
     return `import { z } from "zod";
 

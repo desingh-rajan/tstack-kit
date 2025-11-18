@@ -1,6 +1,9 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
-export function generateRouteTemplate(names: EntityNames, withAuth = true): string {
+export function generateRouteTemplate(
+  names: EntityNames,
+  withAuth = true,
+): string {
   if (withAuth) {
     return `import { Hono } from "hono";
 import { ${names.pascalSingular}Controller } from "./${names.kebabSingular}.controller.ts";

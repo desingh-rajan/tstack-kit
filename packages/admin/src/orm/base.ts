@@ -22,6 +22,7 @@ export interface ORMAdapterConfig {
   idType?: "number" | "string";
 
   /** Database connection (if needed by ORM) */
+  // deno-lint-ignore no-explicit-any
   db?: any;
 }
 

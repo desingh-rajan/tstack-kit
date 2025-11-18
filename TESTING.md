@@ -4,11 +4,13 @@
 >
 > Last Updated: November 14, 2025
 
-This is the **root-level testing guide** for the entire TonyStack project. For package-specific testing instructions, see:
+This is the **root-level testing guide** for the entire TonyStack project. For
+package-specific testing instructions, see:
 
 - **[CLI Testing](./packages/cli/TESTING.md)** - Command-line tool tests
-- **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests  
-- **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with setup guide
+- **[Admin Testing](./packages/admin/TESTING.md)** - Admin interface tests
+- **[Starter Testing](./packages/starter/TESTING.md)** - Application tests with
+  setup guide
 
 ---
 
@@ -49,7 +51,7 @@ src/
 ```typescript
 // [ERROR] BAD: Mocking database
 const mockDB = {
-  query: () => Promise.resolve({ rows: [] })
+  query: () => Promise.resolve({ rows: [] }),
 };
 
 // [SUCCESS] GOOD: Real database
@@ -66,13 +68,14 @@ const result = await db.select().from(users);
 
 ### 3. Test Environment Separation
 
-Each package uses separate test databases following the naming convention: `{project}_dev`, `{project}_test`, `{project}_prod`:
+Each package uses separate test databases following the naming convention:
+`{project}_dev`, `{project}_test`, `{project}_prod`:
 
-| Package | Dev Database | Test Database | Prod Database |
-|---------|-------------|---------------|---------------|
-| Starter | `tonystack_dev` | `tonystack_test` | `tonystack_prod` |
-| Admin   | N/A | `tstack_admin_test` | N/A |
-| CLI     | N/A | Uses temp dirs with pattern `tstack_cli_test_*` | N/A |
+| Package | Dev Database    | Test Database                                   | Prod Database    |
+| ------- | --------------- | ----------------------------------------------- | ---------------- |
+| Starter | `tonystack_dev` | `tonystack_test`                                | `tonystack_prod` |
+| Admin   | N/A             | `tstack_admin_test`                             | N/A              |
+| CLI     | N/A             | Uses temp dirs with pattern `tstack_cli_test_*` | N/A              |
 
 ---
 
@@ -107,7 +110,8 @@ deno task test
 deno task test:watch
 ```
 
-**See detailed setup:** [packages/starter/TESTING.md](./packages/starter/TESTING.md)
+**See detailed setup:**
+[packages/starter/TESTING.md](./packages/starter/TESTING.md)
 
 #### CLI Package (Command-line Tool)
 
@@ -135,7 +139,8 @@ deno task test
 deno task test:coverage
 ```
 
-**See admin testing guide:** [packages/admin/TESTING.md](./packages/admin/TESTING.md)
+**See admin testing guide:**
+[packages/admin/TESTING.md](./packages/admin/TESTING.md)
 
 ---
 
@@ -211,7 +216,7 @@ Each test file should follow this structure:
 
 ```typescript
 import { assertEquals, assertExists } from "@std/assert";
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 
 // Imports
 import { myFunction } from "./myFile.ts";
@@ -232,7 +237,7 @@ Deno.test("Feature Name Tests", async (t) => {
   await t.step("happy path scenario", async () => {
     // Test implementation
   });
-  
+
   await t.step("error case scenario", async () => {
     // Test implementation
   });
@@ -315,11 +320,11 @@ deno task test:setup
 
 ## Test Coverage Goals
 
-| Package | Target Coverage | Current Status |
-|---------|----------------|----------------|
-| **CLI** | 85%+ | [SUCCESS] 90% |
-| **Admin** | 90%+ | [SUCCESS] 100% (73/73 tests) |
-| **Starter** | 85%+ | [SUCCESS] 100% (5 suites, 81 steps) |
+| Package     | Target Coverage | Current Status                      |
+| ----------- | --------------- | ----------------------------------- |
+| **CLI**     | 85%+            | [SUCCESS] 90%                       |
+| **Admin**   | 90%+            | [SUCCESS] 100% (73/73 tests)        |
+| **Starter** | 85%+            | [SUCCESS] 100% (5 suites, 81 steps) |
 
 ### Viewing Coverage
 
@@ -401,7 +406,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -414,26 +419,26 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v2.x
-      
+
       - name: Test CLI
         run: |
           cd packages/cli
           deno task test
-      
+
       - name: Test Admin
         run: |
           cd packages/admin
           deno task test:full
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/tstack_admin_test
-      
+
       - name: Test Starter
         run: |
           cd packages/starter
@@ -481,7 +486,7 @@ assertEquals(result, true);
 assertEquals(
   result.isAuthenticated,
   true,
-  "User should be authenticated after successful login"
+  "User should be authenticated after successful login",
 );
 ```
 
@@ -491,7 +496,7 @@ assertEquals(
 // [SUCCESS] GOOD: Always cleanup, even on failure
 Deno.test("Article CRUD", async () => {
   const articleId = await createArticle();
-  
+
   try {
     const article = await getArticle(articleId);
     assertEquals(article.title, "Test Article");
@@ -531,9 +536,12 @@ Deno.test("Admin operations", async () => {
 
 For detailed testing instructions for each package:
 
-- **[CLI Testing Guide](./packages/cli/TESTING.md)** - Testing commands, utilities, and file operations
-- **[Admin Testing Guide](./packages/admin/TESTING.md)** - Testing admin adapters with real databases
-- **[Starter Testing Guide](./packages/starter/TESTING.md)** - Testing full application with setup instructions
+- **[CLI Testing Guide](./packages/cli/TESTING.md)** - Testing commands,
+  utilities, and file operations
+- **[Admin Testing Guide](./packages/admin/TESTING.md)** - Testing admin
+  adapters with real databases
+- **[Starter Testing Guide](./packages/starter/TESTING.md)** - Testing full
+  application with setup instructions
 
 ---
 

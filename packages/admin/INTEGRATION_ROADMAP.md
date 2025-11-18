@@ -1,6 +1,6 @@
 # @tstack/admin - Integration Roadmap
 
-**Created:** November 13, 2025  
+**Created:** November 13, 2025\
 **Status:** Phase 1 Complete [SUCCESS]
 
 ---
@@ -24,7 +24,8 @@
 3. Register routes in main app
 4. Works immediately!
 
-See [README.md - Using in Existing Projects](./README.md#using-in-existing-projects-without-tstack-kit)
+See
+[README.md - Using in Existing Projects](./README.md#using-in-existing-projects-without-tstack-kit)
 
 ---
 
@@ -62,14 +63,14 @@ tstack admin products
      ```typescript
      // product.admin.route.ts (generated)
      import { Hono } from "hono";
-     import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+     import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
      import { db } from "../../config/database.ts";
      import { products } from "./product.model.ts";
      import { requireAdmin } from "../../shared/middleware/requireRole.ts";
-     
+
      const productAdminRoutes = new Hono();
      productAdminRoutes.use("*", requireAdmin);
-     
+
      const admin = new HonoAdminAdapter({
        ormAdapter: new DrizzleAdapter(products, { db }),
        entityName: "product",
@@ -80,7 +81,7 @@ tstack admin products
        allowedRoles: ["superadmin", "admin"],
        baseUrl: "/admin/products",
      });
-     
+
      // All CRUD routes
      productAdminRoutes.get("/", admin.list());
      productAdminRoutes.get("/new", admin.new());
@@ -91,7 +92,7 @@ tstack admin products
      productAdminRoutes.patch("/:id", admin.update());
      productAdminRoutes.delete("/:id", admin.destroy());
      productAdminRoutes.post("/bulk-delete", admin.bulkDelete());
-     
+
      export { productAdminRoutes };
      ```
 
@@ -204,7 +205,9 @@ cd my-app && deno task dev
    - Generate: Express routes instead of Hono
    - Generate: Sequelize models instead of Drizzle
 
-See [COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GUIDE.md#8-future-extensions--standards) for implementation details.
+See
+[COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GUIDE.md#8-future-extensions--standards)
+for implementation details.
 
 **Estimated Time:** 20-30 hours
 
@@ -287,6 +290,6 @@ See [COMPREHENSIVE_GUIDE.md - Section 8: Future Extensions](./COMPREHENSIVE_GUID
 
 ---
 
-**Last Updated:** November 13, 2025  
-**Package Version:** 1.0.0  
+**Last Updated:** November 13, 2025\
+**Package Version:** 1.0.0\
 **Next Version:** 1.1.0 (with CLI integration)

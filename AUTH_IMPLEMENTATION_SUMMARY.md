@@ -4,39 +4,40 @@
 
 ### Phase 1: Database Models
 
-- [SUCCESS] `user.model.ts` - User entity with email, username (optional), password,
-  isActive, isEmailVerified
-- [SUCCESS] `auth-token.model.ts` - Token storage with userId FK, expiry, revocation,
-  metadata
+- [SUCCESS] `user.model.ts` - User entity with email, username (optional),
+  password, isActive, isEmailVerified
+- [SUCCESS] `auth-token.model.ts` - Token storage with userId FK, expiry,
+  revocation, metadata
 - [SUCCESS] Proper PostgreSQL schema with indexes and constraints
 
 ### Phase 2: Authentication Utilities
 
-- [SUCCESS] `password.ts` - scrypt hashing with random salt (node:crypto, no external
-  deps)
-- [SUCCESS] `jwt.ts` - JWT creation/verification with jose library (npm:jose@^5.9.6)
+- [SUCCESS] `password.ts` - scrypt hashing with random salt (node:crypto, no
+  external deps)
+- [SUCCESS] `jwt.ts` - JWT creation/verification with jose library
+  (npm:jose@^5.9.6)
 - [SUCCESS] Token extraction from Authorization header
 
 ### Phase 3: Authentication Service & DTOs
 
-- [SUCCESS] `auth.service.ts` - All business logic (register, login, logout, validate,
-  getCurrentUser, changePassword)
+- [SUCCESS] `auth.service.ts` - All business logic (register, login, logout,
+  validate, getCurrentUser, changePassword)
 - [SUCCESS] `auth.dto.ts` - Zod validation schemas for all endpoints
 - [SUCCESS] Token storage in database with revocation support
 
 ### Phase 4: Auth Controllers & Routes
 
 - [SUCCESS] `auth.controller.ts` - HTTP handlers for all auth endpoints
-- [SUCCESS] `auth.route.ts` - Public (register, login) and protected routes (logout,
-  me, change-password)
+- [SUCCESS] `auth.route.ts` - Public (register, login) and protected routes
+  (logout, me, change-password)
 - [SUCCESS] Proper error handling and ApiResponse format
 
 ### Phase 5: Middleware & Admin System
 
-- [SUCCESS] `requireAuth.ts` - Middleware for protecting routes, attaches user to
-  context
-- [SUCCESS] `admin.service.ts` - Admin management (create, list, get, update, delete
-  users)
+- [SUCCESS] `requireAuth.ts` - Middleware for protecting routes, attaches user
+  to context
+- [SUCCESS] `admin.service.ts` - Admin management (create, list, get, update,
+  delete users)
 - [SUCCESS] `admin.controller.ts` - HTTP handlers for admin endpoints
 - [SUCCESS] `admin.dto.ts` - Validation schemas for admin operations
 - [SUCCESS] `admin.route.ts` - Admin routes (all protected with requireAuth)
@@ -110,7 +111,7 @@ Header: Authorization: Bearer <token>
 Response: { message: "User deleted successfully" }
 ```
 
-##  Security Features
+## Security Features
 
 - [SUCCESS] Password hashing with scrypt (OWASP recommended)
 - [SUCCESS] JWT tokens with 7-day expiry
@@ -122,7 +123,7 @@ Response: { message: "User deleted successfully" }
 - [SUCCESS] Prevent self-deletion
 - [SUCCESS] All tokens revoked on password change
 
-##  Database Schema
+## Database Schema
 
 ### users table
 
@@ -153,7 +154,7 @@ Response: { message: "User deleted successfully" }
 - updatedAt (timestamp, default now)
 ```
 
-##  Usage
+## Usage
 
 ### Create Project with Auth
 
@@ -243,7 +244,7 @@ curl -X POST http://localhost:8000/api/admin/users \
   }'
 ```
 
-##  Environment Variables
+## Environment Variables
 
 Required in `.env`:
 
@@ -257,7 +258,7 @@ JWT_EXPIRY=7d
 DATABASE_URL=postgresql://postgres:password@localhost:5432/your_db
 ```
 
-##  Technical Details
+## Technical Details
 
 ### Dependencies Added
 
@@ -289,7 +290,7 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/your_db
 - Cannot delete own account (prevent lockout)
 - Soft delete (sets isActive = false)
 
-##  Next Steps
+## Next Steps
 
 ### Testing Phase (CURRENT)
 
@@ -312,7 +313,7 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/your_db
 - [ ] Account lockout after failed attempts
 - [ ] Audit logs
 
-##  Commits
+## Commits
 
 1. `866fb4a` - feat(auth): implement core authentication system (Phases 1-4)
 2. `c3ce19e` - feat(auth): add admin management APIs (Phase 5)

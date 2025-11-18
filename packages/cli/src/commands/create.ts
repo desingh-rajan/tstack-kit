@@ -213,15 +213,12 @@ export async function createProject(options: CreateOptions): Promise<void> {
   const {
     projectName,
     targetDir = Deno.cwd(),
-    withAuth = false,
     latest = false,
     skipDbSetup = false,
   } = options;
 
   Logger.title(`Creating new project: ${projectName}`);
-  if (withAuth) {
-    Logger.info(" Authentication system will be included");
-  }
+  Logger.info(" Authentication system is included by default");
   if (latest) {
     Logger.info(" Latest stable dependency versions will be fetched");
   }
@@ -301,54 +298,52 @@ export async function createProject(options: CreateOptions): Promise<void> {
     );
     await Deno.writeTextFile(dockerComposePath, dockerComposeContent);
 
-    // If --with-auth flag is set, add JWT configuration to .env.example
-    if (withAuth) {
-      Logger.info("Adding authentication configuration...");
-      const envExamplePath = join(projectPath, ".env.example");
-      let envExampleContent = await Deno.readTextFile(envExamplePath);
+    // Authentication is always included - JWT configuration is already in template
+    Logger.info("Authentication system configured");
+    const envExamplePath = join(projectPath, ".env.example");
+    let envExampleContent = await Deno.readTextFile(envExamplePath);
 
-      // Add JWT configuration if not already present
-      if (!envExampleContent.includes("JWT_SECRET")) {
-        envExampleContent += `\n# JWT Authentication Configuration
+    // Verify JWT configuration exists
+    if (!envExampleContent.includes("JWT_SECRET")) {
+      envExampleContent += `\n# JWT Authentication Configuration
 JWT_SECRET=change-this-to-random-secret-in-production-${
-          Math.random().toString(36).substring(2, 15)
-        }
+        Math.random().toString(36).substring(2, 15)
+      }
 JWT_ISSUER=tonystack
 JWT_EXPIRY=7d
 `;
-        await Deno.writeTextFile(envExamplePath, envExampleContent);
-      }
+      await Deno.writeTextFile(envExamplePath, envExampleContent);
+    }
 
-      // Add jose to deno.json imports
-      const denoJsonPath = join(projectPath, "deno.json");
-      const denoJsonContent = await Deno.readTextFile(denoJsonPath);
-      const denoJson = JSON.parse(denoJsonContent);
+    // Add jose to deno.json imports
+    const denoJsonPath = join(projectPath, "deno.json");
+    const denoJsonContent = await Deno.readTextFile(denoJsonPath);
+    const denoJson = JSON.parse(denoJsonContent);
 
-      if (!denoJson.imports) {
-        denoJson.imports = {};
-      }
+    if (!denoJson.imports) {
+      denoJson.imports = {};
+    }
 
-      if (!denoJson.imports["jose"]) {
-        denoJson.imports["jose"] = "npm:jose@^5.9.6";
-        await Deno.writeTextFile(
-          denoJsonPath,
-          JSON.stringify(denoJson, null, 2) + "\n",
-        );
-      }
+    if (!denoJson.imports["jose"]) {
+      denoJson.imports["jose"] = "npm:jose@^5.9.6";
+      await Deno.writeTextFile(
+        denoJsonPath,
+        JSON.stringify(denoJson, null, 2) + "\n",
+      );
+    }
 
-      // Add db:seed task if not present
-      if (!denoJson.tasks) {
-        denoJson.tasks = {};
-      }
+    // Add db:seed task if not present
+    if (!denoJson.tasks) {
+      denoJson.tasks = {};
+    }
 
-      if (!denoJson.tasks["db:seed"]) {
-        denoJson.tasks["db:seed"] =
-          "deno run --allow-all scripts/seed-superadmin.ts";
-        await Deno.writeTextFile(
-          denoJsonPath,
-          JSON.stringify(denoJson, null, 2) + "\n",
-        );
-      }
+    if (!denoJson.tasks["db:seed"]) {
+      denoJson.tasks["db:seed"] =
+        "deno run --allow-all scripts/seed-superadmin.ts";
+      await Deno.writeTextFile(
+        denoJsonPath,
+        JSON.stringify(denoJson, null, 2) + "\n",
+      );
     }
 
     // migrations meta/_journal.json is already copied from starter template
@@ -412,8 +407,8 @@ JWT_EXPIRY=7d
         }`;
         denoJson.imports["zod"] = `npm:zod@^${latestVersions["zod"]}`;
 
-        // Update jose if withAuth is true
-        if (withAuth && latestVersions["jose"]) {
+        // Update jose (auth is always included)
+        if (latestVersions["jose"]) {
           denoJson.imports["jose"] = `npm:jose@^${latestVersions["jose"]}`;
         }
       }
@@ -548,39 +543,37 @@ JWT_EXPIRY=7d
   Logger.code("deno task dev");
   Logger.newLine();
 
-  if (withAuth) {
-    Logger.subtitle(" Authentication System Included:");
-    Logger.newLine();
-    Logger.info("Seed superadmin user:");
-    Logger.code("deno task db:seed");
-    Logger.newLine();
-    Logger.info("Superadmin credentials (set via environment variables):");
-    Logger.code("Email: set via SUPERADMIN_EMAIL environment variable");
-    Logger.code("Password: set via SUPERADMIN_PASSWORD environment variable");
-    Logger.newLine();
-    Logger.info("Available auth endpoints:");
-    Logger.code("POST /auth/register - Create new user");
-    Logger.code("POST /auth/login - Login user");
-    Logger.code("POST /auth/logout - Logout (requires token)");
-    Logger.code("GET /auth/me - Get current user (requires token)");
-    Logger.code(
-      "PUT /auth/change-password - Change password (requires token)",
-    );
-    Logger.newLine();
-    Logger.info("Admin management endpoints:");
-    Logger.code("POST /admin/users - Create admin user");
-    Logger.code("GET /admin/users - List all users");
-    Logger.code("GET /admin/users/:id - Get user by ID");
-    Logger.code("PUT /admin/users/:id - Update user");
-    Logger.code("DELETE /admin/users/:id - Delete user");
-    Logger.newLine();
-    Logger.info(
-      "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
-    );
-    Logger.newLine();
-    Logger.warning("[WARNING]  Change superadmin password in production!");
-    Logger.newLine();
-  }
+  Logger.subtitle(" Authentication System Included:");
+  Logger.newLine();
+  Logger.info("Seed superadmin user:");
+  Logger.code("deno task db:seed");
+  Logger.newLine();
+  Logger.info("Superadmin credentials (set via environment variables):");
+  Logger.code("Email: set via SUPERADMIN_EMAIL environment variable");
+  Logger.code("Password: set via SUPERADMIN_PASSWORD environment variable");
+  Logger.newLine();
+  Logger.info("Available auth endpoints:");
+  Logger.code("POST /auth/register - Create new user");
+  Logger.code("POST /auth/login - Login user");
+  Logger.code("POST /auth/logout - Logout (requires token)");
+  Logger.code("GET /auth/me - Get current user (requires token)");
+  Logger.code(
+    "PUT /auth/change-password - Change password (requires token)",
+  );
+  Logger.newLine();
+  Logger.info("Admin management endpoints:");
+  Logger.code("POST /admin/users - Create admin user");
+  Logger.code("GET /admin/users - List all users");
+  Logger.code("GET /admin/users/:id - Get user by ID");
+  Logger.code("PUT /admin/users/:id - Update user");
+  Logger.code("DELETE /admin/users/:id - Delete user");
+  Logger.newLine();
+  Logger.info(
+    "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
+  );
+  Logger.newLine();
+  Logger.warning("[WARNING]  Change superadmin password in production!");
+  Logger.newLine();
 
   Logger.subtitle("Your API will be available at:");
   Logger.code("http://localhost:8000");

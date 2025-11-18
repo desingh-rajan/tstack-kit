@@ -4,8 +4,8 @@
 >
 > Pure JSON API for admin operations - bring your own frontend
 
-**Version:** 2.0.0  
-**Status:** [SUCCESS] Production Ready (72/72 tests passing)  
+**Version:** 2.0.0\
+**Status:** [SUCCESS] Production Ready (72/72 tests passing)\
 **License:** MIT
 
 ---
@@ -31,7 +31,7 @@ You get a complete MVC stack, but **NO admin API**.
 **Add 10 lines of code, get full admin JSON API:**
 
 ```typescript
-import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 
 const admin = new HonoAdminAdapter({
   ormAdapter: new DrizzleAdapter(products, { db }),
@@ -61,26 +61,26 @@ app.delete("/api/admin/products/:id", admin.destroy());
 
 **Core:**
 
--  Zero configuration required
--  Type-safe with full TypeScript generics
--  Framework-agnostic (Hono now, Express future)
--  ORM-agnostic (Drizzle now, Sequelize/Prisma future)
+- Zero configuration required
+- Type-safe with full TypeScript generics
+- Framework-agnostic (Hono now, Express future)
+- ORM-agnostic (Drizzle now, Sequelize/Prisma future)
 - [SUCCESS] Production-ready (72/72 tests passing)
 
 **API:**
 
 - 📡 Pure JSON responses (API-first architecture)
--  Full-text search across columns
+- Full-text search across columns
 - 📄 Efficient pagination
 - 🔄 Sortable columns
--  Bulk operations
+- Bulk operations
 - 🌐 Works with any frontend framework
 
 **Security:**
 
 - 🔒 Authentication & authorization checks
--  Role-based access control
--  SQL injection protection (parameterized queries)
+- Role-based access control
+- SQL injection protection (parameterized queries)
 - [SUCCESS] Type-safe input validation
 
 ---
@@ -90,10 +90,7 @@ app.delete("/api/admin/products/:id", admin.destroy());
 ### Deno
 
 ```typescript
-import {
-  HonoAdminAdapter,
-  DrizzleAdapter,
-} from "jsr:@tstack/admin";
+import { DrizzleAdapter, HonoAdminAdapter } from "jsr:@tstack/admin";
 ```
 
 Or add to `deno.json`:
@@ -120,7 +117,7 @@ npm install @tstack/admin
 
 ```typescript
 // src/entities/products/product.model.ts
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
@@ -137,7 +134,7 @@ export const products = pgTable("products", {
 ```typescript
 // src/entities/products/product.admin.route.ts
 import { Hono } from "hono";
-import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
 import { products } from "./product.model.ts";
 import { requireSuperAdmin } from "../../shared/middleware/auth.ts";
@@ -218,8 +215,8 @@ curl "http://localhost:8000/admin/products?search=widget&page=1&limit=20"
 ```json
 {
   "data": [
-    {"id": 1, "name": "Widget", "price": 19.99, "createdAt": "..."},
-    {"id": 2, "name": "Gadget", "price": 29.99, "createdAt": "..."}
+    { "id": 1, "name": "Widget", "price": 19.99, "createdAt": "..." },
+    { "id": 2, "name": "Gadget", "price": 29.99, "createdAt": "..." }
   ],
   "total": 42,
   "page": 1,
@@ -415,7 +412,7 @@ Follow the steps above for complete TStack Kit integration.
 ```typescript
 // src/admin/product.admin.route.ts
 import { Hono } from "hono";
-import { HonoAdminAdapter, DrizzleAdapter } from "@tstack/admin";
+import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 import { db } from "../config/database.ts"; // Your existing DB
 import { products } from "../models/product.model.ts"; // Your existing model
 
@@ -537,7 +534,7 @@ c.set("user", user);
 
 ```typescript
 // Check user's role matches allowedRoles
-allowedRoles: ["superadmin", "admin"]
+allowedRoles: ["superadmin", "admin"];
 ```
 
 Check the common issues above or create an issue on GitHub.
@@ -559,8 +556,8 @@ MIT License - See [LICENSE](../../LICENSE) file for details.
 
 ## Credits
 
-**Maintainers:** TStack Kit Team  
-**Version:** 1.0.0  
+**Maintainers:** TStack Kit Team\
+**Version:** 1.0.0\
 **Last Updated:** November 13, 2025
 
 **Built with:**
@@ -572,4 +569,4 @@ MIT License - See [LICENSE](../../LICENSE) file for details.
 
 ---
 
-**Together, we build better tools!** 
+**Together, we build better tools!**

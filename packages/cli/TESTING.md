@@ -107,15 +107,15 @@ Deno.test("myFunction - handles edge case", () => {
 
 ```typescript
 import { join } from "@std/path";
-import { createTempDir, cleanupTempDir } from "../tests/helpers/tempDir.ts";
+import { cleanupTempDir, createTempDir } from "../tests/helpers/tempDir.ts";
 
 Deno.test("creates file correctly", async () => {
   const tempDir = await createTempDir();
-  
+
   try {
     // Test file creation
     await myFileOperation(tempDir);
-    
+
     // Assert file exists
     const filePath = join(tempDir, "myfile.txt");
     const fileExists = await Deno.stat(filePath);
@@ -131,15 +131,17 @@ Deno.test("creates file correctly", async () => {
 ```typescript
 Deno.test("scaffold command - generates all files", async () => {
   const tempDir = await createTempDir();
-  
+
   try {
     await scaffoldEntity({
       entityName: "products",
       targetDir: tempDir,
     });
-    
+
     // Assert files were created
-    const modelExists = await exists(join(tempDir, "src/entities/products/product.model.ts"));
+    const modelExists = await exists(
+      join(tempDir, "src/entities/products/product.model.ts"),
+    );
     assertEquals(modelExists, true);
   } finally {
     await cleanupTempDir(tempDir);
@@ -255,20 +257,21 @@ deno task test:coverage
 
 ## FAQ
 
-**Q: Where do I put test fixtures?**
-A: In `tests/helpers/fixtures.ts` or create a `tests/fixtures/` folder
+**Q: Where do I put test fixtures?** A: In `tests/helpers/fixtures.ts` or create
+a `tests/fixtures/` folder
 
-**Q: Should I mock file system operations?**
-A: No, use real temp directories. It's simpler and more reliable.
+**Q: Should I mock file system operations?** A: No, use real temp directories.
+It's simpler and more reliable.
 
-**Q: How do I test the CLI commands end-to-end?**
-A: Use integration tests in `tests/integration/` with real temp directories.
+**Q: How do I test the CLI commands end-to-end?** A: Use integration tests in
+`tests/integration/` with real temp directories.
 
-**Q: Do I need to test every private function?**
-A: No, test through the public API. If a private function is complex enough to need testing, it should probably be public.
+**Q: Do I need to test every private function?** A: No, test through the public
+API. If a private function is complex enough to need testing, it should probably
+be public.
 
-**Q: What about testing database operations?**
-A: Mock database commands or use test databases. Keep CLI tests focused on file/config generation.
+**Q: What about testing database operations?** A: Mock database commands or use
+test databases. Keep CLI tests focused on file/config generation.
 
 ## Examples
 
@@ -289,4 +292,5 @@ When adding new features:
 
 ---
 
-**Remember**: Tests are documentation. Write them so future contributors can understand what the code does by reading the tests.
+**Remember**: Tests are documentation. Write them so future contributors can
+understand what the code does by reading the tests.
