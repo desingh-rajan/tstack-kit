@@ -44,6 +44,12 @@ function showHelp() {
   Logger.code(
     "--skip-tests               Don't generate test files (scaffold only)",
   );
+  Logger.code(
+    "--skip-auth                Don't add authentication middleware (scaffold only)",
+  );
+  Logger.code(
+    "--skip-validation          Don't add Zod validation schemas (scaffold only)",
+  );
   Logger.newLine();
 
   Logger.subtitle("Examples:");
@@ -57,6 +63,9 @@ function showHelp() {
   Logger.code("tstack scaffold users --skip-admin");
   Logger.code("tstack scaffold posts --skip-tests");
   Logger.code("tstack scaffold articles --skip-admin --skip-tests");
+  Logger.code("tstack scaffold comments --skip-auth");
+  Logger.code("tstack scaffold reviews --skip-validation");
+  Logger.code("tstack scaffold drafts --skip-auth --skip-validation");
   Logger.code("tstack destroy my-backend");
   Logger.code("tstack destroy old-project --force");
   Logger.newLine();
@@ -71,7 +80,7 @@ function showVersion() {
 
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "version", "force", "with-auth", "latest", "skip-admin", "skip-tests"],
+    boolean: ["help", "version", "force", "with-auth", "latest", "skip-admin", "skip-tests", "skip-auth", "skip-validation"],
     string: ["dir"],
     alias: {
       h: "help",
@@ -130,6 +139,8 @@ async function main() {
           force: args.force,
           skipAdmin: args["skip-admin"],
           skipTests: args["skip-tests"],
+          skipAuth: args["skip-auth"],
+          skipValidation: args["skip-validation"],
         });
         break;
       }

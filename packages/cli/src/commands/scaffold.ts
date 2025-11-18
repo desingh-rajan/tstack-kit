@@ -21,6 +21,8 @@ export interface ScaffoldOptions {
   force?: boolean;
   skipAdmin?: boolean;
   skipTests?: boolean;
+  skipAuth?: boolean;
+  skipValidation?: boolean;
 }
 
 export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
@@ -30,6 +32,8 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     force = false,
     skipAdmin = false,
     skipTests = false,
+    skipAuth = false,
+    skipValidation = false,
   } = options;
 
   Logger.title(`Scaffolding entity: ${entityName}`);
@@ -89,7 +93,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.dto.ts`,
       ),
-      content: generateDtoTemplate(names),
+      content: generateDtoTemplate(names, !skipValidation),
       description: "Data Transfer Objects",
     },
     {
@@ -109,7 +113,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.controller.ts`,
       ),
-      content: generateControllerTemplate(names),
+      content: generateControllerTemplate(names, !skipValidation),
       description: "HTTP handlers",
     },
     {
@@ -119,7 +123,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.route.ts`,
       ),
-      content: generateRouteTemplate(names),
+      content: generateRouteTemplate(names, !skipAuth),
       description: "Route definitions",
     },
   ];
@@ -209,9 +213,18 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
   Logger.newLine();
 
   Logger.info("3. Update validation schemas:");
-  Logger.code(
-    `- Update DTOs in ${names.kebabSingular}.dto.ts to match your fields`,
-  );
+  if (!skipValidation) {
+    Logger.code(
+      `- Update DTOs in ${names.kebabSingular}.dto.ts to match your fields`,
+    );
+  } else {
+    Logger.code(
+      `[WARNING] Validation skipped - DTOs are plain TypeScript interfaces`,
+    );
+    Logger.code(
+      `- Add Zod schemas manually in ${names.kebabSingular}.dto.ts for validation`,
+    );
+  }
   Logger.newLine();
 
   Logger.info("4. Routes are auto-registered! ");
@@ -219,6 +232,11 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
     `[SUCCESS] Routes automatically available (no manual imports needed)`,
   );
   Logger.code(` Auto-discovery: entities/*/*.route.ts files`);
+  if (!skipAuth) {
+    Logger.code(` Protected with authentication middleware`);
+  } else {
+    Logger.code(` [WARNING] Public routes (--skip-auth flag used)`);
+  }
   Logger.newLine();
 
   Logger.info("5. Start development server:");
