@@ -5,8 +5,9 @@ import { Logger } from "./src/utils/logger.ts";
 import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
 import { destroyProject } from "./src/commands/destroy.ts";
+import denoConfig from "./deno.json" with { type: "json" };
 
-const VERSION = "0.1.0";
+const VERSION = denoConfig.version;
 
 function showHelp() {
   Logger.banner();
