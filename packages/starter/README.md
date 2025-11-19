@@ -1,804 +1,267 @@
-# TonyStack
+# Project README
 
-> **Rails-like DX for Deno developers who want less framework, more control.**
+Replace the heading below with your actual project name (for example,
+`MyBlog API`).
 
-A lightweight, opinionated toolkit for building fast, type-safe backend services
-using **Deno**, **Hono**, **Drizzle**, and **PostgreSQL**.
+## Your Project Name
 
----
+## 1. Overview
 
-## What's Included
+This is a lightweight REST API built on Deno + Hono + Drizzle (PostgreSQL) with:
 
-### 1. **Starter Package** (`packages/starter/`)
+- Modular, entity‑centric folder structure (`src/entities/<feature>`)
+- Built‑in authentication (JWT, user roles)
+- Seed scripts for users and site settings
+- Typed database access via Drizzle ORM
+- Clear environment & migration workflow
+- Comprehensive test tasks (setup, migrate, seed, run, coverage)
 
-Production-ready backend template with:
+## 2. Stack
 
-- MVC architecture
-- PostgreSQL database (no SQLite)
-- Docker & docker-compose ready
-- Drizzle ORM with migrations
-- Comprehensive error handling
-- Security middleware (CORS, auth)
-- Full TypeScript support
-- Health checks & monitoring
+- Runtime: Deno
+- Web: Hono
+- ORM: Drizzle + PostgreSQL
+- Validation: Zod
+- Auth: JWT (HS256) + role checks (user, superadmin)
 
-### 2. **CLI Tool** (`packages/cli/`)
+## 3. Requirements
 
-Rails-like scaffolding generator:
+- Deno (latest 2.x)
+- PostgreSQL 14+
+- Bash / Docker (optional for local DB)
 
-```bash
-tstack scaffold products
-# Generates: model, dto, service, controller, route
-```
+## 4. Environment Variables
 
----
+Create one of: `.env.development.local` (preferred) or `.env`.
 
-## Quick Start
+| Variable          | Required  | Default                   | Notes                                         |
+| ----------------- | --------- | ------------------------- | --------------------------------------------- |
+| `DATABASE_URL`    | ✅        | —                         | Postgres connection string (must exist)       |
+| `PORT`            | ❌        | 8000                      | HTTP port                                     |
+| `ENVIRONMENT`     | ❌        | development               | Allowed values: development, test, production |
+| `ALLOWED_ORIGINS` | ❌        | <http://localhost:3000>   | Comma separated list                          |
+| `JWT_SECRET`      | ✅ (prod) | `change-me-in-production` | Replace in production                         |
+| `JWT_ISSUER`      | ❌        | tonystack                 | Token issuer name                             |
+| `JWT_EXPIRY`      | ❌        | 1h                        | e.g. `1h`, `30m`, `7d`                        |
 
-### Installation
+Load order (highest priority first): system env → `.env.<env>.local` → `.env`.
 
-```bash
-# Clone the repository
-git clone https://github.com/desingh-rajan/tstack-kit.git
-cd tstack-kit
-
-# Install CLI globally
-cd packages/cli
-deno task install
-
-# Verify installation
-tstack --version
-```
-
-### Create Your First Project
-
-```bash
-# Create new project
-tstack create my-blog-api
-cd my-blog-api
-
-# Setup environment
-cp .env.example .env
-
-# Start PostgreSQL (if using Docker)
-docker compose up -d
-
-# Start development server
-deno task dev
-
-# Generate entities
-tstack scaffold posts
-tstack scaffold comments
-```
-
-**Server runs at:** <http://localhost:8000>
-
----
-
-## Features
-
-### Database
-
-- **PostgreSQL** - Production-ready relational database
-- Drizzle ORM with full type safety
-- Automatic migrations with `drizzle-kit`
-- Type inference from schema
-
-### Architecture
-
-- **MVC Pattern** - Model, Service, Controller separation
-- **Domain-Driven** - Entities organized by feature
-- **Type-Safe** - Full TypeScript with inference
-- **Testable** - Services isolated from HTTP layer
-
-### Developer Experience
-
-- **Scaffolding CLI** - Generate entities in seconds
-- **Hot Reload** - Fast development with `--watch`
-- **Drizzle Studio** - Visual database browser
-- **Docker Ready** - PostgreSQL included
-
-### Production Ready
-
-- Comprehensive error handling
-- Request logging middleware
-- CORS configuration
-- Environment variable management
-- Health check endpoint
-
----
-
-## Project Structure
+## 5. Project Structure
 
 ```text
-tstack-kit/
-├── packages/
-│   ├── cli/                    # Scaffolding tool
-│   │   ├── mod.ts              # CLI entry point
-│   │   └── src/
-│   │       ├── commands/       # create, scaffold commands
-│   │       ├── templates/      # Code generators
-│   │       └── utils/          # String utils, file writer
-│   └── starter/                # Backend template
-│       ├── src/
-│       │   ├── config/         # Database, env config
-│       │   ├── entities/       # Domain entities (scaffold here)
-│       │   ├── shared/         # Middleware, utils
-│       │   └── main.ts         # App entry point
-│       ├── migrations/         # Drizzle migrations
-│       ├── tests/              # Test structure
-│       ├── docker-compose.yml  # PostgreSQL service
-│       ├── drizzle.config.ts   # ORM configuration
-│       └── deno.json           # Tasks & dependencies
-└── README.md                   # You are here
+src/
+  main.ts                # App bootstrap (mount routes, middleware)
+  config/                # env + database setup
+  auth/                  # auth routes, services, models
+  entities/              # feature domains (add your own here)
+    articles/            # example content entity
+    site_settings/       # dynamic configuration system
+  shared/                # errors, jwt, validation, middleware helpers
+migrations/              # Drizzle migration files (generated)
+scripts/                 # Migration, seed, utility scripts
+tests/                   # (If present) higher‑level or docs for tests
+deno.json                # Tasks & dependency mapping
 ```
 
----
+## 6. Core Tasks (deno.json)
 
-## Example: Scaffolding an Entity
+| Task                           | Purpose                                  |
+| ------------------------------ | ---------------------------------------- |
+| `deno task dev`                | Run with watch & all permissions         |
+| `deno task start`              | Run once (no watch)                      |
+| `deno task env:validate`       | Check required env vars                  |
+| `deno task migrate:generate`   | Create migration from current schema     |
+| `deno task migrate:run`        | Apply pending migrations                 |
+| `deno task db:studio`          | Open Drizzle Studio (schema browser)     |
+| `deno task db:seed`            | Seed all default data (users + settings) |
+| `deno task db:seed:superadmin` | Seed only superadmin user                |
+| `deno task db:seed:alpha`      | Seed demo regular user                   |
+| `deno task db:seed:user`       | Seed generic regular user                |
+| `deno task db:seed:site`       | Seed system site settings                |
+| `deno task setup`              | Validate env → migrate → seed            |
+| `deno task test:full`          | Full test DB setup then run tests        |
+| `deno task test`               | Run tests + cleanup test DB              |
+| `deno task test:setup`         | Create test DB + apply migrations        |
+| `deno task test:migrate`       | Migrate test DB only                     |
+| `deno task test:seed`          | Seed test data                           |
+| `deno task test:reset`         | Recreate + migrate + seed test DB        |
+| `deno task test:watch`         | Watch mode tests                         |
+| `deno task test:coverage`      | Coverage report to `coverage/`           |
+| `deno task test:check`         | Health check (DB + basic readiness)      |
+| `deno task cleanup:test-db`    | Remove test database artifacts           |
+| `deno task fmt`                | Format source                            |
+| `deno task lint`               | Lint source                              |
+
+## 7. First Run
 
 ```bash
-# Generate a products entity
-tstack scaffold products
+# 1. Create environment file
+cp .env.example .env  # (If provided) then edit values
 
-# Creates 5 files:
-# [OK] src/entities/products/product.model.ts (Drizzle schema - minimal)
-# [OK] src/entities/products/product.dto.ts (Validation)
-# [OK] src/entities/products/product.service.ts (Business logic)
-# [OK] src/entities/products/product.controller.ts (HTTP handlers)
-# [OK] src/entities/products/product.route.ts (Routes)
-```
+# 2. Start PostgreSQL (Docker optional)
+docker compose up -d postgres
 
-Add your fields to `product.model.ts`:
-
-```typescript
-export const products = pgTable("products", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: text().notNull(),
-  price: real().notNull(),
-  description: text(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-```
-
-Generate and run migrations:
-
-```bash
-deno task migrate:generate
-deno task migrate:run
-```
-
-Register routes in `main.ts`:
-
-```typescript
-import productRoutes from "./entities/products/product.route.ts";
-app.route("/api", productRoutes);
-```
-
-**Instant API:**
-
-```text
-GET /api/products → List products
-POST /api/products → Create product
-GET /api/products/:id → Get product
-PUT /api/products/:id → Update product
-DELETE /api/products/:id → Delete product
-```
-
----
-
-## Built-in Entities
-
-The starter template includes two reference entities to help you understand the
-patterns:
-
-### 1. **Articles** (`src/entities/articles/`)
-
-Example blog/content entity demonstrating:
-
-- Public routes (GET) - anyone can read
-- Protected routes (POST/PUT/DELETE) - authentication required
-- Author authorization - users can only edit their own articles
-- Superadmin override - superadmin can edit any article
-- Slug generation from title
-
-**Routes:**
-
-```text
-GET    /articles           # Public - list published articles
-GET    /articles/:id       # Public - view single article
-POST   /articles           # Protected - create article (logged-in users)
-PUT    /articles/:id       # Protected - update own article
-DELETE /articles/:id       # Protected - delete own article
-GET    /admin/articles     # Protected - superadmin sees all articles
-```
-
-### 2. **Site Settings** (`src/entities/site_settings/`)
-
-Hybrid key-value configuration system with JSONB storage, Zod schema validation,
-and automatic seeding for system settings. Designed for dynamic application
-settings that can be changed without code deployment.
-
-**Key Features:**
-
-- **Two-Tier System**: System settings (protected, validated) vs Custom settings
-  (deletable)
-- **Auto-Seeding**: Missing system settings automatically created with defaults
-- **Schema Validation**: Zod schemas ensure data integrity for system settings
-- **Reset Functionality**: Restore system settings to defaults without deletion
-- **Public/Private**: Frontend-accessible vs backend-only settings
-- **Dual Lookup**: Access by ID (`/site-settings/1`) or key
-  (`/site-settings/theme_config`)
-- **Category Organization**: general, email, appearance, features
-- **Audit Trail**: Track changes with `updatedBy` field
-- **Type-Safe**: Full TypeScript types inferred from Zod schemas
-
-**Routes:**
-
-```text
-# Public Routes (no auth)
-GET    /site-settings                  # All public settings
-GET    /site-settings/:idOrKey         # Get by ID or key
-
-# Admin Routes (superadmin only)
-POST   /site-settings                  # Create custom setting
-PUT    /site-settings/:id              # Update setting (validated)
-DELETE /site-settings/:id              # Delete custom setting only
-POST   /site-settings/:key/reset       # Reset system setting to default
-POST   /site-settings/reset-all        # Reset all system settings
-```
-
-**Frontend Integration:**
-
-Fetch public configuration at app initialization:
-
-```typescript
-// GET /site-settings
-// Returns only public settings (isPublic: true)
-const response = await fetch("http://localhost:8000/site-settings");
-const settings = await response.json();
-
-// Use in your app
-document.title = settings.site_info.siteName;
-applyTheme(settings.theme_config);
-toggleFeature("comments", settings.feature_flags.enableComments);
-```
-
-**Backend Usage:**
-
-Access any setting (including private ones):
-
-```typescript
-// In your service/controller
-import { SiteSettingService } from "./entities/site_settings/site-setting.service.ts";
-
-// Get by key (ID or string key)
-const emailConfig = await SiteSettingService.getByKey("email_settings");
-await sendEmail({
-  host: emailConfig.value.smtp_host,
-  port: emailConfig.value.smtp_port,
-  from: emailConfig.value.from_email,
-});
-
-// Get rate limit config
-const apiConfig = await SiteSettingService.getByKey("api_config");
-const maxRequests = apiConfig.value.rateLimit.maxRequests;
-```
-
-**System Settings (Protected):**
-
-Six system settings come pre-configured with Zod schemas and defaults:
-
-| Key              | Category   | Public | Schema Validated | Auto-Seeded |
-| ---------------- | ---------- | ------ | ---------------- | ----------- |
-| `site_info`      | general    | ✅     | ✅               | ✅          |
-| `contact_info`   | general    | ✅     | ✅               | ✅          |
-| `theme_config`   | appearance | ✅     | ✅               | ✅          |
-| `feature_flags`  | features   | ✅     | ✅               | ✅          |
-| `email_settings` | email      | ❌     | ✅               | ✅          |
-| `api_config`     | general    | ❌     | ✅               | ✅          |
-
-**System Settings Behavior:**
-
-- **Cannot be deleted** - Protected from accidental removal
-- **Schema validated** - Zod schemas ensure data integrity
-- **Auto-seeded** - Missing settings created on first access with defaults
-- **Resettable** - Restore to defaults via reset endpoints
-- **Type-safe** - Full TypeScript types from Zod schemas
-
-**Custom Settings:**
-
-You can create additional settings for your specific needs:
-
-- No schema validation (flexible JSONB)
-- Can be deleted
-- Optional simple type validation via `valueSchema` field
-
-**API Examples:**
-
-```bash
-# Get all public settings (auto-seeds missing system settings)
-curl http://localhost:8000/site-settings
-
-# Get specific setting by key (auto-creates if system setting missing)
-curl http://localhost:8000/site-settings/theme_config
-
-# Get specific setting by ID
-curl http://localhost:8000/site-settings/1
-
-# Update setting (superadmin only, validated for system settings)
-curl -X PUT http://localhost:8000/site-settings/1 \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"value": {"primaryColor": "#ff0000"}}'
-
-# Reset system setting to default (superadmin only)
-curl -X POST http://localhost:8000/site-settings/theme_config/reset \
-  -H "Authorization: Bearer $TOKEN"
-
-# Reset all system settings to defaults (superadmin only)
-curl -X POST http://localhost:8000/site-settings/reset-all \
-  -H "Authorization: Bearer $TOKEN"
-
-# Try to delete system setting (will fail with 400)
-curl -X DELETE http://localhost:8000/site-settings/1 \
-  -H "Authorization: Bearer $TOKEN"
-# Response: "Cannot delete system setting. Use 'reset' to restore default values instead."
-```
-
-**Schema Definitions:**
-
-System settings are defined with Zod schemas in
-`src/entities/site_settings/schemas/`:
-
-```typescript
-// schemas/appearance.schemas.ts
-export const ThemeConfigSchema = z.object({
-  primaryColor: z.string().regex(
-    /^#[0-9a-fA-F]{6}$/,
-    "Must be a valid hex color",
-  ),
-  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  darkMode: z.boolean(),
-  fontFamily: z.string(),
-});
-
-export const DEFAULT_THEME_CONFIG: ThemeConfig = {
-  primaryColor: "#3b82f6",
-  secondaryColor: "#10b981",
-  darkMode: false,
-  fontFamily: "Inter, system-ui, sans-serif",
-};
-```
-
-**Adding New System Settings:**
-
-1. Create schema in appropriate category file (e.g.,
-   `schemas/features.schemas.ts`)
-2. Add to registry in `schemas/index.ts`
-3. Restart server - auto-seeding handles the rest!
-
-**Customization:**
-
-Add your own settings by modifying `scripts/seed-site-settings.ts`:
-
-```typescript
-const customSettings = [
-  {
-    key: "payment_config",
-    category: "integrations",
-    value: {
-      stripePublicKey: "pk_test_...",
-      stripeWebhookSecret: "whsec_...",
-    },
-    isPublic: false, // Never expose API keys to frontend
-    description: "Stripe payment integration config",
-  },
-  {
-    key: "hero_section",
-    category: "sections",
-    value: {
-      title: "Welcome to Our App",
-      subtitle: "Build amazing things",
-      ctaText: "Get Started",
-      ctaLink: "/signup",
-    },
-    isPublic: true, // Frontend can fetch this
-    description: "Landing page hero section content",
-  },
-];
-```
-
-**Benefits:**
-
-- ✅ **Type-Safe** - Zod schemas with full TypeScript inference
-- ✅ **Auto-Seeding** - System settings created automatically
-- ✅ **Validated** - Schema validation prevents invalid data
-- ✅ **Protected** - System settings cannot be deleted
-- ✅ **Resettable** - Easy rollback to defaults
-- ✅ **No Deployment** - Update configuration via API
-- ✅ **Frontend API** - Public settings accessible without auth
-- ✅ **Secure** - Private settings never exposed to frontend
-- ✅ **Fast** - Indexed key-based lookups
-- ✅ **Flexible** - JSONB storage for any structure
-- ✅ **Auditable** - Track changes with timestamps and user IDs
-- ✅ **Organized** - Category-based grouping
-
-### Setup Instructions
-
-Both entities are **ready to use** but require migration generation:
-
-```bash
-# 1. Generate migrations for all entities (users, articles, site_settings)
+# 3. Generate initial schema (after editing models)
 deno task migrate:generate -- --name initial_schema
-
-# 2. Run migrations
 deno task migrate:run
 
-# 3. Seed default data
-deno task db:seed              # Superadmin + alpha user + site settings
-# Or individually:
-deno task db:seed:superadmin   # Create superadmin
-deno task db:seed:alpha        # Create test user
-deno task db:seed:site         # Create default site settings
+# 4. Seed core data
+deno task db:seed
 
-# 4. Start server
+# 5. Start app
 deno task dev
 ```
 
-**Why No Pre-Generated Migrations?**
+Visit: `http://localhost:8000`.
 
-The starter gives you **models as examples**, but you generate migrations
-yourself. This lets you:
+## 8. Entities & Conventions
 
-- Customize fields before first migration
-- Understand your database schema fully
-- Keep migration history clean from day one
+Each scaffolded entity consists of five files:
 
----
-
-## Why TonyStack?
-
-### Compared to Existing Solutions
-
-| Feature              | TonyStack           | Oak            | Express (Node) | NestJS (Deno)     |
-| -------------------- | ------------------- | -------------- | -------------- | ----------------- |
-| **Runtime**          | Deno                | Deno           | Node.js        | Deno              |
-| **Framework Weight** | Lightweight         | Medium         | Light          | Heavy             |
-| **Type Safety**      | Full                | Partial        | Minimal        | Full              |
-| **Scaffolding**      | Built-in            | [ERROR] Manual | [ERROR] Manual | [SUCCESS] Via CLI |
-| **ORM**              | Drizzle (type-safe) | Manual         | Prisma/TypeORM | TypeORM           |
-| **Learning Curve**   | Low                 | Medium         | Low            | High              |
-| **Production Ready** | [SUCCESS]           | [SUCCESS]      | [SUCCESS]      | [SUCCESS]         |
-
-### Perfect For
-
-- **MVPs and prototypes**
-- **Backend APIs for SPAs**
-- **Microservices**
-- **Internal tools**
-- **Freelance projects**
-- **Small to medium-scale apps**
-
-### Not Ideal For
-
-- Real-time WebSocket apps (not yet supported)
-- GraphQL-first projects (REST-focused)
-- Apps requiring complex authentication flows (bring your own)
-
----
-
-## CLI Commands
-
-```bash
-# Create new project
-tstack create my-api          # Create from starter template
-
-# Scaffold entities
-tstack scaffold products      # Generate entity
-tstack scaffold blog-posts    # Supports kebab-case
-tstack scaffold users --force # Overwrite existing
-
-# Options
---help, -h                    # Show help
---version, -v                 # Show version
---force, -f                   # Overwrite files
---dir <path>                  # Target directory
+```
+<entity>.model.ts       # Drizzle table definition
+<entity>.dto.ts         # Zod schemas (create/update/query)
+<entity>.service.ts     # Business logic / data access
+<entity>.controller.ts  # HTTP handlers (thin)
+<entity>.route.ts       # Route registration
 ```
 
----
+Naming: plural directory (e.g. `products`), table plural, route plural. Add new
+fields before generating migrations to keep history clean.
 
-## Docker Deployment
+## 9. Database & Migrations
 
-### Local Development (Database Only)
+- Edit models in `src/entities/**/<name>.model.ts`.
+- Generate migration AFTER changes: `deno task migrate:generate`.
+- Apply: `deno task migrate:run`.
+- Inspect: `deno task db:studio`.
+
+Never hand‑edit generated SQL unless absolutely necessary; prefer evolving the
+model then regenerating a new migration.
+
+## 10. Seeding
+
+Full seed (users + settings): `deno task db:seed`.
+
+Users created:
+
+- Superadmin: `superadmin@tstack.in` (full privileges)
+- Alpha user: `alpha@tstack.in` (regular)
+- Regular user (script) for additional testing.
+
+System site settings auto‑seed & self‑heal on access (see settings section).
+
+## 11. Authentication
+
+- Login / Register endpoints under `auth/` routes.
+- JWT header: `Authorization: Bearer <token>`.
+- Token payload includes `userId` + `email`.
+- Change `JWT_SECRET` before production; rotate by updating env and forcing
+  logout (delete tokens table rows).
+
+## 12. Site Settings System
+
+Dynamic configuration with protected “system” keys:
+
+- Auto‑seed on first read
+- Zod validated (cannot store invalid JSON)
+- Reset endpoints: `/site-settings/<key>/reset` & `/site-settings/reset-all`
+- Public vs private settings (frontend can fetch only public)
+
+Add new system setting:
+
+1. Add schema in `site_settings/schemas/*.schemas.ts`
+2. Register in `site_settings/schemas/index.ts`
+3. (Re)start server – seeding happens automatically
+
+## 13. Articles Example Entity
+
+Demonstrates protected write operations vs public read. Use it as a pattern for
+ownership + role checks.
+
+## 14. Testing Workflow
+
+Recommended full cycle for CI/local:
 
 ```bash
-# Start PostgreSQL only
-docker compose up postgres -d
-
-# Use local Deno for development
-deno task dev
-
-# Stop database
-docker compose down
-
-# Reset database (removes data)
-docker compose down -v
+deno task test:full        # Build test DB + run tests
+deno task test:coverage    # Optional coverage
 ```
 
-### Full Stack (App + Database)
+Fast inner loop while coding:
 
 ```bash
-# Copy environment template
-cp .env.docker .env
-# Edit .env with your values
-
-# Start everything (app + postgres)
-docker compose up --build -d
-
-# Run migrations
-docker compose exec app deno task migrate:run
-
-# Seed database
-docker compose exec app deno task db:seed
-
-# View logs
-docker compose logs -f app
-
-# Stop everything
-docker compose down
-```
-
-### Production Deployment
-
-#### Option 1: Docker Compose (Recommended)
-
-```bash
-# Use production environment
-export ENVIRONMENT=production
-
-# Set secure credentials in .env
-JWT_SECRET=your-secure-secret-key-at-least-32-characters
-POSTGRES_PASSWORD=secure-password
-
-# Deploy
-docker compose up --build -d
-
-# Run migrations
-docker compose exec app deno task migrate:run
-
-# Seed initial data
-docker compose exec app deno task db:seed
-```
-
-#### Option 2: Separate Database
-
-Build and run with external PostgreSQL:
-
-```bash
-# Build image
-docker build -t tonystack-api .
-
-# Run with external database
-docker run -d \
-  -p 8000:8000 \
-  -e ENVIRONMENT=production \
-  -e DATABASE_URL="postgresql://user:pass@db.example.com:5432/mydb" \
-  -e JWT_SECRET="your-secure-secret-key" \
-  -e PORT=8000 \
-  --name tonystack-app \
-  tonystack-api
-```
-
-**Environment Variables:**
-
-- `DATABASE_URL` - PostgreSQL connection string (required)
-- `JWT_SECRET` - Secret key for JWT tokens (required)
-- `JWT_EXPIRY` - Token expiry (default: 1h, test: 1d)
-- `ENVIRONMENT` - Environment (development/test/production)
-- `PORT` - Server port (default: 8000)
-
----
-
-## Testing
-
-### Quick Start
-
-```bash
-# Complete test setup + run (recommended)
-deno task test:full
-
-# Just run tests (after setup)
-deno task test
-
-# Watch mode for development
 deno task test:watch
 ```
 
-### Available Test Commands
-
-| Command                   | Description                                              |
-| ------------------------- | -------------------------------------------------------- |
-| `deno task test:full`     | Complete workflow: setup DB + migrations + seeds + tests |
-| `deno task test`          | Run tests only                                           |
-| `deno task test:setup`    | Setup test database and migrations                       |
-| `deno task test:migrate`  | Run migrations on test database                          |
-| `deno task test:seed`     | Seed test data (superadmin, alpha user, site settings)   |
-| `deno task test:reset`    | Clean reset (database + migrations + seeds)              |
-| `deno task test:watch`    | Run tests in watch mode                                  |
-| `deno task test:coverage` | Run tests with coverage report                           |
-| `deno task test:check`    | Health check test environment                            |
-
-### Database Seeding
-
-#### Development/Production Seeding
+Health check (DB + basic readiness):
 
 ```bash
-# Seed all default data (superadmin + alpha user + site settings)
-deno task db:seed
-
-# Or seed individually:
-deno task db:seed:superadmin   # Create superadmin@tstack.in
-deno task db:seed:alpha        # Create alpha@tstack.in (regular user)
-deno task db:seed:site         # Create default site settings
+deno task test:check
 ```
 
-#### Test Environment Seeding
+## 15. Error Handling
+
+Central error utilities live under `shared/utils/errors.ts`. Throw typed errors
+(`BadRequestError`, `UnauthorizedError`, etc.) from services/controllers – the
+global handler converts them to structured JSON responses.
+
+## 16. Formatting & Linting
 
 ```bash
-# Seed test database
-ENVIRONMENT=test deno task db:seed
-
-# Or use test-specific commands:
-deno task test:seed            # Seeds test database
-deno task test:reset           # Full reset including seed
+deno task fmt
+deno task lint
 ```
 
-### Seeded Data
+Run before commits to maintain consistency and catch drift early.
 
-**Test Users (auto-seeded for integration tests):**
-
-| User           | Email                  | Password          | Role       | Purpose                          |
-| -------------- | ---------------------- | ----------------- | ---------- | -------------------------------- |
-| **Superadmin** | `superadmin@tstack.in` | `TonyStack@2025!` | superadmin | Full access, admin operations    |
-| **Alpha User** | `alpha@tstack.in`      | `Alpha@2025!`     | user       | Regular user, permission testing |
-
-**Site Settings (auto-seeded):**
-
-| Key              | Category   | Public    | Purpose                                    |
-| ---------------- | ---------- | --------- | ------------------------------------------ |
-| `site_info`      | general    | [SUCCESS] | Site name, tagline, logo                   |
-| `contact_info`   | general    | [SUCCESS] | Email, phone, social media                 |
-| `theme_config`   | appearance | [SUCCESS] | UI colors, fonts, dark mode                |
-| `feature_flags`  | features   | [SUCCESS] | Enable/disable features (blog, comments)   |
-| `email_settings` | email      | [ERROR]   | SMTP config (private - backend only)       |
-| `api_config`     | general    | [ERROR]   | Rate limits, CORS (private - backend only) |
-
-### What Gets Tested
-
-- **Authentication**: 19 test scenarios (register, login, JWT, admin operations)
-- **Articles**: 16 test scenarios (CRUD, authorization, ownership)
-- **Site Settings**: CRUD operations, public/private access control
-- **Database**: Connection, migrations, seeds
-- **API**: All endpoints with proper HTTP status codes
-
-📖 **[Full Testing Guide →](TESTING.md)**
-
----
-
-## Roadmap
-
-### [SUCCESS] Phase 1: Core (Completed)
-
-- [x] CLI scaffolding tool (`create`, `scaffold`)
-- [x] Starter template with MVC architecture
-- [x] PostgreSQL support with Drizzle
-- [x] Docker configs
-- [x] Minimal, focused documentation
-
-### 🚧 Phase 2: Enhancement (Next)
-
-- [ ] **Rails-like column definitions**:
-      `tstack scaffold posts title:text content:text published:boolean`
-- [ ] Auto-migration generation from scaffold
-- [ ] Testing utilities and examples
-- [ ] File upload utilities
-- [ ] Rate limiting middleware
-- [ ] Caching layer (Redis)
-- [ ] Relationship scaffolding: `tstack scaffold comments post_id:references`
-
-### 🔮 Phase 3: Advanced
-
-- [ ] Authentication plugin (optional, bring-your-own)
-- [ ] WebSocket support
-- [ ] Job queue system
-- [ ] OpenAPI/Swagger docs generator
-- [ ] GraphQL support (optional)
-
-### 🌍 Phase 4: Community
-
-- [ ] Publish to JSR (`@tstack/cli`, `@tstack/core`)
-- [ ] Example projects (blog, e-commerce, etc.)
-- [ ] Video tutorials
-- [ ] Community templates
-- [ ] Plugin system
-
----
-
-## Contributing
-
-Contributions are welcome! Here's how:
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing`
-5. **Open** a Pull Request
-
-### Development Setup
+## 17. Deployment (Docker Compose)
 
 ```bash
-git clone https://github.com/desingh-rajan/tstack-kit.git
-cd tstack-kit
-
-# Test CLI
-cd packages/cli
-deno task dev scaffold test-entity
-
-# Test starter
-cd packages/starter
-deno task dev
+export ENVIRONMENT=production
+cp .env .env.production.local  # or create fresh
+# Edit secrets (JWT_SECRET, DATABASE_URL)
+docker compose up --build -d
+docker compose exec app deno task migrate:run
+docker compose exec app deno task db:seed
 ```
 
----
+External database build:
 
-## License
+```bash
+docker build -t my-api .
+docker run -d \
+  -p 8000:8000 \
+  -e ENVIRONMENT=production \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e JWT_SECRET="replace-with-strong-secret" \
+  --name my-api \
+  my-api
+```
 
-This project is licensed under the **MIT License** - see the
-[LICENSE](../../LICENSE) file for details.
+## 18. Maintenance Tips
 
----
+- Always modify models BEFORE first migration generation.
+- Keep seed scripts idempotent (current scripts are safe to re‑run).
+- Avoid leaking secrets: never mark sensitive settings `isPublic`.
+- Rotate JWT secret → revoke existing tokens (truncate `auth_tokens`).
 
-## Support & Community
+## 19. Customizing Further
 
-- **Issues:**
-  [GitHub Issues](https://github.com/desingh-rajan/tstack-kit/issues)
-- **Discussions:**
-  [GitHub Discussions](https://github.com/desingh-rajan/tstack-kit/discussions)
+- Add new middleware under `shared/`.
+- Introduce caching layer (e.g., Redis) behind services.
+- Generate additional entities via CLI (from the toolkit) or manually following
+  the pattern.
 
----
+## 20. License
 
-## Acknowledgments
+MIT – see root `LICENSE`.
 
-Built with amazing open-source projects:
+## 21. Support
 
-- [Deno](https://deno.land) - Modern JavaScript/TypeScript runtime
-- [Hono](https://hono.dev) - Ultrafast web framework
-- [Drizzle](https://orm.drizzle.team) - Type-safe ORM
-- [Deno Standard Library](https://jsr.io/@std) - Official Deno modules
-
----
-
-## Stats
-
-- **Lines of Code:** ~2,000 (simplified, focused)
-- **Dependencies:** 6 core packages
-- **Time to First API:** ~5 minutes
-
----
-
-## Built With
-
-- [Deno](https://deno.land) - Modern JavaScript/TypeScript runtime
-- [Hono](https://hono.dev) - Ultrafast web framework
-- [Drizzle](https://orm.drizzle.team) - Type-safe ORM
-- [PostgreSQL](https://postgresql.org) - Production database
-- [Zod](https://zod.dev) - TypeScript-first schema validation
+Toolkit issues / discussions: upstream repository. For this project, manage via
+your own issue tracker.
 
 ---
 
-⭐ **Star this repo if you find it helpful!** ⭐
-
-[Issues](https://github.com/desingh-rajan/tstack-kit/issues) •
-[License](../../LICENSE)
+Happy building! Replace placeholder names above and start shipping.

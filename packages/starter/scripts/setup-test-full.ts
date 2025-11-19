@@ -3,16 +3,19 @@
 /**
  * Complete Test Setup Script
  *
- * This script automates the entire test setup process:
+ * This script automates test database setup:
  * 1. Creates test database
  * 2. Runs migrations
- * 3. Seeds test data
- * 4. Validates setup
+ * 3. Validates database connection
+ *
+ * Note: Test data (users, etc.) is created by individual test suites
+ * using beforeAll/afterAll hooks for proper isolation.
  *
  * Usage: deno run --allow-all scripts/setup-test-full.ts
  */
 
 import { loadSync } from "@std/dotenv";
+import { sql } from "drizzle-orm";
 
 // Load test environment (Deno-style)
 Deno.env.set("ENVIRONMENT", "test");
@@ -71,64 +74,17 @@ try {
   Deno.exit(1);
 }
 
-// Step 3: Seed test data
-console.log("\n🌱 Step 3: Seeding test data...");
-try {
-  // Seed superadmin
-  const seedSuper = new Deno.Command("deno", {
-    args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],
-    env: { ENVIRONMENT: "test" },
-  });
-  const { success: seedSuperSuccess } = await seedSuper.output();
-
-  if (!seedSuperSuccess) {
-    console.error("[ERROR] Failed to seed superadmin");
-    Deno.exit(1);
-  }
-
-  // Seed alpha user
-  const seedAlpha = new Deno.Command("deno", {
-    args: ["run", "--allow-all", "scripts/seed-alpha-user.ts"],
-    env: { ENVIRONMENT: "test" },
-  });
-  const { success: seedAlphaSuccess } = await seedAlpha.output();
-
-  if (!seedAlphaSuccess) {
-    console.error("[ERROR] Failed to seed alpha user");
-    Deno.exit(1);
-  }
-
-  console.log("[SUCCESS] Test data seeded successfully");
-} catch (error) {
-  console.error(
-    "[ERROR] Error seeding test data:",
-    error instanceof Error ? error.message : String(error),
-  );
-  Deno.exit(1);
-}
-
-// Step 4: Validate setup
-console.log("\n[INFO] Step 4: Validating setup...");
+// Step 3: Validate setup
+console.log("\n[INFO] Step 3: Validating setup...");
 try {
   // Import database to test connection
   const { db } = await import("../src/config/database.ts");
 
-  // Test query to verify setup
-  const superadminEmail = Deno.env.get("SUPERADMIN_EMAIL") ||
-    "test-admin@test.local";
-  const alphaEmail = Deno.env.get("ALPHA_EMAIL");
+  // Simple query to verify database is accessible
+  const result = await db.execute(sql`SELECT 1 as test`);
 
-  const expectedCount = alphaEmail ? 2 : 1;
-
-  const users = await db.execute(
-    `SELECT COUNT(*) as count FROM users WHERE email IN ('${superadminEmail}', '${alphaEmail}')`,
-  );
-
-  const userCount = Number(users[0].count);
-  if (userCount !== expectedCount) {
-    console.error(
-      `[ERROR] Expected ${expectedCount} test user(s), found ${userCount}`,
-    );
+  if (!result || result.length === 0) {
+    console.error("[ERROR] Database connection validation failed");
     Deno.exit(1);
   }
 
@@ -147,15 +103,13 @@ try {
 console.log("\n" + "=".repeat(50));
 console.log("[SUCCESS] Test environment setup complete!");
 console.log("");
-console.log("📋 What's ready:");
-console.log("   • Test database created and migrated");
-console.log("   • Test users seeded (superadmin + alpha)");
-console.log("   • All connections verified");
+console.log("📋 Ready to run:");
+console.log("   • Database created and migrated");
+console.log("   • Tests will create their own data (beforeAll/afterAll)");
 console.log("");
-console.log("[INFO] Next steps:");
+console.log("[INFO] Next:");
 console.log("   deno task test          # Run tests");
-console.log("   deno task test:watch    # Run tests in watch mode");
-console.log("   deno task test:coverage # Run with coverage");
+console.log("   deno task test:watch    # Watch mode");
 console.log("");
 
 Deno.exit(0);

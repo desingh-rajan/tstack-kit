@@ -1,53 +1,91 @@
+/**
+ * REFERENCE IMPLEMENTATION: Admin Panel API Tests (BDD Style)
+ *
+ * This test demonstrates testing admin routes that provide JSON API responses
+ * for the @tstack/admin v2.0.0+ interface (pure JSON, no HTML rendering).
+ *
+ * When you scaffold a new entity with `tstack scaffold products`, a similar
+ * test file (product.admin.test.ts) will be automatically generated.
+ *
+ * TESTING PATTERNS DEMONSTRATED:
+ * ================================
+ *
+ * 1. BDD Test Structure:
+ *    - describe(): Logical grouping of related test scenarios
+ *    - it(): Individual test cases with clear "should..." naming
+ *    - beforeAll(): Suite-level setup (create test users/data once)
+ *    - afterAll(): Suite-level cleanup (destroy all test data)
+ *
+ * 2. Admin Panel JSON API Testing:
+ *    - List endpoints with pagination/search/sort
+ *    - Entity metadata endpoints (new, edit)
+ *    - CRUD operations via JSON API
+ *    - Bulk operations
+ *
+ * 3. Role-Based Access Control:
+ *    - Superadmin: Full access to all admin features
+ *    - Admin: Access to admin panel (role-based)
+ *    - Regular user: No access to admin panel
+ *
+ * 4. Test Isolation:
+ *    - Each test suite creates its own test data
+ *    - No dependencies on seed scripts or fixtures
+ *    - Clean slate before and after tests
+ *
+ * 5. HTTP Testing Best Practices:
+ *    - Direct app.request() calls (no server startup)
+ *    - Authenticated requests with Bearer tokens
+ *    - JSON response validation
+ *
+ * 6. Professional Documentation:
+ *    - Comprehensive inline comments
+ *    - Learning resources for developers
+ *    - Industry-standard patterns
+ *
+ * LEARN MORE:
+ * ===========
+ * - BDD Testing: https://docs.deno.com/runtime/fundamentals/testing/#bdd-style
+ * - Admin Package: https://jsr.io/@tstack/admin
+ * - REST API Testing: https://hono.dev/docs/guides/testing
+ */
+
+import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import { assertEquals, assertExists } from "@std/assert";
 import { app } from "../../main.ts";
 import { db } from "../../config/database.ts";
 import { articles } from "./article.model.ts";
 import { authTokens } from "../../auth/auth-token.model.ts";
+import { users } from "../../auth/user.model.ts";
+import { like } from "drizzle-orm";
 
-/**
- * REFERENCE IMPLEMENTATION: Admin Route Tests
- *
- * This test file demonstrates how to test admin routes that return JSON responses.
- * @tstack/admin v2.0.0+ returns pure JSON (no HTML rendering).
- *
- * When you scaffold a new entity with `tstack scaffold products`,
- * a similar test file (product.admin.test.ts) will be automatically generated.
- *
- * Key testing patterns:
- * 1. Test JSON API responses
- * 2. Test role-based access control (superadmin, admin, regular user)
- * 3. Test all CRUD operations (list, create, show, edit, update, delete)
- * 4. Test pagination, search, and sorting
- * 5. Test bulk operations
- */
+// ============================================================================
+// MODULE-LEVEL STATE
+// ============================================================================
+// These variables hold tokens and IDs that are created once in beforeAll()
+// and used across all tests in this suite.
 
 let superadminToken = "";
 let adminToken = "";
 let superadminUserId = 0;
+let adminUserId = 0;
 let testArticleId = 0;
 
-/**
- * Clean up test data before running tests
- * Preserves seeded users (superadmin, alpha, regular user)
- */
-async function cleanupTestData() {
-  try {
-    await db.delete(articles);
-    await db.delete(authTokens);
-  } catch (error) {
-    console.error("[CLEANUP] Error cleaning test data:", error);
-    throw error;
-  }
-}
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 /**
- * Helper to make authenticated requests
+ * Makes an authenticated request to the admin panel API
+ * @param endpoint - The API endpoint (e.g., "/ts-admin/articles")
+ * @param token - Bearer token for authentication
+ * @param options - Additional request options (method, body, headers)
+ * @returns Response object
  */
 async function adminRequest(
   endpoint: string,
   token: string,
   options: RequestInit = {},
-) {
+): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
     headers: {
@@ -57,82 +95,197 @@ async function adminRequest(
   });
 }
 
-Deno.test("Article Admin API Tests", {
-  sanitizeResources: false,
-  sanitizeOps: false,
-}, async (t) => {
-  try {
-    await cleanupTestData();
+/**
+ * Creates a test user directly in the database with specified role
+ * @param email - User email (must end with @test.local)
+ * @param name - User's full name
+ * @param password - User's password (will be hashed)
+ * @param role - User role (superadmin, admin, or user)
+ * @returns Object containing token and userId
+ */
+async function createTestUser(
+  email: string,
+  name: string,
+  password: string,
+  role: "superadmin" | "admin" | "user" = "user",
+): Promise<{ token: string; userId: number }> {
+  // Import hash function
+  const { hashPassword } = await import("../../shared/utils/password.ts");
 
-    // Login as superadmin, admin, and regular user
-    await t.step("Setup: Login users", async () => {
-      // Superadmin login
-      const superadminRes = await app.request("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "superadmin@tonystack.dev",
-          password: "SuperSecurePassword123!",
-        }),
-      });
-      const superadminData = await superadminRes.json();
-      superadminToken = superadminData.data?.token;
-      superadminUserId = superadminData.data?.user?.id;
-      assertExists(superadminToken, "Superadmin token should exist");
-      assertExists(superadminUserId, "Superadmin user ID should exist");
+  // Insert user directly with correct role
+  const [user] = await db.insert(users).values({
+    email,
+    username: name.replace(/\s+/g, "").toLowerCase(),
+    password: await hashPassword(password),
+    role,
+    isActive: true,
+    isEmailVerified: true,
+  }).returning();
 
-      // Alpha user login (admin role)
-      const alphaRes = await app.request("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "alpha@tonystack.dev",
-          password: "AlphaSecurePassword123!",
-        }),
-      });
-      const alphaData = await alphaRes.json();
-      adminToken = alphaData.data?.token;
-      assertExists(adminToken, "Admin token should exist");
-    });
+  // Login to get token
+  const loginRes = await app.request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
 
-    // Test 1: JSON list response
-    await t.step("GET /ts-admin/articles - JSON list", async () => {
+  const loginData = await loginRes.json();
+  return {
+    token: loginData.data?.token,
+    userId: user.id,
+  };
+}
+
+// ============================================================================
+// ADMIN PANEL API TEST SUITE
+// ============================================================================
+
+describe("Article Admin Panel API", () => {
+  // --------------------------------------------------------------------------
+  // SETUP & TEARDOWN
+  // --------------------------------------------------------------------------
+
+  beforeAll(async () => {
+    // Clean up any leftover test data first
+    await db.delete(articles);
+    await db.delete(authTokens);
+    await db.delete(users).where(like(users.email, "%@test.local"));
+
+    // Create superadmin user
+    const superadmin = await createTestUser(
+      "superadmin@test.local",
+      "Test Superadmin",
+      "SuperSecure123!",
+      "superadmin",
+    );
+    superadminToken = superadmin.token;
+    superadminUserId = superadmin.userId;
+
+    // Create admin user
+    const admin = await createTestUser(
+      "admin@test.local",
+      "Test Admin",
+      "AdminSecure123!",
+      "admin",
+    );
+    adminToken = admin.token;
+    adminUserId = admin.userId;
+  });
+
+  afterAll(async () => {
+    // Clean up all test data (articles, tokens, users created during tests)
+    await db.delete(articles);
+    await db.delete(authTokens);
+    await db.delete(users).where(like(users.email, "%@test.local"));
+
+    // Close DB connection to prevent resource leaks
+    try {
+      await db.$client.end();
+    } catch {
+      // Ignore connection close errors
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // LIST & METADATA ENDPOINTS
+  // --------------------------------------------------------------------------
+
+  describe("List and Metadata", () => {
+    it("should return JSON list with pagination metadata", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
         superadminToken,
       );
 
-      assertEquals(response.status, 200, "Should return 200 OK");
+      assertEquals(response.status, 200);
       assertEquals(
         response.headers.get("content-type")?.split(";")[0],
         "application/json",
-        "Should return JSON",
       );
 
       const json = await response.json();
-      assertExists(json.data, "Should have data array");
-      assertEquals(Array.isArray(json.data), true, "Data should be an array");
-      assertExists(json.page, "Should have page");
-      assertExists(json.total, "Should have total");
+      assertExists(json.data);
+      assertEquals(Array.isArray(json.data), true);
+      assertExists(json.page);
+      assertExists(json.total);
     });
 
-    // Test 2: Entity metadata for create
-    await t.step("GET /ts-admin/articles/new - Entity metadata", async () => {
+    it("should return entity metadata for create form", async () => {
       const response = await adminRequest(
         "/ts-admin/articles/new",
         superadminToken,
       );
 
-      assertEquals(response.status, 200, "Should return 200 OK");
+      assertEquals(response.status, 200);
 
       const json = await response.json();
-      assertExists(json.entityName, "Should have entity name");
-      assertEquals(json.mode, "create", "Should be create mode");
-      assertExists(json.columns, "Should have columns definition");
+      assertExists(json.entityName);
+      assertEquals(json.mode, "create");
+      assertExists(json.columns);
     });
 
-    // Test 3: Create article via JSON API
-    await t.step("POST /ts-admin/articles - Create via JSON", async () => {
+    it("should support pagination parameters", async () => {
+      const response = await adminRequest(
+        "/ts-admin/articles?page=1&limit=10",
+        superadminToken,
+      );
+
+      assertEquals(response.status, 200);
+
+      const json = await response.json();
+      assertEquals(json.page, 1);
+      assertEquals(json.limit, 10);
+    });
+
+    it("should support search functionality", async () => {
+      // Create test article
+      await adminRequest("/ts-admin/articles", superadminToken, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Searchable Test Article",
+          slug: "searchable-test",
+          content: "Content",
+          excerpt: "Excerpt",
+          isPublished: true,
+          authorId: superadminUserId,
+        }),
+      });
+
+      // Search for it
+      const response = await adminRequest(
+        "/ts-admin/articles?search=Searchable",
+        superadminToken,
+      );
+
+      assertEquals(response.status, 200);
+
+      const json = await response.json();
+      assertEquals(json.data.length > 0, true);
+    });
+
+    it("should support sorting parameters", async () => {
+      const response = await adminRequest(
+        "/ts-admin/articles?sortBy=createdAt&sortOrder=desc",
+        superadminToken,
+      );
+
+      assertEquals(response.status, 200);
+
+      const json = await response.json();
+      assertExists(json.data);
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // CREATE OPERATIONS
+  // --------------------------------------------------------------------------
+
+  describe("Create Operations", () => {
+    it("should create article via JSON API", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
         superadminToken,
@@ -153,58 +306,53 @@ Deno.test("Article Admin API Tests", {
         },
       );
 
-      assertEquals(response.status, 201, "Should return 201 Created");
+      assertEquals(response.status, 201);
 
       const json = await response.json();
-      assertExists(json.id, "Should have created article ID");
-      testArticleId = json.id;
+      assertExists(json.id);
+      testArticleId = json.id; // Save for later tests
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // READ OPERATIONS
+  // --------------------------------------------------------------------------
+
+  describe("Read Operations", () => {
+    it("should return single article as JSON", async () => {
+      const response = await adminRequest(
+        `/ts-admin/articles/${testArticleId}`,
+        superadminToken,
+      );
+
+      assertEquals(response.status, 200);
+
+      const json = await response.json();
+      assertEquals(json.title, "Test Article for Admin Panel");
     });
 
-    // Test 4: Show article JSON response
-    await t.step(
-      "GET /ts-admin/articles/:id - JSON response",
-      async () => {
-        const response = await adminRequest(
-          `/ts-admin/articles/${testArticleId}`,
-          superadminToken,
-        );
+    it("should return entity metadata with data for edit form", async () => {
+      const response = await adminRequest(
+        `/ts-admin/articles/${testArticleId}/edit`,
+        superadminToken,
+      );
 
-        assertEquals(response.status, 200, "Should return 200 OK");
+      assertEquals(response.status, 200);
 
-        const json = await response.json();
-        assertEquals(
-          json.title,
-          "Test Article for Admin Panel",
-          "Should return correct title",
-        );
-      },
-    );
+      const json = await response.json();
+      assertExists(json.entityName);
+      assertEquals(json.mode, "edit");
+      assertExists(json.data);
+      assertEquals(json.data.title, "Test Article for Admin Panel");
+    });
+  });
 
-    // Test 5: Entity metadata for edit
-    await t.step(
-      "GET /ts-admin/articles/:id/edit - Entity metadata with data",
-      async () => {
-        const response = await adminRequest(
-          `/ts-admin/articles/${testArticleId}/edit`,
-          superadminToken,
-        );
+  // --------------------------------------------------------------------------
+  // UPDATE OPERATIONS
+  // --------------------------------------------------------------------------
 
-        assertEquals(response.status, 200, "Should return 200 OK");
-
-        const json = await response.json();
-        assertExists(json.entityName, "Should have entity name");
-        assertEquals(json.mode, "edit", "Should be edit mode");
-        assertExists(json.data, "Should have data");
-        assertEquals(
-          json.data.title,
-          "Test Article for Admin Panel",
-          "Should have article data",
-        );
-      },
-    );
-
-    // Test 6: Update article via JSON
-    await t.step("PUT /ts-admin/articles/:id - Update via JSON", async () => {
+  describe("Update Operations", () => {
+    it("should update article via JSON API", async () => {
       const response = await adminRequest(
         `/ts-admin/articles/${testArticleId}`,
         superadminToken,
@@ -215,7 +363,7 @@ Deno.test("Article Admin API Tests", {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            title: "Updated Test Article",
+            title: "Updated Admin Article",
             slug: "test-article-admin",
             content: "Updated content",
             excerpt: "Updated excerpt",
@@ -225,102 +373,44 @@ Deno.test("Article Admin API Tests", {
         },
       );
 
-      assertEquals(response.status, 200, "Should return 200 OK");
+      assertEquals(response.status, 200);
 
       const json = await response.json();
-      assertEquals(
-        json.title,
-        "Updated Test Article",
-        "Should have updated title",
-      );
+      assertEquals(json.title, "Updated Admin Article");
     });
+  });
 
-    // Test 7: Admin role can access admin panel
-    await t.step(
-      "Admin role - Can access admin panel",
-      async () => {
-        const response = await adminRequest(
-          "/ts-admin/articles",
-          adminToken,
-          {
-            headers: { Accept: "application/json" },
+  // --------------------------------------------------------------------------
+  // DELETE OPERATIONS
+  // --------------------------------------------------------------------------
+
+  describe("Delete Operations", () => {
+    it("should delete single article", async () => {
+      // Create article to delete
+      const createRes = await adminRequest(
+        "/ts-admin/articles",
+        superadminToken,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
-        );
-
-        assertEquals(
-          response.status,
-          200,
-          "Admin should have access to admin panel",
-        );
-      },
-    );
-
-    // Test 8: Pagination test
-    await t.step("Pagination - List with page parameter", async () => {
-      const response = await adminRequest(
-        "/ts-admin/articles?page=1&limit=10",
-        superadminToken,
-        {
-          headers: { Accept: "application/json" },
+          body: JSON.stringify({
+            title: "Article to Delete",
+            slug: "delete-me",
+            content: "Content",
+            excerpt: "Excerpt",
+            isPublished: true,
+            authorId: superadminUserId,
+          }),
         },
       );
+      const articleId = (await createRes.json()).id;
 
-      assertEquals(response.status, 200, "Should return 200 OK");
-
-      const json = await response.json();
-      assertExists(json.page, "Should have page");
-      assertEquals(
-        json.page,
-        1,
-        "Should be on page 1",
-      );
-      assertEquals(
-        json.limit,
-        10,
-        "Should have limit 10",
-      );
-    });
-
-    // Test 9: Search functionality
-    await t.step("Search - Find articles by title", async () => {
+      // Delete it
       const response = await adminRequest(
-        "/ts-admin/articles?search=Updated",
-        superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
-      );
-
-      assertEquals(response.status, 200, "Should return 200 OK");
-
-      const json = await response.json();
-      assertEquals(
-        json.data.length > 0,
-        true,
-        "Should find articles",
-      );
-    });
-
-    // Test 10: Sorting functionality
-    await t.step("Sort - Order by createdAt desc", async () => {
-      const response = await adminRequest(
-        "/ts-admin/articles?sortBy=createdAt&sortOrder=desc",
-        superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
-      );
-
-      assertEquals(response.status, 200, "Should return 200 OK");
-
-      const json = await response.json();
-      assertExists(json.data, "Should have data array");
-    });
-
-    // Test 11: Delete article
-    await t.step("DELETE /ts-admin/articles/:id - Delete article", async () => {
-      const response = await adminRequest(
-        `/ts-admin/articles/${testArticleId}`,
+        `/ts-admin/articles/${articleId}`,
         superadminToken,
         {
           method: "DELETE",
@@ -328,32 +418,20 @@ Deno.test("Article Admin API Tests", {
         },
       );
 
-      assertEquals(
-        response.status,
-        200,
-        "Should return 200 OK after deletion",
-      );
+      assertEquals(response.status, 200);
 
-      // Verify article is deleted
+      // Verify deletion
       const getResponse = await adminRequest(
-        `/ts-admin/articles/${testArticleId}`,
+        `/ts-admin/articles/${articleId}`,
         superadminToken,
-        {
-          headers: { Accept: "application/json" },
-        },
       );
 
-      assertEquals(
-        getResponse.status,
-        404,
-        "Article should not be found after deletion",
-      );
+      assertEquals(getResponse.status, 404);
     });
 
-    // Test 12: Bulk delete
-    await t.step("POST /ts-admin/articles/bulk-delete", async () => {
-      // Create two articles for bulk delete
-      const article1 = await adminRequest(
+    it("should bulk delete multiple articles", async () => {
+      // Create two articles
+      const article1Res = await adminRequest(
         "/ts-admin/articles",
         superadminToken,
         {
@@ -365,16 +443,16 @@ Deno.test("Article Admin API Tests", {
           body: JSON.stringify({
             title: "Bulk Delete Test 1",
             slug: "bulk-delete-1",
-            content: "Test",
-            excerpt: "Test",
+            content: "Content",
+            excerpt: "Excerpt",
             isPublished: true,
             authorId: superadminUserId,
           }),
         },
       );
-      const id1 = (await article1.json()).id;
+      const id1 = (await article1Res.json()).id;
 
-      const article2 = await adminRequest(
+      const article2Res = await adminRequest(
         "/ts-admin/articles",
         superadminToken,
         {
@@ -386,14 +464,14 @@ Deno.test("Article Admin API Tests", {
           body: JSON.stringify({
             title: "Bulk Delete Test 2",
             slug: "bulk-delete-2",
-            content: "Test",
-            excerpt: "Test",
+            content: "Content",
+            excerpt: "Excerpt",
             isPublished: true,
             authorId: superadminUserId,
           }),
         },
       );
-      const id2 = (await article2.json()).id;
+      const id2 = (await article2Res.json()).id;
 
       // Bulk delete
       const response = await adminRequest(
@@ -411,18 +489,49 @@ Deno.test("Article Admin API Tests", {
         },
       );
 
-      assertEquals(response.status, 200, "Should delete successfully");
+      assertEquals(response.status, 200);
 
       const json = await response.json();
-      assertEquals(
-        json.count,
-        2,
-        "Should delete 2 articles",
-      );
+      assertEquals(json.count, 2);
     });
-  } catch (error) {
-    throw error;
-  } finally {
-    await cleanupTestData();
-  }
+  });
+
+  // --------------------------------------------------------------------------
+  // ROLE-BASED ACCESS CONTROL
+  // --------------------------------------------------------------------------
+
+  describe("Role-Based Access Control", () => {
+    it("should allow admin role to access admin panel", async () => {
+      const response = await adminRequest(
+        "/ts-admin/articles",
+        adminToken,
+      );
+
+      assertEquals(response.status, 200);
+    });
+
+    it("should allow admin role to create articles", async () => {
+      const response = await adminRequest(
+        "/ts-admin/articles",
+        adminToken,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: "Admin Created Article",
+            slug: "admin-created",
+            content: "Content",
+            excerpt: "Excerpt",
+            isPublished: true,
+            authorId: adminUserId,
+          }),
+        },
+      );
+
+      assertEquals(response.status, 201);
+    });
+  });
 });

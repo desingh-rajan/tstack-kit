@@ -1,12 +1,11 @@
 /**
- * Test Setup - runs before all tests
+ * Global Test Setup
  *
- * This file:
- * 1. Sets up test database
- * 2. Runs migrations
- * 3. Prepares test environment
+ * This file runs ONCE before all test files.
+ * It only ensures the database and migrations are ready.
+ * Individual test suites handle their own data setup/teardown.
  *
- * Deno automatically runs files matching _test_setup.ts before tests
+ * Deno automatically runs files matching _test_setup.ts before tests.
  */
 
 import { config } from "./config/env.ts";
@@ -14,21 +13,22 @@ import { config } from "./config/env.ts";
 // Get project root (parent of src/)
 const projectRoot = new URL("../", import.meta.url).pathname;
 
-console.log("\n Setting up test environment...\n");
+console.log("\n🧪 Global Test Setup");
+console.log("=".repeat(50));
 console.log(`   ENVIRONMENT: ${config.environment}`);
-console.log(`   Database: ${config.databaseUrl}`);
-console.log(`   Port: ${config.port}\n`);
+console.log(`   Database: ${config.databaseUrl.split("@")[1]}`); // Hide credentials
+console.log(`   Port: ${config.port}`);
 
 // Verify we're in test mode
 if (config.environment !== "test") {
-  console.error("[ERROR] ERROR: Tests must run with ENVIRONMENT=test");
-  console.error(`   Current ENVIRONMENT: ${config.environment}`);
+  console.error("\n[ERROR] Tests must run with ENVIRONMENT=test");
+  console.error(`   Current: ${config.environment}`);
   console.error(`   Run: ENVIRONMENT=test deno task test`);
   Deno.exit(1);
 }
 
-// Ensure test database exists before running migrations
-console.log(" Ensuring test database exists...");
+// Ensure test database exists
+console.log("\n📦 Ensuring test database exists...");
 
 const setupDbCmd = new Deno.Command("deno", {
   args: ["run", "--allow-all", "scripts/setup-test-db.ts"],
@@ -45,7 +45,7 @@ const setupDbResult = await setupDbCmd.output();
 
 if (!setupDbResult.success) {
   const stderr = new TextDecoder().decode(setupDbResult.stderr);
-  // Ignore "already exists" errors - that's fine
+  // Ignore "already exists" errors
   if (!stderr.includes("already exists") && !stderr.includes("duplicate")) {
     console.error("\n[ERROR] Database setup failed!");
     console.error(stderr);
@@ -53,10 +53,11 @@ if (!setupDbResult.success) {
   }
 }
 
-console.log(" [OK] Test database ready");
-console.log(" Running migrations on test database...");
+console.log("✅ Test database ready");
 
-// Run migrations using drizzle-kit directly
+// Run migrations
+console.log("\n🔄 Running migrations...");
+
 const migrateCmd = new Deno.Command("deno", {
   args: [
     "run",
@@ -69,104 +70,23 @@ const migrateCmd = new Deno.Command("deno", {
     ...Deno.env.toObject(),
     ENVIRONMENT: "test",
   },
-  stdout: "inherit", // Show migration output
-  stderr: "inherit",
+  stdout: "piped",
+  stderr: "piped",
 });
 
 const migrateResult = await migrateCmd.output();
 
 if (!migrateResult.success) {
+  const stderr = new TextDecoder().decode(migrateResult.stderr);
   console.error("\n[ERROR] Migration failed!");
-  console.error("   Make sure test database exists: deno task test:setup");
+  console.error(stderr);
   Deno.exit(1);
 }
 
-// Seed superadmin for auth tests
-console.log("\n[SEED] Seeding superadmin for auth tests...");
+console.log("✅ Migrations applied");
 
-const seedCmd = new Deno.Command("deno", {
-  args: ["run", "--allow-all", "scripts/seed-superadmin.ts"],
-  env: {
-    ...Deno.env.toObject(),
-    ENVIRONMENT: "test",
-  },
-  stdout: "piped",
-  stderr: "piped",
-  cwd: projectRoot,
-});
-
-const seedResult = await seedCmd.output();
-
-if (seedResult.success) {
-  console.log("[OK] Superadmin seeded (or already exists)");
-} else {
-  const stderr = new TextDecoder().decode(seedResult.stderr);
-  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
-    console.log("[OK] Superadmin already exists");
-  } else {
-    console.warn(
-      "[WARNING]  Superadmin seeding failed (may not be needed for all tests)",
-    );
-  }
-}
-
-// Seed alpha user for article tests
-console.log("[SEED] Seeding alpha user for article tests...");
-
-const seedAlphaCmd = new Deno.Command("deno", {
-  args: ["run", "--allow-all", "scripts/seed-alpha-user.ts"],
-  env: {
-    ...Deno.env.toObject(),
-    ENVIRONMENT: "test",
-  },
-  stdout: "piped",
-  stderr: "piped",
-  cwd: projectRoot,
-});
-
-const seedAlphaResult = await seedAlphaCmd.output();
-
-if (seedAlphaResult.success) {
-  console.log("[OK] Alpha user seeded (or already exists)");
-} else {
-  const stderr = new TextDecoder().decode(seedAlphaResult.stderr);
-  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
-    console.log("[OK] Alpha user already exists");
-  } else {
-    console.warn(
-      "[WARNING]  Alpha user seeding failed (may not be needed for all tests)",
-    );
-  }
-}
-
-// Seed regular user for tests
-console.log("[SEED] Seeding regular user for tests...");
-
-const seedRegularUserCmd = new Deno.Command("deno", {
-  args: ["run", "--allow-all", "scripts/seed-regular-user.ts"],
-  env: {
-    ...Deno.env.toObject(),
-    ENVIRONMENT: "test",
-  },
-  stdout: "piped",
-  stderr: "piped",
-  cwd: projectRoot,
-});
-
-const seedRegularUserResult = await seedRegularUserCmd.output();
-
-if (seedRegularUserResult.success) {
-  console.log("[OK] Regular user seeded (or already exists)");
-} else {
-  const stderr = new TextDecoder().decode(seedRegularUserResult.stderr);
-  if (stderr.includes("already exists") || stderr.includes("duplicate")) {
-    console.log("[OK] Regular user already exists");
-  } else {
-    console.warn(
-      "[WARNING]  Regular user seeding failed (may not be needed for all tests)",
-    );
-  }
-}
-
-console.log("\n[SUCCESS] Test environment ready");
-console.log(" Running tests...\n");
+console.log("\n" + "=".repeat(50));
+console.log(
+  "✅ Global setup complete - test suites will handle their own data",
+);
+console.log("");

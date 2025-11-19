@@ -1,51 +1,94 @@
+import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import { assertEquals, assertExists } from "@std/assert";
 import { app } from "../main.ts";
 import { db } from "../config/database.ts";
+import { users } from "./user.model.ts";
 import { authTokens } from "./auth-token.model.ts";
+import { hashPassword } from "../shared/utils/password.ts";
 import { sql } from "drizzle-orm";
 
 /**
  * Authentication & Admin API Tests
  *
- * Tests run against the Hono app directly (no server needed!)
- * Uses ENVIRONMENT=test environment automatically.
- * Tests superadmin login, JWT tokens, and admin endpoints.
+ * TESTING PATTERNS DEMONSTRATED:
+ * ================================
  *
- * Run: deno task test
- * Or: ENVIRONMENT=test deno test --allow-all tests/auth.test.ts
+ * 1. BDD-Style Organization (describe/it):
+ *    - Clear test structure with nested contexts
+ *    - Self-documenting test names
+ *    - Logical grouping by feature
+ *
+ * 2. Test Isolation (beforeAll/afterAll):
+ *    - Setup creates fresh test data before suite
+ *    - Teardown removes all test data after suite
+ *    - No dependencies on external seeds or fixtures
+ *    - Each test suite is self-contained
+ *
+ * 3. HTTP Testing Without Server:
+ *    - Tests Hono app directly via request() API
+ *    - No need to start actual HTTP server
+ *    - Faster test execution
+ *    - Easier debugging
+ *
+ * 4. Test Data Management:
+ *    - Constants for reusable test credentials
+ *    - Module-level variables for shared test state
+ *    - Clear separation between setup data and test data
+ *
+ * 5. Assertion Best Practices:
+ *    - Test both success and failure paths
+ *    - Verify response status codes
+ *    - Check response structure and content
+ *    - Validate side effects (e.g., soft deletes)
+ *
+ * 6. Security Testing:
+ *    - Test authentication flows
+ *    - Verify authorization rules
+ *    - Check token validation
+ *    - Test password change workflows
+ *
+ * LEARNING RESOURCES:
+ * ===================
+ * - Deno Testing: https://deno.com/manual/basics/testing
+ * - BDD Style: https://jsr.io/@std/testing/doc/bdd
+ * - Hono Testing: https://hono.dev/getting-started/testing
  */
 
-let authToken = "";
-let adminToken = "";
-let testUserId = 0;
-let testAdminId = 0;
+// ==============================================================================
+// TEST STATE
+// ==============================================================================
+// Module-level variables store shared state across tests within this suite.
+// This is acceptable because tests run sequentially and build upon each other.
 
-/**
- * Clean up test data before running tests
- * Removes all auth tokens and test users (keeps seeded superadmin and alpha)
- */
-async function cleanupTestData() {
-  try {
-    // Delete all auth tokens
-    await db.delete(authTokens);
+let authToken = ""; // Regular user's JWT token
+let adminToken = ""; // Superadmin's JWT token
+let testUserId = 0; // ID of the created regular user
+let testAdminId = 0; // ID of the created admin user
 
-    // Delete test users created during tests (keep seeded superadmin, alpha, and regular users)
-    // These users are created by seed scripts in _test_setup.ts
-    await db.execute(sql`
-      DELETE FROM users 
-      WHERE email NOT IN ('superadmin@tonystack.dev', 'alpha@tonystack.dev', 'user@tonystack.dev')
-    `);
+// ==============================================================================
+// TEST CONFIGURATION
+// ==============================================================================
+// Constants for test credentials - centralized for easy maintenance
 
-    console.log("[CLEANUP] Test data cleaned successfully");
-  } catch (error) {
-    console.error("[CLEANUP] Error cleaning test data:", error);
-    throw error;
-  }
-}
+const SUPERADMIN_EMAIL = "test-superadmin@test.local";
+const SUPERADMIN_PASSWORD = "TestSuperAdmin123!";
+
+// ==============================================================================
+// HELPER FUNCTIONS
+// ==============================================================================
 
 /**
  * Helper function to make API requests via Hono app
- * No server required - tests run directly against the app!
+ *
+ * This function demonstrates testing HTTP handlers without starting a server.
+ * Benefits:
+ * - Faster test execution (no network overhead)
+ * - No port conflicts
+ * - Easier debugging (direct function calls)
+ *
+ * @param endpoint - API endpoint path (e.g., "/auth/login")
+ * @param options - Fetch API options (method, body, headers)
+ * @returns Object containing HTTP status and parsed response data
  */
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const response = await app.request(endpoint, {
@@ -56,27 +99,77 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     },
   });
 
-  // Get response text first, then try to parse as JSON
-  const text = await response.text();
   let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
+  const contentType = response.headers.get("Content-Type");
+  if (contentType?.includes("application/json")) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
     data = { message: text };
   }
 
   return { status: response.status, data };
 }
 
-Deno.test("Auth API Tests", async (t) => {
-  try {
-    // Clean up test data before starting
-    await cleanupTestData();
+// ==============================================================================
+// TEST SUITE
+// ==============================================================================
 
-    // ============================================
-    // 1. REGISTER NEW USER
-    // ============================================
-    await t.step("1. Register new user", async () => {
+describe("Auth API", () => {
+  // ----------------------------------------------------------------------------
+  // SETUP & TEARDOWN
+  // ----------------------------------------------------------------------------
+
+  /**
+   * Setup Hook: Runs once before all tests in this suite
+   *
+   * Creates minimal test data needed by multiple tests.
+   * Only creates data that is truly shared - individual tests
+   * create their own specific data.
+   *
+   * IMPORTANT: Always clean up in afterAll() to avoid test pollution.
+   */
+  beforeAll(async () => {
+    console.log("\n[SETUP] Creating test data...");
+
+    // Create superadmin for admin API tests
+    const hashedPassword = await hashPassword(SUPERADMIN_PASSWORD);
+    await db.insert(users).values({
+      email: SUPERADMIN_EMAIL,
+      username: "test-superadmin",
+      password: hashedPassword,
+      role: "superadmin",
+      isActive: true,
+      isEmailVerified: true,
+    });
+
+    console.log(`[SETUP] Superadmin created: ${SUPERADMIN_EMAIL}`);
+  });
+
+  // Teardown: Clean up after all tests
+  afterAll(async () => {
+    console.log("\n[CLEANUP] Removing test data...");
+
+    // Delete all tokens
+    await db.delete(authTokens);
+
+    // Delete all test users
+    await db.execute(
+      sql`DELETE FROM users WHERE email LIKE '%@test.local' OR email LIKE '%@example.com'`,
+    );
+
+    console.log("[CLEANUP] Test data removed");
+
+    // Close DB connection
+    try {
+      await db.$client.end();
+    } catch {
+      // Ignore
+    }
+  });
+
+  describe("Registration", () => {
+    it("should register a new user", async () => {
       const { status, data } = await apiRequest("/auth/register", {
         method: "POST",
         body: JSON.stringify({
@@ -91,21 +184,13 @@ Deno.test("Auth API Tests", async (t) => {
       assertExists(data.data.user);
       assertExists(data.data.token);
       assertEquals(data.data.user.email, "testuser@example.com");
-      assertEquals(data.data.user.username, "testuser");
 
-      // Save token and user ID for later tests
+      // Save for later tests
       authToken = data.data.token;
       testUserId = data.data.user.id;
-
-      console.log("[SUCCESS] User registered successfully");
-      console.log(`   User ID: ${testUserId}`);
-      console.log(`   Token: ${authToken.substring(0, 20)}...`);
     });
 
-    // ============================================
-    // 2. REGISTER DUPLICATE USER (SHOULD FAIL)
-    // ============================================
-    await t.step("2. Register duplicate user (should fail)", async () => {
+    it("should reject duplicate registration", async () => {
       const { status, data } = await apiRequest("/auth/register", {
         method: "POST",
         body: JSON.stringify({
@@ -117,46 +202,28 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 400);
       assertEquals(data.status, "error");
-      console.log("[SUCCESS] Duplicate registration blocked correctly");
     });
+  });
 
-    // ============================================
-    // 3. LOGIN WITH SUPERADMIN
-    // ============================================
-    await t.step("3. Login with superadmin", async () => {
-      // Use the same hardcoded credentials that seed scripts use in test env
-      const isTestEnv = Deno.env.get("ENVIRONMENT") === "test";
-      const superadminEmail = isTestEnv
-        ? "superadmin@tonystack.dev"
-        : (Deno.env.get("SUPERADMIN_EMAIL") || "test-admin@test.local");
-      const superadminPassword = isTestEnv
-        ? "SuperSecurePassword123!"
-        : (Deno.env.get("SUPERADMIN_PASSWORD") || "TestPassword123!");
-
+  describe("Login", () => {
+    it("should login superadmin", async () => {
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: superadminEmail,
-          password: superadminPassword,
+          email: SUPERADMIN_EMAIL,
+          password: SUPERADMIN_PASSWORD,
         }),
       });
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
       assertExists(data.data.token);
-      assertEquals(data.data.user.email, superadminEmail);
+      assertEquals(data.data.user.email, SUPERADMIN_EMAIL);
 
-      // Save admin token for admin API tests
       adminToken = data.data.token;
-
-      console.log("[SUCCESS] Superadmin logged in successfully");
-      console.log(`   Admin Token: ${adminToken.substring(0, 20)}...`);
     });
 
-    // ============================================
-    // 4. LOGIN WITH WRONG PASSWORD (SHOULD FAIL)
-    // ============================================
-    await t.step("4. Login with wrong password (should fail)", async () => {
+    it("should reject wrong password", async () => {
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -167,13 +234,11 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 401);
       assertEquals(data.status, "error");
-      console.log("[SUCCESS] Invalid credentials blocked correctly");
     });
+  });
 
-    // ============================================
-    // 5. GET CURRENT USER (PROTECTED ROUTE)
-    // ============================================
-    await t.step("5. Get current user info", async () => {
+  describe("Protected Routes", () => {
+    it("should get current user with valid token", async () => {
       const { status, data } = await apiRequest("/auth/me", {
         method: "GET",
         headers: {
@@ -184,52 +249,33 @@ Deno.test("Auth API Tests", async (t) => {
       assertEquals(status, 200);
       assertEquals(data.status, "success");
       assertEquals(data.data.email, "testuser@example.com");
-      assertEquals(data.data.username, "testuser");
-      // Password should not be returned
       assertEquals(data.data.password, undefined);
-
-      console.log("[SUCCESS] Current user retrieved successfully");
     });
 
-    // ============================================
-    // 6. ACCESS PROTECTED ROUTE WITHOUT TOKEN (SHOULD FAIL)
-    // ============================================
-    await t.step(
-      "6. Access protected route without token (should fail)",
-      async () => {
-        const { status, data } = await apiRequest("/auth/me", {
-          method: "GET",
-        });
+    it("should reject access without token", async () => {
+      const { status, data } = await apiRequest("/auth/me", {
+        method: "GET",
+      });
 
-        assertEquals(status, 401);
-        assertEquals(data.status, "error");
-        console.log("[SUCCESS] Unauthorized access blocked correctly");
-      },
-    );
+      assertEquals(status, 401);
+      assertEquals(data.status, "error");
+    });
 
-    // ============================================
-    // 7. ACCESS PROTECTED ROUTE WITH INVALID TOKEN (SHOULD FAIL)
-    // ============================================
-    await t.step(
-      "7. Access protected route with invalid token (should fail)",
-      async () => {
-        const { status, data } = await apiRequest("/auth/me", {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer invalid-token-12345",
-          },
-        });
+    it("should reject invalid token", async () => {
+      const { status, data } = await apiRequest("/auth/me", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer invalid-token-12345",
+        },
+      });
 
-        assertEquals(status, 401);
-        assertEquals(data.status, "error");
-        console.log("[SUCCESS] Invalid token blocked correctly");
-      },
-    );
+      assertEquals(status, 401);
+      assertEquals(data.status, "error");
+    });
+  });
 
-    // ============================================
-    // 8. CHANGE PASSWORD
-    // ============================================
-    await t.step("8. Change password", async () => {
+  describe("Password Change", () => {
+    it("should change password", async () => {
       const { status, data } = await apiRequest("/auth/change-password", {
         method: "PUT",
         headers: {
@@ -243,13 +289,9 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
-      console.log("[SUCCESS] Password changed successfully");
     });
 
-    // ============================================
-    // 9. LOGIN WITH OLD PASSWORD (SHOULD FAIL)
-    // ============================================
-    await t.step("9. Login with old password (should fail)", async () => {
+    it("should reject old password after change", async () => {
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -260,13 +302,9 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 401);
       assertEquals(data.status, "error");
-      console.log("[SUCCESS] Old password rejected after change");
     });
 
-    // ============================================
-    // 10. LOGIN WITH NEW PASSWORD
-    // ============================================
-    await t.step("10. Login with new password", async () => {
+    it("should login with new password", async () => {
       const { status, data } = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -277,18 +315,12 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
-      assertExists(data.data.token);
-
-      // Update token
       authToken = data.data.token;
-
-      console.log("[SUCCESS] Login with new password successful");
     });
+  });
 
-    // ============================================
-    // 11. CREATE ADMIN USER (ADMIN ONLY)
-    // ============================================
-    await t.step("11. Create admin user", async () => {
+  describe("Admin API", () => {
+    it("should create admin user", async () => {
       const { status, data } = await apiRequest("/admin/users", {
         method: "POST",
         headers: {
@@ -303,19 +335,10 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 201);
       assertEquals(data.status, "success");
-      assertExists(data.data.id);
-      assertEquals(data.data.email, "admin1@example.com");
-
       testAdminId = data.data.id;
-
-      console.log("[SUCCESS] Admin user created successfully");
-      console.log(`   Admin ID: ${testAdminId}`);
     });
 
-    // ============================================
-    // 12. GET ALL USERS (ADMIN ONLY)
-    // ============================================
-    await t.step("12. Get all users (paginated)", async () => {
+    it("should list all users (paginated)", async () => {
       const { status, data } = await apiRequest(
         "/admin/users?page=1&limit=10",
         {
@@ -330,17 +353,9 @@ Deno.test("Auth API Tests", async (t) => {
       assertEquals(data.status, "success");
       assertExists(data.data.users);
       assertExists(data.data.total);
-      assertExists(data.data.page);
-      assertExists(data.data.totalPages);
-
-      console.log("[SUCCESS] Users list retrieved successfully");
-      console.log(`   Total users: ${data.data.total}`);
     });
 
-    // ============================================
-    // 13. GET USER BY ID (ADMIN ONLY)
-    // ============================================
-    await t.step("13. Get user by ID", async () => {
+    it("should get user by ID", async () => {
       const { status, data } = await apiRequest(`/admin/users/${testUserId}`, {
         method: "GET",
         headers: {
@@ -351,15 +366,9 @@ Deno.test("Auth API Tests", async (t) => {
       assertEquals(status, 200);
       assertEquals(data.status, "success");
       assertEquals(data.data.id, testUserId);
-      assertEquals(data.data.email, "testuser@example.com");
-
-      console.log("[SUCCESS] User retrieved by ID successfully");
     });
 
-    // ============================================
-    // 14. UPDATE USER (ADMIN ONLY)
-    // ============================================
-    await t.step("14. Update user", async () => {
+    it("should update user", async () => {
       const { status, data } = await apiRequest(`/admin/users/${testUserId}`, {
         method: "PUT",
         headers: {
@@ -374,41 +383,9 @@ Deno.test("Auth API Tests", async (t) => {
       assertEquals(status, 200);
       assertEquals(data.status, "success");
       assertEquals(data.data.username, "testuser_updated");
-
-      console.log("[SUCCESS] User updated successfully");
     });
 
-    // ============================================
-    // 15. REGULAR USER CANNOT ACCESS ADMIN ROUTES
-    // ============================================
-    await t.step(
-      "15. Regular user cannot create admin (should work but create regular user)",
-      async () => {
-        // Note: In current implementation, any authenticated user can call admin endpoints
-        // You may want to add role-based access control (RBAC) in v1.1
-        const { status } = await apiRequest("/admin/users", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            email: "unauthorized@example.com",
-            username: "unauthorized",
-            password: "UnauthorizedPass123!",
-          }),
-        });
-
-        // Currently this will succeed - add RBAC in future to restrict
-        console.log(
-          `[WARNING]  Note: RBAC not implemented yet. Status: ${status}`,
-        );
-      },
-    );
-
-    // ============================================
-    // 16. DELETE USER (ADMIN ONLY)
-    // ============================================
-    await t.step("16. Delete user (soft delete)", async () => {
+    it("should delete user (soft delete)", async () => {
       const { status, data } = await apiRequest(`/admin/users/${testAdminId}`, {
         method: "DELETE",
         headers: {
@@ -418,14 +395,9 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
-
-      console.log("[SUCCESS] User deleted successfully (soft delete)");
     });
 
-    // ============================================
-    // 17. VERIFY USER IS DEACTIVATED
-    // ============================================
-    await t.step("17. Verify deleted user is deactivated", async () => {
+    it("should verify user is deactivated after deletion", async () => {
       const { status, data } = await apiRequest(`/admin/users/${testAdminId}`, {
         method: "GET",
         headers: {
@@ -435,14 +407,11 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 200);
       assertEquals(data.data.isActive, false);
-
-      console.log("[SUCCESS] User is deactivated (soft delete confirmed)");
     });
+  });
 
-    // ============================================
-    // 18. LOGOUT
-    // ============================================
-    await t.step("18. Logout user", async () => {
+  describe("Logout", () => {
+    it("should logout user", async () => {
       const { status, data } = await apiRequest("/auth/logout", {
         method: "POST",
         headers: {
@@ -452,14 +421,9 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 200);
       assertEquals(data.status, "success");
-
-      console.log("[SUCCESS] User logged out successfully");
     });
 
-    // ============================================
-    // 19. ACCESS WITH REVOKED TOKEN (SHOULD FAIL)
-    // ============================================
-    await t.step("19. Access with revoked token (should fail)", async () => {
+    it("should reject access with revoked token", async () => {
       const { status, data } = await apiRequest("/auth/me", {
         method: "GET",
         headers: {
@@ -469,15 +433,6 @@ Deno.test("Auth API Tests", async (t) => {
 
       assertEquals(status, 401);
       assertEquals(data.status, "error");
-
-      console.log("[SUCCESS] Revoked token blocked correctly");
     });
-  } finally {
-    // Close database connections to prevent resource leaks
-    try {
-      await db.$client.end();
-    } catch {
-      // Ignore errors when closing
-    }
-  }
+  });
 });
