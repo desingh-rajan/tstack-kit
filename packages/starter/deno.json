@@ -53,12 +53,20 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended", "workspace"],
-      "include": ["no-unversioned-import", "no-import-prefix"]
+      "tags": [
+        "recommended",
+        "workspace"
+      ],
+      "include": [
+        "no-unversioned-import",
+        "no-import-prefix"
+      ]
     }
   },
   "compilerOptions": {
-    "lib": ["deno.window"],
+    "lib": [
+      "deno.window"
+    ],
     "strict": true
   }
 }
