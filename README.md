@@ -43,6 +43,12 @@ the same patterns, it became clear: **stop rewriting, start generating**.
 ### What TStack Solves
 
 - **Saves 2-4 hours per project** - Skip the setup, start coding features
+- **Saves $5-15 in AI costs per project** - Stop burning tokens on repetitive
+  boilerplate. One `tstack create` command replaces ~50-100 AI prompts for
+  setup, architecture, and CRUD scaffolding
+- **Saves $2-5 per entity** - Each `tstack scaffold` saves ~15-30 AI prompts
+  that developers typically waste asking for the same CRUD patterns, validation
+  schemas, and controller boilerplate
 - **TypeScript first** - Full type safety from database to API responses
 - **Consistency** - Every entity follows the same proven patterns
 - **Focus on problems, not plumbing** - Stop fighting with tools, stop being a
@@ -50,6 +56,10 @@ the same patterns, it became clear: **stop rewriting, start generating**.
 - **Production ready** - Includes error handling, logging, validation out of the
   box
 - **No vendor lock-in** - Generated code is yours to modify freely
+
+**Real savings example:** A typical project with 10 entities could save
+$65-165 in AI costs ($15 setup + $50 for 10 scaffolds) plus 25-50 hours
+of token wait time and prompt engineering.
 
 ### Default Stack (v1.0)
 
