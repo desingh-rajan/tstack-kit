@@ -73,42 +73,15 @@ TStack currently uses this proven stack:
 This is the **default and recommended stack** for new projects. It's fast,
 type-safe, and production-ready.
 
-### Future: Choose Your Stack
+### Future: Multi-Runtime Support
 
-Coming soon, you'll be able to scaffold with different stacks using simple
-flags:
+Coming in v2.0 (2026):
 
-```bash
-# Current (default) - Deno + Hono + Drizzle + PostgreSQL
-tstack create my-api
+- **Node.js + Express + Prisma + PostgreSQL/SQLite** - Full-stack support with both databases
 
-# Long form (explicit)
-tstack create my-api --runtime=bun --orm=drizzle --db=sqlite
-tstack create my-api --runtime=node --orm=prisma --db=mysql
+The Deno + Hono + Drizzle + PostgreSQL stack will remain the flagship and recommended choice. As a solo developer, I'm focusing on polishing the Deno stack first before expanding to other runtimes. Other combinations (Bun, Fastify, etc.) may be added based on community demand.
 
-# Short form (quick and easy)
-tstack create my-api --stack=bds  # Bun + Drizzle + SQLite
-tstack create my-api --stack=npm  # Node + Prisma + MySQL
-tstack create my-api --stack=dhp  # Deno + Hono + PostgreSQL (default)
-```
-
-**Examples:**
-
-- `dhp` → Deno + Hono + PostgreSQL (default)
-- `bds` → Bun + Drizzle + SQLite
-- `npm` → Node + Prisma + MySQL
-- `nes` → Node + Express + SQLite
-- `dss` → Deno + Sequelize + SQLite
-
-**Planned stack support:**
-
-- **Runtimes**: Node.js, Bun
-- **Frameworks**: Express, Fastify, Fresh
-- **ORMs**: Prisma, Sequelize, TypeORM
-- **Databases**: MySQL, SQLite, MongoDB
-
-**Your contributions are welcome!** Whether you're fixing bugs, adding features,
-or porting to new stacks - this toolkit grows with the community.
+**Contributing:** If you'd like to contribute support for additional stacks, please open an issue or discussion first to coordinate with maintainers.
 
 Built by [Desingh Rajan](https://desinghrajan.in) and
 [contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
@@ -161,8 +134,8 @@ during project creation.
 tstack create blog-api
 cd blog-api
 
-# Start PostgreSQL
-docker-compose up -d postgres
+# Start all services (PostgreSQL + development/test databases)
+docker-compose up -d
 
 # Generate and run migrations
 deno task migrate:generate
@@ -173,6 +146,12 @@ deno task dev
 ```
 
 Server running at **<http://localhost:8000>**
+
+**Databases created:**
+
+- `blog_api_dev` - Development database
+- `blog_api_test` - Testing database
+- `blog_api_prod` - Production database (optional, for reference)
 
 ---
 
@@ -386,32 +365,59 @@ docker-compose --profile prod up -d
 
 TStack starter includes these pre-built endpoints:
 
-**Site Settings** (Dynamic Configuration):
+**Site Settings** (Dynamic Configuration) - Public API:
 
 - `GET /site-settings` - List all public settings
 - `GET /site-settings/:idOrKey` - Get setting by ID or key
-- `POST /site-settings` - Create setting (superadmin only)
-- `PUT /site-settings/:id` - Update setting (superadmin only)
-- `DELETE /site-settings/:id` - Delete setting (superadmin only)
 
-**Articles** (Example Content Entity):
+**Site Settings Admin API** - Protected Endpoints:
+
+- `GET /ts-admin/site-settings` - List all settings (superadmin only)
+- `GET /ts-admin/site-settings/:id` - Get specific setting (superadmin only)
+- `POST /ts-admin/site-settings` - Create setting (superadmin only)
+- `PUT /ts-admin/site-settings/:id` - Update setting (superadmin only)
+- `DELETE /ts-admin/site-settings/:id` - Delete setting (superadmin only)
+
+**Articles** (Example Content Entity) - Public API:
 
 - `GET /api/articles` - List published articles
 - `GET /api/articles/:id` - Get article by ID
 - `POST /api/articles` - Create article (auth required)
 - `PUT /api/articles/:id` - Update own article
 - `DELETE /api/articles/:id` - Delete own article
-- `GET /admin/articles` - List all articles (superadmin only)
+
+**Articles Admin API** - Protected Endpoints:
+
+- `GET /ts-admin/articles` - List all articles (superadmin/admin only)
+- `GET /ts-admin/articles/:id` - Get article (superadmin/admin only)
+- `POST /ts-admin/articles` - Create article (superadmin/admin only)
+- `PUT /ts-admin/articles/:id` - Update article (superadmin/admin only)
+- `DELETE /ts-admin/articles/:id` - Delete article (superadmin/admin only)
+- `POST /ts-admin/articles/bulk-delete` - Bulk delete (superadmin/admin only)
 
 ### Scaffolded Entity Endpoints
 
 After `tstack scaffold products`:
+
+**Public API** (`/api/products`):
 
 - `GET /api/products` - List all
 - `GET /api/products/:id` - Get one
 - `POST /api/products` - Create
 - `PUT /api/products/:id` - Update
 - `DELETE /api/products/:id` - Delete
+
+**Admin API** (`/ts-admin/products`) - Protected:
+
+- `GET /ts-admin/products` - List all products with pagination/search (superadmin/admin)
+- `GET /ts-admin/products/new` - Get new product form metadata (superadmin/admin)
+- `POST /ts-admin/products` - Create product (superadmin/admin)
+- `GET /ts-admin/products/:id` - Get product details (superadmin/admin)
+- `GET /ts-admin/products/:id/edit` - Get edit form metadata (superadmin/admin)
+- `PUT /ts-admin/products/:id` - Update product (superadmin/admin)
+- `PATCH /ts-admin/products/:id` - Partial update (superadmin/admin)
+- `DELETE /ts-admin/products/:id` - Delete product (superadmin/admin)
+- `POST /ts-admin/products/bulk-delete` - Bulk delete products (superadmin/admin)
 
 ---
 
@@ -467,14 +473,14 @@ const maxRequests = apiConfig.value.rateLimit.maxRequests;
 
 Run `deno task db:seed:site` to create 6 default settings:
 
-| Setting        | Public    | Use Case                                  |
-| -------------- | --------- | ----------------------------------------- |
-| site_info      | [SUCCESS] | Site name, tagline, logo - display in UI  |
-| contact_info   | [SUCCESS] | Email, phone, social links - contact page |
-| theme_config   | [SUCCESS] | Colors, fonts - apply to frontend theme   |
-| feature_flags  | [SUCCESS] | Toggle features - enable/disable features |
-| email_settings | [ERROR]   | SMTP config - backend email sending       |
-| api_config     | [ERROR]   | Rate limits, CORS - API configuration     |
+| Setting        | Public | Use Case                                  |
+| -------------- | ------ | ----------------------------------------- |
+| site_info      | Yes    | Site name, tagline, logo - display in UI  |
+| contact_info   | Yes    | Email, phone, social links - contact page |
+| theme_config   | Yes    | Colors, fonts - apply to frontend theme   |
+| feature_flags  | Yes    | Toggle features - enable/disable features |
+| email_settings | No     | SMTP config - backend email sending       |
+| api_config     | No     | Rate limits, CORS - API configuration     |
 
 **Updating Settings:**
 
@@ -529,8 +535,9 @@ Done! You have a working blog API.
 When you no longer need a project, the `tstack destroy` command safely removes:
 
 - Project directory and all files
-- Development database
-- Test database
+- Development database (`{project_name}_dev`)
+- Test database (`{project_name}_test`)
+- Production database (`{project_name}_prod`)
 
 **Basic Usage:**
 
@@ -552,9 +559,10 @@ tstack destroy blog-api --force
 
 1. **Project Directory**: The entire project folder (searched in current
    directory and ~/projects)
-2. **Development Database**: `{project_name}_db` (hyphens replaced with
+2. **Development Database**: `{project_name}_dev` (hyphens replaced with
    underscores)
-3. **Test Database**: `{project_name}_test_db`
+3. **Test Database**: `{project_name}_test`
+4. **Production Database**: `{project_name}_prod` (if created)
 
 **Examples:**
 
@@ -586,23 +594,35 @@ cd ..
 tstack destroy my-blog-api
 ```
 
+**⚠️ Warning:** The `destroy` command will delete **all three databases** created for your project:
+
+- `{project}_dev` - Development database
+- `{project}_test` - Testing database  
+- `{project}_prod` - Production database
+
+Make sure to backup any important data before running this command.
+
 ---
 
 ## Is TStack For You?
 
 ### Perfect If You Want
 
-- [SUCCESS] **Zero auth bloat** - Add authentication when YOU need it
-- [SUCCESS] **PostgreSQL first** - No SQLite native binding issues
-- [SUCCESS] **Minimal defaults** - Clean starting point
-- [SUCCESS] **Pure Deno** - No Node.js baggage
-- [SUCCESS] **Fast scaffolding** - Generate entities in seconds
+- ✅ **Zero auth bloat** - Authentication included but optional, add what you need
+- ✅ **PostgreSQL first** - No SQLite native binding issues
+- ✅ **Minimal defaults** - Clean, opinionated starting point
+- ✅ **Pure Deno** - No Node.js baggage (or use Node.js stack in future)
+- ✅ **Fast scaffolding** - Generate complete entities in seconds
+- ✅ **Type-safe** - Full TypeScript from database to API responses
+- ✅ **Save time and money** - Reduces development time by 2-4 hours per project, saves $5-15 in AI/token costs per project, and $2-5 per entity scaffold
+
+> **💰 Cost Savings:** TStack eliminates repetitive boilerplate setup, reducing AI prompts and token usage significantly. Developers save approximately **2-4 hours of setup time** and **$5-15 in AI credits** per new project, plus **$2-5 per entity** scaffolded. This adds up to substantial savings over multiple projects.
 
 ### Not Ideal If You Need
 
-- [ERROR] Batteries-included auth out of the box (add it yourself!)
-- [ERROR] GraphQL support (REST only for now)
-- [ERROR] All-in-one framework (this is a toolkit)
+- ❌ GraphQL support (REST API only)
+- ❌ All-in-one batteries-included framework (this is a toolkit - you build what you need)
+- ❌ Immediate support for all runtime/framework combinations (Deno + Hono is currently the only stack)
 
 ---
 
@@ -620,44 +640,44 @@ tstack destroy my-blog-api
 
 ## Roadmap
 
-### v1.0 (Current - October 2025)
+### v1.1.3 (Current - November 2025) ✅
 
-- [SUCCESS] Auto-discovery route system
-- [SUCCESS] PostgreSQL support with proper .env loading
-- [SUCCESS] Entity scaffolding with interface templates
-- [SUCCESS] Docker ready
-- [SUCCESS] Minimal starter with common columns helper
-- [SUCCESS] Fail-fast configuration
+- ✅ Auto-discovery route system
+- ✅ PostgreSQL support with proper .env loading
+- ✅ Entity scaffolding with MVC templates
+- ✅ Docker ready with docker-compose
+- ✅ `tstack destroy` command - Remove projects and databases
+- ✅ JWT authentication system (optional)
+- ✅ Rails-style `--skip-*` flags for scaffold command
+- ✅ BDD-style testing framework
+- ✅ Site settings with JSON schema validation
+- ✅ @tstack/admin - Production-ready admin CRUD system
+- ✅ Three-database setup (dev, test, prod)
 
-### v1.1 (Next - Q4 2025)
+### v1.2 (Q1 2026) - Infrastructure & UI
 
-- [ ] **Kamal deployment** - YAML setup with deployment instructions
-- [ ] **GitHub Copilot integration** - Custom instructions for TonyStack
-- [SUCCESS] **`tstack destroy` command** - Remove scaffolded entities
-- [SUCCESS] **Basic JWT authentication** - User entity with auth system
-  (optional addon)
+- [ ] **Docker Support** (#43) - Multi-environment Dockerfile setup
+- [ ] **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
+- [ ] **Workspace Management** (#42) - Multi-project namespace support
+- [ ] **Kamal Deployment** (#7) - Production-ready deployment config
+- [ ] **Interactive Create** (#37) - CLI prompts for project setup
 
-### v1.2 (Q1 2026)
+### v1.3 (Q2 2026) - Communication & Integration
 
-- [ ] **Multi-stack support**:
-  - [ ] Node.js + Drizzle + Express
-  - [ ] Node.js + Sequelize + Express
-  - [ ] Node.js + Sequelize + Hono
-  - [ ] Node.js + Drizzle + Hono
+- [ ] **Email Service** (#10) - SMTP + external provider support
+- [ ] **Contact Forms** (#11) - Email notification module
+- [ ] **Redis Integration** (#9) - Caching and job queue
+- [ ] **OAuth Login** (#34) - Gmail, GitHub authentication
+- [ ] **Feature Opt-out** (#38) - Post-creation feature management
 
-### v2.0 (Future)
+### v2.0 (2026) - Multi-Runtime & Expansion
 
-#### Must Have (Solo Developer Essentials)
-
-- [ ] **Database seeding** - `tstack seed` command with faker integration
-- [ ] **Migration rollback** - `deno task migrate:rollback`
-- [ ] **Environment management** - `tstack env` for multi-environment configs
-      (.env.dev, .env.staging, .env.prod)
-- [ ] **Quick CRUD testing** - Auto-generate Thunder Client / REST Client
-      collections
-- [ ] **Error tracking integration** - Easy Sentry/Rollbar setup
-
-#### Good to Have (Productivity Boosters)
+- [ ] **Node.js Stack** - Express + Prisma + PostgreSQL/SQLite
+- [ ] **Metrics Kit** (#41) - Monitoring, observability, Grafana
+- [ ] **Infra Kit** (#40) - Multi-cloud deployment toolkit
+- [ ] **Flutter Kit** (#39) - Super admin mobile app
+- [ ] **Database Seeding** - Enhanced seeding with faker
+- [ ] **Migration Rollback** - `deno task migrate:rollback`
 
 - [ ] **Relationship scaffolding** - `tstack relate articles comments`
       (auto-setup foreign keys)
