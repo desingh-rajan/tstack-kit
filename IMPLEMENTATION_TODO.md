@@ -77,7 +77,7 @@
   - [x] GitHub tests (5): Remote creation, --skip-remote, push verification, remote deletion, cleanup
 - [x] Test execution modes:
   - [x] Fast: `deno test --allow-all --unstable-kv` (skips GitHub tests)
-  - [x] Full: `TONYSTACK_TEST_GITHUB=true deno test --allow-all --unstable-kv`
+  - [x] Full: `TSTACK_TEST_GITHUB=true deno test --allow-all --unstable-kv`
 - [x] Update documentation:
   - [x] Update main README with workspace feature
   - [x] Document workspace commands (create, destroy)

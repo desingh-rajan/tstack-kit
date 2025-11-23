@@ -524,14 +524,14 @@ deno task dev
 **What happens behind the scenes:**
 
 - **Fast mode (`deno task test`)**:
-  - Sets `TONYSTACK_TEST_DB` to undefined
+  - Sets `TSTACK_TEST_DB` to undefined
   - Tests pass `skipDbSetup: true` to commands
   - Commands skip all `sudo -u postgres psql` operations
   - 9 DB integration tests are ignored
   - Perfect for TDD and CI pipelines
 
 - **Integration mode (`deno task test:db`)**:
-  - Sets `TONYSTACK_TEST_DB=true`
+  - Sets `TSTACK_TEST_DB=true`
   - Tests pass `skipDbSetup: false` to commands
   - Commands create/drop real PostgreSQL databases
   - All databases use `tstack_test_` prefix for safety

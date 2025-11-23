@@ -5,12 +5,12 @@ import { closeKv, getWorkspace } from "../utils/workspaceStore.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 
 // GitHub integration tests are DISABLED by default for fast test runs.
-// To enable GitHub integration tests, set: TONYSTACK_TEST_GITHUB=true
+// To enable GitHub integration tests, set: TSTACK_TEST_GITHUB=true
 // This requires:
 // - GITHUB_TOKEN environment variable
 // - GitHub organization: ts-ground
 // - gh CLI installed and authenticated
-const SKIP_GITHUB = Deno.env.get("TONYSTACK_TEST_GITHUB") !== "true";
+const SKIP_GITHUB = Deno.env.get("TSTACK_TEST_GITHUB") !== "true";
 
 const GITHUB_ORG = "ts-ground";
 const TEST_WORKSPACE_PREFIX = "test-ws";
