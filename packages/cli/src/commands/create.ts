@@ -5,12 +5,19 @@ import {
   extractVersion,
   fetchAllLatestVersions,
 } from "../utils/versionFetcher.ts";
+import {
+  getProject,
+  saveProject,
+  updateProject,
+} from "../utils/projectStore.ts";
 
 export interface CreateOptions {
   projectName: string;
+  projectType?: "api" | "admin-ui" | "workspace"; // Type of project to create
   targetDir?: string;
   latest?: boolean; // Fetch latest stable versions from registries (default: false, uses template versions)
   skipDbSetup?: boolean; // Skip database creation (for testing)
+  forceOverwrite?: boolean; // Force overwrite existing project (skip prompt)
 }
 
 function promptForCredentials(
@@ -212,15 +219,24 @@ async function setupDatabases(
 export async function createProject(options: CreateOptions): Promise<void> {
   const {
     projectName,
+    projectType = "api",
     targetDir = Deno.cwd(),
     latest = false,
     skipDbSetup = false,
   } = options;
 
-  Logger.title(`Creating new project: ${projectName}`);
-  Logger.info(" Authentication system is included by default");
+  // Determine folder name based on type
+  // Smart detection: if user already added the suffix, don't duplicate it
+  const typeSuffix = projectType === "workspace" ? "" : `-${projectType}`;
+  const alreadyHasSuffix = projectName.endsWith(typeSuffix);
+  const folderName = alreadyHasSuffix
+    ? projectName
+    : `${projectName}${typeSuffix}`;
+
+  Logger.title(`Creating new project: ${folderName}`);
+  Logger.info(` Authentication system is included by default`);
   if (latest) {
-    Logger.info(" Latest stable dependency versions will be fetched");
+    Logger.info(` Latest stable dependency versions will be fetched`);
   }
   Logger.newLine();
 
@@ -231,17 +247,89 @@ export async function createProject(options: CreateOptions): Promise<void> {
     Deno.exit(1);
   }
 
-  const projectPath = join(targetDir, projectName);
+  const projectPath = join(targetDir, folderName);
 
-  if (await dirExists(projectPath)) {
-    Logger.error(`Directory "${projectName}" already exists at ${projectPath}`);
+  // Check if project exists in KV store
+  const existingProject = await getProject(folderName);
+  const folderExists = await dirExists(projectPath);
+
+  // Handle various states
+  if (existingProject) {
+    if (existingProject.status === "created" && folderExists) {
+      // Project fully exists
+      Logger.warning(`Project "${folderName}" already exists.`);
+      Logger.info(`Path: ${projectPath}`);
+      Logger.info(`Status: ${existingProject.status}`);
+      Logger.info(
+        `Created: ${new Date(existingProject.createdAt).toLocaleString()}`,
+      );
+      Logger.newLine();
+
+      // In test mode (skipDbSetup=true), don't prompt - require explicit forceOverwrite flag
+      const isTestMode = skipDbSetup === true;
+
+      if (!options.forceOverwrite) {
+        if (isTestMode) {
+          // In test mode, fail immediately without prompting
+          Logger.error(
+            "Project already exists. Use forceOverwrite: true to recreate.",
+          );
+          throw new Error("Project already exists");
+        }
+
+        // In real CLI usage, prompt the user
+        const overwrite = prompt("Do you want to overwrite it? (yes/no):");
+        if (overwrite?.toLowerCase() !== "yes") {
+          Logger.info("Operation cancelled.");
+          Deno.exit(0);
+        }
+      }
+
+      Logger.warning("Overwriting existing project...");
+      Logger.newLine();
+
+      // Mark as destroying and remove old folder
+      await updateProject(folderName, { status: "destroying" });
+      await Deno.remove(projectPath, { recursive: true });
+      await updateProject(folderName, { status: "destroyed" });
+    } else if (existingProject.status === "created" && !folderExists) {
+      // Metadata exists but folder is missing (manually deleted)
+      Logger.warning(
+        `Metadata exists for "${folderName}" but folder is missing.`,
+      );
+      Logger.info("Recreating project with existing metadata...");
+      Logger.newLine();
+      await updateProject(folderName, { status: "creating" });
+    } else if (existingProject.status === "destroyed") {
+      // Previously destroyed, allow recreation
+      Logger.info(`Recreating previously destroyed project "${folderName}"...`);
+      Logger.newLine();
+      await updateProject(folderName, { status: "creating" });
+    } else if (existingProject.status === "creating") {
+      // Incomplete creation
+      Logger.warning(
+        `Project "${folderName}" has incomplete creation (status: creating).`,
+      );
+      Logger.info("Cleaning up and starting fresh...");
+      Logger.newLine();
+      if (folderExists) {
+        await Deno.remove(projectPath, { recursive: true });
+      }
+      await updateProject(folderName, { status: "creating" });
+    }
+  } else if (folderExists) {
+    // Folder exists but not in KV (created outside CLI)
+    Logger.error(
+      `Directory "${folderName}" already exists at ${projectPath} but is not tracked by TStack CLI.`,
+    );
+    Logger.info("Please remove it manually or choose a different name.");
     Deno.exit(1);
   }
 
-  // Set database credentials
-  const { dbName, dbUser, dbPassword } = promptForCredentials(projectName);
-  const testDbName = projectName.replace(/-/g, "_") + "_test"; // Derive from projectName, not dbName
-  const prodDbName = projectName.replace(/-/g, "_") + "_prod"; // Derive from projectName for production
+  // Set database credentials (use folderName for database names)
+  const { dbName, dbUser, dbPassword } = promptForCredentials(folderName);
+  const testDbName = folderName.replace(/-/g, "_") + "_test";
+  const prodDbName = folderName.replace(/-/g, "_") + "_prod";
   Logger.newLine();
 
   const cliPath = dirname(dirname(dirname(new URL(import.meta.url).pathname)));
@@ -526,7 +614,7 @@ JWT_EXPIRY=7d
   Logger.newLine();
 
   Logger.info("1. Navigate to your project:");
-  Logger.code(`cd ${projectName}`);
+  Logger.code(`cd ${folderName}`);
   Logger.newLine();
 
   Logger.info("2. Scaffold entities:");
@@ -578,6 +666,23 @@ JWT_EXPIRY=7d
   Logger.subtitle("Your API will be available at:");
   Logger.code("http://localhost:8000");
   Logger.newLine();
+
+  // Save project metadata to KV store
+  const now = Date.now();
+  await saveProject({
+    name: projectName,
+    type: projectType,
+    folderName,
+    path: projectPath,
+    databases: {
+      dev: dbName,
+      test: testDbName,
+      prod: prodDbName,
+    },
+    status: "created",
+    createdAt: existingProject?.createdAt || now,
+    updatedAt: now,
+  });
 }
 
 async function dirExists(path: string): Promise<boolean> {

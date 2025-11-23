@@ -6,6 +6,7 @@ import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
 import { destroyProject } from "./src/commands/destroy.ts";
 import { createWorkspace } from "./src/commands/workspace.ts";
+import { listTrackedProjects } from "./src/commands/list.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -18,16 +19,16 @@ function showHelp() {
 
   Logger.subtitle("Commands:");
   Logger.code(
-    "create <project-name>      Create a new project from starter template",
-  );
-  Logger.code(
-    "workspace create <name>    Create a multi-project workspace",
+    "create <type> <name>       Create a new project (types: api, admin-ui, workspace)",
   );
   Logger.code(
     "scaffold <entity-name>     Generate a new entity with all MVC files",
   );
   Logger.code(
-    "destroy <project-name>     Remove project and drop its databases",
+    "destroy [type] <name>      Remove project and drop its databases",
+  );
+  Logger.code(
+    "list                       Show all tracked projects",
   );
   Logger.code("--help, -h                 Show this help message");
   Logger.code("--version, -v              Show version number");
@@ -78,15 +79,16 @@ function showHelp() {
   Logger.newLine();
 
   Logger.subtitle("Examples:");
-  Logger.code("tstack create my-backend");
-  Logger.code("tstack create my-api --latest");
-  Logger.code("tstack workspace create vega-groups --with-api --with-ui");
-  Logger.code("tstack workspace create acme-corp --with-api --with-infra");
+  Logger.code("tstack create api my-backend");
+  Logger.code("tstack create api my-api --latest");
+  Logger.code("tstack create admin-ui my-admin");
+  Logger.code("tstack create workspace vega-groups");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
   Logger.code("tstack scaffold orders --force");
   Logger.code("tstack scaffold users --skip-admin");
-  Logger.code("tstack destroy my-backend");
+  Logger.code("tstack destroy api my-shop    # Destroy my-shop-api");
+  Logger.code("tstack destroy my-shop        # Find and select from matches");
   Logger.newLine();
   Logger.subtitle("Documentation:");
   Logger.code("https://github.com/yourusername/tonystack");
@@ -139,20 +141,61 @@ async function main() {
   try {
     switch (command) {
       case "create": {
-        const projectName = args._[1]?.toString();
+        const typeOrName = args._[1]?.toString();
+        const maybeName = args._[2]?.toString();
+
+        // Support both patterns:
+        // New: tstack create api my-project
+        // Old: tstack create my-project (defaults to api)
+        const validTypes = ["api", "admin-ui", "workspace"];
+        let type: string;
+        let projectName: string;
+
+        if (validTypes.includes(typeOrName)) {
+          // New pattern: tstack create <type> <name>
+          type = typeOrName;
+          projectName = maybeName || "";
+        } else {
+          // Old pattern: tstack create <name> (backward compatibility)
+          type = "api";
+          projectName = typeOrName || "";
+          Logger.warning(
+            "⚠️  Deprecated syntax. Use: tstack create api <name>",
+          );
+        }
 
         if (!projectName) {
           Logger.error("Project name is required");
-          Logger.info("Usage: tstack create <project-name>");
-          Logger.info("Example: tstack create my-backend");
+          Logger.info("Usage: tstack create <type> <name>");
+          Logger.info("Types: api, admin-ui, workspace");
+          Logger.info("Example: tstack create api my-backend");
           Deno.exit(1);
         }
 
-        await createProject({
-          projectName,
-          targetDir: args.dir,
-          latest: args.latest,
-        });
+        if (type === "workspace") {
+          await createWorkspace({
+            name: projectName,
+            targetDir: args.dir,
+            namespace: args.namespace,
+            withApi: args["with-api"],
+            withUi: args["with-ui"],
+            withInfra: args["with-infra"],
+            withMobile: args["with-mobile"],
+            withAdmin: args["with-admin"],
+            withGit: !args["no-git"],
+          });
+        } else if (type === "api") {
+          await createProject({
+            projectName,
+            projectType: "api",
+            targetDir: args.dir,
+            latest: args.latest,
+          });
+        } else if (type === "admin-ui") {
+          Logger.error("admin-ui starter not yet implemented");
+          Logger.info("Coming soon in Issue #44");
+          Deno.exit(1);
+        }
         break;
       }
 
@@ -179,17 +222,15 @@ async function main() {
       }
 
       case "workspace": {
-        const subCommand = args._[1]?.toString().toLowerCase();
+        // Deprecated: redirect to new syntax
+        Logger.warning("⚠️  'tstack workspace create' is deprecated");
+        Logger.info("Use: tstack create workspace <name>");
 
+        const subCommand = args._[1]?.toString().toLowerCase();
         if (subCommand === "create") {
           const workspaceName = args._[2]?.toString();
-
           if (!workspaceName) {
             Logger.error("Workspace name is required");
-            Logger.info("Usage: tstack workspace create <name> [options]");
-            Logger.info(
-              "Example: tstack workspace create vega-groups --with-api --with-ui",
-            );
             Deno.exit(1);
           }
 
@@ -206,26 +247,49 @@ async function main() {
           });
         } else {
           Logger.error(`Unknown workspace subcommand: ${subCommand}`);
-          Logger.info("Available: create");
           Deno.exit(1);
         }
         break;
       }
 
       case "destroy": {
-        const projectName = args._[1]?.toString();
+        // Check if first arg is a type (api, admin-ui, workspace)
+        const firstArg = args._[1]?.toString();
+        const secondArg = args._[2]?.toString();
+
+        const validTypes = ["api", "admin-ui", "workspace"];
+        let projectType: "api" | "admin-ui" | "workspace" | undefined;
+        let projectName: string;
+
+        if (firstArg && validTypes.includes(firstArg)) {
+          // New syntax: tstack destroy <type> <name>
+          projectType = firstArg as "api" | "admin-ui" | "workspace";
+          projectName = secondArg || "";
+        } else {
+          // Old syntax: tstack destroy <folder-name> (backward compatibility)
+          projectName = firstArg || "";
+        }
 
         if (!projectName) {
           Logger.error("Project name is required");
-          Logger.info("Usage: tstack destroy <project-name>");
-          Logger.info("Example: tstack destroy my-backend");
+          Logger.info("Usage: tstack destroy [type] <name>");
+          Logger.info("Examples:");
+          Logger.info("  tstack destroy api my-shop");
+          Logger.info("  tstack destroy admin-ui my-shop");
+          Logger.info("  tstack destroy my-shop-api  (backward compatible)");
           Deno.exit(1);
         }
 
         await destroyProject({
           projectName,
+          projectType,
           force: args.force,
         });
+        break;
+      }
+
+      case "list": {
+        await listTrackedProjects();
         break;
       }
 

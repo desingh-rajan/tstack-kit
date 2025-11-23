@@ -1,10 +1,18 @@
 import { join } from "@std/path";
 import { Logger } from "../utils/logger.ts";
+import {
+  deleteProject,
+  getProject,
+  listProjects,
+  updateProject,
+} from "../utils/projectStore.ts";
 
 export interface DestroyOptions {
   projectName: string;
+  projectType?: "api" | "admin-ui" | "workspace";
   force?: boolean;
   skipDbSetup?: boolean; // Skip database operations (for testing)
+  interactive?: boolean; // Allow interactive prompts (default: true)
 }
 
 /**
@@ -159,76 +167,245 @@ async function dropDatabases(
 }
 
 export async function destroyProject(options: DestroyOptions): Promise<void> {
-  const { projectName, force, skipDbSetup = false } = options;
-
-  Logger.title(`Destroying project: ${projectName}`);
-  Logger.newLine();
-
-  // Get project path (check current directory and ~/projects)
-  const currentDirPath = join(Deno.cwd(), projectName);
-  const projectsDirPath = join(
-    Deno.env.get("HOME") || "",
-    "projects",
+  const {
     projectName,
-  );
+    projectType,
+    force,
+    skipDbSetup = false,
+    interactive = true,
+  } = options;
 
-  let projectPath: string | null = null;
-  let projectExists = false;
+  // Step 1: Determine what we're looking for
+  let targetFolderName: string;
+  let shouldSearchForMatches = false;
 
-  try {
-    await Deno.stat(currentDirPath);
-    projectPath = currentDirPath;
-    projectExists = true;
-  } catch {
-    try {
-      await Deno.stat(projectsDirPath);
-      projectPath = projectsDirPath;
-      projectExists = true;
-    } catch {
-      projectExists = false;
+  if (projectType) {
+    // Case 1: Type is provided - calculate exact folder name
+    const typeSuffix = projectType === "workspace" ? "" : `-${projectType}`;
+    const alreadyHasSuffix = projectName.endsWith(typeSuffix);
+    targetFolderName = alreadyHasSuffix
+      ? projectName
+      : `${projectName}${typeSuffix}`;
+  } else {
+    // Case 2 & 3: No type provided
+    // First try exact match, then search for multiple matches
+    targetFolderName = projectName;
+    shouldSearchForMatches = true;
+  }
+
+  // Step 2: Try exact match first
+  let metadata = await getProject(targetFolderName);
+
+  // Step 3: If no exact match and we should search, look for projects starting with the name
+  if (!metadata && shouldSearchForMatches) {
+    const allProjects = await listProjects();
+    const matches = allProjects.filter((p) =>
+      p.folderName.startsWith(projectName) ||
+      p.name === projectName
+    );
+
+    if (matches.length === 1) {
+      // Exactly one match found - auto-select it (works in both interactive and non-interactive)
+      targetFolderName = matches[0].folderName;
+      metadata = matches[0];
+      Logger.info(`Found matching project: ${targetFolderName}`);
+    } else if (matches.length > 1) {
+      if (!interactive) {
+        // Multiple matches in non-interactive mode - cannot proceed
+        Logger.error(
+          `Multiple projects found matching "${projectName}". Please specify the exact folder name or use a type parameter.`,
+        );
+        matches.forEach((project) => {
+          Logger.info(`  - ${project.folderName} (${project.type})`);
+        });
+        throw new Error(`Ambiguous project name: ${projectName}`);
+      }
+
+      // Multiple matches found - prompt user in interactive mode
+      Logger.warning(`Multiple projects found matching "${projectName}":`);
+      Logger.newLine();
+
+      matches.forEach((project, index) => {
+        Logger.info(`  ${index + 1}. ${project.folderName} (${project.type})`);
+        Logger.info(`     Path: ${project.path}`);
+        Logger.newLine();
+      });
+
+      const choice = prompt(
+        `Select project to destroy (1-${matches.length}, or 'all' to destroy all):`,
+      );
+
+      if (choice === null) {
+        Logger.info("Destruction cancelled.");
+        return;
+      }
+
+      if (choice.toLowerCase() === "all") {
+        // Destroy all matches
+        for (const match of matches) {
+          await destroyProject({
+            projectName: match.folderName,
+            force: true, // Skip individual prompts since we already confirmed
+            skipDbSetup,
+            interactive: false, // Disable nested prompts
+          });
+        }
+        return;
+      }
+
+      const selectedIndex = parseInt(choice) - 1;
+      if (
+        isNaN(selectedIndex) || selectedIndex < 0 ||
+        selectedIndex >= matches.length
+      ) {
+        Logger.error("Invalid selection. Destruction cancelled.");
+        Deno.exit(1);
+      }
+
+      // Update target to the selected project
+      targetFolderName = matches[selectedIndex].folderName;
+      metadata = matches[selectedIndex];
     }
   }
 
-  if (!projectExists || !projectPath) {
-    Logger.error(`Project "${projectName}" not found`);
-    Logger.info("Searched in:");
-    Logger.info(`  - ${currentDirPath}`);
-    Logger.info(`  - ${projectsDirPath}`);
-    throw new Error(`Project "${projectName}" not found`);
+  Logger.subtitle(`Destroying project: ${targetFolderName}`);
+  Logger.newLine();
+
+  // Check project status
+  if (metadata) {
+    if (metadata.status === "destroyed") {
+      Logger.warning(`Project "${targetFolderName}" is already destroyed.`);
+      Logger.info(
+        `Destroyed at: ${new Date(metadata.updatedAt).toLocaleString()}`,
+      );
+      Logger.newLine();
+
+      if (!force) {
+        const cleanup = prompt(
+          "Do you want to clean up the metadata? (yes/no):",
+        );
+        if (cleanup?.toLowerCase() === "yes") {
+          await deleteProject(targetFolderName);
+          Logger.success("Metadata cleaned up.");
+        } else {
+          Logger.info("Operation cancelled.");
+        }
+      } else {
+        await deleteProject(targetFolderName);
+        Logger.success("Metadata cleaned up.");
+      }
+      return;
+    }
+
+    if (metadata.status === "creating") {
+      Logger.warning(
+        `Project "${targetFolderName}" has incomplete creation (status: creating).`,
+      );
+      Logger.info("Proceeding with cleanup...");
+      Logger.newLine();
+    }
   }
 
-  Logger.info(`Found project at: ${projectPath}`);
+  // Mark as destroying
+  if (metadata) {
+    await updateProject(targetFolderName, { status: "destroying" });
+  }
+
+  let projectPath: string | null = null;
+  let dbName: string;
+  let testDbName: string;
+  let prodDbName: string;
+
+  if (metadata) {
+    // Use metadata from KV store
+    projectPath = metadata.path;
+    dbName = metadata.databases.dev || "";
+    testDbName = metadata.databases.test || "";
+    prodDbName = metadata.databases.prod || "";
+
+    Logger.info(`Found tracked project: ${metadata.folderName}`);
+    Logger.info(`Type: ${metadata.type}`);
+    Logger.info(`Path: ${projectPath}`);
+  } else {
+    // Fallback: Search in common locations
+    Logger.warning(
+      `Project "${targetFolderName}" not found in tracking database`,
+    );
+    Logger.info("Searching in common locations...");
+
+    const currentDirPath = join(Deno.cwd(), targetFolderName);
+    const projectsDirPath = join(
+      Deno.env.get("HOME") || "",
+      "projects",
+      targetFolderName,
+    );
+
+    let projectExists = false;
+
+    try {
+      await Deno.stat(currentDirPath);
+      projectPath = currentDirPath;
+      projectExists = true;
+    } catch {
+      try {
+        await Deno.stat(projectsDirPath);
+        projectPath = projectsDirPath;
+        projectExists = true;
+      } catch {
+        projectExists = false;
+      }
+    }
+
+    if (!projectExists || !projectPath) {
+      Logger.error(`Project "${targetFolderName}" not found`);
+      Logger.info("Searched in:");
+      Logger.info(`  - ${currentDirPath}`);
+      Logger.info(`  - ${projectsDirPath}`);
+      throw new Error(`Project "${targetFolderName}" not found`);
+    }
+
+    // Derive database names from folder name
+    dbName = targetFolderName.replace(/-/g, "_") + "_dev";
+    testDbName = targetFolderName.replace(/-/g, "_") + "_test";
+    prodDbName = targetFolderName.replace(/-/g, "_") + "_prod";
+
+    Logger.info(`Found project at: ${projectPath}`);
+  }
+
+  // Check if folder exists and handle missing folder case
+  const folderExists = projectPath ? await dirExists(projectPath) : false;
+
+  if (metadata && !folderExists) {
+    Logger.warning(`Project folder is missing at: ${projectPath}`);
+    Logger.info(
+      "The project was likely deleted manually. Cleaning up metadata and databases...",
+    );
+    Logger.newLine();
+  }
+
   Logger.newLine();
 
   // Confirm destruction unless --force flag is used
-  if (!force) {
+  // Skip prompt in test mode (skipDbSetup=true) - require explicit force flag
+  const isTestMode = skipDbSetup === true;
+
+  if (!force && !isTestMode) {
     Logger.warning("[WARNING]  This will permanently delete:");
     Logger.info(`   - Project directory: ${projectPath}`);
-    Logger.info(
-      `   - Development database: ${projectName.replace(/-/g, "_")}_dev`,
-    );
-    Logger.info(
-      `   - Test database: ${projectName.replace(/-/g, "_")}_test`,
-    );
-    Logger.info(
-      `   - Production database: ${projectName.replace(/-/g, "_")}_prod`,
-    );
+    Logger.info(`   - Development database: ${dbName}`);
+    Logger.info(`   - Test database: ${testDbName}`);
+    Logger.info(`   - Production database: ${prodDbName}`);
     Logger.newLine();
 
     const confirmation = prompt(
-      "Type the project name to confirm destruction:",
+      "Type the folder name to confirm destruction:",
     );
-    if (confirmation !== projectName) {
-      Logger.error("Project name doesn't match. Destruction cancelled.");
-      throw new Error("Project name confirmation failed");
+    if (confirmation !== targetFolderName) {
+      Logger.error("Folder name doesn't match. Destruction cancelled.");
+      throw new Error("Folder name confirmation failed");
     }
     Logger.newLine();
   }
-
-  // Extract database names from project name
-  const dbName = projectName.replace(/-/g, "_") + "_dev";
-  const testDbName = projectName.replace(/-/g, "_") + "_test";
-  const prodDbName = projectName.replace(/-/g, "_") + "_prod";
 
   // Step 1: Drop databases
   if (!skipDbSetup) {
@@ -242,16 +419,41 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   // Step 2: Remove project directory
   Logger.step("Removing project directory...");
 
-  try {
-    await Deno.remove(projectPath, { recursive: true });
-    Logger.success(`[OK] Removed: ${projectPath}`);
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    Logger.error(`Failed to remove project directory: ${errorMsg}`);
-    throw new Error(`Failed to remove project directory: ${errorMsg}`);
+  if (await dirExists(projectPath)) {
+    try {
+      await Deno.remove(projectPath, { recursive: true });
+      Logger.success(`[OK] Removed: ${projectPath}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      Logger.error(`Failed to remove project directory: ${errorMsg}`);
+      throw new Error(`Failed to remove project directory: ${errorMsg}`);
+    }
+  } else {
+    Logger.info(`Project directory already removed (or never existed)`);
+  }
+
+  // Step 3: Update status to destroyed, then optionally remove from KV
+  if (metadata) {
+    await updateProject(targetFolderName, { status: "destroyed" });
+    Logger.success("Marked as destroyed in tracking database");
+
+    // Optionally clean up destroyed entries immediately
+    if (force) {
+      await deleteProject(targetFolderName);
+      Logger.success("Removed from tracking database");
+    }
   }
 
   Logger.newLine();
   Logger.success("  Project destroyed successfully!");
   Logger.newLine();
+}
+
+async function dirExists(path: string): Promise<boolean> {
+  try {
+    const stat = await Deno.stat(path);
+    return stat.isDirectory;
+  } catch {
+    return false;
+  }
 }

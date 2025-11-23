@@ -1,7 +1,10 @@
 import { join } from "@std/path";
-import { exists } from "@std/fs";
 import { Logger } from "../utils/logger.ts";
-import { dirExists, writeFiles, type FileToWrite } from "../utils/fileWriter.ts";
+import {
+  dirExists,
+  type FileToWrite,
+  writeFiles,
+} from "../utils/fileWriter.ts";
 
 export interface WorkspaceOptions {
   name: string;
@@ -65,7 +68,9 @@ function validateWorkspaceName(name: string): boolean {
 function generateNamespace(name: string, customNamespace?: string): string {
   if (customNamespace) {
     if (!validateWorkspaceName(customNamespace)) {
-      Logger.error(`Invalid namespace: "${customNamespace}". Use lowercase, alphanumeric, hyphens only.`);
+      Logger.error(
+        `Invalid namespace: "${customNamespace}". Use lowercase, alphanumeric, hyphens only.`,
+      );
       Deno.exit(1);
     }
     return customNamespace;
@@ -76,7 +81,9 @@ function generateNamespace(name: string, customNamespace?: string): string {
 /**
  * Generate .gitignore content based on project type
  */
-function generateGitignore(projectType: "api" | "ui" | "infra" | "mobile" | "admin"): string {
+function generateGitignore(
+  projectType: "api" | "ui" | "infra" | "mobile" | "admin",
+): string {
   const common = `# Environment
 .env
 .env.local
@@ -274,16 +281,23 @@ function generateWorkspaceConfig(
   return `# TStack Workspace Configuration
 # Generated: ${new Date().toISOString()}
 
-${Object.entries(config).map(([key, value]) => 
-  `${key}:\n${JSON.stringify(value, null, 2).split('\n').map(line => `  ${line}`).join('\n')}`
-).join('\n\n')}
+${
+    Object.entries(config).map(([key, value]) =>
+      `${key}:\n${
+        JSON.stringify(value, null, 2).split("\n").map((line) => `  ${line}`)
+          .join("\n")
+      }`
+    ).join("\n\n")
+  }
 `;
 }
 
 /**
  * Create workspace with specified components
  */
-export async function createWorkspace(options: WorkspaceOptions): Promise<void> {
+export async function createWorkspace(
+  options: WorkspaceOptions,
+): Promise<void> {
   const {
     name,
     targetDir = Deno.cwd(),
@@ -341,7 +355,8 @@ export async function createWorkspace(options: WorkspaceOptions): Promise<void> 
       },
       {
         path: "README.md",
-        content: `# ${name}-api\n\nBackend API for ${name}\n\n## Stack\n- Deno\n- Hono\n- Drizzle ORM\n- PostgreSQL\n`,
+        content:
+          `# ${name}-api\n\nBackend API for ${name}\n\n## Stack\n- Deno\n- Hono\n- Drizzle ORM\n- PostgreSQL\n`,
         description: "README file",
       },
     ];
@@ -374,7 +389,8 @@ export async function createWorkspace(options: WorkspaceOptions): Promise<void> 
       },
       {
         path: "README.md",
-        content: `# ${name}-ui\n\nFrontend UI for ${name}\n\n## Stack\n- Fresh\n- Preact\n- Tailwind CSS\n- DaisyUI\n`,
+        content:
+          `# ${name}-ui\n\nFrontend UI for ${name}\n\n## Stack\n- Fresh\n- Preact\n- Tailwind CSS\n- DaisyUI\n`,
         description: "README file",
       },
     ];
@@ -407,7 +423,8 @@ export async function createWorkspace(options: WorkspaceOptions): Promise<void> 
       },
       {
         path: "README.md",
-        content: `# ${name}-infra\n\nInfrastructure configuration for ${name}\n\n## Contents\n- Docker Compose\n- Deployment configs\n`,
+        content:
+          `# ${name}-infra\n\nInfrastructure configuration for ${name}\n\n## Contents\n- Docker Compose\n- Deployment configs\n`,
         description: "README file",
       },
       {
@@ -462,7 +479,8 @@ volumes:
       },
       {
         path: "README.md",
-        content: `# ${name}-mobile\n\nMobile app for ${name}\n\n## Stack\n- Flutter\n`,
+        content:
+          `# ${name}-mobile\n\nMobile app for ${name}\n\n## Stack\n- Flutter\n`,
         description: "README file",
       },
     ];
@@ -495,7 +513,8 @@ volumes:
       },
       {
         path: "README.md",
-        content: `# ${name}-admin\n\nAdmin panel for ${name}\n\n## Stack\n- Fresh Admin UI Kit\n`,
+        content:
+          `# ${name}-admin\n\nAdmin panel for ${name}\n\n## Stack\n- Fresh Admin UI Kit\n`,
         description: "README file",
       },
     ];
@@ -517,7 +536,10 @@ volumes:
   // Generate workspace config and README
   Logger.step("Generating workspace configuration...");
   const configContent = generateWorkspaceConfig(options, projects);
-  await Deno.writeTextFile(join(workspacePath, ".tstack", "config.yaml"), configContent);
+  await Deno.writeTextFile(
+    join(workspacePath, ".tstack", "config.yaml"),
+    configContent,
+  );
 
   const readmeContent = `# ${name} Workspace
 
@@ -528,9 +550,11 @@ TStack workspace for ${name} project.
 
 ## Projects
 
-${Object.entries(projects).map(([name, config]) => 
-  `- **${name}** (${config.type}) - \`${config.path}\``
-).join('\n')}
+${
+    Object.entries(projects).map(([name, config]) =>
+      `- **${name}** (${config.type}) - \`${config.path}\``
+    ).join("\n")
+  }
 
 ## Getting Started
 
@@ -546,7 +570,10 @@ ${Object.entries(projects).map(([name, config]) =>
 See \`.tstack/config.yaml\` for workspace configuration.
 `;
 
-  await Deno.writeTextFile(join(workspacePath, ".tstack", "README.md"), readmeContent);
+  await Deno.writeTextFile(
+    join(workspacePath, ".tstack", "README.md"),
+    readmeContent,
+  );
 
   Logger.newLine();
   Logger.divider();
