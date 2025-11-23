@@ -245,11 +245,11 @@ export async function createProject(options: CreateOptions): Promise<void> {
   Logger.newLine();
 
   const cliPath = dirname(dirname(dirname(new URL(import.meta.url).pathname)));
-  const starterPath = join(dirname(cliPath), "starter");
+  const starterPath = join(dirname(cliPath), "api-starter");
 
   if (!await dirExists(starterPath)) {
     Logger.error(
-      "Starter template not found. Make sure TonyStack is installed correctly.",
+      "API starter template not found. Make sure TStack is installed correctly.",
     );
     Logger.info("Expected path: " + starterPath);
     Deno.exit(1);

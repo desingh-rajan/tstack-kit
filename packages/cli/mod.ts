@@ -5,6 +5,7 @@ import { Logger } from "./src/utils/logger.ts";
 import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
 import { destroyProject } from "./src/commands/destroy.ts";
+import { createWorkspace } from "./src/commands/workspace.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -18,6 +19,9 @@ function showHelp() {
   Logger.subtitle("Commands:");
   Logger.code(
     "create <project-name>      Create a new project from starter template",
+  );
+  Logger.code(
+    "workspace create <name>    Create a multi-project workspace",
   );
   Logger.code(
     "scaffold <entity-name>     Generate a new entity with all MVC files",
@@ -49,22 +53,40 @@ function showHelp() {
     "--skip-validation          Don't add Zod validation schemas (scaffold only)",
   );
   Logger.newLine();
+  Logger.subtitle("Workspace Options:");
+  Logger.code(
+    "--with-api                 Create API project (workspace only)",
+  );
+  Logger.code(
+    "--with-ui                  Create UI project (workspace only)",
+  );
+  Logger.code(
+    "--with-infra               Create infrastructure project (workspace only)",
+  );
+  Logger.code(
+    "--with-mobile              Create mobile project (workspace only)",
+  );
+  Logger.code(
+    "--with-admin               Create admin project (workspace only)",
+  );
+  Logger.code(
+    "--namespace <name>         Custom namespace (workspace only)",
+  );
+  Logger.code(
+    "--no-git                   Skip Git initialization (workspace only)",
+  );
+  Logger.newLine();
 
   Logger.subtitle("Examples:");
   Logger.code("tstack create my-backend");
   Logger.code("tstack create my-api --latest");
-  Logger.code("tstack create acme-api --dir ~/projects");
+  Logger.code("tstack workspace create vega-groups --with-api --with-ui");
+  Logger.code("tstack workspace create acme-corp --with-api --with-infra");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold blog-posts");
   Logger.code("tstack scaffold orders --force");
   Logger.code("tstack scaffold users --skip-admin");
-  Logger.code("tstack scaffold posts --skip-tests");
-  Logger.code("tstack scaffold articles --skip-admin --skip-tests");
-  Logger.code("tstack scaffold comments --skip-auth");
-  Logger.code("tstack scaffold reviews --skip-validation");
-  Logger.code("tstack scaffold drafts --skip-auth --skip-validation");
   Logger.code("tstack destroy my-backend");
-  Logger.code("tstack destroy old-project --force");
   Logger.newLine();
   Logger.subtitle("Documentation:");
   Logger.code("https://github.com/yourusername/tonystack");
@@ -86,8 +108,14 @@ async function main() {
       "skip-tests",
       "skip-auth",
       "skip-validation",
+      "with-api",
+      "with-ui",
+      "with-infra",
+      "with-mobile",
+      "with-admin",
+      "no-git",
     ],
-    string: ["dir"],
+    string: ["dir", "namespace"],
     alias: {
       h: "help",
       v: "version",
@@ -147,6 +175,40 @@ async function main() {
           skipAuth: args["skip-auth"],
           skipValidation: args["skip-validation"],
         });
+        break;
+      }
+
+      case "workspace": {
+        const subCommand = args._[1]?.toString().toLowerCase();
+
+        if (subCommand === "create") {
+          const workspaceName = args._[2]?.toString();
+
+          if (!workspaceName) {
+            Logger.error("Workspace name is required");
+            Logger.info("Usage: tstack workspace create <name> [options]");
+            Logger.info(
+              "Example: tstack workspace create vega-groups --with-api --with-ui",
+            );
+            Deno.exit(1);
+          }
+
+          await createWorkspace({
+            name: workspaceName,
+            targetDir: args.dir,
+            namespace: args.namespace,
+            withApi: args["with-api"],
+            withUi: args["with-ui"],
+            withInfra: args["with-infra"],
+            withMobile: args["with-mobile"],
+            withAdmin: args["with-admin"],
+            withGit: !args["no-git"],
+          });
+        } else {
+          Logger.error(`Unknown workspace subcommand: ${subCommand}`);
+          Logger.info("Available: create");
+          Deno.exit(1);
+        }
         break;
       }
 
