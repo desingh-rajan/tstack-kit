@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-run --unstable-kv
 
 import { parseArgs } from "@std/cli/parse-args";
 import { Logger } from "./src/utils/logger.ts";
@@ -111,13 +111,20 @@ async function main() {
       "skip-auth",
       "skip-validation",
       "with-api",
+      "with-admin-ui",
       "with-ui",
       "with-infra",
       "with-mobile",
-      "with-admin",
-      "no-git",
+      "with-metrics",
+      "skip-api",
+      "skip-admin-ui",
+      "skip-ui",
+      "skip-infra",
+      "skip-mobile",
+      "skip-metrics",
+      "skip-remote",
     ],
-    string: ["dir", "namespace"],
+    string: ["dir", "namespace", "github-org", "github-token", "visibility"],
     alias: {
       h: "help",
       v: "version",
@@ -178,11 +185,21 @@ async function main() {
             targetDir: args.dir,
             namespace: args.namespace,
             withApi: args["with-api"],
+            withAdminUi: args["with-admin-ui"],
             withUi: args["with-ui"],
             withInfra: args["with-infra"],
             withMobile: args["with-mobile"],
-            withAdmin: args["with-admin"],
-            withGit: !args["no-git"],
+            withMetrics: args["with-metrics"],
+            skipApi: args["skip-api"],
+            skipAdminUi: args["skip-admin-ui"],
+            skipUi: args["skip-ui"],
+            skipInfra: args["skip-infra"],
+            skipMobile: args["skip-mobile"],
+            skipMetrics: args["skip-metrics"],
+            skipRemote: args["skip-remote"],
+            githubOrg: args["github-org"],
+            githubToken: args["github-token"],
+            visibility: args.visibility as "private" | "public" | undefined,
           });
         } else if (type === "api") {
           await createProject({
@@ -239,11 +256,21 @@ async function main() {
             targetDir: args.dir,
             namespace: args.namespace,
             withApi: args["with-api"],
+            withAdminUi: args["with-admin-ui"],
             withUi: args["with-ui"],
             withInfra: args["with-infra"],
             withMobile: args["with-mobile"],
-            withAdmin: args["with-admin"],
-            withGit: !args["no-git"],
+            withMetrics: args["with-metrics"],
+            skipApi: args["skip-api"],
+            skipAdminUi: args["skip-admin-ui"],
+            skipUi: args["skip-ui"],
+            skipInfra: args["skip-infra"],
+            skipMobile: args["skip-mobile"],
+            skipMetrics: args["skip-metrics"],
+            skipRemote: args["skip-remote"],
+            githubOrg: args["github-org"],
+            githubToken: args["github-token"],
+            visibility: args.visibility as "private" | "public" | undefined,
           });
         } else {
           Logger.error(`Unknown workspace subcommand: ${subCommand}`);

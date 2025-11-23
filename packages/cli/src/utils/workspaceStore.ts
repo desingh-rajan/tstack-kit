@@ -5,27 +5,41 @@
  * Tracks workspaces, their GitHub repos, and sub-projects
  */
 
+export type WorkspaceStatus =
+  | "creating"
+  | "created"
+  | "destroying"
+  | "destroyed";
+export type ProjectType = "api" | "admin-ui" | "ui" | "infra" | "mobile";
+
 export interface WorkspaceMetadata {
-  name: string; // e.g., "foo-bar-shop"
-  path: string; // Absolute path
-  namespace: string; // GitHub org/user
+  name: string; // e.g., "vega-groups"
+  path: string; // Absolute path to workspace root
+  namespace: string; // Custom namespace (defaults to workspace name)
+  status: WorkspaceStatus; // Lifecycle status
+  githubOrg?: string; // GitHub organization name (if using remote)
   githubRepos: {
-    name: string; // Repo name
+    name: string; // Repo name (e.g., "vega-groups-api")
     url: string; // Full GitHub URL
-    type: "api" | "ui" | "admin" | "infra" | "mobile";
+    type: ProjectType;
   }[];
-  subProjects: {
-    name: string; // Local folder name
+  projects: {
+    folderName: string; // Local folder name (e.g., "vega-groups-api")
     path: string; // Absolute path
-    type: "api" | "ui" | "admin" | "infra" | "mobile";
-    databases?: {
-      dev?: string;
-      test?: string;
-      prod?: string;
-    };
+    type: ProjectType;
+    projectKey: string; // Reference to project KV store
+    addedBy: "workspace-init" | "manual"; // How it was added
+    addedAt: Date;
   }[];
-  createdAt: number;
-  updatedAt: number;
+  components: {
+    api: boolean;
+    adminUi: boolean;
+    ui: boolean;
+    infra: boolean;
+    mobile: boolean;
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 let kv: Deno.Kv | null = null;
@@ -90,7 +104,9 @@ export async function listWorkspaces(): Promise<WorkspaceMetadata[]> {
     }
   }
 
-  return workspaces.sort((a, b) => b.createdAt - a.createdAt);
+  return workspaces.sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 /**
@@ -118,7 +134,7 @@ export async function updateWorkspace(
   const updated: WorkspaceMetadata = {
     ...existing,
     ...updates,
-    updatedAt: Date.now(),
+    updatedAt: new Date(),
   };
 
   await db.set(["workspaces", name], updated);

@@ -1,204 +1,193 @@
 import { join } from "@std/path";
 import { Logger } from "../utils/logger.ts";
+import { dirExists } from "../utils/fileWriter.ts";
+import { createProject } from "./create.ts";
 import {
-  dirExists,
-  type FileToWrite,
-  writeFiles,
-} from "../utils/fileWriter.ts";
+  getWorkspace,
+  type ProjectType,
+  saveWorkspace,
+  updateWorkspace,
+  type WorkspaceMetadata,
+} from "../utils/workspaceStore.ts";
+import { getProject } from "../utils/projectStore.ts";
 
 export interface WorkspaceOptions {
   name: string;
   targetDir?: string;
   namespace?: string;
+
+  // Inclusive flags (only create specified components)
   withApi?: boolean;
+  withAdminUi?: boolean;
   withUi?: boolean;
   withInfra?: boolean;
   withMobile?: boolean;
-  withAdmin?: boolean;
-  withGit?: boolean;
-  createRemote?: boolean;
-  githubOrg?: string;
+  withMetrics?: boolean;
+
+  // Exclusive flags (skip specific components, create all others)
+  skipApi?: boolean;
+  skipAdminUi?: boolean;
+  skipUi?: boolean;
+  skipInfra?: boolean;
+  skipMobile?: boolean;
+  skipMetrics?: boolean;
+
+  // Remote setup options
+  skipRemote?: boolean; // Explicitly skip remote setup (local only)
+  githubOrg?: string; // If provided, remote setup is automatic unless skipRemote=true
   githubToken?: string;
   visibility?: "private" | "public";
-  push?: boolean;
 }
 
-export interface WorkspaceConfig {
-  workspace: {
-    name: string;
-    namespace: string;
-    created_at: string;
-  };
-  projects: Record<string, {
-    path: string;
-    type: string;
-    stack?: string;
-    framework?: string;
-    provider?: string;
-    platform?: string;
-    git?: {
-      local: boolean;
-      remote?: string;
-      branch?: string;
-    };
-  }>;
-  github?: {
-    organization?: string;
-    token?: string;
-    visibility: "private" | "public";
-  };
-  environment?: {
-    development: Record<string, string>;
-    production: Record<string, string>;
-  };
-}
+// Reserved suffixes that cannot be used as workspace names
+const RESERVED_SUFFIXES = [
+  "-api",
+  "-admin-ui",
+  "-ui",
+  "-infra",
+  "-mobile",
+  "-metrics",
+];
+
+// Available component types
+type ComponentType =
+  | "api"
+  | "admin-ui"
+  | "ui"
+  | "infra"
+  | "mobile"
+  | "metrics";
+
+const AVAILABLE_COMPONENTS: ComponentType[] = [
+  "api",
+  "admin-ui",
+  // Future components (not yet implemented)
+  // "ui",
+  // "infra",
+  // "mobile",
+  // "metrics",
+];
 
 /**
  * Validate workspace name
- * Must be lowercase, alphanumeric, hyphens only
  */
-function validateWorkspaceName(name: string): boolean {
-  return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(name);
-}
-
-/**
- * Generate namespace from workspace name
- * Removes hyphens and converts to lowercase
- */
-function generateNamespace(name: string, customNamespace?: string): string {
-  if (customNamespace) {
-    if (!validateWorkspaceName(customNamespace)) {
-      Logger.error(
-        `Invalid namespace: "${customNamespace}". Use lowercase, alphanumeric, hyphens only.`,
+function validateWorkspaceName(name: string): void {
+  // Check for reserved suffixes
+  for (const suffix of RESERVED_SUFFIXES) {
+    if (name.endsWith(suffix)) {
+      throw new Error(
+        `Workspace name cannot end with '${suffix}' as it's reserved for project types.\n` +
+          `Suggestion: Use '${name.replace(suffix, "")}' instead.`,
       );
-      Deno.exit(1);
     }
-    return customNamespace;
   }
-  return name.replace(/-/g, "");
+
+  // Basic name validation (alphanumeric, hyphens only)
+  if (!/^[a-z0-9-]+$/.test(name)) {
+    throw new Error(
+      "Workspace name must contain only lowercase letters, numbers, and hyphens",
+    );
+  }
+
+  if (name.startsWith("-") || name.endsWith("-")) {
+    throw new Error("Workspace name cannot start or end with a hyphen");
+  }
 }
 
 /**
- * Generate .gitignore content based on project type
+ * Determine which components to create based on flags
+ * Logic:
+ * 1. If any --with-* flag is specified, ONLY create those components
+ * 2. If any --skip-* flag is specified, create ALL except skipped ones
+ * 3. If no flags, create ALL available components by default
  */
-function generateGitignore(
-  projectType: "api" | "ui" | "infra" | "mobile" | "admin",
-): string {
-  const common = `# Environment
-.env
-.env.local
-.env.*.local
-!.env.example
+function determineComponents(options: WorkspaceOptions): ComponentType[] {
+  const hasWithFlags = options.withApi || options.withAdminUi ||
+    options.withUi || options.withInfra ||
+    options.withMobile || options.withMetrics;
 
-# Logs
-logs/
-*.log
+  const hasSkipFlags = options.skipApi || options.skipAdminUi ||
+    options.skipUi || options.skipInfra ||
+    options.skipMobile || options.skipMetrics;
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-Thumbs.db
+  if (hasWithFlags && hasSkipFlags) {
+    throw new Error(
+      "Cannot use both --with-* and --skip-* flags together. " +
+        "Use --with-* to include specific components, or --skip-* to exclude specific ones.",
+    );
+  }
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-`;
+  let components: ComponentType[] = [];
 
-  const typeSpecific: Record<string, string> = {
-    api: `
-# Deno
-deno.lock
+  if (hasWithFlags) {
+    // Only create specified components
+    if (options.withApi) components.push("api");
+    if (options.withAdminUi) components.push("admin-ui");
+    if (options.withUi) components.push("ui");
+    if (options.withInfra) components.push("infra");
+    if (options.withMobile) components.push("mobile");
+    if (options.withMetrics) components.push("metrics");
+  } else if (hasSkipFlags) {
+    // Create all except skipped
+    components = [...AVAILABLE_COMPONENTS];
+    if (options.skipApi) components = components.filter((c) => c !== "api");
+    if (options.skipAdminUi) {
+      components = components.filter((c) => c !== "admin-ui");
+    }
+    if (options.skipUi) components = components.filter((c) => c !== "ui");
+    if (options.skipInfra) components = components.filter((c) => c !== "infra");
+    if (options.skipMobile) {
+      components = components.filter((c) => c !== "mobile");
+    }
+    if (options.skipMetrics) {
+      components = components.filter((c) => c !== "metrics");
+    }
+  } else {
+    // Default: create all available components
+    components = [...AVAILABLE_COMPONENTS];
+  }
 
-# Database
-*.db
-*.db-shm
-*.db-wal
+  // Filter to only implemented components
+  const implementedComponents = components.filter((c) =>
+    c === "api" || c === "admin-ui"
+  );
 
-# Testing
-coverage/
+  if (implementedComponents.length === 0) {
+    throw new Error(
+      "No components selected for creation. " +
+        "Currently available: api, admin-ui. " +
+        "Future: ui, infra, mobile, metrics.",
+    );
+  }
 
-# Build
-dist/
-`,
-    ui: `
-# Dependencies
-node_modules/
+  // Warn about future components
+  const futureComponents = components.filter((c) =>
+    c !== "api" && c !== "admin-ui"
+  );
+  if (futureComponents.length > 0) {
+    Logger.warning(
+      `⚠️  Components not yet implemented: ${futureComponents.join(", ")}. ` +
+        `Only creating: ${implementedComponents.join(", ")}`,
+    );
+  }
 
-# Build
-.next/
-dist/
-build/
-out/
-
-# Testing
-coverage/
-.nyc_output/
-`,
-    infra: `
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.backup
-*.tfvars
-
-# Docker
-docker-compose.override.yml
-`,
-    mobile: `
-# Dependencies
-node_modules/
-
-# Flutter/Dart
-.dart_tool/
-.packages
-build/
-.flutter-plugins
-.flutter-plugins-dependencies
-
-# iOS
-ios/Pods/
-ios/.symlinks/
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-
-# Android
-android/.gradle/
-android/captures/
-android/local.properties
-`,
-    admin: `
-# Dependencies
-node_modules/
-
-# Build
-.next/
-dist/
-build/
-
-# Testing
-coverage/
-`,
-  };
-
-  return common + (typeSpecific[projectType] || "");
+  return implementedComponents;
 }
 
 /**
  * Initialize Git repository for a project
  */
-async function initializeGitRepo(
+async function initializeGit(
   projectPath: string,
   projectName: string,
 ): Promise<void> {
   try {
-    // Check if .git already exists
+    Logger.info(`  🔧 Initializing Git repository...`);
+
+    // Check if git is already initialized
     const gitDir = join(projectPath, ".git");
     if (await dirExists(gitDir)) {
-      Logger.info(`Git repository already exists in ${projectName}`);
+      Logger.info(`  ℹ️  Git already initialized, skipping`);
       return;
     }
 
@@ -209,7 +198,13 @@ async function initializeGitRepo(
       stdout: "piped",
       stderr: "piped",
     });
-    await initCmd.output();
+    const initResult = await initCmd.output();
+
+    if (!initResult.success) {
+      throw new Error(
+        `Git init failed: ${new TextDecoder().decode(initResult.stderr)}`,
+      );
+    }
 
     // Set default branch to main
     const branchCmd = new Deno.Command("git", {
@@ -230,70 +225,205 @@ async function initializeGitRepo(
     await addCmd.output();
 
     const commitCmd = new Deno.Command("git", {
-      args: ["commit", "-m", "Initial commit: TStack project scaffolding"],
+      args: ["commit", "-m", `Initial commit: ${projectName} scaffolding`],
       cwd: projectPath,
       stdout: "piped",
       stderr: "piped",
     });
-    await commitCmd.output();
+    const commitResult = await commitCmd.output();
 
-    Logger.success(`Git repository initialized in ${projectName}`);
+    if (commitResult.success) {
+      Logger.success(`  ✅ Git initialized with initial commit`);
+    }
   } catch (error) {
-    Logger.warning(`Failed to initialize Git repository: ${error.message}`);
+    Logger.warning(
+      `  ⚠️  Failed to initialize Git: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }
 
 /**
- * Generate workspace configuration file
+ * Create remote GitHub repository
  */
-function generateWorkspaceConfig(
-  options: WorkspaceOptions,
-  projects: WorkspaceConfig["projects"],
-): string {
-  const config: WorkspaceConfig = {
-    workspace: {
-      name: options.name,
-      namespace: generateNamespace(options.name, options.namespace),
-      created_at: new Date().toISOString(),
-    },
-    projects,
-  };
+async function createRemoteRepo(
+  projectName: string,
+  projectPath: string,
+  options: {
+    githubOrg?: string;
+    githubToken?: string;
+    visibility?: "private" | "public";
+    push?: boolean;
+  },
+): Promise<string | null> {
+  const { githubOrg, githubToken, visibility = "public", push = false } =
+    options;
 
-  if (options.githubOrg || options.githubToken) {
-    config.github = {
-      organization: options.githubOrg,
-      token: options.githubToken ? "$GITHUB_TOKEN" : undefined,
-      visibility: options.visibility || "private",
-    };
+  try {
+    Logger.info(`  🌐 Creating remote GitHub repository...`);
+
+    const repoFullName = githubOrg
+      ? `${githubOrg}/${projectName}`
+      : projectName;
+    let repoUrl: string | null = null;
+
+    // Try gh CLI first
+    const ghAvailable = await checkGhCliAvailable();
+    if (ghAvailable) {
+      Logger.info(`  📡 Using gh CLI...`);
+      repoUrl = await createRepoUsingGhCli(repoFullName, visibility);
+    } else if (githubToken) {
+      Logger.info(`  📡 Using GitHub API...`);
+      repoUrl = await createRepoUsingApi(
+        projectName,
+        githubOrg,
+        githubToken,
+        visibility,
+      );
+    } else {
+      throw new Error(
+        "Neither gh CLI nor GITHUB_TOKEN available. " +
+          "Install gh CLI or set GITHUB_TOKEN environment variable.",
+      );
+    }
+
+    if (!repoUrl) {
+      throw new Error("Failed to create remote repository");
+    }
+
+    // Add remote
+    const remoteCmd = new Deno.Command("git", {
+      args: ["remote", "add", "origin", repoUrl],
+      cwd: projectPath,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    await remoteCmd.output();
+
+    Logger.success(`  ✅ Remote repository created: ${repoUrl}`);
+
+    // Push if requested
+    if (push) {
+      Logger.info(`  📤 Pushing to remote...`);
+      const pushCmd = new Deno.Command("git", {
+        args: ["push", "-u", "origin", "main"],
+        cwd: projectPath,
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const pushResult = await pushCmd.output();
+
+      if (pushResult.success) {
+        Logger.success(`  ✅ Pushed to remote successfully`);
+      } else {
+        Logger.warning(
+          `  ⚠️  Push failed: ${new TextDecoder().decode(pushResult.stderr)}`,
+        );
+      }
+    }
+
+    return repoUrl;
+  } catch (error) {
+    Logger.error(
+      `  ❌ Failed to create remote repo: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    return null;
   }
-
-  config.environment = {
-    development: {
-      api_url: "http://localhost:8000",
-      ui_url: "http://localhost:3000",
-    },
-    production: {
-      api_url: `https://api.${options.name}.com`,
-      ui_url: `https://${options.name}.com`,
-    },
-  };
-
-  return `# TStack Workspace Configuration
-# Generated: ${new Date().toISOString()}
-
-${
-    Object.entries(config).map(([key, value]) =>
-      `${key}:\n${
-        JSON.stringify(value, null, 2).split("\n").map((line) => `  ${line}`)
-          .join("\n")
-      }`
-    ).join("\n\n")
-  }
-`;
 }
 
 /**
- * Create workspace with specified components
+ * Check if gh CLI is available
+ */
+async function checkGhCliAvailable(): Promise<boolean> {
+  try {
+    const cmd = new Deno.Command("gh", {
+      args: ["--version"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const result = await cmd.output();
+    return result.success;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Create repo using gh CLI
+ */
+async function createRepoUsingGhCli(
+  repoFullName: string,
+  visibility: "private" | "public",
+): Promise<string> {
+  const visibilityFlag = visibility === "private" ? "--private" : "--public";
+
+  const cmd = new Deno.Command("gh", {
+    args: ["repo", "create", repoFullName, visibilityFlag, "--confirm"],
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const result = await cmd.output();
+
+  if (!result.success) {
+    const error = new TextDecoder().decode(result.stderr);
+    throw new Error(`gh CLI failed: ${error}`);
+  }
+
+  // Extract repo URL from output
+  const output = new TextDecoder().decode(result.stdout);
+  const match = output.match(/https:\/\/github\.com\/[^\s]+/);
+
+  if (match) {
+    return match[0] + ".git";
+  }
+
+  // Construct URL from repo name
+  return `https://github.com/${repoFullName}.git`;
+}
+
+/**
+ * Create repo using GitHub API
+ */
+async function createRepoUsingApi(
+  projectName: string,
+  githubOrg: string | undefined,
+  githubToken: string,
+  visibility: "private" | "public",
+): Promise<string> {
+  const apiUrl = githubOrg
+    ? `https://api.github.com/orgs/${githubOrg}/repos`
+    : "https://api.github.com/user/repos";
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${githubToken}`,
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: projectName,
+      private: visibility === "private",
+      auto_init: false,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`GitHub API failed: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.clone_url;
+}
+
+/**
+ * Create a new workspace with multiple projects
  */
 export async function createWorkspace(
   options: WorkspaceOptions,
@@ -301,311 +431,317 @@ export async function createWorkspace(
   const {
     name,
     targetDir = Deno.cwd(),
-    withApi = false,
-    withUi = false,
-    withInfra = false,
-    withMobile = false,
-    withAdmin = false,
-    withGit = true,
+    namespace,
+    skipRemote = false,
+    githubOrg,
+    githubToken = Deno.env.get("GITHUB_TOKEN"),
+    visibility = "public",
   } = options;
 
-  Logger.title(`Creating TStack workspace: ${name}`);
-  Logger.newLine();
+  // Auto-enable remote creation if githubOrg is provided (unless explicitly skipped)
+  const shouldCreateRemote = !skipRemote && githubOrg ? true : false;
+  const shouldPush = shouldCreateRemote; // Always push if creating remote
 
-  // Validate workspace name
-  if (!validateWorkspaceName(name)) {
-    Logger.error(
-      `Invalid workspace name: "${name}". Use lowercase, alphanumeric, hyphens only (e.g., vega-groups, acme-corp).`,
+  // Show warning if skipping remote
+  if (skipRemote && githubOrg) {
+    Logger.warning(
+      "⚠️  Remote repository creation skipped (--skip-remote flag).",
     );
-    Deno.exit(1);
-  }
-
-  const namespace = generateNamespace(name, options.namespace);
-  const workspacePath = join(targetDir, name);
-
-  // Check if workspace already exists
-  if (await dirExists(workspacePath)) {
-    Logger.error(`Workspace "${name}" already exists at ${workspacePath}`);
-    Deno.exit(1);
-  }
-
-  Logger.info(`Namespace: ${namespace}`);
-  Logger.info(`Location: ${workspacePath}`);
-  Logger.newLine();
-
-  // Create workspace directory structure
-  Logger.step("Creating workspace structure...");
-  await Deno.mkdir(workspacePath, { recursive: true });
-  await Deno.mkdir(join(workspacePath, ".tstack"), { recursive: true });
-
-  // Track created projects for config
-  const projects: WorkspaceConfig["projects"] = {};
-
-  // Create API project
-  if (withApi) {
-    Logger.info(`Creating ${name}-api (Backend)...`);
-    const apiPath = join(workspacePath, `${name}-api`);
-    await Deno.mkdir(apiPath, { recursive: true });
-
-    const files: FileToWrite[] = [
-      {
-        path: ".gitignore",
-        content: generateGitignore("api"),
-        description: "Git ignore file",
-      },
-      {
-        path: "README.md",
-        content:
-          `# ${name}-api\n\nBackend API for ${name}\n\n## Stack\n- Deno\n- Hono\n- Drizzle ORM\n- PostgreSQL\n`,
-        description: "README file",
-      },
-    ];
-
-    await writeFiles(apiPath, files);
-
-    projects[`${name}-api`] = {
-      path: `./${name}-api`,
-      type: "backend",
-      stack: "deno-hono-drizzle-postgresql",
-      git: { local: withGit, branch: "main" },
-    };
-
-    if (withGit) {
-      await initializeGitRepo(apiPath, `${name}-api`);
-    }
-  }
-
-  // Create UI project (placeholder for Issue #44)
-  if (withUi) {
-    Logger.info(`Creating ${name}-ui (Frontend)...`);
-    const uiPath = join(workspacePath, `${name}-ui`);
-    await Deno.mkdir(uiPath, { recursive: true });
-
-    const files: FileToWrite[] = [
-      {
-        path: ".gitignore",
-        content: generateGitignore("ui"),
-        description: "Git ignore file",
-      },
-      {
-        path: "README.md",
-        content:
-          `# ${name}-ui\n\nFrontend UI for ${name}\n\n## Stack\n- Fresh\n- Preact\n- Tailwind CSS\n- DaisyUI\n`,
-        description: "README file",
-      },
-    ];
-
-    await writeFiles(uiPath, files);
-
-    projects[`${name}-ui`] = {
-      path: `./${name}-ui`,
-      type: "frontend",
-      framework: "fresh",
-      git: { local: withGit, branch: "main" },
-    };
-
-    if (withGit) {
-      await initializeGitRepo(uiPath, `${name}-ui`);
-    }
-  }
-
-  // Create Infrastructure project
-  if (withInfra) {
-    Logger.info(`Creating ${name}-infra (Infrastructure)...`);
-    const infraPath = join(workspacePath, `${name}-infra`);
-    await Deno.mkdir(infraPath, { recursive: true });
-
-    const files: FileToWrite[] = [
-      {
-        path: ".gitignore",
-        content: generateGitignore("infra"),
-        description: "Git ignore file",
-      },
-      {
-        path: "README.md",
-        content:
-          `# ${name}-infra\n\nInfrastructure configuration for ${name}\n\n## Contents\n- Docker Compose\n- Deployment configs\n`,
-        description: "README file",
-      },
-      {
-        path: "docker-compose.yml",
-        content: `version: '3.8'
-
-services:
-  # Add your services here
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: ${namespace}_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-`,
-        description: "Docker Compose file",
-      },
-    ];
-
-    await writeFiles(infraPath, files);
-
-    projects[`${name}-infra`] = {
-      path: `./${name}-infra`,
-      type: "infrastructure",
-      provider: "docker",
-      git: { local: withGit, branch: "main" },
-    };
-
-    if (withGit) {
-      await initializeGitRepo(infraPath, `${name}-infra`);
-    }
-  }
-
-  // Create Mobile project (placeholder)
-  if (withMobile) {
-    Logger.info(`Creating ${name}-mobile (Mobile)...`);
-    const mobilePath = join(workspacePath, `${name}-mobile`);
-    await Deno.mkdir(mobilePath, { recursive: true });
-
-    const files: FileToWrite[] = [
-      {
-        path: ".gitignore",
-        content: generateGitignore("mobile"),
-        description: "Git ignore file",
-      },
-      {
-        path: "README.md",
-        content:
-          `# ${name}-mobile\n\nMobile app for ${name}\n\n## Stack\n- Flutter\n`,
-        description: "README file",
-      },
-    ];
-
-    await writeFiles(mobilePath, files);
-
-    projects[`${name}-mobile`] = {
-      path: `./${name}-mobile`,
-      type: "mobile",
-      platform: "flutter",
-      git: { local: withGit, branch: "main" },
-    };
-
-    if (withGit) {
-      await initializeGitRepo(mobilePath, `${name}-mobile`);
-    }
-  }
-
-  // Create Admin project (placeholder)
-  if (withAdmin) {
-    Logger.info(`Creating ${name}-admin (Admin Panel)...`);
-    const adminPath = join(workspacePath, `${name}-admin`);
-    await Deno.mkdir(adminPath, { recursive: true });
-
-    const files: FileToWrite[] = [
-      {
-        path: ".gitignore",
-        content: generateGitignore("admin"),
-        description: "Git ignore file",
-      },
-      {
-        path: "README.md",
-        content:
-          `# ${name}-admin\n\nAdmin panel for ${name}\n\n## Stack\n- Fresh Admin UI Kit\n`,
-        description: "README file",
-      },
-    ];
-
-    await writeFiles(adminPath, files);
-
-    projects[`${name}-admin`] = {
-      path: `./${name}-admin`,
-      type: "admin",
-      framework: "fresh",
-      git: { local: withGit, branch: "main" },
-    };
-
-    if (withGit) {
-      await initializeGitRepo(adminPath, `${name}-admin`);
-    }
-  }
-
-  // Generate workspace config and README
-  Logger.step("Generating workspace configuration...");
-  const configContent = generateWorkspaceConfig(options, projects);
-  await Deno.writeTextFile(
-    join(workspacePath, ".tstack", "config.yaml"),
-    configContent,
-  );
-
-  const readmeContent = `# ${name} Workspace
-
-TStack workspace for ${name} project.
-
-## Namespace
-\`${namespace}\`
-
-## Projects
-
-${
-    Object.entries(projects).map(([name, config]) =>
-      `- **${name}** (${config.type}) - \`${config.path}\``
-    ).join("\n")
-  }
-
-## Getting Started
-
-1. Navigate to a project directory:
-   \`\`\`bash
-   cd ${Object.keys(projects)[0] || `${name}-api`}
-   \`\`\`
-
-2. Follow the project-specific README for setup instructions.
-
-## Workspace Configuration
-
-See \`.tstack/config.yaml\` for workspace configuration.
-`;
-
-  await Deno.writeTextFile(
-    join(workspacePath, ".tstack", "README.md"),
-    readmeContent,
-  );
-
-  Logger.newLine();
-  Logger.divider();
-  Logger.success(`Workspace "${name}" created successfully!`);
-  Logger.divider();
-  Logger.newLine();
-
-  Logger.subtitle("Workspace Structure:");
-  Logger.code(`${name}/`);
-  Logger.code(`├── .tstack/`);
-  Logger.code(`│   ├── config.yaml`);
-  Logger.code(`│   └── README.md`);
-  for (const projectName of Object.keys(projects)) {
-    Logger.code(`└── ${projectName}/`);
-  }
-  Logger.newLine();
-
-  Logger.subtitle("Next Steps:");
-  Logger.newLine();
-  Logger.info("1. Navigate to your workspace:");
-  Logger.code(`cd ${name}`);
-  Logger.newLine();
-
-  if (withApi) {
-    Logger.info("2. Set up the API project:");
-    Logger.code(`cd ${name}-api`);
-    Logger.code(`# TODO: Run tstack create to scaffold the API`);
+    Logger.warning(
+      "   You'll need to create and link GitHub repos manually.",
+    );
     Logger.newLine();
   }
 
-  if (options.createRemote) {
-    Logger.warning("Remote repository creation will be implemented in Phase 3");
+  try {
+    // Step 1: Validate workspace name
+    Logger.info(`🔍 Validating workspace name: ${name}`);
+    validateWorkspaceName(name);
+
+    // Step 2: Determine components to create
+    const componentTypes = determineComponents(options);
+    Logger.info(
+      `📦 Creating workspace with components: ${componentTypes.join(", ")}`,
+    );
+
+    // Step 3: Check if workspace already exists
+    const existing = await getWorkspace(name);
+    if (existing) {
+      throw new Error(
+        `Workspace "${name}" already exists at: ${existing.path}\n` +
+          `  Use a different name or destroy the existing workspace first.`,
+      );
+    }
+
+    // Step 4: Create workspace directory
+    const workspacePath = join(targetDir, name);
+    if (await dirExists(workspacePath)) {
+      throw new Error(
+        `Directory "${workspacePath}" already exists\n` +
+          `  Choose a different location or name`,
+      );
+    }
+
+    Logger.info(`📁 Creating workspace directory: ${workspacePath}`);
+    await Deno.mkdir(workspacePath, { recursive: true });
+
+    // Step 5: Initialize workspace metadata
+    const workspaceNamespace = namespace || name;
+    const metadata: WorkspaceMetadata = {
+      name,
+      path: workspacePath,
+      namespace: workspaceNamespace,
+      status: "creating",
+      githubOrg,
+      githubRepos: [],
+      projects: [],
+      components: {
+        api: componentTypes.includes("api"),
+        adminUi: componentTypes.includes("admin-ui"),
+        ui: componentTypes.includes("ui"),
+        infra: componentTypes.includes("infra"),
+        mobile: componentTypes.includes("mobile"),
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await saveWorkspace(metadata);
+
+    // Step 6: Create each component project
+    for (const type of componentTypes) {
+      Logger.newLine();
+      const projectName = `${name}-${type}`;
+      Logger.info(`🚀 Creating ${type} project: ${projectName}`);
+
+      try {
+        await createProject({
+          projectName: name,
+          projectType: type as "api" | "admin-ui",
+          targetDir: workspacePath,
+          skipDbSetup: type === "admin-ui", // Only API needs database
+        });
+
+        const projectPath = join(workspacePath, projectName);
+        const project = await getProject(projectName);
+
+        if (project) {
+          metadata.projects.push({
+            folderName: projectName,
+            path: projectPath,
+            type: type as "api" | "admin-ui",
+            projectKey: projectName,
+            addedBy: "workspace-init",
+            addedAt: new Date(),
+          });
+
+          // Always initialize Git (required for remote tracking)
+          await initializeGit(projectPath, projectName);
+
+          // Create remote repo if should create
+          if (shouldCreateRemote) {
+            const repoUrl = await createRemoteRepo(projectName, projectPath, {
+              githubOrg,
+              githubToken,
+              visibility,
+              push: shouldPush,
+            });
+
+            if (repoUrl) {
+              metadata.githubRepos.push({
+                name: projectName,
+                url: repoUrl,
+                type: type as ProjectType,
+              });
+            }
+          }
+        }
+
+        Logger.success(`✅ ${type} project created successfully`);
+      } catch (error) {
+        Logger.error(
+          `Failed to create ${type} project: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+
+    // Step 7: Update workspace status to "created"
+    metadata.status = "created";
+    metadata.updatedAt = new Date();
+    await updateWorkspace(name, metadata);
+
+    // Step 8: Success message
     Logger.newLine();
+    Logger.banner();
+    Logger.success(`✅ Workspace "${name}" created successfully!`);
+    Logger.newLine();
+    Logger.subtitle("Workspace Structure:");
+    Logger.code(`${workspacePath}/`);
+    for (const project of metadata.projects) {
+      Logger.code(`  ├── ${project.folderName}/`);
+      Logger.code(`  │   └── .git/ (initialized)`);
+      const repo = metadata.githubRepos.find((r) =>
+        r.name === project.folderName
+      );
+      if (repo) {
+        Logger.code(`  │   └── remote: ${repo.url}`);
+      }
+    }
+    Logger.newLine();
+    Logger.subtitle("Next Steps:");
+    Logger.code(`cd ${name}`);
+    Logger.code(`cd ${name}-api && deno task dev`);
+    Logger.newLine();
+  } catch (error) {
+    Logger.error(
+      `Failed to create workspace: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    throw error;
   }
 }
+
+/**
+ * Destroy a workspace and optionally its GitHub repos
+ */
+export async function destroyWorkspace(options: {
+  name: string;
+  force?: boolean;
+  deleteRemote?: boolean;
+}): Promise<void> {
+  const { name, force: _force = false, deleteRemote = true } = options;
+
+  try {
+    // Get workspace metadata
+    const workspace = await getWorkspace(name);
+    if (!workspace) {
+      Logger.error(`Workspace "${name}" not found`);
+      return;
+    }
+
+    Logger.info(`🗑️  Destroying workspace: ${name}`);
+    Logger.info(`   Path: ${workspace.path}`);
+
+    // Delete all GitHub repos if requested
+    if (deleteRemote && workspace.githubRepos.length > 0) {
+      Logger.newLine();
+      Logger.info(
+        `🌐 Deleting ${workspace.githubRepos.length} GitHub repositories...`,
+      );
+
+      for (const repo of workspace.githubRepos) {
+        try {
+          const ghAvailable = await checkGhCliAvailable();
+          if (ghAvailable) {
+            const fullName = workspace.githubOrg
+              ? `${workspace.githubOrg}/${repo.name}`
+              : repo.name;
+
+            const deleteCmd = new Deno.Command("gh", {
+              args: ["repo", "delete", fullName, "--yes"],
+              stdout: "piped",
+              stderr: "piped",
+            });
+
+            const result = await deleteCmd.output();
+            if (result.success) {
+              Logger.success(`  ✅ Deleted: ${fullName}`);
+            } else {
+              Logger.warning(`  ⚠️  Failed to delete: ${fullName}`);
+            }
+          } else {
+            Logger.warning(
+              `  ⚠️  gh CLI not available, skipping: ${repo.name}`,
+            );
+          }
+        } catch (error) {
+          Logger.warning(
+            `  ⚠️  Error deleting ${repo.name}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+      }
+    }
+
+    // Destroy all projects
+    if (workspace.projects.length > 0) {
+      Logger.newLine();
+      Logger.info(`📦 Destroying ${workspace.projects.length} projects...`);
+
+      const { destroyProject } = await import("./destroy.ts");
+
+      for (const project of workspace.projects) {
+        try {
+          Logger.info(`  🗑️  ${project.folderName}`);
+          await destroyProject({
+            projectName: project.folderName,
+            force: true,
+          });
+        } catch (error) {
+          Logger.warning(
+            `  ⚠️  Error destroying ${project.folderName}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+      }
+    }
+
+    // Remove workspace directory
+    Logger.newLine();
+    Logger.info(`📁 Removing workspace directory...`);
+    try {
+      await Deno.remove(workspace.path, { recursive: true });
+      Logger.success(`  ✅ Directory removed`);
+    } catch (error) {
+      if ((error as Error).name === "NotFound") {
+        Logger.warning(`  ⚠️  Directory already removed`);
+      } else {
+        throw error;
+      }
+    }
+
+    // Delete workspace metadata
+    const { deleteWorkspace } = await import("../utils/workspaceStore.ts");
+    await deleteWorkspace(name);
+
+    Logger.newLine();
+    Logger.success(`✅ Workspace "${name}" destroyed successfully!`);
+  } catch (error) {
+    Logger.error(
+      `Failed to destroy workspace: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    throw error;
+  }
+}
+
+/**
+ * TODO: Update remote configuration for an existing workspace
+ * Retroactively adds GitHub remotes to projects that don't have them
+ *
+ * Usage: tstack workspace <name> update-remote --github-org=<org>
+ *
+ * This will:
+ * - Check each project in the workspace
+ * - Initialize Git if not present
+ * - Create GitHub repos if they don't exist
+ * - Add remote origin to local Git config
+ * - Push initial commit
+ */
+/*
+export async function updateWorkspaceRemote(options: {
+  name: string;
+  githubOrg: string;
+  githubToken?: string;
+  visibility?: "private" | "public";
+  push?: boolean;
+}): Promise<void> {
+  // Implementation coming soon...
+}
+*/
