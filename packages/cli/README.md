@@ -599,6 +599,220 @@ cleans up after itself, but you can manually clean up with:
 deno task cleanup:test-dbs
 ```
 
+## Project & Workspace Tracking (Deno KV)
+
+TStack CLI uses **Deno KV** to track all your projects and workspaces, enabling
+powerful commands like `destroy` and `workspace destroy` to work reliably across
+your system.
+
+### How It Works
+
+**KV Store Location:**
+
+```bash
+~/.tstack/projects.db  # Deno KV database file
+```
+
+**What Gets Tracked:**
+
+1. **Projects** (from `tstack create`):
+   - Project name and path
+   - Database names (dev/test/prod)
+   - Creation timestamp
+   - Project type (api, admin-ui, etc.)
+   - Status (creating/created/destroying/destroyed)
+
+2. **Workspaces** (from `tstack workspace create`):
+   - Workspace name
+   - All component projects with their paths
+   - GitHub repositories (if created)
+   - Component flags (api, adminUi, etc.)
+   - Creation timestamp
+
+### Why KV Store?
+
+**Benefits:**
+
+✅ **Reliable Cleanup** - `tstack destroy` knows exactly what to delete ✅
+**Cross-Directory** - Tracks projects regardless of where you created them ✅
+**Workspace Management** - Links multiple projects together ✅ **GitHub
+Integration** - Remembers remote repo URLs for deletion ✅ **Fast Lookups** -
+Instant project queries without filesystem scanning ✅ **Persistent** - Survives
+terminal sessions and reboots
+
+**Example Workflow:**
+
+```bash
+# Create project - gets tracked in KV
+tstack create blog-api
+# KV stores: {
+#   name: "blog-api",
+#   path: "/home/user/blog-api",
+#   databases: { dev: "blog_api_dev", test: "blog_api_test", prod: "blog_api_prod" },
+#   createdAt: "2025-11-23T10:30:00Z",
+#   status: "created"
+# }
+
+# Later, from ANY directory
+tstack destroy blog-api
+# KV lookup finds the project
+# Deletes: /home/user/blog-api + 3 databases
+# Removes from KV store
+```
+
+### KV Store Schema
+
+**Project Entry:**
+
+```typescript
+// Key: ["projects", projectName]
+{
+  name: string;
+  path: string;
+  type: "api" | "admin-ui" | "ui" | "mobile" | "infra";
+  databases: {
+    dev: string;
+    test: string;
+    prod: string;
+  }
+  createdAt: string;
+  status: "creating" | "created" | "destroying" | "destroyed";
+}
+```
+
+**Workspace Entry:**
+
+```typescript
+// Key: ["workspaces", workspaceName]
+{
+  name: string;
+  path: string;
+  namespace: string;
+  projects: Array<{
+    name: string;
+    path: string;
+    type: string;
+    databases: { dev, test, prod };
+  }>;
+  githubRepos: Array<{
+    name: string;
+    url: string;
+    type: string;
+  }>;
+  components: {
+    api: boolean;
+    adminUi: boolean;
+    ui: boolean;
+    mobile: boolean;
+    infra: boolean;
+  };
+  githubOrg?: string;
+  createdAt: string;
+  status: "creating" | "created" | "destroying" | "destroyed";
+}
+```
+
+### Querying the KV Store (Advanced)
+
+**List all tracked projects:**
+
+```bash
+# From your project directory
+deno eval "
+const kv = await Deno.openKv(Deno.env.get('HOME') + '/.tstack/projects.db');
+const projects = kv.list({ prefix: ['projects'] });
+for await (const entry of projects) {
+  console.log(entry.key, entry.value);
+}
+kv.close();
+"
+```
+
+**Check workspace info:**
+
+```bash
+deno eval "
+const kv = await Deno.openKv(Deno.env.get('HOME') + '/.tstack/projects.db');
+const workspace = await kv.get(['workspaces', 'my-saas']);
+console.log(workspace.value);
+kv.close();
+"
+```
+
+### When KV Store Gets Updated
+
+**On `tstack create`:**
+
+- ✅ Project entry created with status "creating"
+- ✅ Updated to "created" when successful
+- ✅ Stores database names and paths
+
+**On `tstack workspace create`:**
+
+- ✅ Workspace entry created
+- ✅ Each component project gets a project entry
+- ✅ GitHub repos tracked if `--github-org` used
+- ✅ Component flags stored
+
+**On `tstack destroy`:**
+
+- ✅ Project looked up in KV
+- ✅ Status changed to "destroying"
+- ✅ After successful deletion, entry removed from KV
+
+**On `tstack workspace destroy`:**
+
+- ✅ Workspace looked up in KV
+- ✅ All component projects destroyed
+- ✅ GitHub repos deleted if `--delete-remote` used
+- ✅ Workspace entry removed from KV
+
+### KV Store Safety
+
+**Automatic Cleanup:**
+
+- Failed creations don't leave orphaned entries
+- Successful destroys remove entries completely
+- No manual cleanup needed in normal usage
+
+**Data Privacy:**
+
+- Stored locally in `~/.tstack/` (your home directory)
+- Only you can read it (standard file permissions)
+- No data sent to external services
+- Can be deleted safely: `rm ~/.tstack/projects.db`
+
+**Recovery:**
+
+- If KV store is deleted, CLI still works for new projects
+- Existing projects won't be tracked, so `destroy` needs manual path
+- Re-creating the same project name will re-track it
+
+### Troubleshooting
+
+**"Project not found" error:**
+
+```bash
+# The project isn't in KV store
+# Either:
+# 1. Created before KV tracking was added
+# 2. KV store was deleted
+# 3. Project created outside of tstack CLI
+
+# Solution: Specify the full path
+tstack destroy ~/projects/old-project --force
+```
+
+**Reset KV store (nuclear option):**
+
+```bash
+# This removes ALL tracking data
+rm ~/.tstack/projects.db
+
+# Future creates/destroys will work normally
+# But old projects won't be tracked anymore
+```
+
 ## Documentation
 
 - [TonyStack Documentation](https://github.com/yourusername/tonystack)

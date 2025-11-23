@@ -1,27 +1,51 @@
 # TStack Kit
 
-> **Rails-like backend toolkit for Deno. Build APIs fast.**
+> **Full-stack SaaS MVP toolkit for Deno. Ship products, not boilerplate.**
 
-A minimal, production-ready starter for building type-safe REST APIs with Deno,
-Hono, Drizzle ORM, and PostgreSQL.
+From API to deployment in minutes - a complete toolkit for building type-safe
+SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL.
+
+**Project Evolution:**
+
+- ✅ **v1.0** - Starter Kit (Single API project scaffolding)
+- 🔥 **v1.2** - MVP Kit (Multi-project workspaces with API + Admin UI)
+- 🚀 **v2.0** - SaaS Kit (Add payments, mobile, infrastructure, deployment)
 
 ---
 
 ## What is TStack?
 
-**TonyStack is a backend scaffolding toolkit** - like what Vite does for
-frontend, but for Deno backend APIs.
+**TStack is evolving from a backend toolkit into a complete SaaS MVP launcher.**
 
-- **Vite** → Scaffolds React/Vue/Svelte projects (frontend)
-- **TStack** → Scaffolds Deno REST API projects (backend)
+**Current State (v1.2 - MVP Kit):**
 
-Think of it as **"Rails generators for Deno"** or **"Laravel Artisan for
-minimalists"**. Instead of writing boilerplate CRUD code repeatedly, TStack
-generates complete, production-ready entities (models, controllers, routes,
-DTOs) with a single command.
+- 🎯 **Single Project**: `tstack create` - API scaffolding with auth, CRUD,
+  testing
+- 🚀 **Workspaces**: `tstack workspace create` - Multi-project setup (API +
+  Admin UI + GitHub)
+- ⚡ **Entity Generation**: `tstack scaffold` - Complete MVC with tests in
+  seconds
 
-**One command** → Full MVC entity with database migrations → **Start building
-your business logic**
+**Think of it as:**
+
+- **Create React App** + **T3 Stack** → but for **full-stack Deno SaaS
+  products**
+- **Rails generators** + **Laravel Artisan** → but **workspace-aware and
+  deployment-ready**
+
+**One command to:**
+
+1. Create backend API (Deno + Hono + Drizzle)
+2. Create admin dashboard (Fresh + Preact)
+3. Initialize Git repos with initial commits
+4. Push to GitHub organization
+5. Set up databases (dev/test/prod)
+
+**Then scaffold entities:**
+
+- `tstack scaffold products` → Model, Service, Controller, Routes, Admin Routes,
+  Tests (8 files)
+- Focus on **business logic**, not plumbing
 
 ---
 
@@ -58,8 +82,8 @@ the same patterns, it became clear: **stop rewriting, start generating**.
 - **No vendor lock-in** - Generated code is yours to modify freely
 
 **Real savings example:** A typical project with 10 entities could save
-$65-165 in AI costs ($15 setup + $50 for 10 scaffolds) plus 25-50 hours
-of token wait time and prompt engineering.
+$65-165 in AI costs ($15 setup + $50 for 10 scaffolds) plus 25-50 hours of token
+wait time and prompt engineering.
 
 ### Default Stack (v1.0)
 
@@ -77,11 +101,16 @@ type-safe, and production-ready.
 
 Coming in v2.0 (2026):
 
-- **Node.js + Express + Prisma + PostgreSQL/SQLite** - Full-stack support with both databases
+- **Node.js + Express + Prisma + PostgreSQL/SQLite** - Full-stack support with
+  both databases
 
-The Deno + Hono + Drizzle + PostgreSQL stack will remain the flagship and recommended choice. As a solo developer, I'm focusing on polishing the Deno stack first before expanding to other runtimes. Other combinations (Bun, Fastify, etc.) may be added based on community demand.
+The Deno + Hono + Drizzle + PostgreSQL stack will remain the flagship and
+recommended choice. As a solo developer, I'm focusing on polishing the Deno
+stack first before expanding to other runtimes. Other combinations (Bun,
+Fastify, etc.) may be added based on community demand.
 
-**Contributing:** If you'd like to contribute support for additional stacks, please open an issue or discussion first to coordinate with maintainers.
+**Contributing:** If you'd like to contribute support for additional stacks,
+please open an issue or discussion first to coordinate with maintainers.
 
 Built by [Desingh Rajan](https://desinghrajan.in) and
 [contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
@@ -129,12 +158,14 @@ during project creation.
 
 ### 3. Create Your First Project
 
+**Option A: Single API Project (Traditional)**
+
 ```bash
 # Create new project
 tstack create blog-api
 cd blog-api
 
-# Start all services (PostgreSQL + development/test databases)
+# Start PostgreSQL
 docker-compose up -d
 
 # Generate and run migrations
@@ -147,11 +178,111 @@ deno task dev
 
 Server running at **<http://localhost:8000>**
 
-**Databases created:**
+**What you get:**
 
-- `blog_api_dev` - Development database
-- `blog_api_test` - Testing database
-- `blog_api_prod` - Production database (optional, for reference)
+- ✅ Complete API project with Deno + Hono + Drizzle
+- ✅ JWT authentication system (optional, ready to use)
+- ✅ 3 databases created: `blog_api_dev`, `blog_api_test`, `blog_api_prod`
+- ✅ Built-in entities: Users, Articles, Site Settings
+- ✅ Docker Compose setup
+- ✅ Migration system
+- ✅ Testing framework (BDD-style)
+
+**Option B: Full Workspace (API + Admin UI)**
+
+```bash
+# Create workspace with multiple projects
+tstack workspace create my-saas
+cd my-saas
+
+# Each project has its own folder:
+# - my-saas-api/        (Backend API)
+# - my-saas-admin-ui/   (Admin Dashboard)
+
+# Start API
+cd my-saas-api
+docker-compose up -d
+deno task migrate:generate
+deno task migrate:run
+deno task dev  # Port 8000
+
+# Start Admin UI (in another terminal)
+cd my-saas-admin-ui
+deno task dev  # Port 5173
+```
+
+**With GitHub Integration:**
+
+```bash
+# Create workspace + push to GitHub organization
+tstack workspace create my-saas --github-org=your-company
+
+# Creates:
+# - Local folders: my-saas-api/, my-saas-admin-ui/
+# - GitHub repos: your-company/my-saas-api, your-company/my-saas-admin-ui
+# - Git initialized + initial commit + pushed to remote
+# - All tracked in workspace metadata
+```
+
+---
+
+## Workspace Management
+
+### Create Workspace
+
+Create a workspace with multiple projects (api, admin-ui, etc.):
+
+```bash
+# Create workspace with default components (api + admin-ui)
+tstack workspace create my-app
+
+# Create workspace with specific components
+tstack workspace create my-app --with-api --with-admin-ui
+
+# Create workspace with only API
+tstack workspace create my-app --with-api
+
+# Create workspace and skip admin-ui
+tstack workspace create my-app --skip-admin-ui
+
+# Create workspace with GitHub repos
+tstack workspace create my-app --github-org=your-org
+
+# Create workspace locally only (skip GitHub)
+tstack workspace create my-app --github-org=your-org --skip-remote
+```
+
+### Workspace Structure
+
+```text
+my-app/
+├── my-app-api/          # Backend API (Deno + Hono + Drizzle)
+│   └── .git/           # Initialized with initial commit
+└── my-app-admin-ui/    # Admin dashboard (Fresh + Preact)
+    └── .git/           # Initialized with initial commit
+```
+
+### Destroy Workspace
+
+```bash
+# Destroy workspace (removes projects and databases)
+tstack workspace destroy my-app
+
+# Force destroy (skip confirmation)
+tstack workspace destroy my-app --force
+
+# Destroy workspace and delete GitHub repos
+tstack workspace destroy my-app --delete-remote
+```
+
+**What gets deleted:**
+
+- Project directories and all files
+- Development databases (`{project}_dev`)
+- Test databases (`{project}_test`)
+- Production databases (`{project}_prod`)
+- Remote GitHub repositories (if `--delete-remote` specified)
+- Workspace metadata from tracking database
 
 ---
 
@@ -282,9 +413,18 @@ deno task db:seed:site         # Create default site settings
 ### TStack CLI
 
 ```bash
+# Project commands
 tstack create <project>     # Create new project
-tstack scaffold <entity>    # Generate entity
 tstack destroy <project>    # Remove project and drop databases
+
+# Workspace commands
+tstack workspace create <name>   # Create workspace with multiple projects
+tstack workspace destroy <name>  # Remove workspace, projects, and databases
+
+# Scaffolding
+tstack scaffold <entity>    # Generate entity (model, controller, routes, tests)
+
+# Help
 tstack --help              # Show help
 tstack --version           # Show version
 ```
@@ -409,15 +549,18 @@ After `tstack scaffold products`:
 
 **Admin API** (`/ts-admin/products`) - Protected:
 
-- `GET /ts-admin/products` - List all products with pagination/search (superadmin/admin)
-- `GET /ts-admin/products/new` - Get new product form metadata (superadmin/admin)
+- `GET /ts-admin/products` - List all products with pagination/search
+  (superadmin/admin)
+- `GET /ts-admin/products/new` - Get new product form metadata
+  (superadmin/admin)
 - `POST /ts-admin/products` - Create product (superadmin/admin)
 - `GET /ts-admin/products/:id` - Get product details (superadmin/admin)
 - `GET /ts-admin/products/:id/edit` - Get edit form metadata (superadmin/admin)
 - `PUT /ts-admin/products/:id` - Update product (superadmin/admin)
 - `PATCH /ts-admin/products/:id` - Partial update (superadmin/admin)
 - `DELETE /ts-admin/products/:id` - Delete product (superadmin/admin)
-- `POST /ts-admin/products/bulk-delete` - Bulk delete products (superadmin/admin)
+- `POST /ts-admin/products/bulk-delete` - Bulk delete products
+  (superadmin/admin)
 
 ---
 
@@ -530,77 +673,79 @@ Done! You have a working blog API.
 
 ## Removing Projects
 
-### Destroy Command
+### Destroy Single Project
 
-When you no longer need a project, the `tstack destroy` command safely removes:
-
-- Project directory and all files
-- Development database (`{project_name}_dev`)
-- Test database (`{project_name}_test`)
-- Production database (`{project_name}_prod`)
-
-**Basic Usage:**
+When you no longer need a single API project:
 
 ```bash
 # Destroy with confirmation prompt
 tstack destroy blog-api
 
-# Type the project name to confirm: blog-api
-```
-
-**Force Destruction (Skip Confirmation):**
-
-```bash
-# Skip confirmation prompt
+# Force destroy (skip confirmation)
 tstack destroy blog-api --force
 ```
 
 **What Gets Deleted:**
 
-1. **Project Directory**: The entire project folder (searched in current
-   directory and ~/projects)
-2. **Development Database**: `{project_name}_dev` (hyphens replaced with
-   underscores)
-3. **Test Database**: `{project_name}_test`
-4. **Production Database**: `{project_name}_prod` (if created)
-
-**Examples:**
-
-```bash
-# Create and destroy a test project
-tstack create test-api
-tstack destroy test-api
-
-# Project: my-blog-api
-# Deletes directory: my-blog-api/
-# Drops database: my_blog_api_db
-# Drops test DB: my_blog_api_test_db
-```
+- ✅ Project directory and all files
+- ✅ Development database (`blog_api_dev`)
+- ✅ Test database (`blog_api_test`)
+- ✅ Production database (`blog_api_prod`)
+- ✅ Project metadata from tracking database
 
 **Safety Features:**
 
-- Requires typing project name exactly for confirmation (unless --force)
+- Requires typing project name exactly for confirmation (unless `--force`)
 - Shows what will be deleted before proceeding
-- Searches in both current directory and ~/projects
-- Provides clear error messages if project not found
+- Searches in current directory and `~/projects`
+- Clear error messages if project not found
 
-**Note**: Docker Compose services must be stopped separately if running:
+### Destroy Workspace
+
+When you no longer need a workspace with multiple projects:
 
 ```bash
-# Stop Docker services before destroying project
-cd my-blog-api
-docker-compose down -v
-cd ..
-tstack destroy my-blog-api
+# Destroy workspace (local only)
+tstack workspace destroy my-saas
+
+# Force destroy (skip confirmation)
+tstack workspace destroy my-saas --force
+
+# Destroy workspace + delete GitHub repos
+tstack workspace destroy my-saas --delete-remote
+
+# Force destroy + delete GitHub repos
+tstack workspace destroy my-saas --force --delete-remote
 ```
 
-**⚠️ Warning:** The `destroy` command will delete **all three databases** created for your project:
+**What Gets Deleted:**
 
-- `{project}_dev` - Development database
-- `{project}_test` - Testing database  
-- `{project}_prod` - Production database
+- ✅ All project directories (`my-saas-api/`, `my-saas-admin-ui/`)
+- ✅ All databases for each project (dev/test/prod per project)
+- ✅ Workspace directory
+- ✅ Workspace metadata from tracking database
+- ✅ Remote GitHub repositories (if `--delete-remote` specified)
 
-Make sure to backup any important data before running this command.
+**Example Workflow:**
+
+```bash
+# Create workspace with GitHub repos
+tstack workspace create demo --github-org=my-company
+# Creates: my-company/demo-api, my-company/demo-admin-ui on GitHub
+
+# Later, destroy everything including GitHub repos
+tstack workspace destroy demo --delete-remote
+# Deletes: Local folders + databases + GitHub repos
+```
+
+**⚠️ Warning:**
+
+- `tstack destroy` - Deletes 3 databases (dev/test/prod)
+- `tstack workspace destroy` - Deletes 3 databases **per project** (6 total for
+  API + Admin UI)
+- `--delete-remote` - Permanently deletes GitHub repositories
+
+Make sure to backup any important data before running these commands.
 
 ---
 
@@ -608,21 +753,30 @@ Make sure to backup any important data before running this command.
 
 ### Perfect If You Want
 
-- ✅ **Zero auth bloat** - Authentication included but optional, add what you need
+- ✅ **Zero auth bloat** - Authentication included but optional, add what you
+  need
 - ✅ **PostgreSQL first** - No SQLite native binding issues
 - ✅ **Minimal defaults** - Clean, opinionated starting point
 - ✅ **Pure Deno** - No Node.js baggage (or use Node.js stack in future)
 - ✅ **Fast scaffolding** - Generate complete entities in seconds
 - ✅ **Type-safe** - Full TypeScript from database to API responses
-- ✅ **Save time and money** - Reduces development time by 2-4 hours per project, saves $5-15 in AI/token costs per project, and $2-5 per entity scaffold
+- ✅ **Save time and money** - Reduces development time by 2-4 hours per
+  project, saves $5-15 in AI/token costs per project, and $2-5 per entity
+  scaffold
 
-> **💰 Cost Savings:** TStack eliminates repetitive boilerplate setup, reducing AI prompts and token usage significantly. Developers save approximately **2-4 hours of setup time** and **$5-15 in AI credits** per new project, plus **$2-5 per entity** scaffolded. This adds up to substantial savings over multiple projects.
+> **💰 Cost Savings:** TStack eliminates repetitive boilerplate setup, reducing
+> AI prompts and token usage significantly. Developers save approximately **2-4
+> hours of setup time** and **$5-15 in AI credits** per new project, plus **$2-5
+> per entity** scaffolded. This adds up to substantial savings over multiple
+> projects.
 
 ### Not Ideal If You Need
 
 - ❌ GraphQL support (REST API only)
-- ❌ All-in-one batteries-included framework (this is a toolkit - you build what you need)
-- ❌ Immediate support for all runtime/framework combinations (Deno + Hono is currently the only stack)
+- ❌ All-in-one batteries-included framework (this is a toolkit - you build what
+  you need)
+- ❌ Immediate support for all runtime/framework combinations (Deno + Hono is
+  currently the only stack)
 
 ---
 
@@ -640,27 +794,44 @@ Make sure to backup any important data before running this command.
 
 ## Roadmap
 
-### v1.1.3 (Current - November 2025) ✅
+### v1.2 (Current - November 2025) - MVP Kit ✅
 
+**Workspace Management (Completed) ✅**
+
+- ✅ `tstack workspace create` - Multi-project setup (API + Admin UI)
+- ✅ Component flags: `--with-api`, `--with-admin-ui`, `--skip-*`
+- ✅ GitHub integration: `--github-org` auto-creates and pushes repos
+- ✅ `--skip-remote` flag for local-only development
+- ✅ `tstack workspace destroy` with `--delete-remote` option
+- ✅ Git initialization per project with initial commits
+- ✅ Workspace metadata tracking in KV store
+- ✅ Comprehensive test suite (12 tests: 7 local + 5 GitHub)
+
+**Single Project (Existing) ✅**
+
+- ✅ `tstack create` - API scaffolding
+- ✅ `tstack destroy` - Project + database cleanup
+- ✅ `tstack scaffold` - Entity generation with MVC pattern
 - ✅ Auto-discovery route system
-- ✅ PostgreSQL support with proper .env loading
-- ✅ Entity scaffolding with MVC templates
-- ✅ Docker ready with docker-compose
-- ✅ `tstack destroy` command - Remove projects and databases
+- ✅ PostgreSQL with three-database setup (dev/test/prod)
 - ✅ JWT authentication system (optional)
-- ✅ Rails-style `--skip-*` flags for scaffold command
+- ✅ Rails-style `--skip-*` flags for scaffold
 - ✅ BDD-style testing framework
 - ✅ Site settings with JSON schema validation
-- ✅ @tstack/admin - Production-ready admin CRUD system
-- ✅ Three-database setup (dev, test, prod)
+- ✅ Docker Compose setup
 
-### v1.2 (Q1 2026) - Infrastructure & UI
+**In Progress**
+
+- 🔄 **Base Service/Controller Refactoring** (#45) - 85% code reduction per
+  entity
+- 🔄 **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
+
+### v1.3 (Q1 2026) - Infrastructure & Deployment
 
 - [ ] **Docker Support** (#43) - Multi-environment Dockerfile setup
-- [ ] **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
-- [ ] **Workspace Management** (#42) - Multi-project namespace support
 - [ ] **Kamal Deployment** (#7) - Production-ready deployment config
 - [ ] **Interactive Create** (#37) - CLI prompts for project setup
+- [ ] **Public UI Kit** - Next.js/React frontend starter
 
 ### v1.3 (Q2 2026) - Communication & Integration
 
