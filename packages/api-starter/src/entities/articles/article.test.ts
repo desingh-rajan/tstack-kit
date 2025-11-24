@@ -166,7 +166,7 @@ describe("Article API", () => {
         body: JSON.stringify({
           title: "Alpha's First Article",
           content: "Content by Alpha",
-          published: true,
+          isPublished: true,
         }),
       });
 
@@ -186,7 +186,7 @@ describe("Article API", () => {
         body: JSON.stringify({
           title: "Admin's Article",
           content: "Content by Admin",
-          published: true,
+          isPublished: true,
         }),
       });
 

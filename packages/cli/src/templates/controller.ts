@@ -2,172 +2,43 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateControllerTemplate(
   names: EntityNames,
-  withValidation = true,
 ): string {
-  if (withValidation) {
-    return `import { Context } from "hono";
-import { ${names.pascalSingular}Service } from "./${names.kebabSingular}.service.ts";
-import { ValidationUtil } from "../../shared/utils/validation.ts";
-import { ApiResponse } from "../../shared/utils/response.ts";
-import { NotFoundError } from "../../shared/utils/errors.ts";
-import {
- Create${names.pascalSingular}Schema,
- Update${names.pascalSingular}Schema,
-} from "./${names.kebabSingular}.dto.ts";
+  return `import { ${names.camelSingular}Service } from "./${names.kebabSingular}.service.ts";
+import { BaseController } from "../../shared/controllers/base.controller.ts";
 
-export class ${names.pascalSingular}Controller {
- // GET /${names.kebabPlural}
- static async getAll(c: Context) {
- const ${names.plural} = await ${names.pascalSingular}Service.getAll();
- return c.json(
- ApiResponse.success(${names.plural}, "${names.pascalPlural} retrieved successfully"),
- 200
- );
- }
+/**
+ * ${names.pascalSingular} Controller
+ * 
+ * Extends BaseController to inherit standard CRUD handlers:
+ * - getAll(), getById(), create(), update(), delete()
+ * 
+ * Configure authorization declaratively in constructor:
+ * - roles: ['superadmin', 'admin'] - who can access
+ * - ownershipCheck: (entity, userId) => entity.userId === userId
+ * 
+ * Override methods to add custom logic when needed.
+ */
 
- // GET /${names.kebabPlural}/:id
- static async getById(c: Context) {
- const id = parseInt(c.req.param("id"));
- const ${names.singular} = await ${names.pascalSingular}Service.getById(id);
-
- if (!${names.singular}) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} retrieved successfully"),
- 200
- );
- }
-
- // POST /${names.kebabPlural}
- static async create(c: Context) {
- const body = await c.req.json();
- const validatedData = ValidationUtil.validateSync(Create${names.pascalSingular}Schema, body);
-
- const ${names.singular} = await ${names.pascalSingular}Service.create(validatedData);
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} created successfully"),
- 201
- );
- }
-
- // PUT /${names.kebabPlural}/:id
- static async update(c: Context) {
- const id = parseInt(c.req.param("id"));
- const body = await c.req.json();
- const validatedData = ValidationUtil.validateSync(Update${names.pascalSingular}Schema, body);
-
- const ${names.singular} = await ${names.pascalSingular}Service.update(id, validatedData);
-
- if (!${names.singular}) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} updated successfully"),
- 200
- );
- }
-
- // DELETE /${names.kebabPlural}/:id
- static async delete(c: Context) {
- const id = parseInt(c.req.param("id"));
- const success = await ${names.pascalSingular}Service.delete(id);
-
- if (!success) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(null, "${names.pascalSingular} deleted successfully"),
- 200
- );
- }
-}
-`;
-  } else {
-    return `import { Context } from "hono";
-import { ${names.pascalSingular}Service } from "./${names.kebabSingular}.service.ts";
-import { ApiResponse } from "../../shared/utils/response.ts";
-import { NotFoundError } from "../../shared/utils/errors.ts";
-import type {
- Create${names.pascalSingular}DTO,
- Update${names.pascalSingular}DTO,
-} from "./${names.kebabSingular}.dto.ts";
-
-export class ${names.pascalSingular}Controller {
- // GET /${names.kebabPlural}
- static async getAll(c: Context) {
- const ${names.plural} = await ${names.pascalSingular}Service.getAll();
- return c.json(
- ApiResponse.success(${names.plural}, "${names.pascalPlural} retrieved successfully"),
- 200
- );
- }
-
- // GET /${names.kebabPlural}/:id
- static async getById(c: Context) {
- const id = parseInt(c.req.param("id"));
- const ${names.singular} = await ${names.pascalSingular}Service.getById(id);
-
- if (!${names.singular}) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} retrieved successfully"),
- 200
- );
- }
-
- // POST /${names.kebabPlural}
- static async create(c: Context) {
- const body: Create${names.pascalSingular}DTO = await c.req.json();
- // No validation - add validation later by implementing Zod schemas
-
- const ${names.singular} = await ${names.pascalSingular}Service.create(body);
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} created successfully"),
- 201
- );
- }
-
- // PUT /${names.kebabPlural}/:id
- static async update(c: Context) {
- const id = parseInt(c.req.param("id"));
- const body: Update${names.pascalSingular}DTO = await c.req.json();
- // No validation - add validation later by implementing Zod schemas
-
- const ${names.singular} = await ${names.pascalSingular}Service.update(id, body);
-
- if (!${names.singular}) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(${names.singular}, "${names.pascalSingular} updated successfully"),
- 200
- );
- }
-
- // DELETE /${names.kebabPlural}/:id
- static async delete(c: Context) {
- const id = parseInt(c.req.param("id"));
- const success = await ${names.pascalSingular}Service.delete(id);
-
- if (!success) {
- throw new NotFoundError("${names.pascalSingular} not found");
- }
-
- return c.json(
- ApiResponse.success(null, "${names.pascalSingular} deleted successfully"),
- 200
- );
- }
-}
-`;
+export class ${names.pascalSingular}Controller extends BaseController<typeof ${names.camelSingular}Service> {
+  constructor() {
+    super(
+      ${names.camelSingular}Service,
+      "${names.pascalSingular}",
+      // Optional: Configure authorization
+      // {
+      //   create: { roles: ["user"] },
+      //   update: { ownershipCheck: (${names.singular}, userId) => ${names.singular}.userId === userId },
+      //   delete: { ownershipCheck: (${names.singular}, userId) => ${names.singular}.userId === userId },
+      // }
+    );
   }
+
+  // Override methods here if needed
+  // Example: Custom create logic
+  // override create = async (c: Context) => { ... }
+}
+
+const controller = new ${names.pascalSingular}Controller();
+export const ${names.pascalSingular}ControllerStatic = controller.toStatic();
+`;
 }

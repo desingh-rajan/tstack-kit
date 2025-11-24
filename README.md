@@ -288,62 +288,90 @@ tstack workspace destroy my-app --delete-remote
 
 ## Scaffold Entities
 
-Generate complete MVC structures:
+Generate complete MVC structures with minimal boilerplate:
 
 ```bash
-# Scaffold articles entity
-tstack scaffold articles
+# Scaffold products entity
+tstack scaffold products
 
-# This creates (7 files by default):
-# [OK] src/entities/articles/article.model.ts         (Drizzle schema)
-# [OK] src/entities/articles/article.dto.ts           (Zod validation)
-# [OK] src/entities/articles/article.service.ts       (Business logic)
-# [OK] src/entities/articles/article.controller.ts    (HTTP handlers)
-# [OK] src/entities/articles/article.route.ts         (Public routes: /articles)
-# [OK] src/entities/articles/article.admin.route.ts   (Admin API: /ts-admin/articles)
-# [OK] src/entities/articles/article.test.ts          (API tests)
-# [OK] src/entities/articles/article.admin.test.ts    (Admin tests)
+# Creates 8 files:
+# - product.model.ts          (Drizzle schema)
+# - product.dto.ts            (Zod validation)
+# - product.service.ts        (Business logic - extends BaseService)
+# - product.controller.ts     (HTTP handlers - extends BaseController)
+# - product.route.ts          (Public API routes)
+# - product.admin.route.ts    (Admin panel routes)
+# - product.test.ts           (API tests)
+# - product.admin.test.ts     (Admin tests)
 ```
 
-### Customize the Model
+### Base Abstractions Pattern (70-80% Less Code)
 
-Edit `src/entities/articles/article.model.ts`:
+**Why?** Admin panels need standardized CRUD operations for every entity. The
+base classes generate this boilerplate automatically, letting you focus on
+business logic.
+
+**Two-Tier Design:**
+
+1. **Admin API** (`/ts-admin/*`) - Always uses base classes for consistency
+   - Powers reusable admin UI (list/search/filter/bulk operations)
+   - Rails-style: same structure for all entities
+
+2. **Public API** (`/api/*`) - Uses base classes when appropriate
+   - Standard CRUD: Use base classes (saves 70-80% code)
+   - Custom logic: Override or implement from scratch
+
+Generated entities use **base classes** to eliminate boilerplate:
 
 ```typescript
-import {
-  boolean,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+// Service - Just add custom logic
+export class ProductService
+  extends BaseService<Product, CreateDTO, UpdateDTO, ResponseDTO> {
+  protected override async beforeCreate(data: CreateDTO) {
+    return { ...data, slug: slugify(data.name) }; // Auto-generate slug
+  }
+}
 
-export const articles = pgTable("articles", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  title: text().notNull(),
-  content: text(),
-  published: boolean().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+// Controller - Declarative authorization
+export class ProductController extends BaseController<typeof productService> {
+  constructor() {
+    super(productService, "Product", {
+      update: {
+        requireAuth: true,
+        ownershipCheck: (p, uid) => p.ownerId === uid,
+      },
+    });
+  }
+}
+
+// Public API - Auto-generated CRUD routes
+const routes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/products",
+  controller: ProductControllerStatic,
+  schemas: { create: CreateProductSchema, update: UpdateProductSchema },
+  publicRoutes: ["getAll", "getById"], // No auth required
+});
+
+// Admin API - Standardized for admin panel UI
+const adminRoutes = AdminRouteFactory.createAdminRoutes({
+  basePath: "/ts-admin/products",
+  adapter: new DrizzleAdapter(db, products),
+  requireRole: ["admin", "superadmin"],
 });
 ```
 
-### Register Routes
+**What You Get:**
 
-Edit `src/main.ts`:
+- ✅ Lifecycle hooks: `beforeCreate`, `afterCreate`, `beforeUpdate`,
+  `afterUpdate`, `beforeDelete`, `afterDelete`
+- ✅ Declarative authorization: ownership checks, role-based access, superadmin
+  bypass
+- ✅ Auto-generated routes: Standard CRUD + admin panel endpoints
+- ✅ Type-safe: Full TypeScript generics
 
-```typescript
-import articleRoutes from "./entities/articles/article.route.ts";
-
-app.route("/api", articleRoutes);
-```
-
-### Run Migrations
-
-```bash
-deno task migrate:generate
-deno task migrate:run
-```
+**Learn More:** See
+[packages/api-starter/README.md](packages/api-starter/README.md#9-base-abstractions-pattern)
+for detailed examples and when to use custom implementations.
 
 ---
 
@@ -819,11 +847,16 @@ Make sure to backup any important data before running these commands.
 - ✅ BDD-style testing framework
 - ✅ Site settings with JSON schema validation
 - ✅ Docker Compose setup
+- ✅ **Base Service/Controller Refactoring** (#45) - 70-80% code reduction per
+  entity
+  - BaseService with lifecycle hooks (beforeCreate, afterCreate, beforeUpdate,
+    afterUpdate, beforeDelete, afterDelete)
+  - BaseController with declarative authorization
+  - BaseRouteFactory and AdminRouteFactory for automatic route generation
+  - Full test coverage (6 suites, 111 steps passing)
 
 **In Progress**
 
-- 🔄 **Base Service/Controller Refactoring** (#45) - 85% code reduction per
-  entity
 - 🔄 **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
 
 ### v1.3 (Q1 2026) - Infrastructure & Deployment

@@ -1,8 +1,11 @@
 # TonyStack Starter - Your Project Name
 
-> Replace "Your Project Name" with your actual project name (e.g., "Blog API", "E-commerce API")
+> Replace "Your Project Name" with your actual project name (e.g., "Blog API",
+> "E-commerce API")
 
-A lightweight, modular REST API starter built with Deno + Hono + Drizzle, featuring built-in authentication, role-based access control, and a dynamic site settings system.
+A lightweight, modular REST API starter built with Deno + Hono + Drizzle,
+featuring built-in authentication, role-based access control, and a dynamic site
+settings system.
 
 ## 1. Overview
 
@@ -118,12 +121,15 @@ deno task dev
 Visit: `http://localhost:8000`
 
 **Default Credentials (after seeding):**
+
 - Superadmin: `superadmin@tstack.in` / `password123`
 - Alpha User: `alpha@tstack.in` / `password123`
 
 ## 8. Entities & Conventions
 
-Each entity in the project follows a modular, consistent structure. Understanding this pattern will help you maintain and extend your API effectively.
+Each entity in the project follows a modular, consistent structure.
+Understanding this pattern will help you maintain and extend your API
+effectively.
 
 ### Standard Entity Files
 
@@ -143,8 +149,8 @@ src/entities/
 For entities requiring admin-only operations:
 
 ```
-    <entity>.admin.route.ts    # Admin routes (e.g., /ts-admin/articles)
-    <entity>.admin.test.ts     # Tests for admin routes
+<entity>.admin.route.ts    # Admin routes (e.g., /ts-admin/articles)
+<entity>.admin.test.ts     # Tests for admin routes
 ```
 
 ### File Organization Example
@@ -168,7 +174,7 @@ src/entities/
 - **Directory**: Plural (e.g., `articles/`, `products/`)
 - **Table**: Plural (e.g., `articles`, `products`)
 - **Files**: Singular entity name (e.g., `article.model.ts`, `product.dto.ts`)
-- **Routes**: 
+- **Routes**:
   - Public: `/articles`, `/products`
   - Admin: `/ts-admin/articles`, `/ts-admin/products`
 
@@ -184,9 +190,602 @@ When creating a new entity, follow this workflow:
 6. **Generate migration**: `deno task migrate:generate`
 7. **Apply migration**: `deno task migrate:run`
 
-**Best Practice**: Add all fields to your model BEFORE generating the first migration to keep migration history clean.
+**Best Practice**: Add all fields to your model BEFORE generating the first
+migration to keep migration history clean.
 
-## 9. Database & Migrations
+## 9. Base Abstractions Pattern
+
+### Design Philosophy
+
+**The Problem:** Admin panels need standard CRUD operations (index, show,
+create, edit, delete) for every entity. Writing this repetitive code manually is
+time-consuming and error-prone.
+
+**The Solution:** Base abstractions that generate 80% of the code automatically,
+leaving you to focus on business logic.
+
+**Two-Tier API Design:**
+
+1. **Admin API (`/ts-admin/entity`)** - Standardized CRUD for admin panels
+   - Extends base classes for consistency
+   - Provides list/search/filter/sort/bulk operations
+   - Powers the reusable admin frontend UI
+   - Rails-style convention over configuration
+
+2. **Public API (`/api/entity`)** - Custom business logic
+   - Can use base classes when logic aligns (common for simple entities)
+   - Override/customize when business needs differ
+   - Complete freedom to deviate from CRUD pattern
+
+**When to use base classes:**
+
+- ✅ Always for admin APIs (standardization is the goal)
+- ✅ For public APIs with standard CRUD needs
+- ❌ For complex business logic (auth, payments, custom workflows)
+
+### Architecture Overview
+
+```
+BaseService (Generic CRUD + Lifecycle Hooks)
+    ↓ extends
+YourService (Custom business logic)
+    ↓ used by
+BaseController (Generic HTTP handlers + Declarative Auth)
+    ↓ extends
+YourController (Custom handlers)
+    ↓ used by
+BaseRouteFactory (Auto-generate CRUD routes)
+    ↓ generates
+/api/your-entity (REST endpoints)
+
+AdminRouteFactory (Standard Admin CRUD)
+    ↓ generates
+/ts-admin/your-entity (Admin panel endpoints)
+```
+
+### 9.1 BaseService - Data Layer
+
+**Purpose:** Generic CRUD operations with lifecycle hooks for custom logic.
+
+**Location:** `src/shared/services/base.service.ts`
+
+#### Basic Usage
+
+```typescript
+import { BaseService } from "../../shared/services/base.service.ts";
+import { db } from "../../config/database.ts";
+import { products } from "./product.model.ts";
+import type {
+  CreateProductDTO,
+  Product,
+  ProductResponseDTO,
+  UpdateProductDTO,
+} from "./product.dto.ts";
+
+export class ProductService extends BaseService<
+  Product, // Database model type
+  CreateProductDTO, // Creation input type
+  UpdateProductDTO, // Update input type
+  ProductResponseDTO // Response type
+> {
+  constructor() {
+    super(db, products); // Pass database connection and table
+  }
+}
+
+export const productService = new ProductService();
+```
+
+**What You Get (Inherited):**
+
+- `getAll(options?)` - List with pagination, filtering, sorting
+- `getById(id)` - Fetch single record
+- `create(data)` - Insert with lifecycle hooks
+- `update(id, data)` - Update with lifecycle hooks
+- `delete(id)` - Delete with lifecycle hooks
+
+#### Lifecycle Hooks
+
+Override these methods to add custom logic at specific points:
+
+```typescript
+export class ProductService extends BaseService<...> {
+  constructor() {
+    super(db, products);
+  }
+
+  // Called BEFORE creating a record
+  protected override async beforeCreate(data: CreateProductDTO): Promise<CreateProductDTO> {
+    // Auto-generate slug from name
+    return {
+      ...data,
+      slug: data.name.toLowerCase().replace(/\s+/g, '-'),
+      sku: `PRD-${Date.now()}`, // Generate SKU
+    };
+  }
+
+  // Called AFTER creating a record
+  protected override async afterCreate(record: Product): Promise<void> {
+    console.log(`Product created: ${record.name} (ID: ${record.id})`);
+    // Send notification, update cache, trigger webhook, etc.
+  }
+
+  // Called BEFORE updating a record
+  protected override async beforeUpdate(
+    id: number,
+    data: UpdateProductDTO
+  ): Promise<UpdateProductDTO> {
+    // Update slug if name changed
+    if (data.name) {
+      return {
+        ...data,
+        slug: data.name.toLowerCase().replace(/\s+/g, '-'),
+      };
+    }
+    return data;
+  }
+
+  // Called AFTER updating a record
+  protected override async afterUpdate(record: Product): Promise<void> {
+    console.log(`Product updated: ${record.name}`);
+    // Clear cache, sync with external systems
+  }
+
+  // Called BEFORE deleting a record
+  protected override async beforeDelete(id: number): Promise<void> {
+    // Check for dependencies
+    const orderCount = await db.select().from(orders).where(eq(orders.productId, id));
+    if (orderCount.length > 0) {
+      throw new ValidationError("Cannot delete product with existing orders");
+    }
+  }
+
+  // Called AFTER deleting a record
+  protected override async afterDelete(id: number): Promise<void> {
+    console.log(`Product deleted: ${id}`);
+    // Clean up associated files, clear cache
+  }
+}
+```
+
+#### Custom Methods
+
+Add methods for complex queries that don't fit the standard CRUD pattern:
+
+```typescript
+export class ProductService extends BaseService<...> {
+  constructor() {
+    super(db, products);
+  }
+
+  // Override getAll to add joins
+  override async getAll(): Promise<ProductResponseDTO[]> {
+    const results = await this.db
+      .select({
+        id: products.id,
+        name: products.name,
+        price: products.price,
+        categoryName: categories.name,  // Join with categories
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id));
+    
+    return results;
+  }
+
+  // Custom business logic
+  async getFeaturedProducts(): Promise<ProductResponseDTO[]> {
+    return await this.db
+      .select()
+      .from(products)
+      .where(eq(products.featured, true))
+      .orderBy(desc(products.createdAt))
+      .limit(10);
+  }
+
+  async applyDiscount(productId: number, percentage: number): Promise<Product> {
+    const product = await this.getById(productId);
+    const discountedPrice = product.price * (1 - percentage / 100);
+    return await this.update(productId, { price: discountedPrice });
+  }
+}
+```
+
+### 9.2 BaseController - HTTP Layer
+
+**Purpose:** Generic HTTP handlers with declarative authorization.
+
+**Location:** `src/shared/controllers/base.controller.ts`
+
+#### Basic Usage
+
+```typescript
+import { BaseController } from "../../shared/controllers/base.controller.ts";
+import { productService } from "./product.service.ts";
+import type { Context } from "@hono/hono";
+
+export class ProductController extends BaseController<typeof productService> {
+  constructor() {
+    super(
+      productService, // Service instance
+      "Product", // Entity name (for error messages)
+      {
+        // Declarative authorization config
+        create: { requireAuth: true },
+        update: {
+          requireAuth: true,
+          ownershipCheck: (product, userId) => product.ownerId === userId,
+        },
+        delete: {
+          requireAuth: true,
+          ownershipCheck: (product, userId) => product.ownerId === userId,
+          superadminBypass: true, // Superadmins can delete any product
+        },
+      },
+    );
+  }
+}
+
+// Export static methods for route registration
+export const ProductControllerStatic = ProductController.prototype.toStatic();
+```
+
+**What You Get (Inherited):**
+
+- `getAll(c)` - GET handler with pagination
+- `getById(c)` - GET /:id handler
+- `create(c)` - POST handler with validation
+- `update(c)` - PUT /:id handler with auth checks
+- `delete(c)` - DELETE /:id handler with auth checks
+
+#### Authorization Configuration
+
+Configure authorization declaratively in the constructor:
+
+```typescript
+export class ProductController extends BaseController<typeof productService> {
+  constructor() {
+    super(productService, "Product", {
+      // Public routes (no config needed)
+      // getAll and getById are public by default
+
+      // Require authentication only
+      create: {
+        requireAuth: true,
+      },
+
+      // Require authentication + ownership check
+      update: {
+        requireAuth: true,
+        ownershipCheck: (product, userId) => product.ownerId === userId,
+        ownershipField: "ownerId", // Field to check
+      },
+
+      // Require specific role
+      delete: {
+        requireAuth: true,
+        requireRole: "admin", // Only admins can delete
+        superadminBypass: true, // Superadmins skip role check
+      },
+
+      // Custom authorization logic
+      publish: {
+        requireAuth: true,
+        customCheck: async (c, product, userId) => {
+          // Complex authorization logic
+          const user = await userService.getById(userId);
+          return user.role === "admin" || product.ownerId === userId;
+        },
+      },
+    });
+  }
+}
+```
+
+#### Override Handlers
+
+Customize specific handlers while keeping others inherited:
+
+```typescript
+export class ProductController extends BaseController<typeof productService> {
+  constructor() {
+    super(productService, "Product", {/* auth config */});
+  }
+
+  // Override create to inject user ID
+  override create = async (c: Context) => {
+    const body = await c.req.json();
+    const userId = c.get("userId"); // From JWT middleware
+
+    // Add ownerId automatically
+    const productData = {
+      ...body,
+      ownerId: userId,
+    };
+
+    const product = await this.service.create(productData);
+    return c.json({ data: product }, 201);
+  };
+
+  // Add custom handler
+  async publish(c: Context) {
+    const productId = Number(c.req.param("id"));
+    const product = await this.service.getById(productId);
+
+    // Check authorization (manual example)
+    const userId = c.get("userId");
+    if (product.ownerId !== userId) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    // Update product
+    const updated = await this.service.update(productId, { published: true });
+    return c.json({ data: updated });
+  }
+}
+```
+
+### 9.3 Route Factories - Route Registration
+
+**Purpose:** Auto-generate REST routes from controllers.
+
+**Location:** `src/shared/routes/base-route.factory.ts`
+
+#### Basic Usage (Public CRUD API)
+
+```typescript
+import { BaseRouteFactory } from "../../shared/routes/base-route.factory.ts";
+import { ProductControllerStatic } from "./product.controller.ts";
+import { CreateProductSchema, UpdateProductSchema } from "./product.dto.ts";
+import { requireAuth } from "../../shared/middleware/requireAuth.ts";
+
+const productRoutes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/products",
+  controller: ProductControllerStatic,
+  schemas: {
+    create: CreateProductSchema,
+    update: UpdateProductSchema,
+  },
+  publicRoutes: ["getAll", "getById"], // No auth required
+  middleware: {
+    auth: requireAuth, // JWT validation middleware
+  },
+});
+
+export default productRoutes;
+```
+
+**Generated Routes:**
+
+- `GET /products` - List all (public)
+- `GET /products/:id` - Get one (public)
+- `POST /products` - Create (requires auth + validation)
+- `PUT /products/:id` - Update (requires auth + validation)
+- `DELETE /products/:id` - Delete (requires auth)
+
+#### Advanced Configuration
+
+```typescript
+const productRoutes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/products",
+  controller: ProductControllerStatic,
+  schemas: {
+    create: CreateProductSchema,
+    update: UpdateProductSchema,
+    query: ProductQuerySchema, // For GET params validation
+  },
+  publicRoutes: ["getAll", "getById"],
+  disabledRoutes: ["delete"], // Don't expose delete endpoint
+  middleware: {
+    auth: requireAuth,
+    role: requireRole("admin"), // All protected routes require admin
+  },
+});
+
+// Add custom routes
+productRoutes.post("/:id/publish", async (c) => {
+  const controller = new ProductController();
+  return await controller.publish(c);
+});
+
+export default productRoutes;
+```
+
+#### Admin Routes (Admin Panel Backend)
+
+**Purpose:** Standardized CRUD endpoints that power the reusable admin UI
+frontend.
+
+Admin routes provide consistent operations for every entity:
+
+- List with pagination/search/filter/sort
+- View single record
+- Create/edit forms with metadata
+- Update/delete operations
+- Bulk actions
+
+**Why standardize?** The admin frontend UI can be completely generic - it
+expects the same endpoint structure for Products, Articles, Categories, etc.
+This is the Rails way: convention over configuration.
+
+```typescript
+import { AdminRouteFactory } from "../../shared/routes/admin-route.factory.ts";
+import { DrizzleAdapter } from "@tstack/admin";
+import { db } from "../../config/database.ts";
+import { products } from "./product.model.ts";
+
+const productAdminRoutes = AdminRouteFactory.createAdminRoutes({
+  basePath: "/ts-admin/products",
+  tableName: "products",
+  adapter: new DrizzleAdapter(db, products),
+  requireRole: ["admin", "superadmin"],
+});
+
+export default productAdminRoutes;
+```
+
+**Generated Admin Routes:**
+
+- `GET /ts-admin/products` - List with search/filter/sort
+- `GET /ts-admin/products/new` - Form metadata
+- `POST /ts-admin/products` - Create
+- `GET /ts-admin/products/:id` - Get one
+- `GET /ts-admin/products/:id/edit` - Edit form metadata
+- `PUT /ts-admin/products/:id` - Update
+- `DELETE /ts-admin/products/:id` - Delete
+- `POST /ts-admin/products/bulk-delete` - Bulk delete
+
+**Result:** Admin UI works with any entity without custom code. Just add
+`product.admin.route.ts` and the admin panel automatically supports managing
+products.
+
+### 9.4 Complete Entity Example
+
+Here's how all pieces work together:
+
+**1. Model** (`product.model.ts`):
+
+```typescript
+export const products = pgTable("products", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: text().notNull(),
+  slug: text().notNull().unique(),
+  price: numeric({ precision: 10, scale: 2 }).notNull(),
+  ownerId: integer("owner_id").references(() => users.id),
+  published: boolean().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+```
+
+**2. Service** (`product.service.ts`):
+
+```typescript
+export class ProductService extends BaseService<...> {
+  constructor() { super(db, products); }
+  
+  protected override async beforeCreate(data: CreateProductDTO) {
+    return { ...data, slug: slugify(data.name) };
+  }
+}
+```
+
+**3. Controller** (`product.controller.ts`):
+
+```typescript
+export class ProductController extends BaseController<typeof productService> {
+  constructor() {
+    super(productService, "Product", {
+      update: {
+        requireAuth: true,
+        ownershipCheck: (p, uid) => p.ownerId === uid,
+      },
+      delete: {
+        requireAuth: true,
+        ownershipCheck: (p, uid) => p.ownerId === uid,
+      },
+    });
+  }
+
+  override create = async (c) => {
+    const body = await c.req.json();
+    const product = await this.service.create({
+      ...body,
+      ownerId: c.get("userId"),
+    });
+    return c.json({ data: product }, 201);
+  };
+}
+```
+
+**4. Routes** (`product.route.ts`):
+
+```typescript
+const productRoutes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/products",
+  controller: ProductControllerStatic,
+  schemas: { create: CreateProductSchema, update: UpdateProductSchema },
+  publicRoutes: ["getAll", "getById"],
+  middleware: { auth: requireAuth },
+});
+export default productRoutes;
+```
+
+**5. Register** (`main.ts`):
+
+```typescript
+import productRoutes from "./entities/products/product.route.ts";
+app.route("/api", productRoutes);
+```
+
+**Result:** Full CRUD API with only ~200 lines of code (vs. 500+ lines without
+base classes).
+
+### 9.5 When to Use vs. Custom Implementation
+
+**Admin APIs (`/ts-admin/*`)**: Always use base classes + AdminRouteFactory
+
+- Goal: Standardized interface for admin frontend
+- Example: Articles, Products, Categories, Users
+- Pattern: Consistent list/search/filter/bulk operations
+
+**Public APIs (`/api/*`)**: Use base classes when appropriate
+
+✅ **Use base classes when:**
+
+- Entity has standard CRUD operations (products, articles, categories)
+- Authorization is simple (ownership checks, role-based)
+- Business logic fits lifecycle hooks (slug generation, timestamps)
+
+❌ **Use custom implementation when:**
+
+- Complex workflows (multi-step checkout, payment processing)
+- Non-CRUD operations (login, register, password reset)
+- Multiple entities per request (reports, aggregations)
+- Special authentication (OAuth, magic links)
+
+**Examples in this starter:**
+
+**Using Base Classes:**
+
+```typescript
+// Articles - Standard CRUD with ownership
+export class ArticleService extends BaseService<...> {
+  protected override async beforeCreate(data) {
+    return { ...data, slug: slugify(data.title) };
+  }
+}
+```
+
+**Custom Implementation:**
+
+```typescript
+// Auth - Special logic, not CRUD
+export class AuthController {
+  static async login(c: Context) {
+    const { email, password } = await c.req.json();
+    // Custom validation, JWT generation
+    const token = await AuthService.login(email, password);
+    return c.json({ token });
+  }
+}
+
+// Site Settings - Complex business rules
+export class SiteSettingService {
+  static async resetToDefault(key: string) {
+    // Custom logic: schema validation, system protection
+    const setting = systemSettings[key];
+    if (!setting) throw new NotFoundError();
+    await db.update(siteSettings).set({ value: setting.defaultValue });
+  }
+}
+```
+
+**Key Principle:** Admin APIs prioritize consistency (always use base classes).
+Public APIs prioritize flexibility (use base classes when they fit, custom when
+they don't).
+
+## 10. Database & Migrations
 
 - Edit models in `src/entities/**/<name>.model.ts`.
 - Generate migration AFTER changes: `deno task migrate:generate`.
@@ -196,7 +795,7 @@ When creating a new entity, follow this workflow:
 Never hand‑edit generated SQL unless absolutely necessary; prefer evolving the
 model then regenerating a new migration.
 
-## 10. Seeding
+## 11. Seeding
 
 Full seed (users + settings): `deno task db:seed`.
 
@@ -212,7 +811,8 @@ System site settings auto‑seed & self‑heal on access (see settings section).
 
 ### Overview
 
-The starter includes JWT-based authentication with role-based access control (RBAC).
+The starter includes JWT-based authentication with role-based access control
+(RBAC).
 
 - **Login/Register**: Available under `auth/` routes
 - **Token Format**: `Authorization: Bearer <token>`
@@ -233,6 +833,7 @@ curl -X POST http://localhost:8000/auth/login \
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -257,6 +858,7 @@ curl -X POST http://localhost:8000/auth/register \
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -296,19 +898,21 @@ Configure JWT behavior via environment variables:
 
 - **Development**: Uses default secret for convenience
 - **Production**: Set a strong `JWT_SECRET` (32+ characters, random)
-- **Rotation**: Update `JWT_SECRET` and force re-login (clear `auth_tokens` table)
+- **Rotation**: Update `JWT_SECRET` and force re-login (clear `auth_tokens`
+  table)
 
 ### Role-Based Access Control (RBAC)
 
-| Role | Permissions |
-|------|-------------|
-| `superadmin` | Full access to all resources; Admin panel access (`/ts-admin/*`); Can create, read, update, delete any content; Manage site settings |
-| `user` | Create own articles; Read public content; Update/delete only own articles; No admin panel access |
-| (unauthenticated) | Read-only access to public content; Access public site settings; No write operations |
+| Role              | Permissions                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `superadmin`      | Full access to all resources; Admin panel access (`/ts-admin/*`); Can create, read, update, delete any content; Manage site settings |
+| `user`            | Create own articles; Read public content; Update/delete only own articles; No admin panel access                                     |
+| (unauthenticated) | Read-only access to public content; Access public site settings; No write operations                                                 |
 
 ## 12. Site Settings System
 
-The site settings system provides dynamic, validated configuration storage with automatic seeding and type safety.
+The site settings system provides dynamic, validated configuration storage with
+automatic seeding and type safety.
 
 ### Key Features
 
@@ -327,6 +931,7 @@ curl http://localhost:8000/site-settings
 ```
 
 **Response:**
+
 ```json
 {
   "site_info": {
@@ -390,9 +995,9 @@ export const defaultPaymentConfig = {
 **Step 2**: Register in `src/entities/site_settings/schemas/index.ts`
 
 ```typescript
-import { 
-  paymentConfigSchema, 
-  defaultPaymentConfig 
+import {
+  defaultPaymentConfig,
+  paymentConfigSchema,
 } from "./payment.schemas.ts";
 
 export const systemSettings = {
@@ -407,7 +1012,8 @@ export const systemSettings = {
 
 **Step 3**: Restart server - setting will auto-seed on first access
 
-The new setting will be automatically created when first accessed. No manual database operations needed!
+The new setting will be automatically created when first accessed. No manual
+database operations needed!
 
 ### Public vs Private Settings
 
@@ -423,14 +1029,14 @@ email_settings: { isPublic: false, ... }
 
 **Default Settings Included:**
 
-| Setting | Public | Use Case |
-|---------|--------|----------|
-| `site_info` | ✅ | Site name, tagline, logo - display in UI |
-| `contact_info` | ✅ | Email, phone, social links - contact page |
-| `theme_config` | ✅ | Colors, fonts - apply to frontend theme |
-| `feature_flags` | ✅ | Toggle features - enable/disable features |
-| `email_settings` | ❌ | SMTP config - backend email sending |
-| `api_config` | ❌ | Rate limits, CORS - API configuration |
+| Setting          | Public | Use Case                                  |
+| ---------------- | ------ | ----------------------------------------- |
+| `site_info`      | ✅     | Site name, tagline, logo - display in UI  |
+| `contact_info`   | ✅     | Email, phone, social links - contact page |
+| `theme_config`   | ✅     | Colors, fonts - apply to frontend theme   |
+| `feature_flags`  | ✅     | Toggle features - enable/disable features |
+| `email_settings` | ❌     | SMTP config - backend email sending       |
+| `api_config`     | ❌     | Rate limits, CORS - API configuration     |
 
 ### Updating Settings
 
@@ -460,10 +1066,10 @@ curl -X POST http://localhost:8000/site-settings/reset-all \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
-
 ## 13. Articles Example Entity
 
 The Articles entity demonstrates key patterns including:
+
 - Protected write operations (authentication required)
 - Public read access (no authentication needed)
 - Ownership checks (users can only modify their own articles)
@@ -479,6 +1085,7 @@ curl http://localhost:8000/articles
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -544,7 +1151,8 @@ curl -X PUT http://localhost:8000/articles/2 \
   }'
 ```
 
-**Note**: Users can only update articles they created. Attempting to update another user's article will return a `403 Forbidden` error.
+**Note**: Users can only update articles they created. Attempting to update
+another user's article will return a `403 Forbidden` error.
 
 #### Delete Own Article
 
@@ -555,7 +1163,8 @@ curl -X DELETE http://localhost:8000/articles/2 \
 
 ### Admin Operations (Superadmin Role)
 
-Admin operations are available at `/ts-admin/articles` and provide additional capabilities:
+Admin operations are available at `/ts-admin/articles` and provide additional
+capabilities:
 
 ```bash
 # Login as superadmin
@@ -616,79 +1225,83 @@ The Articles entity serves as a reference implementation for:
 
 Apply these patterns to your own entities for consistent authorization behavior.
 
-
 ## 14. API Quick Reference
 
-A comprehensive list of all available endpoints in the starter project. Use this as a quick reference when building your frontend or testing the API.
+A comprehensive list of all available endpoints in the starter project. Use this
+as a quick reference when building your frontend or testing the API.
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| POST | `/auth/register` | ❌ | Register new user account |
-| POST | `/auth/login` | ❌ | Login with email/password, receive JWT token |
-| POST | `/auth/logout` | ✅ | Logout (invalidate token) |
-| GET | `/auth/me` | ✅ | Get current user profile |
+| Method | Endpoint         | Auth Required | Description                                  |
+| ------ | ---------------- | ------------- | -------------------------------------------- |
+| POST   | `/auth/register` | ❌            | Register new user account                    |
+| POST   | `/auth/login`    | ❌            | Login with email/password, receive JWT token |
+| POST   | `/auth/logout`   | ✅            | Logout (invalidate token)                    |
+| GET    | `/auth/me`       | ✅            | Get current user profile                     |
 
 ### Article Endpoints (Public API)
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/articles` | ❌ | List all published articles (paginated) |
-| GET | `/articles/:id` | ❌ | Get single article by ID |
-| POST | `/articles` | ✅ user | Create new article (requires authentication) |
-| PUT | `/articles/:id` | ✅ user | Update own article |
-| DELETE | `/articles/:id` | ✅ user | Delete own article |
+| Method | Endpoint        | Auth Required | Description                                  |
+| ------ | --------------- | ------------- | -------------------------------------------- |
+| GET    | `/articles`     | ❌            | List all published articles (paginated)      |
+| GET    | `/articles/:id` | ❌            | Get single article by ID                     |
+| POST   | `/articles`     | ✅ user       | Create new article (requires authentication) |
+| PUT    | `/articles/:id` | ✅ user       | Update own article                           |
+| DELETE | `/articles/:id` | ✅ user       | Delete own article                           |
 
 **Notes:**
+
 - Public endpoints (GET) are accessible without authentication
 - Write operations (POST, PUT, DELETE) require user role
 - Users can only modify articles they created (ownership check)
 
 ### Article Endpoints (Admin API)
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/ts-admin/articles` | ✅ superadmin | List all articles with filters (published, unpublished) |
-| GET | `/ts-admin/articles/:id` | ✅ superadmin | Get any article by ID |
-| PUT | `/ts-admin/articles/:id` | ✅ superadmin | Update any article (bypass ownership) |
-| DELETE | `/ts-admin/articles/:id` | ✅ superadmin | Delete any article |
-| POST | `/ts-admin/articles/bulk-delete` | ✅ superadmin | Delete multiple articles by IDs |
+| Method | Endpoint                         | Auth Required | Description                                             |
+| ------ | -------------------------------- | ------------- | ------------------------------------------------------- |
+| GET    | `/ts-admin/articles`             | ✅ superadmin | List all articles with filters (published, unpublished) |
+| GET    | `/ts-admin/articles/:id`         | ✅ superadmin | Get any article by ID                                   |
+| PUT    | `/ts-admin/articles/:id`         | ✅ superadmin | Update any article (bypass ownership)                   |
+| DELETE | `/ts-admin/articles/:id`         | ✅ superadmin | Delete any article                                      |
+| POST   | `/ts-admin/articles/bulk-delete` | ✅ superadmin | Delete multiple articles by IDs                         |
 
 **Notes:**
+
 - All admin endpoints require superadmin role
 - Admin routes bypass ownership checks
 - Access filters and operations unavailable in public API
 
 ### Site Settings Endpoints
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/site-settings` | ❌ | Get all public settings (theme, features, site info) |
-| GET | `/site-settings/:idOrKey` | ❌ | Get specific setting by ID or key |
-| POST | `/site-settings` | ✅ superadmin | Create new setting |
-| PUT | `/site-settings/:id` | ✅ superadmin | Update existing setting |
-| DELETE | `/site-settings/:id` | ✅ superadmin | Delete setting |
-| POST | `/site-settings/:key/reset` | ✅ superadmin | Reset specific setting to default value |
-| POST | `/site-settings/reset-all` | ✅ superadmin | Reset all settings to default values |
+| Method | Endpoint                    | Auth Required | Description                                          |
+| ------ | --------------------------- | ------------- | ---------------------------------------------------- |
+| GET    | `/site-settings`            | ❌            | Get all public settings (theme, features, site info) |
+| GET    | `/site-settings/:idOrKey`   | ❌            | Get specific setting by ID or key                    |
+| POST   | `/site-settings`            | ✅ superadmin | Create new setting                                   |
+| PUT    | `/site-settings/:id`        | ✅ superadmin | Update existing setting                              |
+| DELETE | `/site-settings/:id`        | ✅ superadmin | Delete setting                                       |
+| POST   | `/site-settings/:key/reset` | ✅ superadmin | Reset specific setting to default value              |
+| POST   | `/site-settings/reset-all`  | ✅ superadmin | Reset all settings to default values                 |
 
 **Notes:**
+
 - Public GET endpoints only return settings marked as `isPublic: true`
 - Private settings (email config, API keys) are hidden from public access
 - Settings auto-seed on first access if not present
 
 ### Core Endpoints
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/` | ❌ | API information and health status |
-| GET | `/health` | ❌ | Health check endpoint |
+| Method | Endpoint  | Auth Required | Description                       |
+| ------ | --------- | ------------- | --------------------------------- |
+| GET    | `/`       | ❌            | API information and health status |
+| GET    | `/health` | ❌            | Health check endpoint             |
 
 ### Response Format
 
 All API responses follow a consistent structure:
 
 **Success Response:**
+
 ```json
 {
   "success": true,
@@ -698,6 +1311,7 @@ All API responses follow a consistent structure:
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -729,14 +1343,15 @@ Authorization: Bearer <your-jwt-token>
 ```
 
 Example:
+
 ```bash
 curl -H "Authorization: Bearer eyJhbGc..." http://localhost:8000/articles
 ```
 
-
 ## 15. Testing Workflow
 
-The project includes comprehensive testing infrastructure with a dedicated test database to ensure isolation from development data.
+The project includes comprehensive testing infrastructure with a dedicated test
+database to ensure isolation from development data.
 
 ### What Gets Tested
 
@@ -749,6 +1364,7 @@ The project includes comprehensive testing infrastructure with a dedicated test 
 ### Testing Conventions
 
 #### File Structure
+
 Tests are colocated with the code they test:
 
 ```text
@@ -763,20 +1379,22 @@ src/entities/articles/
 ```
 
 #### File Naming
+
 - **Public Routes**: `<entity>.test.ts` (e.g., `article.test.ts`)
 - **Admin Routes**: `<entity>.admin.test.ts` (e.g., `article.admin.test.ts`)
 
 #### Test Pattern
+
 Tests follow BDD-style with describe/it blocks:
 
 ```typescript
-import { describe, it, beforeAll, afterAll } from "@std/testing/bdd";
+import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import { assertEquals, assertExists } from "@std/assert";
 
 describe("Article API", () => {
   let authToken: string;
   let testArticleId: number;
-  
+
   beforeAll(async () => {
     // Setup: Login and get auth token
     const response = await fetch("http://localhost:8001/auth/login", {
@@ -795,7 +1413,7 @@ describe("Article API", () => {
     it("should list all articles without authentication", async () => {
       const response = await fetch("http://localhost:8001/articles");
       assertEquals(response.status, 200);
-      
+
       const data = await response.json();
       assertExists(data.data);
     });
@@ -815,7 +1433,7 @@ describe("Article API", () => {
           published: true,
         }),
       });
-      
+
       assertEquals(response.status, 201);
       const data = await response.json();
       testArticleId = data.id;
@@ -831,11 +1449,11 @@ describe("Article API", () => {
           content: "Should fail",
         }),
       });
-      
+
       assertEquals(response.status, 401);
     });
   });
-  
+
   afterAll(async () => {
     // Cleanup: Delete test article
     if (testArticleId) {
@@ -849,6 +1467,7 @@ describe("Article API", () => {
 ```
 
 #### Test Environment
+
 - **Test Database**: Automatically created as `{project_name}_test_db`
 - **Test Port**: Usually port 8001 (different from dev server on 8000)
 - **Isolation**: Tests run in isolated database, safe to reset/cleanup
@@ -863,6 +1482,7 @@ deno task test:full        # Setup test DB + migrate + seed + run tests
 ```
 
 This command:
+
 1. Creates/recreates test database
 2. Applies all migrations
 3. Seeds test data (superadmin, alpha user, etc.)
@@ -906,7 +1526,9 @@ deno task test:coverage     # Generate coverage report to coverage/
 
 ### Best Practices
 
-1. **Group Related Tests**: Use nested `describe` blocks to organize tests logically
+1. **Group Related Tests**: Use nested `describe` blocks to organize tests
+   logically
+
    ```typescript
    describe("Article API", () => {
      describe("Create Operations", () => { ... });
@@ -915,7 +1537,9 @@ deno task test:coverage     # Generate coverage report to coverage/
    });
    ```
 
-2. **Descriptive Test Names**: Start with "should..." and clearly state expected behavior
+2. **Descriptive Test Names**: Start with "should..." and clearly state expected
+   behavior
+
    ```typescript
    it("should create article with valid data", ...);
    it("should reject creation without authentication", ...);
@@ -928,7 +1552,9 @@ deno task test:coverage     # Generate coverage report to coverage/
    - Missing authentication fails with 401
    - Insufficient permissions fail with 403
 
-4. **Clean Up Test Data**: Use `afterAll` or `afterEach` hooks to remove test artifacts
+4. **Clean Up Test Data**: Use `afterAll` or `afterEach` hooks to remove test
+   artifacts
+
    ```typescript
    afterAll(async () => {
      // Delete created test records
@@ -936,6 +1562,7 @@ deno task test:coverage     # Generate coverage report to coverage/
    ```
 
 5. **Use Meaningful Assertions**: Check multiple properties when relevant
+
    ```typescript
    assertEquals(response.status, 201);
    assertExists(data.id);
@@ -943,6 +1570,7 @@ deno task test:coverage     # Generate coverage report to coverage/
    ```
 
 6. **Test Permissions**: Verify role-based access control works correctly
+
    ```typescript
    it("should allow superadmin to delete any article", ...);
    it("should prevent regular user from accessing admin routes", ...);
@@ -957,7 +1585,6 @@ deno task test:check        # Verify DB connection and basic readiness
 ```
 
 Use this before running full tests to catch configuration issues early.
-
 
 ## 16. Error Handling
 

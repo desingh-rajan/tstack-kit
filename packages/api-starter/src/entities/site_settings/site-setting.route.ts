@@ -2,8 +2,11 @@ import { Hono } from "hono";
 import { SiteSettingController } from "./site-setting.controller.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 import { requireSuperadmin } from "../../shared/middleware/requireRole.ts";
-
-const siteSettingRoutes = new Hono();
+import { BaseRouteFactory } from "../../shared/routes/base-route.factory.ts";
+import {
+  CreateSiteSettingSchema,
+  UpdateSiteSettingSchema,
+} from "./site-setting.dto.ts";
 
 /**
  * Site Settings Routes
@@ -20,39 +23,38 @@ const siteSettingRoutes = new Hono();
  *   POST /site-settings/reset-all   - Reset all system settings to defaults
  */
 
-// PUBLIC ROUTES - Frontend can access to fetch site configuration
-siteSettingRoutes.get("/site-settings", SiteSettingController.getAll);
-siteSettingRoutes.get("/site-settings/:id", SiteSettingController.getByIdOrKey);
+const siteSettingRoutes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/site-settings",
+  controller: {
+    getAll: SiteSettingController.getAll,
+    getById: SiteSettingController.getByIdOrKey,
+    create: SiteSettingController.create,
+    update: SiteSettingController.update,
+    delete: SiteSettingController.delete,
+  },
+  schemas: {
+    create: CreateSiteSettingSchema,
+    update: UpdateSiteSettingSchema,
+  },
+  publicRoutes: ["getAll", "getById"],
+  middleware: {
+    auth: requireAuth,
+    role: requireSuperadmin,
+  },
+});
 
-// ADMIN ROUTES - Superadmin only
-siteSettingRoutes.post(
-  "/site-settings",
-  requireAuth,
-  requireSuperadmin,
-  SiteSettingController.create,
-);
-siteSettingRoutes.put(
-  "/site-settings/:id",
-  requireAuth,
-  requireSuperadmin,
-  SiteSettingController.update,
-);
-siteSettingRoutes.delete(
-  "/site-settings/:id",
-  requireAuth,
-  requireSuperadmin,
-  SiteSettingController.delete,
-);
+// Custom routes for reset functionality
+const customMiddleware = [requireAuth, requireSuperadmin];
+
 siteSettingRoutes.post(
   "/site-settings/:key/reset",
-  requireAuth,
-  requireSuperadmin,
+  ...customMiddleware,
   SiteSettingController.resetToDefault,
 );
+
 siteSettingRoutes.post(
   "/site-settings/reset-all",
-  requireAuth,
-  requireSuperadmin,
+  ...customMiddleware,
   SiteSettingController.resetAllToDefaults,
 );
 

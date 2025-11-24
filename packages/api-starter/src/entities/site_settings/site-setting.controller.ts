@@ -1,12 +1,7 @@
 import { Context } from "hono";
 import { SiteSettingService } from "./site-setting.service.ts";
-import { ValidationUtil } from "../../shared/utils/validation.ts";
 import { ApiResponse } from "../../shared/utils/response.ts";
 import { NotFoundError } from "../../shared/utils/errors.ts";
-import {
-  CreateSiteSettingSchema,
-  UpdateSiteSettingSchema,
-} from "./site-setting.dto.ts";
 
 export class SiteSettingController {
   /**
@@ -67,12 +62,7 @@ export class SiteSettingController {
    */
   static async create(c: Context) {
     const body = await c.req.json();
-    const validatedData = ValidationUtil.validateSync(
-      CreateSiteSettingSchema,
-      body,
-    );
-
-    const siteSetting = await SiteSettingService.create(validatedData);
+    const siteSetting = await SiteSettingService.create(body);
 
     return c.json(
       ApiResponse.success(siteSetting, "SiteSetting created successfully"),
@@ -88,12 +78,7 @@ export class SiteSettingController {
   static async update(c: Context) {
     const id = parseInt(c.req.param("id"));
     const body = await c.req.json();
-    const validatedData = ValidationUtil.validateSync(
-      UpdateSiteSettingSchema,
-      body,
-    );
-
-    const siteSetting = await SiteSettingService.update(id, validatedData);
+    const siteSetting = await SiteSettingService.update(id, body);
 
     if (!siteSetting) {
       throw new NotFoundError("SiteSetting not found");
