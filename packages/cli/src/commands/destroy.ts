@@ -1,4 +1,4 @@
-import { join } from "@std/path";
+import { isAbsolute, join, resolve } from "@std/path";
 import { Logger } from "../utils/logger.ts";
 import {
   deleteProject,
@@ -318,7 +318,10 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
 
   if (metadata) {
     // Use metadata from KV store
-    projectPath = metadata.path;
+    // Resolve to absolute path in case it's stored as relative
+    projectPath = isAbsolute(metadata.path)
+      ? metadata.path
+      : resolve(Deno.cwd(), metadata.path);
 
     // Only extract database names for API projects
     if (metadata.type === "api" && metadata.databases) {

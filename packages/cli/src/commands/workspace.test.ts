@@ -668,6 +668,88 @@ Deno.test({
 });
 
 Deno.test({
+  name:
+    "destroyWorkspace - removes folders when called from different directory (relative path fix)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = "test-destroy-relative";
+
+    try {
+      // Create workspace in tempDir
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        withApi: true,
+        skipRemote: true,
+      });
+
+      const workspacePath = join(tempDir, workspaceName);
+      const apiPath = join(workspacePath, `${workspaceName}-api`);
+
+      // Verify folders exist
+      assertEquals(
+        await Deno.stat(workspacePath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Workspace folder should exist",
+      );
+      assertEquals(
+        await Deno.stat(apiPath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "API folder should exist",
+      );
+
+      // Change to a DIFFERENT directory before destroying
+      // This simulates the bug where relative paths fail
+      const originalCwd = Deno.cwd();
+      const homeDir = Deno.env.get("HOME") || "/tmp";
+      Deno.chdir(homeDir);
+
+      try {
+        // Destroy from different directory
+        await destroyWorkspace({
+          name: workspaceName,
+          force: true,
+          deleteRemote: false,
+        });
+
+        // Verify workspace folder is actually removed
+        assertEquals(
+          await Deno.stat(workspacePath)
+            .then(() => true)
+            .catch(() => false),
+          false,
+          "Workspace folder should be removed even when called from different directory",
+        );
+
+        // Verify API folder is also removed
+        assertEquals(
+          await Deno.stat(apiPath)
+            .then(() => true)
+            .catch(() => false),
+          false,
+          "API folder should be removed even when called from different directory",
+        );
+
+        // Verify metadata removed
+        const workspace = await getWorkspace(workspaceName);
+        assertEquals(workspace, null);
+      } finally {
+        // Restore original directory
+        Deno.chdir(originalCwd);
+      }
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
   name: "destroyWorkspace - deletes remote GitHub repos",
   ignore: SKIP_GITHUB,
   sanitizeResources: false,

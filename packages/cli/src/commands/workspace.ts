@@ -1,4 +1,4 @@
-import { join } from "@std/path";
+import { isAbsolute, join, resolve } from "@std/path";
 import { Logger } from "../utils/logger.ts";
 import { dirExists } from "../utils/fileWriter.ts";
 import { createProject } from "./create.ts";
@@ -746,8 +746,14 @@ export async function destroyWorkspace(options: {
     // Remove workspace directory
     Logger.newLine();
     Logger.info(`📁 Removing workspace directory...`);
+    
+    // Resolve to absolute path in case it's stored as relative
+    const workspacePath = isAbsolute(workspace.path)
+      ? workspace.path
+      : resolve(Deno.cwd(), workspace.path);
+    
     try {
-      await Deno.remove(workspace.path, { recursive: true });
+      await Deno.remove(workspacePath, { recursive: true });
       Logger.success(`  ✅ Directory removed`);
     } catch (error) {
       if ((error as Error).name === "NotFound") {
