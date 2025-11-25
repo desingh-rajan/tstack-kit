@@ -209,9 +209,12 @@ async function main() {
             latest: args.latest,
           });
         } else if (type === "admin-ui") {
-          Logger.error("admin-ui starter not yet implemented");
-          Logger.info("Coming soon in Issue #44");
-          Deno.exit(1);
+          await createProject({
+            projectName,
+            projectType: "admin-ui",
+            targetDir: args.dir,
+            latest: args.latest,
+          });
         }
         break;
       }
