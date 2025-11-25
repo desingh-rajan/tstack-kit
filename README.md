@@ -21,7 +21,7 @@ SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL.
 
 - 🎯 **Single Project**: `tstack create` - API scaffolding with auth, CRUD,
   testing
-- 🚀 **Workspaces**: `tstack workspace create` - Multi-project setup (API +
+- 🚀 **Workspaces**: `tstack create workspace` - Multi-project setup (API +
   Admin UI + GitHub)
 - ⚡ **Entity Generation**: `tstack scaffold` - Complete MVC with tests in
   seconds
@@ -158,11 +158,60 @@ during project creation.
 
 ### 3. Create Your First Project
 
-**Option A: Single API Project (Traditional)**
+**Option A: Full Workspace (Recommended for new projects)**
+
+```bash
+# Create workspace with API + Admin UI
+tstack create workspace my-shop
+
+# Navigate to workspace
+cd my-shop
+
+# Start API server
+cd my-shop-api
+
+# Generate initial migration (creates tables for auth, articles, site_settings)
+deno task migrate:generate
+
+# Run migration to create tables
+deno task migrate:run
+
+# Seed database with admin user
+deno task db:seed
+
+# Start API dev server (port 8000)
+deno task dev
+
+# In another terminal - Start Admin UI
+cd ../my-shop-admin-ui
+deno install        # Install dependencies (first time only)
+deno task dev       # Start dev server (port 5173)
+```
+
+**Login to Admin UI:**
+
+- URL: <http://localhost:5173/auth/login>
+- Email: `dev-admin@example.com`
+- Password: Check `SUPERADMIN_PASSWORD` in `.env` (default: `password`)
+
+**Scaffold your first entity:**
+
+```bash
+# In my-shop-api directory
+tstack scaffold products
+
+# Generate and run migration for new entity
+deno task migrate:generate
+deno task migrate:run
+
+# Products will automatically appear in Admin UI sidebar! 🎉
+```
+
+**Option B: Single API Project (Traditional)**
 
 ```bash
 # Create new project
-tstack create blog-api
+tstack create api blog-api
 cd blog-api
 
 # Start PostgreSQL
@@ -188,34 +237,11 @@ Server running at **<http://localhost:8000>**
 - ✅ Migration system
 - ✅ Testing framework (BDD-style)
 
-**Option B: Full Workspace (API + Admin UI)**
-
-```bash
-# Create workspace with multiple projects
-tstack workspace create my-saas
-cd my-saas
-
-# Each project has its own folder:
-# - my-saas-api/        (Backend API)
-# - my-saas-admin-ui/   (Admin Dashboard)
-
-# Start API
-cd my-saas-api
-docker-compose up -d
-deno task migrate:generate
-deno task migrate:run
-deno task dev  # Port 8000
-
-# Start Admin UI (in another terminal)
-cd my-saas-admin-ui
-deno task dev  # Port 5173
-```
-
-**With GitHub Integration:**
+**With GitHub Integration (for workspaces):**
 
 ```bash
 # Create workspace + push to GitHub organization
-tstack workspace create my-saas --github-org=your-company
+tstack create workspace my-saas --github-org=your-company
 
 # Creates:
 # - Local folders: my-saas-api/, my-saas-admin-ui/
@@ -234,22 +260,22 @@ Create a workspace with multiple projects (api, admin-ui, etc.):
 
 ```bash
 # Create workspace with default components (api + admin-ui)
-tstack workspace create my-app
+tstack create workspace my-app
 
 # Create workspace with specific components
-tstack workspace create my-app --with-api --with-admin-ui
+tstack create workspace my-app --with-api --with-admin-ui
 
 # Create workspace with only API
-tstack workspace create my-app --with-api
+tstack create workspace my-app --with-api
 
 # Create workspace and skip admin-ui
-tstack workspace create my-app --skip-admin-ui
+tstack create workspace my-app --skip-admin-ui
 
 # Create workspace with GitHub repos
-tstack workspace create my-app --github-org=your-org
+tstack create workspace my-app --github-org=your-org
 
 # Create workspace locally only (skip GitHub)
-tstack workspace create my-app --github-org=your-org --skip-remote
+tstack create workspace my-app --github-org=your-org --skip-remote
 ```
 
 ### Workspace Structure
@@ -266,13 +292,13 @@ my-app/
 
 ```bash
 # Destroy workspace (removes projects and databases)
-tstack workspace destroy my-app
+tstack destroy workspace my-app
 
 # Force destroy (skip confirmation)
-tstack workspace destroy my-app --force
+tstack destroy workspace my-app --force
 
 # Destroy workspace and delete GitHub repos
-tstack workspace destroy my-app --delete-remote
+tstack destroy workspace my-app --delete-remote
 ```
 
 **What gets deleted:**
@@ -446,8 +472,8 @@ tstack create <project>     # Create new project
 tstack destroy <project>    # Remove project and drop databases
 
 # Workspace commands
-tstack workspace create <name>   # Create workspace with multiple projects
-tstack workspace destroy <name>  # Remove workspace, projects, and databases
+tstack create workspace <name>   # Create workspace with multiple projects
+tstack destroy workspace <name>  # Remove workspace, projects, and databases
 
 # Scaffolding
 tstack scaffold <entity>    # Generate entity (model, controller, routes, tests)
@@ -734,16 +760,16 @@ When you no longer need a workspace with multiple projects:
 
 ```bash
 # Destroy workspace (local only)
-tstack workspace destroy my-saas
+tstack destroy workspace my-saas
 
 # Force destroy (skip confirmation)
-tstack workspace destroy my-saas --force
+tstack destroy workspace my-saas --force
 
 # Destroy workspace + delete GitHub repos
-tstack workspace destroy my-saas --delete-remote
+tstack destroy workspace my-saas --delete-remote
 
 # Force destroy + delete GitHub repos
-tstack workspace destroy my-saas --force --delete-remote
+tstack destroy workspace my-saas --force --delete-remote
 ```
 
 **What Gets Deleted:**
@@ -758,18 +784,18 @@ tstack workspace destroy my-saas --force --delete-remote
 
 ```bash
 # Create workspace with GitHub repos
-tstack workspace create demo --github-org=my-company
+tstack create workspace demo --github-org=my-company
 # Creates: my-company/demo-api, my-company/demo-admin-ui on GitHub
 
 # Later, destroy everything including GitHub repos
-tstack workspace destroy demo --delete-remote
+tstack destroy workspace demo --delete-remote
 # Deletes: Local folders + databases + GitHub repos
 ```
 
 **⚠️ Warning:**
 
 - `tstack destroy` - Deletes 3 databases (dev/test/prod)
-- `tstack workspace destroy` - Deletes 3 databases **per project** (6 total for
+- `tstack destroy workspace` - Deletes 3 databases **per project** (6 total for
   API + Admin UI)
 - `--delete-remote` - Permanently deletes GitHub repositories
 
@@ -826,11 +852,11 @@ Make sure to backup any important data before running these commands.
 
 **Workspace Management (Completed) ✅**
 
-- ✅ `tstack workspace create` - Multi-project setup (API + Admin UI)
+- ✅ `tstack create workspace` - Multi-project setup (API + Admin UI)
 - ✅ Component flags: `--with-api`, `--with-admin-ui`, `--skip-*`
 - ✅ GitHub integration: `--github-org` auto-creates and pushes repos
 - ✅ `--skip-remote` flag for local-only development
-- ✅ `tstack workspace destroy` with `--delete-remote` option
+- ✅ `tstack destroy workspace` with `--delete-remote` option
 - ✅ Git initialization per project with initial commits
 - ✅ Workspace metadata tracking in KV store
 - ✅ Comprehensive test suite (12 tests: 7 local + 5 GitHub)

@@ -44,6 +44,7 @@
     "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
     "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
+    "drizzle-zod": "npm:drizzle-zod@^0.5.0",
     "postgres": "npm:postgres@^3.4.0",
     "zod": "npm:zod@^3.23.0"
   },
@@ -53,20 +54,12 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended",
-        "workspace"
-      ],
-      "include": [
-        "no-unversioned-import",
-        "no-import-prefix"
-      ]
+      "tags": ["recommended", "workspace"],
+      "include": ["no-unversioned-import", "no-import-prefix"]
     }
   },
   "compilerOptions": {
-    "lib": [
-      "deno.window"
-    ],
+    "lib": ["deno.window"],
     "strict": true
   }
 }

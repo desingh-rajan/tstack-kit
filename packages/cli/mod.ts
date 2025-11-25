@@ -56,6 +56,15 @@ function showHelp() {
   Logger.code(
     "--skip-validation          Don't add Zod validation schemas (scaffold only)",
   );
+  Logger.code(
+    "--skip-admin-ui            Skip admin-UI scaffolding (scaffold only)",
+  );
+  Logger.code(
+    "--only-api                 Scaffold API files only (scaffold only)",
+  );
+  Logger.code(
+    "--only-admin-ui            Scaffold admin-UI files only (scaffold only)",
+  );
   Logger.newLine();
   Logger.subtitle("Workspace Options:");
   Logger.code(
@@ -87,9 +96,10 @@ function showHelp() {
   Logger.code("tstack create admin-ui my-admin");
   Logger.code("tstack create workspace vega-groups");
   Logger.code("tstack scaffold products");
-  Logger.code("tstack scaffold blog-posts");
+  Logger.code("tstack scaffold products --skip-admin-ui");
+  Logger.code("tstack scaffold products --only-api");
+  Logger.code("tstack scaffold products --only-admin-ui");
   Logger.code("tstack scaffold orders --force");
-  Logger.code("tstack scaffold users --skip-admin");
   Logger.code("tstack destroy api my-shop    # Destroy my-shop-api");
   Logger.code("tstack destroy my-shop        # Find and select from matches");
   Logger.newLine();
@@ -113,6 +123,9 @@ async function main() {
       "skip-tests",
       "skip-auth",
       "skip-validation",
+      "skip-admin-ui", // NEW: Skip admin-UI scaffolding
+      "only-api", // NEW: Only scaffold API
+      "only-admin-ui", // NEW: Only scaffold admin-UI
       "with-api",
       "with-admin-ui",
       "with-ui",
@@ -120,7 +133,6 @@ async function main() {
       "with-mobile",
       "with-metrics",
       "skip-api",
-      "skip-admin-ui",
       "skip-ui",
       "skip-infra",
       "skip-mobile",
@@ -230,6 +242,9 @@ async function main() {
           skipTests: args["skip-tests"],
           skipAuth: args["skip-auth"],
           skipValidation: args["skip-validation"],
+          skipAdminUi: args["skip-admin-ui"],
+          onlyApi: args["only-api"],
+          onlyAdminUi: args["only-admin-ui"],
         });
         break;
       }
@@ -264,17 +279,30 @@ async function main() {
           Logger.error("Project name is required");
           Logger.info("Usage: tstack destroy [type] <name>");
           Logger.info("Examples:");
+          Logger.info("  tstack destroy workspace my-shop");
           Logger.info("  tstack destroy api my-shop");
           Logger.info("  tstack destroy admin-ui my-shop");
           Logger.info("  tstack destroy my-shop-api  (backward compatible)");
           Deno.exit(1);
         }
 
-        await destroyProject({
-          projectName,
-          projectType,
-          force: args.force,
-        });
+        // Handle workspace destruction separately
+        if (projectType === "workspace") {
+          const { destroyWorkspace } = await import(
+            "./src/commands/workspace.ts"
+          );
+          await destroyWorkspace({
+            name: projectName,
+            force: args.force,
+            deleteRemote: !args["skip-remote"],
+          });
+        } else {
+          await destroyProject({
+            projectName,
+            projectType,
+            force: args.force,
+          });
+        }
         break;
       }
 

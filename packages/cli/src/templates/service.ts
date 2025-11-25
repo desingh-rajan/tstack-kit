@@ -2,10 +2,9 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateServiceTemplate(names: EntityNames): string {
   return `import { db } from "../../config/database.ts";
-import { ${names.plural} } from "./${names.kebabSingular}.model.ts";
+import { ${names.plural}, type ${names.pascalSingular} } from "./${names.kebabSingular}.model.ts";
 import { BaseService } from "../../shared/services/base.service.ts";
 import type {
-  ${names.pascalSingular},
   Create${names.pascalSingular}DTO,
   Update${names.pascalSingular}DTO,
   ${names.pascalSingular}ResponseDTO,
