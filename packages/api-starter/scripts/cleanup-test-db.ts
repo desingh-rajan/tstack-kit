@@ -37,7 +37,7 @@ try {
 try {
   // Check if test setup generated the migrations
   await Deno.stat(MIGRATIONS_GENERATED_FLAG);
-  
+
   // Flag exists - migrations were auto-generated, clean them up
   const migrationsDir = "./migrations";
   const metaDir = "./migrations/meta";
@@ -58,7 +58,7 @@ try {
 
   // Remove the flag file
   await Deno.remove(MIGRATIONS_GENERATED_FLAG);
-  
+
   console.log("[CLEANUP] Auto-generated migration files removed");
 } catch {
   // Flag doesn't exist - migrations were created by developer, leave them alone

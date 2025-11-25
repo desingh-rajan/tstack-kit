@@ -598,7 +598,11 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       metadata = await getProject(folderName);
       assertExists(metadata, "Metadata should still exist after destroy");
-      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
+      assertEquals(
+        metadata.status,
+        "destroyed",
+        "Status should be 'destroyed'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV(`${projectName}-api`).catch(() => {});
@@ -817,11 +821,19 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       const apiMetadata = await getProject("shop-api");
       assertExists(apiMetadata, "API metadata should still exist");
-      assertEquals(apiMetadata.status, "destroyed", "API status should be 'destroyed'");
+      assertEquals(
+        apiMetadata.status,
+        "destroyed",
+        "API status should be 'destroyed'"
+      );
 
       const uiMetadata = await getProject("shop-admin-ui");
       assertExists(uiMetadata, "Admin UI metadata should still exist");
-      assertEquals(uiMetadata.status, "created", "Admin UI status should still be 'created'");
+      assertEquals(
+        uiMetadata.status,
+        "created",
+        "Admin UI status should still be 'created'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("shop-api").catch(() => {});
@@ -877,11 +889,19 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       const apiMetadata = await getProject("store-api");
       assertExists(apiMetadata, "API metadata should still exist");
-      assertEquals(apiMetadata.status, "destroyed", "API status should be 'destroyed'");
+      assertEquals(
+        apiMetadata.status,
+        "destroyed",
+        "API status should be 'destroyed'"
+      );
 
       const uiMetadata = await getProject("store-admin-ui");
       assertExists(uiMetadata);
-      assertEquals(uiMetadata.status, "created", "Admin UI status should still be 'created'");
+      assertEquals(
+        uiMetadata.status,
+        "created",
+        "Admin UI status should still be 'created'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("store-api").catch(() => {});
@@ -925,7 +945,11 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("cart-api");
       assertExists(metadata, "Metadata should still exist");
-      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
+      assertEquals(
+        metadata.status,
+        "destroyed",
+        "Status should be 'destroyed'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("cart-api").catch(() => {});
@@ -1032,7 +1056,11 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("foo-bar-api");
       assertExists(metadata, "Metadata should still exist");
-      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
+      assertEquals(
+        metadata.status,
+        "destroyed",
+        "Status should be 'destroyed'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("foo-bar-api").catch(() => {});
@@ -1165,7 +1193,11 @@ Deno.test({
       // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("status-manual-test-api");
       assertExists(metadata, "Metadata should still exist");
-      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
+      assertEquals(
+        metadata.status,
+        "destroyed",
+        "Status should be 'destroyed'"
+      );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("status-manual-test-api").catch(() => {});

@@ -68,17 +68,15 @@ const TEST_PATTERNS = [
 async function listTestDatabases(): Promise<string[]> {
   try {
     // Build query to find test databases
-    const protectedExact = PROTECTED_DATABASES.map((db) =>
-      `datname != '${db}'`
-    ).join(" AND ");
+    const protectedExact = PROTECTED_DATABASES.map((db) => `datname != '${db}'`)
+      .join(" AND ");
 
     const protectedPrefixes = PROTECTED_PREFIXES.map((p) =>
       `datname NOT LIKE '${p}%'`
     ).join(" AND ");
 
-    const includeConditions = TEST_PATTERNS.map((p) =>
-      `datname LIKE '${p}'`
-    ).join(" OR ");
+    const includeConditions = TEST_PATTERNS.map((p) => `datname LIKE '${p}'`)
+      .join(" OR ");
 
     const query =
       `SELECT datname FROM pg_database WHERE (${includeConditions}) AND ${protectedExact} AND ${protectedPrefixes}`;

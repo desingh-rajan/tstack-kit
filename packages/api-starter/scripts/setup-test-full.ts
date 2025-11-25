@@ -82,10 +82,13 @@ if (!hasMigrations) {
       console.error("[ERROR] Failed to generate migrations:", errMsg);
       Deno.exit(1);
     }
-    
+
     // Create flag file so cleanup knows to remove these migrations
-    await Deno.writeTextFile(MIGRATIONS_GENERATED_FLAG, "auto-generated for tests");
-    
+    await Deno.writeTextFile(
+      MIGRATIONS_GENERATED_FLAG,
+      "auto-generated for tests",
+    );
+
     console.log("[SUCCESS] Migrations generated successfully");
   } catch (error) {
     console.error(
