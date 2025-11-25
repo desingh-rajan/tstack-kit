@@ -30,6 +30,9 @@ function showHelp() {
   Logger.code(
     "list                       Show all tracked projects",
   );
+  Logger.code(
+    "                           Options: --status <created|destroyed|all>",
+  );
   Logger.code("--help, -h                 Show this help message");
   Logger.code("--version, -v              Show version number");
   Logger.newLine();
@@ -276,7 +279,32 @@ async function main() {
       }
 
       case "list": {
-        await listTrackedProjects();
+        const status = args.status as string | undefined;
+        const validStatuses = [
+          "created",
+          "creating",
+          "destroyed",
+          "destroying",
+          "all",
+        ];
+
+        if (status && !validStatuses.includes(status)) {
+          Logger.error(`Invalid status: ${status}`);
+          Logger.info(
+            "Valid statuses: created, creating, destroyed, destroying, all",
+          );
+          Deno.exit(1);
+        }
+
+        await listTrackedProjects({
+          status: status as
+            | "created"
+            | "creating"
+            | "destroyed"
+            | "destroying"
+            | "all"
+            | undefined,
+        });
         break;
       }
 

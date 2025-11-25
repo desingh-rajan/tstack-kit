@@ -45,7 +45,11 @@ Deno.test("listTrackedProjects - should show created projects", async () => {
     assertExists(ourProject!.createdAt, "Should have createdAt");
   } finally {
     await cleanupTempDir(tempDir);
-    await destroyProject({ projectName: `${projectName}-api`, force: true, skipDbSetup: true }).catch(() => {});
+    await destroyProject({
+      projectName: `${projectName}-api`,
+      force: true,
+      skipDbSetup: true,
+    }).catch(() => {});
     closeKv();
   }
 });
@@ -57,69 +61,83 @@ Deno.test({
     const tempDir = await createTempDir();
     const timestamp = Date.now();
 
-  try {
-    // Create multiple test projects with unique names
-    await createProject({
-      projectName: `list-multi-one-${timestamp}`,
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
+    try {
+      // Create multiple test projects with unique names
+      await createProject({
+        projectName: `list-multi-one-${timestamp}`,
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-    await createProject({
-      projectName: `list-multi-two-${timestamp}`,
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
+      await createProject({
+        projectName: `list-multi-two-${timestamp}`,
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-    await createWorkspace({
-      name: `list-multi-ws-${timestamp}`,
-      targetDir: tempDir,
-      skipApi: false,
-      skipAdminUi: true,
-      skipRemote: true,
-    });
+      await createWorkspace({
+        name: `list-multi-ws-${timestamp}`,
+        targetDir: tempDir,
+        skipApi: false,
+        skipAdminUi: true,
+        skipRemote: true,
+      });
 
-    // List all projects
-    const projects = await listProjects();
+      // List all projects
+      const projects = await listProjects();
 
-    // Find our test projects
-    const ourProjects = projects.filter(
-      (p) =>
-        p.folderName === `list-multi-one-${timestamp}-api` ||
-        p.folderName === `list-multi-two-${timestamp}-api` ||
-        p.folderName === `list-multi-ws-${timestamp}-api`
-    );
+      // Find our test projects
+      const ourProjects = projects.filter(
+        (p) =>
+          p.folderName === `list-multi-one-${timestamp}-api` ||
+          p.folderName === `list-multi-two-${timestamp}-api` ||
+          p.folderName === `list-multi-ws-${timestamp}-api`
+      );
 
-    assertEquals(
-      ourProjects.length >= 3,
-      true,
-      "Should have at least 3 test projects"
-    );
+      assertEquals(
+        ourProjects.length >= 3,
+        true,
+        "Should have at least 3 test projects"
+      );
 
-    // Verify types
-    const apiProjects = ourProjects.filter((p) => p.type === "api");
-    const workspaceProjects = ourProjects.filter((p) => p.type === "workspace");
+      // Verify types
+      const apiProjects = ourProjects.filter((p) => p.type === "api");
+      const workspaceProjects = ourProjects.filter(
+        (p) => p.type === "workspace"
+      );
 
-    assertEquals(
-      apiProjects.length,
-      3,
-      "Should have 3 API projects (2 standalone + 1 from workspace)"
-    );
-    assertEquals(
-      workspaceProjects.length,
-      0,
-      "Workspace itself is not tracked, only its projects"
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-    await destroyProject({ projectName: `list-multi-one-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
-    await destroyProject({ projectName: `list-multi-two-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
-    await destroyProject({ projectName: `list-multi-ws-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
-    closeKv();
-  }
-},
+      assertEquals(
+        apiProjects.length,
+        3,
+        "Should have 3 API projects (2 standalone + 1 from workspace)"
+      );
+      assertEquals(
+        workspaceProjects.length,
+        0,
+        "Workspace itself is not tracked, only its projects"
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+      await destroyProject({
+        projectName: `list-multi-one-${timestamp}-api`,
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
+      await destroyProject({
+        projectName: `list-multi-two-${timestamp}-api`,
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
+      await destroyProject({
+        projectName: `list-multi-ws-${timestamp}-api`,
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
+      closeKv();
+    }
+  },
 });
 
 Deno.test(
@@ -183,8 +201,16 @@ Deno.test(
       }
     } finally {
       await cleanupTempDir(tempDir);
-      await destroyProject({ projectName: "sort-test-old-api", force: true, skipDbSetup: true }).catch(() => {});
-      await destroyProject({ projectName: "sort-test-new-api", force: true, skipDbSetup: true }).catch(() => {});
+      await destroyProject({
+        projectName: "sort-test-old-api",
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
+      await destroyProject({
+        projectName: "sort-test-new-api",
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
       closeKv();
     }
   }
@@ -220,7 +246,11 @@ Deno.test(
       assertEquals(ourProject!.databases.prod, "db_info_test_api_prod");
     } finally {
       await cleanupTempDir(tempDir);
-      await destroyProject({ projectName: `${projectName}-api`, force: true, skipDbSetup: true }).catch(() => {});
+      await destroyProject({
+        projectName: `${projectName}-api`,
+        force: true,
+        skipDbSetup: true,
+      }).catch(() => {});
       closeKv();
     }
   }
@@ -258,9 +288,15 @@ Deno.test(
 
       // Verify it's marked as destroyed but still in KV
       projects = await listProjects();
-      const allProjects = projects.filter((p) => p.folderName === `${projectName}-api`);
+      const allProjects = projects.filter(
+        (p) => p.folderName === `${projectName}-api`
+      );
       assertEquals(allProjects.length, 1, "Project should still be in KV");
-      assertEquals(allProjects[0].status, "destroyed", "Status should be destroyed");
+      assertEquals(
+        allProjects[0].status,
+        "destroyed",
+        "Status should be destroyed"
+      );
 
       // Verify it doesn't appear in filtered list (status !== 'destroyed')
       const activeProjects = projects.filter(
@@ -277,3 +313,79 @@ Deno.test(
     }
   }
 );
+
+Deno.test("listTrackedProjects - should filter by status flag", async () => {
+  const tempDir = await createTempDir();
+  const activeProject = "status-filter-active";
+  const destroyedProject = "status-filter-destroyed";
+
+  try {
+    // Create two projects
+    await createProject({
+      projectName: activeProject,
+      projectType: "api",
+      targetDir: tempDir,
+      skipDbSetup: true,
+    });
+
+    await createProject({
+      projectName: destroyedProject,
+      projectType: "api",
+      targetDir: tempDir,
+      skipDbSetup: true,
+    });
+
+    // Destroy one
+    await destroyProject({
+      projectName: `${destroyedProject}-api`,
+      force: true,
+      skipDbSetup: true,
+    });
+
+    // Test: Get all projects (no filter - should only show active by default)
+    let projects = await listProjects();
+    let filtered = projects.filter((p) => p.status !== "destroyed");
+    let ourActive = filtered.filter(
+      (p) => p.folderName === `${activeProject}-api`
+    );
+    let ourDestroyed = filtered.filter(
+      (p) => p.folderName === `${destroyedProject}-api`
+    );
+    assertEquals(ourActive.length, 1, "Should find active project");
+    assertEquals(
+      ourDestroyed.length,
+      0,
+      "Should NOT find destroyed project by default"
+    );
+
+    // Test: Get only destroyed projects
+    projects = await listProjects();
+    filtered = projects.filter((p) => p.status === "destroyed");
+    ourDestroyed = filtered.filter(
+      (p) => p.folderName === `${destroyedProject}-api`
+    );
+    assertEquals(
+      ourDestroyed.length,
+      1,
+      "Should find destroyed project when filtering"
+    );
+    assertEquals(ourDestroyed[0].status, "destroyed");
+
+    // Test: Get all projects (including destroyed)
+    projects = await listProjects();
+    ourActive = projects.filter((p) => p.folderName === `${activeProject}-api`);
+    ourDestroyed = projects.filter(
+      (p) => p.folderName === `${destroyedProject}-api`
+    );
+    assertEquals(ourActive.length, 1, "Should find active in 'all'");
+    assertEquals(ourDestroyed.length, 1, "Should find destroyed in 'all'");
+  } finally {
+    await cleanupTempDir(tempDir);
+    await destroyProject({
+      projectName: `${activeProject}-api`,
+      force: true,
+      skipDbSetup: true,
+    }).catch(() => {});
+    closeKv();
+  }
+});
