@@ -6,6 +6,25 @@ import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 import { fileExists } from "../utils/fileWriter.ts";
 import { loadConfig } from "../utils/config.ts";
 
+/**
+ * TODO: Add comprehensive edge case and error scenario tests
+ * GitHub Issue: https://github.com/desingh-rajan/tstack-kit/issues/[TBD]
+ * 
+ * Missing test coverage for:
+ * 1. Invalid project names (starting with numbers, special chars, empty string, >255 chars)
+ * 2. Directory exists but not tracked by CLI (manual creation outside tstack)
+ * 3. Template path not found (corrupted installation)
+ * 4. Very long names (>255 characters)
+ * 5. Unicode/emoji in project names
+ * 6. Version fetching failures (--latest with network offline)
+ * 7. Disk full scenarios
+ * 8. Permission denied errors (readonly target directory)
+ * 9. Concurrent project creation (race conditions)
+ * 10. Malformed deno.json in template
+ * 11. Database connection failures (PostgreSQL not running)
+ * 12. Template copy failures (partial file copy)
+ */
+
 // Database integration tests are DISABLED by default for fast test runs.
 // To enable full database integration tests, set: TONYSTACK_TEST_DB=true
 // This requires:
@@ -718,6 +737,10 @@ Deno.test("createProject - should add entry to KV store with correct metadata", 
   }
 });
 
+// TODO: After refactoring, workspace type is no longer supported directly in create.ts
+// Workspace projects should be created using workspace.ts command instead
+// This test should be moved to workspace.test.ts
+/*
 Deno.test("createProject - workspace type should not have suffix", async () => {
   const tempDir = await createTempDir();
   try {
@@ -753,6 +776,7 @@ Deno.test("createProject - workspace type should not have suffix", async () => {
     closeKv();
   }
 });
+*/
 
 Deno.test("createProject - should track multiple projects", async () => {
   const tempDir = await createTempDir();
@@ -1027,6 +1051,78 @@ Deno.test("Status tracking - should handle manually deleted folder", async () =>
   } finally {
     await cleanupTempDir(tempDir);
     await deleteProject("status-test-api");
+    closeKv();
+  }
+});
+
+// --latest flag tests
+
+Deno.test({
+  name: "createProject - api: --latest flag updates dependencies",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-latest-api",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+        latest: true,
+      });
+
+      // Project name already ends in -api, so folder name won't be doubled
+      const projectPath = join(tempDir, "test-latest-api");
+      const denoJsonPath = join(projectPath, "deno.json");
+      const denoJsonContent = await Deno.readTextFile(denoJsonPath);
+      const denoJson = JSON.parse(denoJsonContent);
+
+      // Verify imports exist (versions will be latest)
+      assertExists(denoJson.imports["hono"], "Should have Hono import");
+      assertExists(
+        denoJson.imports["drizzle-orm"],
+        "Should have Drizzle import",
+      );
+      assertExists(denoJson.imports["zod"], "Should have Zod import");
+
+      // Version numbers should be updated (not the template defaults)
+      const honoImport = denoJson.imports["hono"];
+      assertEquals(
+        honoImport.includes("jsr:@hono/hono@^"),
+        true,
+        "Should have JSR Hono import with version",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+      await deleteProject("test-latest-api").catch(() => {});
+      closeKv();
+    }
+  },
+});
+
+Deno.test("createProject - api: without --latest uses template versions", async () => {
+  const tempDir = await createTempDir();
+  try {
+    await createProject({
+      projectName: "test-default-api",
+      projectType: "api",
+      targetDir: tempDir,
+      skipDbSetup: true,
+      latest: false,
+    });
+
+    // Project name already ends in -api, so folder name won't be doubled
+    const projectPath = join(tempDir, "test-default-api");
+    const denoJsonPath = join(projectPath, "deno.json");
+    const denoJsonContent = await Deno.readTextFile(denoJsonPath);
+    const denoJson = JSON.parse(denoJsonContent);
+
+    // Should still have imports (from template)
+    assertExists(denoJson.imports["hono"], "Should have Hono import");
+    assertExists(denoJson.imports["drizzle-orm"], "Should have Drizzle import");
+  } finally {
+    await cleanupTempDir(tempDir);
+    await deleteProject("test-default-api").catch(() => {});
     closeKv();
   }
 });

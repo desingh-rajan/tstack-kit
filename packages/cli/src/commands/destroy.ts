@@ -319,9 +319,9 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   if (metadata) {
     // Use metadata from KV store
     projectPath = metadata.path;
-    dbName = metadata.databases.dev || "";
-    testDbName = metadata.databases.test || "";
-    prodDbName = metadata.databases.prod || "";
+    dbName = metadata.databases?.dev || "";
+    testDbName = metadata.databases?.test || "";
+    prodDbName = metadata.databases?.prod || "";
 
     Logger.info(`Found tracked project: ${metadata.folderName}`);
     Logger.info(`Type: ${metadata.type}`);

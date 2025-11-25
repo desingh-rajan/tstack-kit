@@ -30,15 +30,15 @@ export async function listTrackedProjects(): Promise<void> {
     Logger.code(`Path:    ${project.path}`);
     Logger.code(`Created: ${createdDate}`);
 
-    if (project.databases.dev || project.databases.test) {
+    if (project.databases?.dev || project.databases?.test) {
       Logger.code("Databases:");
-      if (project.databases.dev) {
+      if (project.databases?.dev) {
         Logger.code(`  Dev:  ${project.databases.dev}`);
       }
-      if (project.databases.test) {
+      if (project.databases?.test) {
         Logger.code(`  Test: ${project.databases.test}`);
       }
-      if (project.databases.prod) {
+      if (project.databases?.prod) {
         Logger.code(`  Prod: ${project.databases.prod}`);
       }
     }

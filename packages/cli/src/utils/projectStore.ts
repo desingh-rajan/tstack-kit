@@ -12,7 +12,7 @@ export interface ProjectMetadata {
   type: "api" | "admin-ui" | "workspace";
   folderName: string; // Actual folder name (e.g., "foo-bar-shop-api")
   path: string; // Absolute path to project
-  databases: {
+  databases?: { // Optional: only for API projects
     dev?: string;
     test?: string;
     prod?: string;
