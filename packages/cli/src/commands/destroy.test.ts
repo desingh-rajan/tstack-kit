@@ -42,7 +42,7 @@ async function destroyInDir(
     force?: boolean;
     skipDbSetup?: boolean;
     interactive?: boolean;
-  },
+  }
 ): Promise<void> {
   const originalCwd = Deno.cwd();
   try {
@@ -62,24 +62,24 @@ async function databaseExists(dbName: string): Promise<boolean> {
 
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
-        args: [
-          "-c",
-          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${dbName}'"`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      })
+          args: [
+            "-c",
+            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${dbName}'"`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        })
       : new Deno.Command("sudo", {
-        args: [
-          "-u",
-          "postgres",
-          "psql",
-          "-tAc",
-          `SELECT 1 FROM pg_database WHERE datname='${dbName}'`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      });
+          args: [
+            "-u",
+            "postgres",
+            "psql",
+            "-tAc",
+            `SELECT 1 FROM pg_database WHERE datname='${dbName}'`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        });
 
     const { stdout } = await cmd.output();
     const result = new TextDecoder().decode(stdout).trim();
@@ -98,24 +98,24 @@ async function dropDatabase(dbName: string): Promise<void> {
 
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
-        args: [
-          "-c",
-          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      })
+          args: [
+            "-c",
+            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        })
       : new Deno.Command("sudo", {
-        args: [
-          "-u",
-          "postgres",
-          "psql",
-          "-c",
-          `DROP DATABASE IF EXISTS ${dbName}`,
-        ],
-        stdout: "piped",
-        stderr: "piped",
-      });
+          args: [
+            "-u",
+            "postgres",
+            "psql",
+            "-c",
+            `DROP DATABASE IF EXISTS ${dbName}`,
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        });
 
     await cmd.output();
   } catch {
@@ -170,7 +170,7 @@ Deno.test("destroyProject - fails when project doesn't exist", async () => {
       });
     },
     Error,
-    "not found",
+    "not found"
   );
 });
 
@@ -199,60 +199,66 @@ Deno.test("destroyProject - handles project with hyphens in name", async () => {
   }
 });
 
-Deno.test("destroyProject - handles project with underscores in name", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await createProject({
-      projectName: "my_cool_app",
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
+Deno.test(
+  "destroyProject - handles project with underscores in name",
+  async () => {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "my_cool_app",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-    const projectPath = join(tempDir, "my_cool_app-api");
-    assertEquals(await dirExists(projectPath), true);
+      const projectPath = join(tempDir, "my_cool_app-api");
+      assertEquals(await dirExists(projectPath), true);
 
-    await destroyInDir(tempDir, {
-      projectName: "my_cool_app-api",
-      force: true,
-      skipDbSetup: true,
-    });
+      await destroyInDir(tempDir, {
+        projectName: "my_cool_app-api",
+        force: true,
+        skipDbSetup: true,
+      });
 
-    assertEquals(await dirExists(projectPath), false);
-  } finally {
-    await cleanupTempDir(tempDir);
+      assertEquals(await dirExists(projectPath), false);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
   }
-});
+);
 
-Deno.test("destroyProject - removes all project files and subdirectories", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await createProject({
-      projectName: "test-app",
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
+Deno.test(
+  "destroyProject - removes all project files and subdirectories",
+  async () => {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-app",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-    const projectPath = join(tempDir, "test-app-api");
+      const projectPath = join(tempDir, "test-app-api");
 
-    // Verify key directories exist before destruction
-    assertEquals(await dirExists(join(projectPath, "src")), true);
-    assertEquals(await dirExists(join(projectPath, "migrations")), true);
-    assertEquals(await dirExists(join(projectPath, "scripts")), true);
+      // Verify key directories exist before destruction
+      assertEquals(await dirExists(join(projectPath, "src")), true);
+      assertEquals(await dirExists(join(projectPath, "migrations")), true);
+      assertEquals(await dirExists(join(projectPath, "scripts")), true);
 
-    await destroyInDir(tempDir, {
-      projectName: "test-app-api",
-      force: true,
-      skipDbSetup: true,
-    });
+      await destroyInDir(tempDir, {
+        projectName: "test-app-api",
+        force: true,
+        skipDbSetup: true,
+      });
 
-    // Verify entire project is gone
-    assertEquals(await dirExists(projectPath), false);
-  } finally {
-    await cleanupTempDir(tempDir);
+      // Verify entire project is gone
+      assertEquals(await dirExists(projectPath), false);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
   }
-});
+);
 
 Deno.test("destroyProject - handles nested directory structure", async () => {
   const tempDir = await createTempDir();
@@ -273,7 +279,7 @@ Deno.test("destroyProject - handles nested directory structure", async () => {
     });
     await Deno.writeTextFile(
       join(projectPath, "extra", "nested", "deep", "file.txt"),
-      "test",
+      "test"
     );
 
     await destroyInDir(tempDir, {
@@ -316,7 +322,7 @@ Deno.test({
       assertEquals(
         await databaseExists(dbName),
         true,
-        `Database ${dbName} should exist before destroy`,
+        `Database ${dbName} should exist before destroy`
       );
 
       // Destroy project with databases
@@ -330,7 +336,7 @@ Deno.test({
       assertEquals(
         await databaseExists(dbName),
         false,
-        `Database ${dbName} should be dropped`,
+        `Database ${dbName} should be dropped`
       );
     } finally {
       // Cleanup
@@ -364,7 +370,7 @@ Deno.test({
       assertEquals(
         await databaseExists(testDbName),
         true,
-        `Database ${testDbName} should exist before destroy`,
+        `Database ${testDbName} should exist before destroy`
       );
 
       // Destroy project
@@ -378,7 +384,7 @@ Deno.test({
       assertEquals(
         await databaseExists(testDbName),
         false,
-        `Database ${testDbName} should be dropped`,
+        `Database ${testDbName} should be dropped`
       );
     } finally {
       // Cleanup
@@ -412,17 +418,17 @@ Deno.test({
       assertEquals(
         await databaseExists(dbName),
         true,
-        `Dev database should exist`,
+        `Dev database should exist`
       );
       assertEquals(
         await databaseExists(testDbName),
         true,
-        `Test database should exist`,
+        `Test database should exist`
       );
       assertEquals(
         await databaseExists(prodDbName),
         true,
-        `Prod database should exist`,
+        `Prod database should exist`
       );
 
       // Destroy project
@@ -436,17 +442,17 @@ Deno.test({
       assertEquals(
         await databaseExists(dbName),
         false,
-        `Dev database should be dropped`,
+        `Dev database should be dropped`
       );
       assertEquals(
         await databaseExists(testDbName),
         false,
-        `Test database should be dropped`,
+        `Test database should be dropped`
       );
       assertEquals(
         await databaseExists(prodDbName),
         false,
-        `Prod database should be dropped`,
+        `Prod database should be dropped`
       );
     } finally {
       // Cleanup
@@ -459,8 +465,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - handles database names with hyphens converted to underscores (integration test)",
+  name: "destroyProject - handles database names with hyphens converted to underscores (integration test)",
   ignore: SKIP_DB_SETUP,
   async fn() {
     const tempDir = await createTempDir();
@@ -504,8 +509,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - completes successfully even if databases don't exist (integration test)",
+  name: "destroyProject - completes successfully even if databases don't exist (integration test)",
   ignore: SKIP_DB_SETUP,
   sanitizeResources: false, // KV connection shared across tests
   async fn() {
@@ -602,166 +606,174 @@ Deno.test({
   },
 });
 
-Deno.test("destroyProject - should use KV metadata for path and databases", async () => {
-  const tempDir = await createTempDir();
-  const projectName = "kv-metadata-test";
+Deno.test(
+  "destroyProject - should use KV metadata for path and databases",
+  async () => {
+    const tempDir = await createTempDir();
+    const projectName = "kv-metadata-test";
 
-  try {
-    // Create project with KV tracking
-    await createProject({
-      projectName,
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
-
-    const folderName = `${projectName}-api`;
-    const folderPath = join(tempDir, folderName);
-
-    // Verify KV metadata is correct
-    const metadata = await getProject(folderName);
-    assertExists(metadata, "Metadata should exist");
-    assertEquals(metadata.path, folderPath, "Path should match");
-    assertEquals(metadata.databases?.dev, `kv_metadata_test_api_dev`);
-
-    // Verify folder exists
-    let folderExists = await exists(folderPath, { isDirectory: true });
-    assertEquals(folderExists, true, "Folder should exist");
-
-    // Destroy from different directory (to test KV path lookup)
-    const originalCwd = Deno.cwd();
-    Deno.chdir("/tmp");
     try {
-      await destroyProject({
-        projectName: folderName,
+      // Create project with KV tracking
+      await createProject({
+        projectName,
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
+
+      const folderName = `${projectName}-api`;
+      const folderPath = join(tempDir, folderName);
+
+      // Verify KV metadata is correct
+      const metadata = await getProject(folderName);
+      assertExists(metadata, "Metadata should exist");
+      assertEquals(metadata.path, folderPath, "Path should match");
+      assertEquals(metadata.databases?.dev, `kv_metadata_test_api_dev`);
+
+      // Verify folder exists
+      let folderExists = await exists(folderPath, { isDirectory: true });
+      assertEquals(folderExists, true, "Folder should exist");
+
+      // Destroy from different directory (to test KV path lookup)
+      const originalCwd = Deno.cwd();
+      Deno.chdir("/tmp");
+      try {
+        await destroyProject({
+          projectName: folderName,
+          force: true,
+          skipDbSetup: true,
+        });
+      } finally {
+        Deno.chdir(originalCwd);
+      }
+
+      // Verify folder is gone
+      folderExists = await exists(folderPath, { isDirectory: true });
+      assertEquals(folderExists, false, "Folder should be removed");
+    } finally {
+      await cleanupTempDir(tempDir);
+      await deleteFromKV(`${projectName}-api`).catch(() => {});
+      closeKv();
+    }
+  }
+);
+
+Deno.test(
+  "destroyProject - should fallback to directory search if not in KV",
+  async () => {
+    const tempDir = await createTempDir();
+    const projectName = "untracked-destroy-test";
+
+    try {
+      // Manually create a project directory (not through CLI, so not tracked)
+      const folderPath = join(tempDir, projectName);
+      await Deno.mkdir(folderPath, { recursive: true });
+      await Deno.writeTextFile(join(folderPath, "deno.json"), "{}");
+
+      // Verify it's NOT in KV
+      const metadata = await getProject(projectName);
+      assertEquals(metadata, null, "Should not be tracked");
+
+      // Verify folder exists
+      let folderExists = await exists(folderPath, { isDirectory: true });
+      assertEquals(folderExists, true, "Folder should exist");
+
+      // Destroy should still work using directory search
+      await destroyInDir(tempDir, {
+        projectName,
         force: true,
         skipDbSetup: true,
       });
+
+      // Verify folder is removed
+      folderExists = await exists(folderPath, { isDirectory: true });
+      assertEquals(
+        folderExists,
+        false,
+        "Folder should be removed even without KV tracking"
+      );
     } finally {
-      Deno.chdir(originalCwd);
+      await cleanupTempDir(tempDir);
+      await deleteFromKV(projectName).catch(() => {});
+      closeKv();
     }
-
-    // Verify folder is gone
-    folderExists = await exists(folderPath, { isDirectory: true });
-    assertEquals(folderExists, false, "Folder should be removed");
-  } finally {
-    await cleanupTempDir(tempDir);
-    await deleteFromKV(`${projectName}-api`).catch(() => {});
-    closeKv();
   }
-});
+);
 
-Deno.test("destroyProject - should fallback to directory search if not in KV", async () => {
-  const tempDir = await createTempDir();
-  const projectName = "untracked-destroy-test";
+Deno.test(
+  "destroyProject - should support type-based destruction",
+  async () => {
+    const tempDir = await createTempDir();
+    try {
+      // Create two projects with same base name but different types
+      await createProject({
+        projectName: "multi-type-test",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-  try {
-    // Manually create a project directory (not through CLI, so not tracked)
-    const folderPath = join(tempDir, projectName);
-    await Deno.mkdir(folderPath, { recursive: true });
-    await Deno.writeTextFile(join(folderPath, "deno.json"), "{}");
+      await createProject({
+        projectName: "multi-type-test",
+        projectType: "admin-ui",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
 
-    // Verify it's NOT in KV
-    const metadata = await getProject(projectName);
-    assertEquals(metadata, null, "Should not be tracked");
+      // Verify both exist
+      const apiPath = join(tempDir, "multi-type-test-api");
+      const uiPath = join(tempDir, "multi-type-test-admin-ui");
+      assertEquals(await exists(apiPath), true, "API project should exist");
+      assertEquals(await exists(uiPath), true, "Admin UI project should exist");
 
-    // Verify folder exists
-    let folderExists = await exists(folderPath, { isDirectory: true });
-    assertEquals(folderExists, true, "Folder should exist");
+      // Destroy only the API project using type parameter
+      await destroyInDir(tempDir, {
+        projectName: "multi-type-test",
+        projectType: "api",
+        force: true,
+        skipDbSetup: true,
+      });
 
-    // Destroy should still work using directory search
-    await destroyInDir(tempDir, {
-      projectName,
-      force: true,
-      skipDbSetup: true,
-    });
+      // Verify API is gone but admin-ui remains
+      assertEquals(
+        await exists(apiPath),
+        false,
+        "API project should be destroyed"
+      );
+      assertEquals(
+        await exists(uiPath),
+        true,
+        "Admin UI project should still exist"
+      );
 
-    // Verify folder is removed
-    folderExists = await exists(folderPath, { isDirectory: true });
-    assertEquals(
-      folderExists,
-      false,
-      "Folder should be removed even without KV tracking",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-    await deleteFromKV(projectName).catch(() => {});
-    closeKv();
+      // Clean up the admin-ui
+      await destroyInDir(tempDir, {
+        projectName: "multi-type-test",
+        projectType: "admin-ui",
+        force: true,
+        skipDbSetup: true,
+      });
+
+      assertEquals(
+        await exists(uiPath),
+        false,
+        "Admin UI project should be destroyed"
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+      await deleteFromKV("multi-type-test-api").catch(() => {});
+      await deleteFromKV("multi-type-test-admin-ui").catch(() => {});
+      closeKv();
+    }
   }
-});
-
-Deno.test("destroyProject - should support type-based destruction", async () => {
-  const tempDir = await createTempDir();
-  try {
-    // Create two projects with same base name but different types
-    await createProject({
-      projectName: "multi-type-test",
-      projectType: "api",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
-
-    await createProject({
-      projectName: "multi-type-test",
-      projectType: "admin-ui",
-      targetDir: tempDir,
-      skipDbSetup: true,
-    });
-
-    // Verify both exist
-    const apiPath = join(tempDir, "multi-type-test-api");
-    const uiPath = join(tempDir, "multi-type-test-admin-ui");
-    assertEquals(await exists(apiPath), true, "API project should exist");
-    assertEquals(await exists(uiPath), true, "Admin UI project should exist");
-
-    // Destroy only the API project using type parameter
-    await destroyInDir(tempDir, {
-      projectName: "multi-type-test",
-      projectType: "api",
-      force: true,
-      skipDbSetup: true,
-    });
-
-    // Verify API is gone but admin-ui remains
-    assertEquals(
-      await exists(apiPath),
-      false,
-      "API project should be destroyed",
-    );
-    assertEquals(
-      await exists(uiPath),
-      true,
-      "Admin UI project should still exist",
-    );
-
-    // Clean up the admin-ui
-    await destroyInDir(tempDir, {
-      projectName: "multi-type-test",
-      projectType: "admin-ui",
-      force: true,
-      skipDbSetup: true,
-    });
-
-    assertEquals(
-      await exists(uiPath),
-      false,
-      "Admin UI project should be destroyed",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-    await deleteFromKV("multi-type-test-api").catch(() => {});
-    await deleteFromKV("multi-type-test-admin-ui").catch(() => {});
-    closeKv();
-  }
-});
+);
 
 // ============================================================================
 // Comprehensive tests for 3 destroy scenarios
 // ============================================================================
 
 Deno.test({
-  name:
-    "destroyProject - Scenario 1: Destroy with type parameter (exact match)",
+  name: "destroyProject - Scenario 1: Destroy with type parameter (exact match)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -817,8 +829,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - Scenario 2: Destroy by exact folder name (backward compatible)",
+  name: "destroyProject - Scenario 2: Destroy by exact folder name (backward compatible)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -856,7 +867,7 @@ Deno.test({
       assertEquals(
         await exists(apiPath),
         false,
-        "store-api should be destroyed",
+        "store-api should be destroyed"
       );
       assertEquals(await exists(uiPath), true, "store-admin-ui should remain");
 
@@ -876,8 +887,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - Scenario 3: Ambiguous name finds multiple matches (single match auto-select)",
+  name: "destroyProject - Scenario 3: Ambiguous name finds multiple matches (single match auto-select)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -904,7 +914,7 @@ Deno.test({
       assertEquals(
         await exists(apiPath),
         false,
-        "Should auto-destroy single match",
+        "Should auto-destroy single match"
       );
 
       const metadata = await getProject("cart-api");
@@ -918,8 +928,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - Scenario 3: Multiple matches detected (would prompt in interactive mode)",
+  name: "destroyProject - Scenario 3: Multiple matches detected (would prompt in interactive mode)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -966,11 +975,11 @@ Deno.test({
       const uiMetadata = await getProject("market-admin-ui");
 
       // At least one should still exist to prove we didn't destroy without confirmation
-      const atLeastOneExists = (apiMetadata !== null) || (uiMetadata !== null);
+      const atLeastOneExists = apiMetadata !== null || uiMetadata !== null;
       assertEquals(
         atLeastOneExists,
         true,
-        "Should not destroy multiple projects without user confirmation",
+        "Should not destroy multiple projects without user confirmation"
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -982,8 +991,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "destroyProject - Smart suffix detection: 'foo-bar-api' type='api' should not duplicate",
+  name: "destroyProject - Smart suffix detection: 'foo-bar-api' type='api' should not duplicate",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -1011,7 +1019,7 @@ Deno.test({
       assertEquals(
         await exists(projectPath),
         false,
-        "Should destroy foo-bar-api",
+        "Should destroy foo-bar-api"
       );
 
       const metadata = await getProject("foo-bar-api");
@@ -1054,12 +1062,12 @@ Deno.test({
       const metadata = await getProject("status-destroy-test-api");
       assertExists(
         metadata,
-        "Metadata should exist after destroy without force",
+        "Metadata should exist after destroy without force"
       );
       assertEquals(
         metadata?.status,
         "destroyed",
-        "Status should be 'destroyed'",
+        "Status should be 'destroyed'"
       );
 
       // Try to destroy again - should detect already destroyed
@@ -1068,7 +1076,7 @@ Deno.test({
       assertEquals(
         metadata?.status,
         "destroyed",
-        "Should show destroyed status",
+        "Should show destroyed status"
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -1106,7 +1114,7 @@ Deno.test({
       assertEquals(
         metadata,
         null,
-        "Metadata should be removed with force flag",
+        "Metadata should be removed with force flag"
       );
     } finally {
       await cleanupTempDir(tempDir);

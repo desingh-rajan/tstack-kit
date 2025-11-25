@@ -148,27 +148,17 @@ async function main() {
   try {
     switch (command) {
       case "create": {
-        const typeOrName = args._[1]?.toString();
-        const maybeName = args._[2]?.toString();
+        const type = args._[1]?.toString();
+        const projectName = args._[2]?.toString();
 
-        // Support both patterns:
-        // New: tstack create api my-project
-        // Old: tstack create my-project (defaults to api)
         const validTypes = ["api", "admin-ui", "workspace"];
-        let type: string;
-        let projectName: string;
 
-        if (validTypes.includes(typeOrName)) {
-          // New pattern: tstack create <type> <name>
-          type = typeOrName;
-          projectName = maybeName || "";
-        } else {
-          // Old pattern: tstack create <name> (backward compatibility)
-          type = "api";
-          projectName = typeOrName || "";
-          Logger.warning(
-            "⚠️  Deprecated syntax. Use: tstack create api <name>",
-          );
+        if (!type || !validTypes.includes(type)) {
+          Logger.error("Project type is required");
+          Logger.info("Usage: tstack create <type> <name>");
+          Logger.info("Types: api, admin-ui, workspace");
+          Logger.info("Example: tstack create api my-backend");
+          Deno.exit(1);
         }
 
         if (!projectName) {
@@ -242,44 +232,11 @@ async function main() {
       }
 
       case "workspace": {
-        // Deprecated: redirect to new syntax
-        Logger.warning("⚠️  'tstack workspace create' is deprecated");
+        // Removed: use 'tstack create workspace <name>' instead
+        Logger.error("⚠️  'tstack workspace' command has been removed");
         Logger.info("Use: tstack create workspace <name>");
-
-        const subCommand = args._[1]?.toString().toLowerCase();
-        if (subCommand === "create") {
-          const workspaceName = args._[2]?.toString();
-          if (!workspaceName) {
-            Logger.error("Workspace name is required");
-            Deno.exit(1);
-          }
-
-          await createWorkspace({
-            name: workspaceName,
-            targetDir: args.dir,
-            namespace: args.namespace,
-            withApi: args["with-api"],
-            withAdminUi: args["with-admin-ui"],
-            withUi: args["with-ui"],
-            withInfra: args["with-infra"],
-            withMobile: args["with-mobile"],
-            withMetrics: args["with-metrics"],
-            skipApi: args["skip-api"],
-            skipAdminUi: args["skip-admin-ui"],
-            skipUi: args["skip-ui"],
-            skipInfra: args["skip-infra"],
-            skipMobile: args["skip-mobile"],
-            skipMetrics: args["skip-metrics"],
-            skipRemote: args["skip-remote"],
-            githubOrg: args["github-org"],
-            githubToken: args["github-token"],
-            visibility: args.visibility as "private" | "public" | undefined,
-          });
-        } else {
-          Logger.error(`Unknown workspace subcommand: ${subCommand}`);
-          Deno.exit(1);
-        }
-        break;
+        Logger.info("Example: tstack create workspace my-shop");
+        Deno.exit(1);
       }
 
       case "destroy": {

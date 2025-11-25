@@ -757,13 +757,12 @@ Deno.test("scaffoldEntity - default generates routes with auth middleware", asyn
   }
 });
 
-Deno.test("scaffoldEntity - skipAuth flag generates public routes", async () => {
+Deno.test("scaffoldEntity - routes use BaseRouteFactory pattern", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
       entityName: "product",
       targetDir: tempDir,
-      skipAuth: true,
     });
 
     const routePath = join(
@@ -775,21 +774,22 @@ Deno.test("scaffoldEntity - skipAuth flag generates public routes", async () => 
     );
     const content = await Deno.readTextFile(routePath);
 
-    // Should NOT have auth imports or middleware
+    // Should use BaseRouteFactory pattern
     assertEquals(
-      content.includes('from "../../shared/middleware/auth.ts"'),
-      false,
-      "Should NOT import auth middleware",
-    );
-    assertEquals(
-      content.includes("requireAuth"),
-      false,
-      "Should NOT use requireAuth middleware",
-    );
-    assertEquals(
-      content.includes("// All routes are public (no authentication)"),
+      content.includes('from "../../shared/routes/base-route.factory.ts"'),
       true,
-      "Should have public routes comment",
+      "Should import BaseRouteFactory",
+    );
+    assertEquals(
+      content.includes("BaseRouteFactory.createCrudRoutes"),
+      true,
+      "Should use createCrudRoutes",
+    );
+    // Auth is now configured in controller via authConfig, not in routes
+    assertEquals(
+      content.includes("// publicRoutes:"),
+      true,
+      "Should have publicRoutes configuration example",
     );
   } finally {
     await cleanupTempDir(tempDir);
@@ -835,13 +835,12 @@ Deno.test("scaffoldEntity - default generates DTOs with Zod validation", async (
   }
 });
 
-Deno.test("scaffoldEntity - skipValidation flag generates plain interfaces", async () => {
+Deno.test("scaffoldEntity - DTOs always use Zod validation (base pattern)", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
       entityName: "product",
       targetDir: tempDir,
-      skipValidation: true,
     });
 
     const dtoPath = join(
@@ -853,33 +852,28 @@ Deno.test("scaffoldEntity - skipValidation flag generates plain interfaces", asy
     );
     const content = await Deno.readTextFile(dtoPath);
 
-    // Should NOT have Zod imports
+    // Base pattern always uses Zod
     assertEquals(
       content.includes('import { z } from "zod"'),
-      false,
-      "Should NOT import zod",
+      true,
+      "Should import zod",
     );
     assertEquals(
-      content.includes("export interface CreateProductDTO"),
+      content.includes("CreateProductSchema = z.object"),
       true,
-      "Should have CreateProductDTO as interface",
+      "Should have CreateProductSchema with Zod",
     );
     assertEquals(
-      content.includes("export interface UpdateProductDTO"),
+      content.includes("UpdateProductSchema = z.object"),
       true,
-      "Should have UpdateProductDTO as interface",
-    );
-    assertEquals(
-      content.includes("no validation"),
-      true,
-      "Should have 'no validation' comment",
+      "Should have UpdateProductSchema with Zod",
     );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - default controller uses ValidationUtil", async () => {
+Deno.test("scaffoldEntity - controller extends BaseController pattern", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -896,39 +890,26 @@ Deno.test("scaffoldEntity - default controller uses ValidationUtil", async () =>
     );
     const content = await Deno.readTextFile(controllerPath);
 
-    // Should use ValidationUtil
+    // Should extend BaseController (validation is handled by validate middleware)
     assertEquals(
-      content.includes('from "../../shared/utils/validation.ts"'),
+      content.includes('from "../../shared/controllers/base.controller.ts"'),
       true,
-      "Should import ValidationUtil",
+      "Should import BaseController",
     );
     assertEquals(
-      content.includes("ValidationUtil.validateSync"),
+      content.includes("extends BaseController"),
       true,
-      "Should use ValidationUtil.validateSync",
+      "Should extend BaseController",
     );
     assertEquals(
-      content.includes("CreateProductSchema"),
+      content.includes("authConfig"),
       true,
-      "Should use CreateProductSchema",
+      "Should have authConfig property",
     );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
-
-Deno.test("scaffoldEntity - skipValidation controller skips ValidationUtil", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipValidation: true,
-    });
-
-    const controllerPath = join(
-      tempDir,
-      "src",
       "entities",
       "products",
       "product.controller.ts",
@@ -965,7 +946,7 @@ Deno.test("scaffoldEntity - skipValidation controller skips ValidationUtil", asy
 });
 
 // Test combined flags
-Deno.test("scaffoldEntity - all skip flags combined", async () => {
+Deno.test("scaffoldEntity - skip flags (admin and tests)", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -973,13 +954,11 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
       targetDir: tempDir,
       skipAdmin: true,
       skipTests: true,
-      skipAuth: true,
-      skipValidation: true,
     });
 
     const basePath = join(tempDir, "src", "entities", "products");
 
-    // Core files should exist
+    // Core files should exist (base pattern)
     assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
     assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
     assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
@@ -1006,22 +985,13 @@ Deno.test("scaffoldEntity - all skip flags combined", async () => {
       "Admin test should NOT be generated",
     );
 
-    // Check route is public
-    const routePath = join(basePath, "product.route.ts");
-    const routeContent = await Deno.readTextFile(routePath);
-    assertEquals(
-      routeContent.includes("requireAuth"),
-      false,
-      "Route should NOT have auth",
-    );
-
-    // Check DTO has no validation
+    // Base pattern always uses Zod validation
     const dtoPath = join(basePath, "product.dto.ts");
     const dtoContent = await Deno.readTextFile(dtoPath);
     assertEquals(
       dtoContent.includes("z.object"),
-      false,
-      "DTO should NOT have Zod schemas",
+      true,
+      "DTO should have Zod schemas (base pattern)",
     );
   } finally {
     await cleanupTempDir(tempDir);

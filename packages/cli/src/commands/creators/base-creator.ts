@@ -5,10 +5,7 @@ import {
   extractVersion,
   fetchAllLatestVersions,
 } from "../../utils/versionFetcher.ts";
-import {
-  getProject,
-  updateProject,
-} from "../../utils/projectStore.ts";
+import { getProject, updateProject } from "../../utils/projectStore.ts";
 
 export interface BaseCreateOptions {
   projectName: string;
