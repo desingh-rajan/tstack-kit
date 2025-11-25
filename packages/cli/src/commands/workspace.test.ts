@@ -43,8 +43,7 @@ async function deleteGitHubRepo(repoName: string): Promise<void> {
 // ============================================================================
 
 Deno.test({
-  name:
-    "createWorkspace - creates workspace with default components (api + admin-ui)",
+  name: "createWorkspace - creates workspace with default components (api + admin-ui)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -71,16 +70,22 @@ Deno.test({
       const adminUiPath = join(workspacePath, `${workspaceName}-admin-ui`);
 
       assertEquals(
-        await Deno.stat(workspacePath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(workspacePath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
       assertEquals(
-        await Deno.stat(apiPath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(apiPath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
       assertEquals(
-        await Deno.stat(adminUiPath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(adminUiPath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
 
       // Cleanup
@@ -119,8 +124,10 @@ Deno.test({
 
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
       assertEquals(
-        await Deno.stat(apiPath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(apiPath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
 
       await destroyWorkspace({
@@ -188,7 +195,7 @@ Deno.test({
         assertEquals(
           (error as Error).message.includes("reserved"),
           true,
-          `Should reject reserved suffix: ${name}`,
+          `Should reject reserved suffix: ${name}`
         );
       }
       assertEquals(errorThrown, true, `Should have thrown error for ${name}`);
@@ -226,10 +233,7 @@ Deno.test({
         });
       } catch (error) {
         errorThrown = true;
-        assertEquals(
-          (error as Error).message.includes("already exists"),
-          true,
-        );
+        assertEquals((error as Error).message.includes("already exists"), true);
       }
       assertEquals(errorThrown, true);
 
@@ -264,8 +268,10 @@ Deno.test({
       const gitPath = join(apiPath, ".git");
 
       assertEquals(
-        await Deno.stat(gitPath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(gitPath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
 
       // Verify initial commit exists
@@ -453,8 +459,10 @@ Deno.test({
 
       const workspacePath = join(tempDir, workspaceName);
       assertEquals(
-        await Deno.stat(workspacePath).then(() => true).catch(() => false),
-        true,
+        await Deno.stat(workspacePath)
+          .then(() => true)
+          .catch(() => false),
+        true
       );
 
       await destroyWorkspace({
@@ -465,8 +473,10 @@ Deno.test({
 
       // Verify workspace removed
       assertEquals(
-        await Deno.stat(workspacePath).then(() => true).catch(() => false),
-        false,
+        await Deno.stat(workspacePath)
+          .then(() => true)
+          .catch(() => false),
+        false
       );
 
       // Verify metadata removed

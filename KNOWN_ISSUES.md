@@ -5,12 +5,14 @@
 **Issue:** VS Code's `formatOnSave` with Deno formatter can corrupt test files containing multi-line `assertEquals()` calls.
 
 **Symptoms:**
+
 - Orphaned commas on separate lines
 - Broken `assertEquals()` statements split across multiple lines
 - Syntax errors like "Expression expected"
 - Files affected: `*.test.ts`
 
 **Example Corruption:**
+
 ```typescript
 // Before (correct):
 assertEquals(
@@ -36,7 +38,9 @@ assertEquals(
 **Workaround:**
 
 ### Option 1: Disable formatOnSave for test files (Recommended)
+
 Add to your `.vscode/settings.json`:
+
 ```json
 {
   "files.associations": {
@@ -50,6 +54,7 @@ Add to your `.vscode/settings.json`:
 ```
 
 ### Option 2: Use single-line assertions
+
 ```typescript
 // Instead of multi-line:
 assertEquals(
@@ -63,12 +68,15 @@ assertEquals(exists, true);
 ```
 
 ### Option 3: Restore from Git
+
 If corruption happens:
+
 ```bash
 git checkout HEAD -- path/to/corrupted.test.ts
 ```
 
 **Files Previously Affected:**
+
 - `packages/cli/src/commands/workspace.test.ts` (restored from commit aff0b27)
 - `packages/cli/src/commands/create-admin-ui.test.ts` (recreated from scratch)
 - `packages/cli/src/commands/creators/base-creator.ts` (manually fixed)
