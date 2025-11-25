@@ -3,6 +3,7 @@ import { join } from "@std/path";
 import { createWorkspace, destroyWorkspace } from "./workspace.ts";
 import { closeKv, getWorkspace } from "../utils/workspaceStore.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
+import { cleanupTestDatabases } from "../../scripts/cleanup-test-dbs.ts";
 
 // ⚠️ WARNING: VS Code's formatOnSave with Deno formatter can corrupt this file!
 // If you see orphaned commas or broken assertEquals() calls, restore from git.
@@ -927,6 +928,25 @@ Deno.test({
       }
     }
 
+    closeKv();
+  },
+});
+
+// ============================================================================
+// Database Cleanup (Always runs at the end)
+// ============================================================================
+
+Deno.test({
+  name: "CLEANUP - Remove all test databases",
+  sanitizeResources: false,
+  async fn() {
+    const result = await cleanupTestDatabases();
+    if (result.success > 0) {
+      console.log(`[CLEANUP] Dropped ${result.success} test database(s)`);
+    }
+    if (result.failed > 0) {
+      console.log(`[CLEANUP] Failed to drop ${result.failed} database(s)`);
+    }
     closeKv();
   },
 });
