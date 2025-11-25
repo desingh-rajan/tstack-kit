@@ -43,7 +43,8 @@ async function deleteGitHubRepo(repoName: string): Promise<void> {
 // ============================================================================
 
 Deno.test({
-  name: "createWorkspace - creates workspace with default components (api + admin-ui)",
+  name:
+    "createWorkspace - creates workspace with default components (api + admin-ui)",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -73,20 +74,58 @@ Deno.test({
         await Deno.stat(workspacePath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
       assertEquals(
         await Deno.stat(apiPath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
       assertEquals(
         await Deno.stat(adminUiPath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
+
+      // Cleanup
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - shows local-only warning when no github-org specified",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = "test-local-warning";
+
+    try {
+      // Create workspace without github-org (should show warning)
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        // No githubOrg, no skipRemote - should warn about local-only
+      });
+
+      // Verify workspace created locally
+      const workspace = await getWorkspace(workspaceName);
+      assertExists(workspace);
+      assertEquals(workspace.githubRepos.length, 0); // No GitHub repos
+
+      // Verify both components created by default
+      assertEquals(workspace.components.api, true);
+      assertEquals(workspace.components.adminUi, true);
 
       // Cleanup
       await destroyWorkspace({
@@ -127,7 +166,7 @@ Deno.test({
         await Deno.stat(apiPath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
 
       await destroyWorkspace({
@@ -195,7 +234,7 @@ Deno.test({
         assertEquals(
           (error as Error).message.includes("reserved"),
           true,
-          `Should reject reserved suffix: ${name}`
+          `Should reject reserved suffix: ${name}`,
         );
       }
       assertEquals(errorThrown, true, `Should have thrown error for ${name}`);
@@ -271,7 +310,7 @@ Deno.test({
         await Deno.stat(gitPath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
 
       // Verify initial commit exists
@@ -438,6 +477,145 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "createWorkspace - creates BOTH api + admin-ui with GitHub org",
+  ignore: SKIP_GITHUB,
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      // Create workspace with both api and admin-ui (default)
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        githubOrg: GITHUB_ORG, // Should create 2 repos
+      });
+
+      // Verify workspace metadata
+      const workspace = await getWorkspace(workspaceName);
+      assertExists(workspace);
+      assertEquals(workspace.components.api, true);
+      assertEquals(workspace.components.adminUi, true);
+      assertEquals(workspace.githubOrg, GITHUB_ORG);
+      assertEquals(workspace.githubRepos.length, 2); // api + admin-ui
+
+      // Verify both repos exist in metadata
+      const apiRepo = workspace.githubRepos.find((r) => r.type === "api");
+      const adminUiRepo = workspace.githubRepos.find((r) =>
+        r.type === "admin-ui"
+      );
+
+      assertExists(apiRepo);
+      assertEquals(apiRepo.name, `${workspaceName}-api`);
+      assertEquals(apiRepo.url.includes(GITHUB_ORG), true);
+
+      assertExists(adminUiRepo);
+      assertEquals(adminUiRepo.name, `${workspaceName}-admin-ui`);
+      assertEquals(adminUiRepo.url.includes(GITHUB_ORG), true);
+
+      // Verify remote URLs configured for both projects
+      const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
+      const adminUiPath = join(
+        tempDir,
+        workspaceName,
+        `${workspaceName}-admin-ui`,
+      );
+
+      // Check API remote
+      const apiRemoteCmd = new Deno.Command("git", {
+        args: ["remote", "get-url", "origin"],
+        cwd: apiPath,
+        stdout: "piped",
+      });
+      const apiResult = await apiRemoteCmd.output();
+      assertEquals(apiResult.success, true);
+      const apiRemoteUrl = new TextDecoder().decode(apiResult.stdout).trim();
+      assertEquals(apiRemoteUrl.includes(GITHUB_ORG), true);
+      assertEquals(apiRemoteUrl.includes(`${workspaceName}-api`), true);
+
+      // Check Admin UI remote
+      const adminRemoteCmd = new Deno.Command("git", {
+        args: ["remote", "get-url", "origin"],
+        cwd: adminUiPath,
+        stdout: "piped",
+      });
+      const adminResult = await adminRemoteCmd.output();
+      assertEquals(adminResult.success, true);
+      const adminRemoteUrl = new TextDecoder().decode(adminResult.stdout)
+        .trim();
+      assertEquals(adminRemoteUrl.includes(GITHUB_ORG), true);
+      assertEquals(adminRemoteUrl.includes(`${workspaceName}-admin-ui`), true);
+
+      // Cleanup
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: true,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name: "createWorkspace - creates admin-ui only with --with-admin-ui",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = "test-admin-only";
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        withAdminUi: true, // Only admin-ui
+        skipRemote: true,
+      });
+
+      // Verify workspace metadata
+      const workspace = await getWorkspace(workspaceName);
+      assertExists(workspace);
+      assertEquals(workspace.name, workspaceName);
+      assertEquals(workspace.components.api, false);
+      assertEquals(workspace.components.adminUi, true);
+      assertEquals(workspace.projects.length, 1); // admin-ui only
+
+      // Verify only admin-ui folder exists
+      const workspacePath = join(tempDir, workspaceName);
+      const apiPath = join(workspacePath, `${workspaceName}-api`);
+      const adminUiPath = join(workspacePath, `${workspaceName}-admin-ui`);
+
+      assertEquals(
+        await Deno.stat(apiPath)
+          .then(() => true)
+          .catch(() => false),
+        false,
+      ); // API should NOT exist
+
+      assertEquals(
+        await Deno.stat(adminUiPath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+      ); // Admin UI should exist
+
+      // Cleanup
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
 // ============================================================================
 // Workspace Destroy Tests
 // ============================================================================
@@ -462,7 +640,7 @@ Deno.test({
         await Deno.stat(workspacePath)
           .then(() => true)
           .catch(() => false),
-        true
+        true,
       );
 
       await destroyWorkspace({
@@ -476,7 +654,7 @@ Deno.test({
         await Deno.stat(workspacePath)
           .then(() => true)
           .catch(() => false),
-        false
+        false,
       );
 
       // Verify metadata removed
@@ -546,6 +724,98 @@ Deno.test({
       closeKv();
       // Extra cleanup in case test failed
       await deleteGitHubRepo(`${workspaceName}-api`);
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "destroyWorkspace - destroys workspace with BOTH projects + GitHub repos",
+  ignore: SKIP_GITHUB,
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      // Create workspace with both api and admin-ui + GitHub
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        githubOrg: GITHUB_ORG, // Creates 2 repos
+      });
+
+      // Verify both repos exist
+      const apiCheckCmd = new Deno.Command("gh", {
+        args: [
+          "repo",
+          "view",
+          `${GITHUB_ORG}/${workspaceName}-api`,
+          "--json",
+          "name",
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const apiCheckResult = await apiCheckCmd.output();
+      assertEquals(apiCheckResult.success, true);
+
+      const adminCheckCmd = new Deno.Command("gh", {
+        args: [
+          "repo",
+          "view",
+          `${GITHUB_ORG}/${workspaceName}-admin-ui`,
+          "--json",
+          "name",
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const adminCheckResult = await adminCheckCmd.output();
+      assertEquals(adminCheckResult.success, true);
+
+      // Destroy workspace with remote deletion
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: true, // Should delete both repos
+      });
+
+      // Verify both repos deleted
+      const apiVerifyCmd = new Deno.Command("gh", {
+        args: [
+          "repo",
+          "view",
+          `${GITHUB_ORG}/${workspaceName}-api`,
+          "--json",
+          "name",
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const apiVerifyResult = await apiVerifyCmd.output();
+      assertEquals(apiVerifyResult.success, false); // Should fail
+
+      const adminVerifyCmd = new Deno.Command("gh", {
+        args: [
+          "repo",
+          "view",
+          `${GITHUB_ORG}/${workspaceName}-admin-ui`,
+          "--json",
+          "name",
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const adminVerifyResult = await adminVerifyCmd.output();
+      assertEquals(adminVerifyResult.success, false); // Should fail
+
+      // Verify metadata removed
+      const workspace = await getWorkspace(workspaceName);
+      assertEquals(workspace, null);
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
     }
   },
 });

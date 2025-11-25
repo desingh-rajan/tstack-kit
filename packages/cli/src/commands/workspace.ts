@@ -268,13 +268,9 @@ async function createRemoteRepo(
       : projectName;
     let repoUrl: string | null = null;
 
-    // Try gh CLI first
-    const ghAvailable = await checkGhCliAvailable();
-    if (ghAvailable) {
-      Logger.info(`  📡 Using gh CLI...`);
-      repoUrl = await createRepoUsingGhCli(repoFullName, visibility);
-    } else if (githubToken) {
-      Logger.info(`  📡 Using GitHub API...`);
+    // Priority: GitHub Token (explicit) > gh CLI (convenience)
+    if (githubToken) {
+      Logger.info(`  📡 Using GitHub API with token...`);
       repoUrl = await createRepoUsingApi(
         projectName,
         githubOrg,
@@ -282,10 +278,16 @@ async function createRemoteRepo(
         visibility,
       );
     } else {
-      throw new Error(
-        "Neither gh CLI nor GITHUB_TOKEN available. " +
-          "Install gh CLI or set GITHUB_TOKEN environment variable.",
-      );
+      const ghAvailable = await checkGhCliAvailable();
+      if (ghAvailable) {
+        Logger.info(`  📡 Using gh CLI...`);
+        repoUrl = await createRepoUsingGhCli(repoFullName, visibility);
+      } else {
+        throw new Error(
+          "Neither GITHUB_TOKEN nor gh CLI available. " +
+            "Set GITHUB_TOKEN environment variable or install gh CLI.",
+        );
+      }
     }
 
     if (!repoUrl) {
@@ -442,13 +444,21 @@ export async function createWorkspace(
   const shouldCreateRemote = !skipRemote && githubOrg ? true : false;
   const shouldPush = shouldCreateRemote; // Always push if creating remote
 
-  // Show warning if skipping remote
+  // Show warning based on remote setup choice
   if (skipRemote && githubOrg) {
     Logger.warning(
       "⚠️  Remote repository creation skipped (--skip-remote flag).",
     );
     Logger.warning(
       "   You'll need to create and link GitHub repos manually.",
+    );
+    Logger.newLine();
+  } else if (!githubOrg) {
+    Logger.warning(
+      "⚠️  No --github-org flag specified, creating local workspace only.",
+    );
+    Logger.info(
+      "   To create GitHub repos, use: --github-org=your-org",
     );
     Logger.newLine();
   }
@@ -634,28 +644,67 @@ export async function destroyWorkspace(options: {
 
       for (const repo of workspace.githubRepos) {
         try {
-          const ghAvailable = await checkGhCliAvailable();
-          if (ghAvailable) {
-            const fullName = workspace.githubOrg
-              ? `${workspace.githubOrg}/${repo.name}`
-              : repo.name;
+          const fullName = workspace.githubOrg
+            ? `${workspace.githubOrg}/${repo.name}`
+            : repo.name;
 
-            const deleteCmd = new Deno.Command("gh", {
-              args: ["repo", "delete", fullName, "--yes"],
-              stdout: "piped",
-              stderr: "piped",
-            });
+          // Priority: GitHub Token (explicit) > gh CLI (convenience)
+          const githubToken = Deno.env.get("GITHUB_TOKEN");
 
-            const result = await deleteCmd.output();
-            if (result.success) {
+          if (githubToken) {
+            // Use GitHub API
+            const [owner, repoName] = fullName.includes("/")
+              ? fullName.split("/")
+              : [null, fullName];
+
+            if (!owner) {
+              Logger.warning(
+                `  ⚠️  Cannot delete ${fullName}: No owner specified`,
+              );
+              continue;
+            }
+
+            const response = await fetch(
+              `https://api.github.com/repos/${owner}/${repoName}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Bearer ${githubToken}`,
+                  "Accept": "application/vnd.github.v3+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                },
+              },
+            );
+
+            if (response.status === 204) {
               Logger.success(`  ✅ Deleted: ${fullName}`);
             } else {
-              Logger.warning(`  ⚠️  Failed to delete: ${fullName}`);
+              const errorText = await response.text();
+              Logger.warning(
+                `  ⚠️  Failed to delete ${fullName}: ${errorText}`,
+              );
             }
           } else {
-            Logger.warning(
-              `  ⚠️  gh CLI not available, skipping: ${repo.name}`,
-            );
+            // Fallback to gh CLI
+            const ghAvailable = await checkGhCliAvailable();
+            if (ghAvailable) {
+              const deleteCmd = new Deno.Command("gh", {
+                args: ["repo", "delete", fullName, "--yes"],
+                stdout: "piped",
+                stderr: "piped",
+              });
+
+              const result = await deleteCmd.output();
+              if (result.success) {
+                Logger.success(`  ✅ Deleted: ${fullName}`);
+              } else {
+                Logger.warning(`  ⚠️  Failed to delete: ${fullName}`);
+              }
+            } else {
+              Logger.warning(
+                `  ⚠️  Neither GITHUB_TOKEN nor gh CLI available, skipping: ${repo.name}`,
+              );
+            }
           }
         } catch (error) {
           Logger.warning(
