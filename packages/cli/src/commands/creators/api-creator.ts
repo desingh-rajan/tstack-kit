@@ -118,8 +118,6 @@ JWT_EXPIRY=7d
         denoJsonPath,
         JSON.stringify(denoJson, null, 2) + "\n",
       );
-      
-    
     }
   }
 
@@ -128,9 +126,10 @@ JWT_EXPIRY=7d
     latestVersions: Record<string, string>,
   ): void {
     // Update API-specific dependencies
-      
-    
-    imports["@std/dotenv"] = `jsr:@std/dotenv@^${latestVersions["@std/dotenv"]}`;
+
+    imports["@std/dotenv"] = `jsr:@std/dotenv@^${
+      latestVersions["@std/dotenv"]
+    }`;
     imports["@std/dotenv/load"] = `jsr:@std/dotenv@^${
       latestVersions["@std/dotenv"]
     }/load`;
@@ -138,16 +137,22 @@ JWT_EXPIRY=7d
     imports["hono/cors"] = `jsr:@hono/hono@^${latestVersions["hono"]}/cors`;
     imports["hono/logger"] = `jsr:@hono/hono@^${latestVersions["hono"]}/logger`;
     imports["hono/jwt"] = `jsr:@hono/hono@^${latestVersions["hono"]}/jwt`;
-    
-    imports["drizzle-orm"] = `npm:drizzle-orm@^${latestVersions["drizzle-orm"]}`;
+
+    imports["drizzle-orm"] = `npm:drizzle-orm@^${
+      latestVersions["drizzle-orm"]
+    }`;
     imports["drizzle-orm/pg-core"] = `npm:drizzle-orm@^${
       latestVersions["drizzle-orm"]
     }/pg-core`;
     imports["drizzle-orm/postgres-js"] = `npm:drizzle-orm@^${
       latestVersions["drizzle-orm"]
     }/postgres-js`;
-    imports["drizzle-kit"] = `npm:drizzle-kit@^${latestVersions["drizzle-kit"]}`;
-    imports["drizzle-zod"] = `npm:drizzle-zod@^${latestVersions["drizzle-zod"]}`;
+    imports["drizzle-kit"] = `npm:drizzle-kit@^${
+      latestVersions["drizzle-kit"]
+    }`;
+    imports["drizzle-zod"] = `npm:drizzle-zod@^${
+      latestVersions["drizzle-zod"]
+    }`;
     imports["postgres"] = `npm:postgres@^${latestVersions["postgres"]}`;
     imports["zod"] = `npm:zod@^${latestVersions["zod"]}`;
 
@@ -197,7 +202,7 @@ JWT_EXPIRY=7d
 
       // 3. Setup .env.test.local with test database name
       const envTestPath = join(this.projectPath, ".env.test.local");
-      
+
       try {
         if (await exists(envTestPath)) {
           let envTestContent = await Deno.readTextFile(envTestPath);
@@ -206,7 +211,9 @@ JWT_EXPIRY=7d
             `DATABASE_URL=postgresql://${this.credentials.dbUser}:${this.credentials.dbPassword}@localhost:5432/${this.testDbName}`,
           );
           await Deno.writeTextFile(envTestPath, envTestContent);
-          Logger.info(`.env.test.local configured (database: ${this.testDbName})`);
+          Logger.info(
+            `.env.test.local configured (database: ${this.testDbName})`,
+          );
         }
       } catch {
         // File doesn't exist, skip

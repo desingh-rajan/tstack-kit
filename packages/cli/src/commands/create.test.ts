@@ -9,7 +9,7 @@ import { loadConfig } from "../utils/config.ts";
 /**
  * TODO: Add comprehensive edge case and error scenario tests
  * GitHub Issue: https://github.com/desingh-rajan/tstack-kit/issues/[TBD]
- * 
+ *
  * Missing test coverage for:
  * 1. Invalid project names (starting with numbers, special chars, empty string, >255 chars)
  * 2. Directory exists but not tracked by CLI (manual creation outside tstack)

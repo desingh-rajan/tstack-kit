@@ -319,9 +319,13 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   if (metadata) {
     // Use metadata from KV store
     projectPath = metadata.path;
-    dbName = metadata.databases?.dev || "";
-    testDbName = metadata.databases?.test || "";
-    prodDbName = metadata.databases?.prod || "";
+
+    // Only extract database names for API projects
+    if (metadata.type === "api" && metadata.databases) {
+      dbName = metadata.databases.dev || "";
+      testDbName = metadata.databases.test || "";
+      prodDbName = metadata.databases.prod || "";
+    }
 
     Logger.info(`Found tracked project: ${metadata.folderName}`);
     Logger.info(`Type: ${metadata.type}`);
@@ -392,9 +396,13 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   if (!force && !isTestMode) {
     Logger.warning("[WARNING]  This will permanently delete:");
     Logger.info(`   - Project directory: ${projectPath}`);
-    Logger.info(`   - Development database: ${dbName}`);
-    Logger.info(`   - Test database: ${testDbName}`);
-    Logger.info(`   - Production database: ${prodDbName}`);
+
+    // Only show database info for API projects
+    if (dbName || testDbName || prodDbName) {
+      Logger.info(`   - Development database: ${dbName}`);
+      Logger.info(`   - Test database: ${testDbName}`);
+      Logger.info(`   - Production database: ${prodDbName}`);
+    }
     Logger.newLine();
 
     const confirmation = prompt(
@@ -407,8 +415,8 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     Logger.newLine();
   }
 
-  // Step 1: Drop databases
-  if (!skipDbSetup) {
+  // Step 1: Drop databases (only for API projects)
+  if (!skipDbSetup && (dbName || testDbName || prodDbName)) {
     Logger.step("Dropping databases...");
     await dropDatabases(dbName, testDbName, prodDbName);
     Logger.newLine();

@@ -44,15 +44,33 @@ Deno.test("createProject - admin-ui: copies all starter files", async () => {
     assertEquals(await fileExists(join(projectPath, "deno.json")), true);
     assertEquals(await fileExists(join(projectPath, ".env.example")), true);
     assertEquals(await fileExists(join(projectPath, "main.ts")), true);
-    assertEquals(await fileExists(join(projectPath, "tailwind.config.ts")), true);
+    assertEquals(
+      await fileExists(join(projectPath, "tailwind.config.ts")),
+      true,
+    );
     assertEquals(await fileExists(join(projectPath, "vite.config.ts")), true);
 
     // Check key directories
-    assertEquals(await exists(join(projectPath, "components"), { isDirectory: true }), true);
-    assertEquals(await exists(join(projectPath, "islands"), { isDirectory: true }), true);
-    assertEquals(await exists(join(projectPath, "routes"), { isDirectory: true }), true);
-    assertEquals(await exists(join(projectPath, "static"), { isDirectory: true }), true);
-    assertEquals(await exists(join(projectPath, "lib"), { isDirectory: true }), true);
+    assertEquals(
+      await exists(join(projectPath, "components"), { isDirectory: true }),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "islands"), { isDirectory: true }),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "routes"), { isDirectory: true }),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "static"), { isDirectory: true }),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "lib"), { isDirectory: true }),
+      true,
+    );
   } finally {
     await cleanupTempDir(tempDir);
     await deleteProject("test-admin-admin-ui").catch(() => {});
@@ -102,7 +120,10 @@ Deno.test("createProject - admin-ui: deno.json has required Fresh imports", asyn
     // Check Fresh and UI-specific imports
     assertExists(denoJson.imports["fresh"], "Should have Fresh import");
     assertExists(denoJson.imports["preact"], "Should have Preact import");
-    assertExists(denoJson.imports["tailwindcss"], "Should have Tailwind import");
+    assertExists(
+      denoJson.imports["tailwindcss"],
+      "Should have Tailwind import",
+    );
     assertExists(denoJson.imports["daisyui"], "Should have DaisyUI import");
   } finally {
     await cleanupTempDir(tempDir);
@@ -216,9 +237,18 @@ Deno.test("createProject - admin-ui: has Fresh route structure", async () => {
       await fileExists(join(projectPath, "routes", "_app.tsx")),
       true,
     );
-    assertEquals(await fileExists(join(projectPath, "routes", "index.tsx")), true);
-    assertEquals(await exists(join(projectPath, "routes", "admin"), { isDirectory: true }), true);
-    assertEquals(await exists(join(projectPath, "routes", "auth"), { isDirectory: true }), true);
+    assertEquals(
+      await fileExists(join(projectPath, "routes", "index.tsx")),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "routes", "admin"), { isDirectory: true }),
+      true,
+    );
+    assertEquals(
+      await exists(join(projectPath, "routes", "auth"), { isDirectory: true }),
+      true,
+    );
   } finally {
     await cleanupTempDir(tempDir);
     await deleteProject("test-admin-admin-ui").catch(() => {});
@@ -240,7 +270,9 @@ Deno.test("createProject - admin-ui: has admin components", async () => {
 
     // Check admin components exist
     assertEquals(
-      await exists(join(projectPath, "components", "admin"), { isDirectory: true }),
+      await exists(join(projectPath, "components", "admin"), {
+        isDirectory: true,
+      }),
       true,
       "Should have admin components directory",
     );
@@ -276,7 +308,10 @@ Deno.test({
       // Verify imports exist (versions will be latest)
       assertExists(denoJson.imports["fresh"], "Should have Fresh import");
       assertExists(denoJson.imports["preact"], "Should have Preact import");
-      assertExists(denoJson.imports["tailwindcss"], "Should have Tailwind import");
+      assertExists(
+        denoJson.imports["tailwindcss"],
+        "Should have Tailwind import",
+      );
       assertExists(denoJson.imports["daisyui"], "Should have DaisyUI import");
 
       // Version numbers should be updated
@@ -426,8 +461,16 @@ Deno.test("createProject - both types can coexist with same base name", async ()
     const apiPath = join(tempDir, "myapp-api");
     const adminPath = join(tempDir, "myapp-admin-ui");
 
-    assertEquals(await exists(apiPath, { isDirectory: true }), true, "API project should exist");
-    assertEquals(await exists(adminPath, { isDirectory: true }), true, "Admin UI project should exist");
+    assertEquals(
+      await exists(apiPath, { isDirectory: true }),
+      true,
+      "API project should exist",
+    );
+    assertEquals(
+      await exists(adminPath, { isDirectory: true }),
+      true,
+      "Admin UI project should exist",
+    );
 
     // Both should be tracked separately
     const apiMetadata = await getProject("myapp-api");

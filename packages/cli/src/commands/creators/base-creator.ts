@@ -38,14 +38,16 @@ export abstract class BaseProjectCreator {
 
   constructor(options: BaseCreateOptions) {
     this.options = options;
-    
+
     // Determine folder name based on type
-    const typeSuffix = options.projectType === "workspace" ? "" : `-${options.projectType}`;
+    const typeSuffix = options.projectType === "workspace"
+      ? ""
+      : `-${options.projectType}`;
     const alreadyHasSuffix = options.projectName.endsWith(typeSuffix);
     this.folderName = alreadyHasSuffix
       ? options.projectName
       : `${options.projectName}${typeSuffix}`;
-    
+
     this.projectPath = join(options.targetDir || Deno.cwd(), this.folderName);
   }
 
@@ -149,13 +151,15 @@ export abstract class BaseProjectCreator {
         await updateProject(this.folderName, { status: "destroyed" });
       } else if (existingProject.status === "created" && !folderExists) {
         Logger.warning(
-          `Metadata exists for "${this.folderName}" but folder is missing.`
+          `Metadata exists for "${this.folderName}" but folder is missing.`,
         );
         Logger.info("Recreating project with existing metadata...");
         Logger.newLine();
         await updateProject(this.folderName, { status: "creating" });
       } else if (existingProject.status === "destroyed") {
-        Logger.info(`Recreating previously destroyed project "${this.folderName}"...`);
+        Logger.info(
+          `Recreating previously destroyed project "${this.folderName}"...`,
+        );
         Logger.newLine();
         await updateProject(this.folderName, { status: "creating" });
       } else if (existingProject.status === "creating") {
@@ -172,7 +176,7 @@ export abstract class BaseProjectCreator {
     } else if (folderExists) {
       throw new Error(
         `Directory "${this.folderName}" already exists at ${this.projectPath} but is not tracked by TStack CLI.\n` +
-          `Please remove it manually or choose a different name.`
+          `Please remove it manually or choose a different name.`,
       );
     }
   }
@@ -184,8 +188,10 @@ export abstract class BaseProjectCreator {
     // Get CLI root: packages/cli/src/commands/creators/base-creator.ts
     // -> dirname 5 times to get to packages/
     const currentFilePath = new URL(import.meta.url).pathname;
-    const packagesDir = dirname(dirname(dirname(dirname(dirname(currentFilePath)))));
-    
+    const packagesDir = dirname(
+      dirname(dirname(dirname(dirname(currentFilePath)))),
+    );
+
     // Join with starter name
     const starterName = this.getStarterTemplateName();
     const starterPath = join(packagesDir, starterName);

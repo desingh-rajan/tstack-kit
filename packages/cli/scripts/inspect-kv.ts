@@ -36,11 +36,13 @@ for await (const entry of projects) {
     folderName?: string;
     type?: string;
     path?: string;
+    status?: string;
     createdAt?: number;
     databases?: { dev?: string; test?: string; prod?: string };
   };
   console.log(`\n  ${projectCount}. ${data.folderName || "Unknown"}`);
   console.log(`     Type: ${data.type || "?"}`);
+  console.log(`     Status: ${data.status || "created"}`);
   console.log(`     Path: ${data.path || "?"}`);
   console.log(
     `     Created: ${
