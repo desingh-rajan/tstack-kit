@@ -10,6 +10,9 @@ import {
   type WorkspaceMetadata,
 } from "../utils/workspaceStore.ts";
 import { getProject } from "../utils/projectStore.ts";
+import denoConfig from "../../deno.json" with { type: "json" };
+
+const VERSION = denoConfig.version;
 
 export interface WorkspaceOptions {
   name: string;
@@ -584,7 +587,7 @@ export async function createWorkspace(
 
     // Step 8: Success message
     Logger.newLine();
-    Logger.banner();
+    Logger.banner(VERSION);
     Logger.success(`✅ Workspace "${name}" created successfully!`);
     Logger.newLine();
     Logger.subtitle("Workspace Structure:");

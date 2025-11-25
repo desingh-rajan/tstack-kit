@@ -12,7 +12,7 @@ import denoConfig from "./deno.json" with { type: "json" };
 const VERSION = denoConfig.version;
 
 function showHelp() {
-  Logger.banner();
+  Logger.banner(VERSION);
   Logger.subtitle("Usage:");
   Logger.code("tstack <command> [options]");
   Logger.newLine();
@@ -96,7 +96,7 @@ function showHelp() {
 }
 
 function showVersion() {
-  Logger.plain(`TonyStack CLI v${VERSION}`);
+  Logger.plain(`TStack CLI v${VERSION}`);
 }
 
 async function main() {
