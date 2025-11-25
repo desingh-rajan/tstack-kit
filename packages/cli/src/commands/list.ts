@@ -8,7 +8,10 @@ export async function listTrackedProjects(): Promise<void> {
   Logger.title("Tracked Projects");
   Logger.newLine();
 
-  const projects = await listProjects();
+  const allProjects = await listProjects();
+  
+  // Filter out destroyed projects - only show active ones
+  const projects = allProjects.filter((p) => p.status !== "destroyed");
 
   if (projects.length === 0) {
     Logger.info("No projects tracked yet.");
