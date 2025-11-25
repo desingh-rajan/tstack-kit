@@ -1,8 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { join } from "@std/path";
 import { createWorkspace, destroyWorkspace } from "./workspace.ts";
-import { closeKv, closeKv, get } from "../utils/workspaceStore.ts";
+import { closeKv, getWorkspace } from "../utils/workspaceStore.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
+
+// ⚠️ WARNING: VS Code's formatOnSave with Deno formatter can corrupt this file!
+// If you see orphaned commas or broken assertEquals() calls, restore from git.
+// Workaround: Disable formatOnSave temporarily when editing complex assertions.
 
 // GitHub integration tests are DISABLED by default for fast test runs.
 // To enable GitHub integration tests, set: TSTACK_TEST_GITHUB=true
@@ -40,7 +44,6 @@ async function deleteGitHubRepo(repoName: string): Promise<void> {
 
 Deno.test({
   name:
-   
     "createWorkspace - creates workspace with default components (api + admin-ui)",
   sanitizeResources: false,
   async fn() {
@@ -67,24 +70,11 @@ Deno.test({
       const apiPath = join(workspacePath, `${workspaceName}-api`);
       const adminUiPath = join(workspacePath, `${workspaceName}-admin-ui`);
 
-        
-        true,
-      
       assertEquals(
-        
-        true,
-      
-        await Deno.
-        stat(workspacePath).then(() => true).catch(() => false),
-        true,
-      
+        await Deno.stat(workspacePath).then(() => true).catch(() => false),
         true,
       );
       assertEquals(
-       
-       
-       ,
-     
         await Deno.stat(apiPath).then(() => true).catch(() => false),
         true,
       );
@@ -114,16 +104,9 @@ Deno.test({
     const workspaceName = "test-api-only";
 
     try {
-      await createW
-        orkspace({
-        true,
-      
+      await createWorkspace({
         name: workspaceName,
         targetDir: tempDir,
-       
-       
-       ,
-     
         withApi: true,
         skipRemote: true,
       });
@@ -153,10 +136,6 @@ Deno.test({
 });
 
 Deno.test({
-       
-       
-       ,
-     
   name: "createWorkspace - creates workspace with --skip-admin-ui",
   sanitizeResources: false,
   async fn() {
@@ -230,10 +209,6 @@ Deno.test({
     try {
       // Create first time
       await createWorkspace({
-       
-       
-       ,
-     
         name: workspaceName,
         targetDir: tempDir,
         withApi: true,
@@ -259,10 +234,7 @@ Deno.test({
       assertEquals(errorThrown, true);
 
       await destroyWorkspace({
-        name: works
-        paceName,
-        true,
-      
+        name: workspaceName,
         force: true,
         deleteRemote: false,
       });
@@ -277,10 +249,6 @@ Deno.test({
   name: "createWorkspace - initializes Git in each project",
   sanitizeResources: false,
   async fn() {
-       
-       
-       ,
-     
     const tempDir = await createTempDir();
     const workspaceName = "test-git-init";
 
@@ -333,11 +301,7 @@ Deno.test({
   ignore: SKIP_GITHUB,
   sanitizeResources: false,
   async fn() {
-    const tempDir = await crea
-       teTempDir();
-       
-       ,
-     
+    const tempDir = await createTempDir();
     const workspaceName = generateWorkspaceName();
 
     try {
@@ -378,10 +342,6 @@ Deno.test({
         force: true,
         deleteRemote: true,
       });
-       
-       
-       ,
-     
     } finally {
       await cleanupTempDir(tempDir);
       closeKv();
@@ -417,10 +377,6 @@ Deno.test({
         cwd: apiPath,
         stdout: "piped",
         stderr: "piped",
-       
-       
-       ,
-     
       });
       const result = await remoteCmd.output();
       assertEquals(result.success, false); // Should fail (no remote)
@@ -448,22 +404,12 @@ Deno.test({
     try {
       await createWorkspace({
         name: workspaceName,
-        targetDir: 
-        tempDir,
-        true,
-      
+        targetDir: tempDir,
         withApi: true,
         githubOrg: GITHUB_ORG,
-       
-       
-       ,
-     
       });
 
-      // Verify rem
-        ote branch exists
-        false,
-      
+      // Verify remote branch exists
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
       const branchCmd = new Deno.Command("git", {
         args: ["branch", "-a"],
@@ -494,12 +440,6 @@ Deno.test({
   name: "destroyWorkspace - removes all projects and metadata",
   sanitizeResources: false,
   async fn() {
-          "repo",
-          "view",
-          `${GITHUB_ORG}/${workspaceName}-api`,
-          "--json",
-          "name",
-        
     const tempDir = await createTempDir();
     const workspaceName = "test-destroy";
 
@@ -508,20 +448,10 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         withApi: true,
-       
-       
-       ,
-     
         skipRemote: true,
       });
 
-      const wor
-          "repo",
-          "view",
-          `${GITHUB_ORG}/${workspaceName}-api`,
-          "--json",
-          "name",
-        
+      const workspacePath = join(tempDir, workspaceName);
       assertEquals(
         await Deno.stat(workspacePath).then(() => true).catch(() => false),
         true,
