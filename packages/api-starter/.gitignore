@@ -8,6 +8,11 @@
 !.env.production.local
 deno.lock
 
+# Migrations (generated from schema - developers generate their own)
+# Keep migrations/README.md for documentation
+migrations/*.sql
+migrations/meta/
+
 # Logs
 logs/
 *.log

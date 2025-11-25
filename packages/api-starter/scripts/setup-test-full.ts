@@ -5,8 +5,9 @@
  *
  * This script automates test database setup:
  * 1. Creates test database
- * 2. Runs migrations
- * 3. Validates database connection
+ * 2. Generates migrations (if none exist)
+ * 3. Runs migrations
+ * 4. Validates database connection
  *
  * Note: Test data (users, etc.) is created by individual test suites
  * using beforeAll/afterAll hooks for proper isolation.
@@ -16,6 +17,7 @@
 
 import { loadSync } from "@std/dotenv";
 import { sql } from "drizzle-orm";
+import { exists } from "@std/fs";
 
 // Load test environment (Deno-style)
 Deno.env.set("ENVIRONMENT", "test");
@@ -46,8 +48,53 @@ try {
   Deno.exit(1);
 }
 
-// Step 2: Run migrations
-console.log("\n🔄 Step 2: Running migrations...");
+// Step 2: Check if migrations exist, generate if needed
+console.log("\n🔍 Step 2: Checking migrations...");
+const migrationsDir = "./migrations";
+let hasMigrations = false;
+
+try {
+  if (await exists(migrationsDir)) {
+    for await (const entry of Deno.readDir(migrationsDir)) {
+      if (entry.isFile && entry.name.endsWith(".sql")) {
+        hasMigrations = true;
+        break;
+      }
+    }
+  }
+} catch {
+  // Directory doesn't exist
+}
+
+if (!hasMigrations) {
+  console.log("[INFO] No migrations found, generating from schema...");
+  try {
+    const generate = new Deno.Command("deno", {
+      args: ["task", "migrate:generate"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const { success: genSuccess, stderr } = await generate.output();
+
+    if (!genSuccess) {
+      const errMsg = new TextDecoder().decode(stderr);
+      console.error("[ERROR] Failed to generate migrations:", errMsg);
+      Deno.exit(1);
+    }
+    console.log("[SUCCESS] Migrations generated successfully");
+  } catch (error) {
+    console.error(
+      "[ERROR] Error generating migrations:",
+      error instanceof Error ? error.message : String(error),
+    );
+    Deno.exit(1);
+  }
+} else {
+  console.log("[INFO] Migrations already exist, skipping generation");
+}
+
+// Step 3: Run migrations
+console.log("\n🔄 Step 3: Running migrations...");
 try {
   const migrate = new Deno.Command("deno", {
     args: [
@@ -74,8 +121,8 @@ try {
   Deno.exit(1);
 }
 
-// Step 3: Validate setup
-console.log("\n[INFO] Step 3: Validating setup...");
+// Step 4: Validate setup
+console.log("\n[INFO] Step 4: Validating setup...");
 try {
   // Import database to test connection
   const { db } = await import("../src/config/database.ts");
