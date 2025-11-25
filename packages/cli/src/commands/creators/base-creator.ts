@@ -1,5 +1,5 @@
 import { dirname, join } from "@std/path";
-import { copy, exists } from "@std/fs";
+import { copy } from "@std/fs";
 import { Logger } from "../../utils/logger.ts";
 import {
   extractVersion,
@@ -7,7 +7,6 @@ import {
 } from "../../utils/versionFetcher.ts";
 import {
   getProject,
-  saveProject,
   updateProject,
 } from "../../utils/projectStore.ts";
 

@@ -621,8 +621,8 @@ Deno.test("destroyProject - should use KV metadata for path and databases", asyn
     // Verify KV metadata is correct
     const metadata = await getProject(folderName);
     assertExists(metadata, "Metadata should exist");
-    assertEquals(metadata!.path, folderPath, "Path should match");
-    assertEquals(metadata!.databases.dev, `kv_metadata_test_api_dev`);
+    assertEquals(metadata.path, folderPath, "Path should match");
+    assertEquals(metadata.databases?.dev, `kv_metadata_test_api_dev`);
 
     // Verify folder exists
     let folderExists = await exists(folderPath, { isDirectory: true });

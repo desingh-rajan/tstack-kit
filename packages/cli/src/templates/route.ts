@@ -16,7 +16,7 @@ import { Create${names.pascalSingular}Schema, Update${names.pascalSingular}Schem
  * - middleware.auth: requireAuth - Protect create/update/delete
  */
 
-const ${names.camelSingular}Routes = BaseRouteFactory.createCrudRoutes({
+const ${names.singular}Routes = BaseRouteFactory.createCrudRoutes({
   basePath: "/${names.kebabPlural}",
   controller: ${names.pascalSingular}ControllerStatic,
   schemas: {
@@ -30,6 +30,6 @@ const ${names.camelSingular}Routes = BaseRouteFactory.createCrudRoutes({
   // },
 });
 
-export default ${names.camelSingular}Routes;
+export default ${names.singular}Routes;
 `;
 }

@@ -1,4 +1,13 @@
-import { blue, bold, cyan, dim, gray, green, magenta, red, yellow } from "@std/fmt/colors";
+import {
+  blue,
+  bold,
+  cyan,
+  gray,
+  green,
+  magenta,
+  red,
+  yellow,
+} from "@std/fmt/colors";
 
 /**
  * Helper to safely write to console and ignore broken pipe errors
@@ -60,8 +69,10 @@ export class Logger {
 
   static banner(version?: string) {
     const versionText = version ? `v${version}` : "";
-    const authorLink = "\x1b]8;;https://github.com/desingh-rajan\x1b\\Made by @desingh-rajan\x1b]8;;\x1b\\";
-    const repoLink = "\x1b]8;;https://github.com/desingh-rajan/tstack-kit\x1b\\⭐ Star us on GitHub!\x1b]8;;\x1b\\";
+    const authorLink =
+      "\x1b]8;;https://github.com/desingh-rajan\x1b\\Made by @desingh-rajan\x1b]8;;\x1b\\";
+    const repoLink =
+      "\x1b]8;;https://github.com/desingh-rajan/tstack-kit\x1b\\⭐ Star us on GitHub!\x1b]8;;\x1b\\";
     safeLog(() => {
       console.log();
       console.log(bold(cyan("  ─────────────────────────────────────────")));

@@ -312,9 +312,9 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   }
 
   let projectPath: string | null = null;
-  let dbName: string;
-  let testDbName: string;
-  let prodDbName: string;
+  let dbName: string | undefined;
+  let testDbName: string | undefined;
+  let prodDbName: string | undefined;
 
   if (metadata) {
     // Use metadata from KV store
@@ -418,7 +418,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   // Step 1: Drop databases (only for API projects)
   if (!skipDbSetup && (dbName || testDbName || prodDbName)) {
     Logger.step("Dropping databases...");
-    await dropDatabases(dbName, testDbName, prodDbName);
+    await dropDatabases(dbName!, testDbName!, prodDbName!);
     Logger.newLine();
   }
 

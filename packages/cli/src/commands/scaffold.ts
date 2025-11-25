@@ -113,7 +113,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.controller.ts`,
       ),
-      content: generateControllerTemplate(names, !skipValidation),
+      content: generateControllerTemplate(names),
       description: "HTTP handlers",
     },
     {
@@ -123,7 +123,7 @@ export async function scaffoldEntity(options: ScaffoldOptions): Promise<void> {
         names.snakePlural,
         `${names.kebabSingular}.route.ts`,
       ),
-      content: generateRouteTemplate(names, !skipAuth),
+      content: generateRouteTemplate(names),
       description: "Route definitions",
     },
   ];

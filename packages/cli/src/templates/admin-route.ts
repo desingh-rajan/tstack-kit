@@ -26,7 +26,7 @@ const ormAdapter = new DrizzleAdapter(${names.plural}, {
   idType: "number",
 });
 
-const ${names.camelSingular}Admin = new HonoAdminAdapter({
+const ${names.singular}Admin = new HonoAdminAdapter({
   ormAdapter,
   entityName: "${names.singular}",
   entityNamePlural: "${names.plural}",
@@ -54,9 +54,9 @@ const ${names.camelSingular}Admin = new HonoAdminAdapter({
   baseUrl: ADMIN_BASE_URL,
 });
 
-const ${names.camelSingular}AdminRoutes = AdminRouteFactory.createAdminRoutes({
+const ${names.singular}AdminRoutes = AdminRouteFactory.createAdminRoutes({
   baseUrl: ADMIN_BASE_URL,
-  adapter: ${names.camelSingular}Admin,
+  adapter: ${names.singular}Admin,
   authMiddleware: [requireAuth],
   // Optional: Override specific handlers for custom logic
   // customHandlers: {
@@ -65,6 +65,6 @@ const ${names.camelSingular}AdminRoutes = AdminRouteFactory.createAdminRoutes({
   // },
 });
 
-export default ${names.camelSingular}AdminRoutes;
+export default ${names.singular}AdminRoutes;
 `;
 }

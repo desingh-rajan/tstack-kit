@@ -3,7 +3,7 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 export function generateControllerTemplate(
   names: EntityNames,
 ): string {
-  return `import { ${names.camelSingular}Service } from "./${names.kebabSingular}.service.ts";
+  return `import { ${names.singular}Service } from "./${names.kebabSingular}.service.ts";
 import { BaseController } from "../../shared/controllers/base.controller.ts";
 
 /**
@@ -19,10 +19,10 @@ import { BaseController } from "../../shared/controllers/base.controller.ts";
  * Override methods to add custom logic when needed.
  */
 
-export class ${names.pascalSingular}Controller extends BaseController<typeof ${names.camelSingular}Service> {
+export class ${names.pascalSingular}Controller extends BaseController<typeof ${names.singular}Service> {
   constructor() {
     super(
-      ${names.camelSingular}Service,
+      ${names.singular}Service,
       "${names.pascalSingular}",
       // Optional: Configure authorization
       // {

@@ -4,10 +4,10 @@
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno run --allow-read --allow-write mod.ts",
-    "test": "deno test --allow-all src/ tests/ && deno run --allow-all scripts/cleanup-test-dbs.ts",
-    "test:watch": "deno test --allow-all --watch src/ tests/",
-    "test:coverage": "deno test --allow-all --coverage=coverage src/ tests/",
-    "test:db": "TONYSTACK_TEST_DB=true deno test --allow-all src/ tests/",
+    "test": "deno test --allow-all --unstable-kv src/ tests/ && deno run --allow-all scripts/cleanup-test-dbs.ts",
+    "test:watch": "deno test --allow-all --unstable-kv --watch src/ tests/",
+    "test:coverage": "deno test --allow-all --unstable-kv --coverage=coverage src/ tests/",
+    "test:db": "TONYSTACK_TEST_DB=true deno test --allow-all --unstable-kv src/ tests/",
     "cleanup:test-dbs": "deno run --allow-all scripts/cleanup-test-dbs.ts",
     "install": "deno install --global --allow-read --allow-write --allow-env --allow-run --allow-net --unstable-kv --config deno.json --name tstack -f mod.ts"
   },

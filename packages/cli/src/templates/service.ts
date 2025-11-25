@@ -45,6 +45,6 @@ export class ${names.pascalSingular}Service extends BaseService<
   // }
 }
 
-export const ${names.camelSingular}Service = new ${names.pascalSingular}Service();
+export const ${names.singular}Service = new ${names.pascalSingular}Service();
 `;
 }
