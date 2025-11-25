@@ -27,6 +27,7 @@ export async function listTrackedProjects(): Promise<void> {
 
     Logger.subtitle(`${project.folderName}`);
     Logger.code(`Type:    ${project.type}`);
+    Logger.code(`Status:  ${project.status}`);
     Logger.code(`Path:    ${project.path}`);
     Logger.code(`Created: ${createdDate}`);
 
