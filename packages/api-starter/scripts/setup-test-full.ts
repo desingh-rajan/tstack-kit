@@ -51,6 +51,7 @@ try {
 // Step 2: Check if migrations exist, generate if needed
 console.log("\n🔍 Step 2: Checking migrations...");
 const migrationsDir = "./migrations";
+const MIGRATIONS_GENERATED_FLAG = ".migrations_generated_by_test";
 let hasMigrations = false;
 
 try {
@@ -81,6 +82,10 @@ if (!hasMigrations) {
       console.error("[ERROR] Failed to generate migrations:", errMsg);
       Deno.exit(1);
     }
+    
+    // Create flag file so cleanup knows to remove these migrations
+    await Deno.writeTextFile(MIGRATIONS_GENERATED_FLAG, "auto-generated for tests");
+    
     console.log("[SUCCESS] Migrations generated successfully");
   } catch (error) {
     console.error(
