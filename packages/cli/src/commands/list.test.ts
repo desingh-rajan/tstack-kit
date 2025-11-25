@@ -1,7 +1,8 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { createProject } from "./create.ts";
 import { createWorkspace } from "./workspace.ts";
-import { closeKv, deleteProject, listProjects } from "../utils/projectStore.ts";
+import { destroyProject } from "./destroy.ts";
+import { closeKv, listProjects } from "../utils/projectStore.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 
 Deno.test({
@@ -44,7 +45,7 @@ Deno.test("listTrackedProjects - should show created projects", async () => {
     assertExists(ourProject!.createdAt, "Should have createdAt");
   } finally {
     await cleanupTempDir(tempDir);
-    await deleteProject(`${projectName}-api`).catch(() => {});
+    await destroyProject({ projectName: `${projectName}-api`, force: true, skipDbSetup: true }).catch(() => {});
     closeKv();
   }
 });
@@ -113,9 +114,9 @@ Deno.test({
     );
   } finally {
     await cleanupTempDir(tempDir);
-    await deleteProject(`list-multi-one-${timestamp}-api`).catch(() => {});
-    await deleteProject(`list-multi-two-${timestamp}-api`).catch(() => {});
-    await deleteProject(`list-multi-ws-${timestamp}-api`).catch(() => {});
+    await destroyProject({ projectName: `list-multi-one-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
+    await destroyProject({ projectName: `list-multi-two-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
+    await destroyProject({ projectName: `list-multi-ws-${timestamp}-api`, force: true, skipDbSetup: true }).catch(() => {});
     closeKv();
   }
 },
@@ -182,8 +183,8 @@ Deno.test(
       }
     } finally {
       await cleanupTempDir(tempDir);
-      await deleteProject("sort-test-old-api").catch(() => {});
-      await deleteProject("sort-test-new-api").catch(() => {});
+      await destroyProject({ projectName: "sort-test-old-api", force: true, skipDbSetup: true }).catch(() => {});
+      await destroyProject({ projectName: "sort-test-new-api", force: true, skipDbSetup: true }).catch(() => {});
       closeKv();
     }
   }
@@ -219,7 +220,59 @@ Deno.test(
       assertEquals(ourProject!.databases.prod, "db_info_test_api_prod");
     } finally {
       await cleanupTempDir(tempDir);
-      await deleteProject(`${projectName}-api`).catch(() => {});
+      await destroyProject({ projectName: `${projectName}-api`, force: true, skipDbSetup: true }).catch(() => {});
+      closeKv();
+    }
+  }
+);
+
+Deno.test(
+  "listTrackedProjects - should filter out destroyed projects",
+  async () => {
+    const tempDir = await createTempDir();
+    const projectName = "filter-destroyed-test";
+
+    try {
+      // Create a test project
+      await createProject({
+        projectName,
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: true,
+      });
+
+      // Verify it appears in the list
+      let projects = await listProjects();
+      let ourProject = projects.find(
+        (p) => p.folderName === `${projectName}-api` && p.status !== "destroyed"
+      );
+      assertExists(ourProject, "Should find created project");
+      assertEquals(ourProject!.status, "created");
+
+      // Destroy the project
+      await destroyProject({
+        projectName: `${projectName}-api`,
+        force: true,
+        skipDbSetup: true,
+      });
+
+      // Verify it's marked as destroyed but still in KV
+      projects = await listProjects();
+      const allProjects = projects.filter((p) => p.folderName === `${projectName}-api`);
+      assertEquals(allProjects.length, 1, "Project should still be in KV");
+      assertEquals(allProjects[0].status, "destroyed", "Status should be destroyed");
+
+      // Verify it doesn't appear in filtered list (status !== 'destroyed')
+      const activeProjects = projects.filter(
+        (p) => p.folderName === `${projectName}-api` && p.status !== "destroyed"
+      );
+      assertEquals(
+        activeProjects.length,
+        0,
+        "Destroyed project should not appear in active list"
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
       closeKv();
     }
   }

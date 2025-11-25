@@ -440,16 +440,10 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
     Logger.info(`Project directory already removed (or never existed)`);
   }
 
-  // Step 3: Update status to destroyed, then optionally remove from KV
+  // Step 3: Mark status as destroyed (keep in KV for history)
   if (metadata) {
     await updateProject(targetFolderName, { status: "destroyed" });
     Logger.success("Marked as destroyed in tracking database");
-
-    // Optionally clean up destroyed entries immediately
-    if (force) {
-      await deleteProject(targetFolderName);
-      Logger.success("Removed from tracking database");
-    }
   }
 
   Logger.newLine();
