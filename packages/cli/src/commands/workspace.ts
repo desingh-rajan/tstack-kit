@@ -746,12 +746,12 @@ export async function destroyWorkspace(options: {
     // Remove workspace directory
     Logger.newLine();
     Logger.info(`📁 Removing workspace directory...`);
-    
+
     // Resolve to absolute path in case it's stored as relative
     const workspacePath = isAbsolute(workspace.path)
       ? workspace.path
       : resolve(Deno.cwd(), workspace.path);
-    
+
     try {
       await Deno.remove(workspacePath, { recursive: true });
       Logger.success(`  ✅ Directory removed`);

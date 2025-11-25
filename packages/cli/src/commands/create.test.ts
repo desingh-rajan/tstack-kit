@@ -26,12 +26,12 @@ import { loadConfig } from "../utils/config.ts";
  */
 
 // Database integration tests are DISABLED by default for fast test runs.
-// To enable full database integration tests, set: TONYSTACK_TEST_DB=true
+// To enable full database integration tests, set: TSTACK_TEST_DB=true
 // This requires:
 // - PostgreSQL running locally
 // - Sudo password configured in ~/.tonystack/config.json
 // - Or sudo access without password prompt
-const SKIP_DB_SETUP = Deno.env.get("TONYSTACK_TEST_DB") !== "true";
+const SKIP_DB_SETUP = Deno.env.get("TSTACK_TEST_DB") !== "true";
 
 // Prefix for test databases to avoid conflicts with real databases
 const TEST_DB_PREFIX = "ts_cli_";
@@ -369,7 +369,7 @@ Deno.test("createProject - includes auth by default (starter template)", async (
 // ============================================================================
 // DATABASE INTEGRATION TESTS
 // ============================================================================
-// These tests only run when TONYSTACK_TEST_DB=true
+// These tests only run when TSTACK_TEST_DB=true
 // They verify actual database creation in PostgreSQL
 
 /**
@@ -489,7 +489,7 @@ async function cleanupAllTestDatabases(): Promise<void> {
 
 Deno.test({
   name: "createProject - creates development database (integration test)",
-  ignore: SKIP_DB_SETUP, // Only runs when TONYSTACK_TEST_DB=true
+  ignore: SKIP_DB_SETUP, // Only runs when TSTACK_TEST_DB=true
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}dev_app`;
@@ -525,7 +525,7 @@ Deno.test({
 
 Deno.test({
   name: "createProject - creates test database (integration test)",
-  ignore: SKIP_DB_SETUP, // Only runs when TONYSTACK_TEST_DB=true
+  ignore: SKIP_DB_SETUP, // Only runs when TSTACK_TEST_DB=true
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}test_app`;
@@ -561,7 +561,7 @@ Deno.test({
 Deno.test({
   name:
     "createProject - creates ALL dev, test, and prod databases (integration test)",
-  ignore: SKIP_DB_SETUP, // Only runs when TONYSTACK_TEST_DB=true
+  ignore: SKIP_DB_SETUP, // Only runs when TSTACK_TEST_DB=true
   async fn() {
     const tempDir = await createTempDir();
     const projectName = `${TEST_DB_PREFIX}full_app`;

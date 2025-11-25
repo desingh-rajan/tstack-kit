@@ -12,8 +12,8 @@ if (Deno.env.get("TSTACK_CLI_TEST") !== "true") {
 }
 
 // Database integration tests are DISABLED by default for fast test runs.
-// To enable full database integration tests, set: TONYSTACK_TEST_DB=true
-const SKIP_DB_SETUP = Deno.env.get("TONYSTACK_TEST_DB") !== "true";
+// To enable full database integration tests, set: TSTACK_TEST_DB=true
+const SKIP_DB_SETUP = Deno.env.get("TSTACK_TEST_DB") !== "true";
 
 // Prefix for test databases to avoid conflicts with real databases
 const TEST_DB_PREFIX = "ts_cli_";
@@ -297,7 +297,7 @@ Deno.test("destroyProject - handles nested directory structure", async () => {
 // ============================================================================
 // DATABASE INTEGRATION TESTS
 // ============================================================================
-// These tests only run when TONYSTACK_TEST_DB=true
+// These tests only run when TSTACK_TEST_DB=true
 // They verify actual database deletion in PostgreSQL
 
 Deno.test({
@@ -567,7 +567,7 @@ import { assertExists } from "@std/assert";
 import { exists } from "@std/fs";
 
 Deno.test({
-  name: "destroyProject - should remove entry from KV store",
+  name: "destroyProject - should mark entry as destroyed in KV store",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -595,9 +595,10 @@ Deno.test({
         skipDbSetup: true,
       });
 
-      // Verify KV entry is removed
+      // Verify KV entry is marked as destroyed (kept for history)
       metadata = await getProject(folderName);
-      assertEquals(metadata, null, "Metadata should be removed after destroy");
+      assertExists(metadata, "Metadata should still exist after destroy");
+      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV(`${projectName}-api`).catch(() => {});
@@ -813,12 +814,14 @@ Deno.test({
       assertEquals(await exists(apiPath), false, "API should be destroyed");
       assertEquals(await exists(uiPath), true, "Admin UI should remain");
 
-      // Verify KV entry is removed
+      // Verify KV entry is marked as destroyed (kept for history)
       const apiMetadata = await getProject("shop-api");
-      assertEquals(apiMetadata, null, "API metadata should be removed");
+      assertExists(apiMetadata, "API metadata should still exist");
+      assertEquals(apiMetadata.status, "destroyed", "API status should be 'destroyed'");
 
       const uiMetadata = await getProject("shop-admin-ui");
       assertExists(uiMetadata, "Admin UI metadata should still exist");
+      assertEquals(uiMetadata.status, "created", "Admin UI status should still be 'created'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("shop-api").catch(() => {});
@@ -871,12 +874,14 @@ Deno.test({
       );
       assertEquals(await exists(uiPath), true, "store-admin-ui should remain");
 
-      // Verify KV
+      // Verify KV entry is marked as destroyed (kept for history)
       const apiMetadata = await getProject("store-api");
-      assertEquals(apiMetadata, null);
+      assertExists(apiMetadata, "API metadata should still exist");
+      assertEquals(apiMetadata.status, "destroyed", "API status should be 'destroyed'");
 
       const uiMetadata = await getProject("store-admin-ui");
       assertExists(uiMetadata);
+      assertEquals(uiMetadata.status, "created", "Admin UI status should still be 'created'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("store-api").catch(() => {});
@@ -917,8 +922,10 @@ Deno.test({
         "Should auto-destroy single match"
       );
 
+      // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("cart-api");
-      assertEquals(metadata, null, "Metadata should be removed");
+      assertExists(metadata, "Metadata should still exist");
+      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("cart-api").catch(() => {});
@@ -1022,8 +1029,10 @@ Deno.test({
         "Should destroy foo-bar-api"
       );
 
+      // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("foo-bar-api");
-      assertEquals(metadata, null, "Metadata should be removed");
+      assertExists(metadata, "Metadata should still exist");
+      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("foo-bar-api").catch(() => {});
@@ -1087,7 +1096,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Status tracking - force flag should remove metadata completely",
+  name: "Status tracking - force flag should mark as destroyed",
   ignore: Deno.env.get("TSTACK_CLI_TEST") !== "true",
   async fn() {
     const tempDir = await createTempDir();
@@ -1109,12 +1118,13 @@ Deno.test({
         interactive: false,
       });
 
-      // Metadata should be completely removed
+      // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("status-force-test-api");
+      assertExists(metadata, "Metadata should still exist");
       assertEquals(
-        metadata,
-        null,
-        "Metadata should be removed with force flag"
+        metadata.status,
+        "destroyed",
+        "Status should be 'destroyed' after force destroy"
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -1144,7 +1154,7 @@ Deno.test({
       // Manually delete folder
       await Deno.remove(projectPath, { recursive: true });
 
-      // Destroy should still work and clean up metadata
+      // Destroy should still work and mark as destroyed
       await destroyInDir(tempDir, {
         projectName: "status-manual-test-api",
         force: true,
@@ -1152,9 +1162,10 @@ Deno.test({
         interactive: false,
       });
 
-      // Metadata should be removed
+      // Verify KV entry is marked as destroyed (kept for history)
       const metadata = await getProject("status-manual-test-api");
-      assertEquals(metadata, null, "Metadata should be cleaned up");
+      assertExists(metadata, "Metadata should still exist");
+      assertEquals(metadata.status, "destroyed", "Status should be 'destroyed'");
     } finally {
       await cleanupTempDir(tempDir);
       await deleteFromKV("status-manual-test-api").catch(() => {});
