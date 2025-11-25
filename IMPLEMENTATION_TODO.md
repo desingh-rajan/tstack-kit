@@ -21,10 +21,15 @@
 
 ## ✅ Issue #42: TStack Workspace - Multi-Project Namespace Management (COMPLETED)
 
+**Status:** 100% Complete - All phases implemented, tested, and documented.
+
+**Version:** v1.2.0 (Minor release - new features, backward compatible)
+
 ### Phase 1: Core Workspace Structure ✅
 
 - [x] Create `packages/cli/src/commands/workspace.ts` - Main workspace command file
-- [x] Implement `tstack workspace create <name>` command
+- [x] Implement `tstack create workspace <name>` command (new syntax)
+- [x] Maintain backward compatibility with `tstack workspace create <name>` (deprecated warning)
   - [x] Validate workspace name (blocks reserved suffixes: -api, -admin-ui, etc.)
   - [x] Create workspace root directory
   - [x] Support component determination with flags
@@ -51,20 +56,19 @@
 ### Phase 3: Remote Repository Creation (GitHub Integration) ✅
 
 - [x] Dual-mode GitHub integration:
-  - [x] Primary: gh CLI (preferred method)
-  - [x] Fallback: GitHub API with GITHUB_TOKEN
+  - [x] Primary: **GitHub API with GITHUB_TOKEN** (industry standard, CI/CD friendly)
+  - [x] Fallback: gh CLI (convenience for local dev)
 - [x] Add command flags for remote creation:
   - [x] `--github-org=<name>` - Target GitHub organization (auto-creates remotes)
   - [x] `--skip-remote` - Skip remote creation (local only)
-  - [x] `--github-token=<token>` - GitHub PAT (or use env var)
   - [x] `--visibility=<private|public>` - Repository visibility
 - [x] Implement remote repository workflow:
-  - [x] Create repo via gh CLI or GitHub API
+  - [x] Create repo via GitHub API or gh CLI
   - [x] Add remote URL: `git remote add origin <url>`
   - [x] Push initial commit: `git push -u origin main`
 - [x] Environment variable support:
-  - [x] `GITHUB_TOKEN` - Personal Access Token
-- [x] Implement `tstack workspace destroy` command
+  - [x] `GITHUB_TOKEN` - Personal Access Token (required scopes: repo, delete_repo)
+- [x] Implement `tstack destroy workspace` command
   - [x] Remove local projects and directories
   - [x] Drop all databases (dev/test/prod)
   - [x] `--delete-remote` flag to delete GitHub repos
@@ -72,9 +76,9 @@
 
 ### Phase 4: Testing & Documentation ✅
 
-- [x] Create comprehensive test suite (12 tests):
-  - [x] Local tests (7): Default components, --with-api, --skip-admin-ui, validation, duplicates, Git init, destruction
-  - [x] GitHub tests (5): Remote creation, --skip-remote, push verification, remote deletion, cleanup
+- [x] Create comprehensive test suite (16 tests):
+  - [x] Local tests (9): Default components, --with-api, --skip-admin-ui, validation, duplicates, Git init, destruction, local-only warning
+  - [x] GitHub tests (7): Remote creation (both api+admin-ui), --skip-remote, push verification, remote deletion, cleanup
 - [x] Test execution modes:
   - [x] Fast: `deno test --allow-all --unstable-kv` (skips GitHub tests)
   - [x] Full: `TSTACK_TEST_GITHUB=true deno test --allow-all --unstable-kv`
@@ -85,10 +89,21 @@
 
 **Implementation Details:**
 
-- packages/cli/src/commands/workspace.ts (730 lines) - Complete workspace management
+- packages/cli/src/commands/workspace.ts (799 lines) - Complete workspace management
 - packages/cli/src/utils/workspaceStore.ts (152 lines) - KV persistence
-- packages/cli/src/commands/workspace.test.ts (493 lines) - Comprehensive test suite
-- All tests passing: 7 local + 5 GitHub = 12 total ✅
+- packages/cli/src/commands/workspace.test.ts (789 lines) - Comprehensive test suite
+- All tests passing: 9 local + 7 GitHub = 16 total ✅
+- GitHub token prioritized over gh CLI (industry standard) ✅
+- Backward compatibility maintained for old syntax ✅
+
+**Key Changes in v1.2.0:**
+
+1. ✅ New syntax: `tstack create workspace <name>` (recommended)
+2. ✅ Old syntax: `tstack workspace create <name>` (deprecated, shows warning)
+3. ✅ GitHub API token-first priority (explicit, CI/CD friendly)
+4. ✅ Local-only warning when no `--github-org` specified
+5. ✅ Comprehensive test coverage (16 tests, all passing)
+6. ✅ TStack CLI rebrand with colorful banner and clickable links
 
 ---
 
@@ -453,18 +468,23 @@
 
 ## 📊 Success Criteria Checklist
 
-### Issue #42 - Workspace Management ✅ COMPLETED
+### Issue #42 - Workspace Management ✅ COMPLETED (v1.2.0)
 
-- [x] ✅ `tstack workspace create <name>` command works
+- [x] ✅ `tstack create workspace <name>` command works (new syntax)
+- [x] ✅ `tstack workspace create <name>` backward compatible (deprecated warning)
 - [x] ✅ Workspace structure created with multiple projects
 - [x] ✅ Component flags (`--with-api`, `--skip-admin-ui`, etc.) functional
 - [x] ✅ Git repos initialized with proper `.gitignore`
 - [x] ✅ Initial commits created and verified
-- [x] ✅ Remote repo creation via gh CLI + GitHub API works
+- [x] ✅ Remote repo creation via **GitHub API (primary)** + gh CLI (fallback)
+- [x] ✅ Token-first priority (industry standard, CI/CD friendly)
 - [x] ✅ `--skip-remote` flag for local-only mode
-- [x] ✅ `tstack workspace destroy` command with `--delete-remote`
-- [x] ✅ Comprehensive test suite passes (12 tests: 7 local + 5 GitHub)
+- [x] ✅ Local-only warning when no `--github-org` specified
+- [x] ✅ `tstack destroy workspace` command with `--delete-remote`
+- [x] ✅ Comprehensive test suite passes (16 tests: 9 local + 7 GitHub)
 - [x] ✅ Documentation complete with examples
+- [x] ✅ TStack CLI rebrand with colorful banner and clickable links
+- [x] ✅ Dynamic version display from deno.json
 
 ### Issue #45 - Backend Refactoring
 
