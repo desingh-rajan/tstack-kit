@@ -1,5 +1,15 @@
 # TStack Kit
 
+<p align="center">
+  <a href="https://github.com/desingh-rajan/tstack-kit/releases"><img src="https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?style=flat-square&label=Version" alt="Version"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/commits/main"><img src="https://img.shields.io/github/last-commit/desingh-rajan/tstack-kit?style=flat-square&label=Last%20commit" alt="Last commit"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/desingh-rajan/tstack-kit?style=flat-square" alt="License"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/stargazers"><img src="https://img.shields.io/github/stars/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub stars"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/network/members"><img src="https://img.shields.io/github/forks/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub forks"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/issues"><img src="https://img.shields.io/github/issues/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub issues"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/graphs/contributors"><img src="https://img.shields.io/github/contributors/desingh-rajan/tstack-kit?style=flat-square" alt="Contributors"></a>
+</p>
+
 > **Full-stack SaaS MVP toolkit for Deno. Ship products, not boilerplate.**
 
 From API to deployment in minutes - a complete toolkit for building type-safe
@@ -1041,6 +1051,41 @@ gh issue list --assignee @me
 # View project board
 open https://github.com/users/desingh-rajan/projects/2
 ```
+
+---
+
+## Contributors
+
+Thanks to all the amazing contributors who have helped build TStack Kit! 🎉
+
+<a href="https://github.com/desingh-rajan/tstack-kit/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=desingh-rajan/tstack-kit" alt="Contributors" />
+</a>
+
+Want to contribute? Check out our [Contributing Guidelines](#contributing) above.
+
+---
+
+## Supporters
+
+<a href="https://github.com/sponsors/desingh-rajan">
+  <img src="https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge" alt="Sponsor TStack Kit" />
+</a>
+
+TStack Kit is free and open source. If you find it useful, please consider supporting the project:
+
+- ⭐ **Star this repo** - It helps others discover TStack Kit
+- 🐛 **Report bugs** - Help us improve by [opening issues](https://github.com/desingh-rajan/tstack-kit/issues)
+- 💡 **Suggest features** - Share your ideas for making TStack better
+- 💖 **Sponsor** - Support ongoing development via [GitHub Sponsors](https://github.com/sponsors/desingh-rajan)
+
+---
+
+## Used By
+
+_Are you using TStack Kit in your project? [Let us know!](https://github.com/desingh-rajan/tstack-kit/issues/new?title=Add%20my%20project%20to%20Used%20By&body=Project%20name:%0AProject%20URL:%0ADescription:)_
+
+<!-- Projects using TStack Kit will be listed here -->
 
 ---
 
