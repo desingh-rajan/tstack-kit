@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/desingh-rajan/tstack-kit/releases"><img src="https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?style=flat-square&label=Version" alt="Version"></a>
   <a href="https://github.com/desingh-rajan/tstack-kit/commits/main"><img src="https://img.shields.io/github/last-commit/desingh-rajan/tstack-kit?style=flat-square&label=Last%20commit" alt="Last commit"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/desingh-rajan/tstack-kit?style=flat-square" alt="License"></a>
+  <a href="https://github.com/desingh-rajan/tstack-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/desingh-rajan/tstack-kit?style=flat-square" alt="License"></a>
   <a href="https://github.com/desingh-rajan/tstack-kit/stargazers"><img src="https://img.shields.io/github/stars/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub stars"></a>
   <a href="https://github.com/desingh-rajan/tstack-kit/network/members"><img src="https://img.shields.io/github/forks/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub forks"></a>
   <a href="https://github.com/desingh-rajan/tstack-kit/issues"><img src="https://img.shields.io/github/issues/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub issues"></a>
