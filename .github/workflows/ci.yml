@@ -57,7 +57,7 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: password
           TSTACK_CLI_TEST: "true"
-        run: deno task test --coverage=coverage
+        run: deno test --allow-all --unstable-kv --coverage=coverage src/ tests/
 
       - name: Generate coverage report
         working-directory: packages/cli
@@ -116,7 +116,9 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: password
-        run: deno task test --coverage=coverage
+        run: |
+          deno run --allow-all scripts/setup-test-full.ts
+          ENVIRONMENT=test deno test --allow-all --coverage=coverage src/_test_setup.ts src/
 
       - name: Generate coverage report
         working-directory: packages/api-starter
@@ -175,7 +177,7 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: password
-        run: deno task test --coverage=coverage
+        run: ENVIRONMENT=test deno test --allow-all --no-check --coverage=coverage src/_test_setup.ts src/
 
       - name: Generate coverage report
         working-directory: packages/admin
