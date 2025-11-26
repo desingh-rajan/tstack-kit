@@ -29,6 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Git
+        run: |
+          git config --global user.name "CI Bot"
+          git config --global user.email "ci@tstack.dev"
+
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
