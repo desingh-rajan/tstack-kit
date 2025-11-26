@@ -1,6 +1,6 @@
 {
   "name": "@tstack/admin-ui-starter",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "nodeModulesDir": "manual",
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
@@ -11,11 +11,20 @@
   },
   "lint": {
     "rules": {
-      "tags": ["fresh", "recommended"],
-      "exclude": ["react-no-danger", "no-explicit-any"]
+      "tags": [
+        "fresh",
+        "recommended"
+      ],
+      "exclude": [
+        "react-no-danger",
+        "no-explicit-any"
+      ]
     }
   },
-  "exclude": ["**/_fresh/*", "node_modules/**/*"],
+  "exclude": [
+    "**/_fresh/*",
+    "node_modules/**/*"
+  ],
   "imports": {
     "@/": "./",
     "daisyui": "npm:daisyui@^5.5.5",
@@ -29,7 +38,12 @@
     "postcss": "npm:postcss@^8.4.33"
   },
   "compilerOptions": {
-    "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "dom.iterable",
+      "deno.ns"
+    ],
     "jsx": "precompile",
     "jsxImportSource": "preact",
     "skipLibCheck": true,
@@ -49,6 +63,8 @@
       "noscript",
       "template"
     ],
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ]
   }
 }

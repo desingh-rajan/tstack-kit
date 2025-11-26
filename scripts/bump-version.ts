@@ -3,23 +3,25 @@
 const version = Deno.args[0];
 if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
   console.error("Usage: deno run scripts/bump-version.ts <version>");
-  console.error("Example: deno run scripts/bump-version.ts 1.1.0");
+  console.error("Example: deno run scripts/bump-version.ts 1.2.0");
   Deno.exit(1);
 }
 
-// CLI and Starter use the same version, Admin is independent
-const packages = ["cli", "starter"];
+// CLI, api-starter, and admin-ui-starter share the same version
+// Admin (ORM/core library) is independently versioned
+const packages = ["cli", "api-starter", "admin-ui-starter"];
 
 for (const pkg of packages) {
   const path = `./packages/${pkg}/deno.json`;
   const content = await Deno.readTextFile(path);
   const json = JSON.parse(content);
+  const oldVersion = json.version;
   json.version = version;
   await Deno.writeTextFile(path, JSON.stringify(json, null, 2) + "\n");
-  console.log(`✅ Updated ${pkg} to v${version}`);
+  console.log(`✅ Updated ${pkg}: v${oldVersion} → v${version}`);
 }
 
-console.log(`ℹ️  Admin package version unchanged (independent versioning)`);
+console.log(`\nℹ️  Admin package version unchanged (independent versioning)`);
 
 console.log(`\n🎉 All packages bumped to v${version}`);
 console.log("\nNext steps:");
