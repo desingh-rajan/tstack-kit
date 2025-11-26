@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2025-11-26
+
+### Added
+
+- GitHub Actions CI workflow with parallel test jobs (CLI, API Starter, Admin)
+- PostgreSQL 16 service containers for integration testing
+- Deno caching for faster CI builds
+- Lint and format checking in CI
+
+### Changed
+
+- Streamlined README from 1100+ lines to ~340 lines
+- Added admin-ui project structure documentation
+- Added AI cost savings calculation section
+- Clarified that JWT auth is included by default (not optional)
+- Removed `.github/` from gitignore to enable CI
+
+---
+
 ## [1.2.0] - 2025-11-26
 
 ### Highlights
@@ -147,5 +166,6 @@ Previous stable release. See [GitHub Compare](https://github.com/desingh-rajan/t
 
 ---
 
+[1.2.1]: https://github.com/desingh-rajan/tstack-kit/releases/tag/v1.2.1
 [1.2.0]: https://github.com/desingh-rajan/tstack-kit/releases/tag/v1.2.0
 [1.1.3]: https://github.com/desingh-rajan/tstack-kit/releases/tag/v1.1.3

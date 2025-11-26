@@ -1,6 +1,6 @@
 {
   "name": "@tstack/admin-ui-starter",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "nodeModulesDir": "manual",
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
