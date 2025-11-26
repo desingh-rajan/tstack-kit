@@ -1,370 +1,238 @@
 # TStack Kit
 
-<p align="center">
-  <a href="https://github.com/desingh-rajan/tstack-kit/releases"><img src="https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?style=flat-square&label=Version" alt="Version"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/commits/main"><img src="https://img.shields.io/github/last-commit/desingh-rajan/tstack-kit?style=flat-square&label=Last%20commit" alt="Last commit"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/desingh-rajan/tstack-kit?style=flat-square" alt="License"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/stargazers"><img src="https://img.shields.io/github/stars/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub stars"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/network/members"><img src="https://img.shields.io/github/forks/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub forks"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/issues"><img src="https://img.shields.io/github/issues/desingh-rajan/tstack-kit?style=flat-square" alt="GitHub issues"></a>
-  <a href="https://github.com/desingh-rajan/tstack-kit/graphs/contributors"><img src="https://img.shields.io/github/contributors/desingh-rajan/tstack-kit?style=flat-square" alt="Contributors"></a>
-</p>
+[![CI](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
+[![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 
-> **Full-stack SaaS MVP toolkit for Deno. Ship products, not boilerplate.**
+> **A growing SaaS toolkit that scales from day zero.** Ship products, not boilerplate.
 
-From API to deployment in minutes - a complete toolkit for building type-safe
-SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL.
+TStack Kit is a full-stack toolkit for building type-safe SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API + Admin UI workspaces in minutes.
 
-**Project Evolution:**
+**What you can build:**
 
-- **v1.0** - Starter Kit (Single API project scaffolding)
-- **v1.2** - MVP Kit (Multi-project workspaces with API + Admin UI)
-- **v2.0** - SaaS Kit (Add payments, mobile, infrastructure, deployment)
-
----
-
-## What is TStack?
-
-**TStack is evolving from a backend toolkit into a complete SaaS MVP launcher.**
-
-**Current State (v1.2 - MVP Kit):**
-
-- **Single Project**: `tstack create` - API scaffolding with auth, CRUD,
-  testing
-- **Workspaces**: `tstack create workspace` - Multi-project setup (API +
-  Admin UI + GitHub)
-- **Entity Generation**: `tstack scaffold` - Complete MVC with tests in
-  seconds
-
-**Think of it as:**
-
-- **Create React App** + **T3 Stack** → but for **full-stack Deno SaaS
-  products**
-- **Rails generators** + **Laravel Artisan** → but **workspace-aware and
-  deployment-ready**
-
-**One command to:**
-
-1. Create backend API (Deno + Hono + Drizzle)
-2. Create admin dashboard (Fresh + Preact)
-3. Initialize Git repos with initial commits
-4. Push to GitHub organization
-5. Set up databases (dev/test/prod)
-
-**Then scaffold entities:**
-
-- `tstack scaffold products` → Model, Service, Controller, Routes, Admin Routes,
-  Tests (8 files)
-- Focus on **business logic**, not plumbing
-
----
-
-## Why TStack?
-
-### The Problem
-
-Every time you start a new backend project, you waste hours on:
-
-- Setting up the same folder structure
-- Writing repetitive CRUD boilerplate
-- Configuring database connections and migrations
-- Setting up validation, error handling, and logging
-- Copy-pasting controller/service patterns from old projects
-
-**This toolkit was born from frustration.** After building dozens of APIs with
-the same patterns, it became clear: **stop rewriting, start generating**.
-
-### What TStack Solves
-
-- **Saves 2-4 hours per project** - Skip the setup, start coding features
-- **Saves $5-15 in AI costs per project** - Stop burning tokens on repetitive
-  boilerplate. One `tstack create` command replaces ~50-100 AI prompts for
-  setup, architecture, and CRUD scaffolding
-- **Saves $2-5 per entity** - Each `tstack scaffold` saves ~15-30 AI prompts
-  that developers typically waste asking for the same CRUD patterns, validation
-  schemas, and controller boilerplate
-- **TypeScript first** - Full type safety from database to API responses
-- **Consistency** - Every entity follows the same proven patterns
-- **Focus on problems, not plumbing** - Stop fighting with tools, stop being a
-  CRUD monkey - ship features that matter
-- **Production ready** - Includes error handling, logging, validation out of the
-  box
-- **No vendor lock-in** - Generated code is yours to modify freely
-
-**Real savings example:** A typical project with 10 entities could save
-$65-165 in AI costs ($15 setup + $50 for 10 scaffolds) plus 25-50 hours of token
-wait time and prompt engineering.
-
-### Default Stack (v1.0)
-
-TStack currently uses this proven stack:
-
-- **Runtime**: Deno 2.0+
-- **Framework**: Hono
-- **ORM**: Drizzle
-- **Database**: PostgreSQL
-
-This is the **default and recommended stack** for new projects. It's fast,
-type-safe, and production-ready.
-
-### Future: Multi-Runtime Support
-
-Coming in v2.0 (2026):
-
-- **Node.js + Express + Prisma + PostgreSQL/SQLite** - Full-stack support with
-  both databases
-
-The Deno + Hono + Drizzle + PostgreSQL stack will remain the flagship and
-recommended choice. As a solo developer, I'm focusing on polishing the Deno
-stack first before expanding to other runtimes. Other combinations (Bun,
-Fastify, etc.) may be added based on community demand.
-
-**Contributing:** If you'd like to contribute support for additional stacks,
-please open an issue or discussion first to coordinate with maintainers.
-
-Built by [Desingh Rajan](https://desinghrajan.in) and
-[contributors](https://github.com/desingh-rajan/tstack-kit/graphs/contributors)
-
----
-
-## Features
-
-- **Fast Setup** - Create new projects in seconds
-- **CLI Scaffolding** - Generate complete MVC entities with one command
-- **Type-Safe** - Full TypeScript with Drizzle ORM
-- **PostgreSQL** - Production-ready from day 1
-- **Docker Ready** - Includes docker-compose setup
-- **Clean MVC** - Organized entity structure
-- **Minimal** - No auth bloat, add what you need
+- Internal tools and admin dashboards
+- SaaS MVPs with authentication out of the box
+- Portfolio sites that grow into full products
+- SSR e-commerce applications
+- Content management systems
+- Any CRUD-heavy application
 
 ---
 
 ## Quick Start
 
-### 1. Install Deno
-
 ```bash
+# Install Deno (if not installed)
 curl -fsSL https://deno.land/install.sh | sh
-```
 
-### 2. Install TStack CLI
-
-```bash
-# Clone the repo
+# Install TStack CLI
 git clone https://github.com/desingh-rajan/tstack-kit.git
-cd tstack-kit
-
-# Install CLI globally (default: prompts for permissions at runtime)
-cd packages/cli
+cd tstack-kit/packages/cli
 deno task install
 
-# Or skip permission prompts (if you trust the CLI)
-deno install --allow-all --global --name tstack --config deno.json mod.ts
-```
+# Create your first workspace
+tstack create workspace my-app
+cd my-app/my-app-api
 
-**Default:** CLI asks for permission (y/n/A) when needed - safer for first-time
-users. **Skip prompts:** Use `--allow-all` if you don't want interruptions
-during project creation.
-
-### 3. Create Your First Project
-
-**Option A: Full Workspace (Recommended for new projects)**
-
-```bash
-# Create workspace with API + Admin UI
-tstack create workspace my-shop
-
-# Navigate to workspace
-cd my-shop
-
-# Start API server
-cd my-shop-api
-
-# Generate initial migration (creates tables for auth, articles, site_settings)
+# Setup database
 deno task migrate:generate
-
-# Run migration to create tables
 deno task migrate:run
-
-# Seed database with admin user
 deno task db:seed
 
-# Start API dev server (port 8000)
+# Start development
 deno task dev
-
-# In another terminal - Start Admin UI
-cd ../my-shop-admin-ui
-deno install        # Install dependencies (first time only)
-deno task dev       # Start dev server (port 5173)
 ```
 
-**Login to Admin UI:**
+Your API is running at `http://localhost:8000`
 
-- URL: <http://localhost:5173/auth/login>
-- Email: `dev-admin@example.com`
-- Password: Check `SUPERADMIN_PASSWORD` in `.env` (default: `password`)
+---
 
-**Scaffold your first entity:**
+## What You Get
+
+### One Command, Full Stack
 
 ```bash
-# In my-shop-api directory
+tstack create workspace my-shop
+```
+
+Creates:
+
+- **my-shop-api/** - Backend API (Deno + Hono + Drizzle + PostgreSQL)
+- **my-shop-admin-ui/** - Admin dashboard (Fresh + Preact + DaisyUI)
+- 3 databases per project (dev/test/prod)
+- Git initialized with initial commit
+- JWT authentication (included by default)
+- Role-based access control (user/admin/superadmin)
+- Built-in entities: Users, Articles, Site Settings
+
+### Entity Scaffolding
+
+```bash
 tstack scaffold products
-
-# Generate and run migration for new entity
-deno task migrate:generate
-deno task migrate:run
-
-# Products will automatically appear in Admin UI sidebar! 🎉
 ```
 
-**Option B: Single API Project (Traditional)**
+Generates 8 files in seconds:
+
+- `product.model.ts` - Drizzle schema
+- `product.dto.ts` - Zod validation
+- `product.service.ts` - Business logic
+- `product.controller.ts` - HTTP handlers
+- `product.route.ts` - Public API routes
+- `product.admin.route.ts` - Admin panel routes
+- `product.test.ts` - API tests
+- `product.admin.test.ts` - Admin tests
+
+Entity automatically appears in Admin UI sidebar.
+
+---
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Workspace Management** | Create/destroy multi-project workspaces |
+| **GitHub Integration** | Auto-create repos with `--github-org` flag |
+| **Base Abstractions** | 70-80% less code with BaseService/BaseController |
+| **Admin UI** | Config-driven CRUD with Fresh + DaisyUI |
+| **Type-Safe** | Full TypeScript from database to API |
+| **JWT Auth** | Optional authentication system included |
+| **PostgreSQL** | Three-database setup (dev/test/prod) |
+| **Docker Ready** | docker-compose included |
+
+---
+
+## CLI Commands
 
 ```bash
-# Create new project
-tstack create api blog-api
-cd blog-api
+# Create projects
+tstack create workspace my-app          # Full workspace (API + Admin UI)
+tstack create workspace my-app --github-org=your-org  # With GitHub repos
+tstack create api my-api                # API only
 
-# Start PostgreSQL
-docker-compose up -d
+# Scaffold entities
+tstack scaffold products                # Generate full MVC entity
 
-# Generate and run migrations
-deno task migrate:generate
-deno task migrate:run
+# Destroy projects
+tstack destroy my-api                   # Remove project + databases
+tstack destroy workspace my-app         # Remove entire workspace
+tstack destroy workspace my-app --delete-remote  # Also delete GitHub repos
 
-# Start dev server
-deno task dev
+# Info
+tstack list                             # List all tracked projects
+tstack --help                           # Show help
+tstack --version                        # Show version
 ```
 
-Server running at **<http://localhost:8000>**
-
-**What you get:**
-
-- ✅ Complete API project with Deno + Hono + Drizzle
-- ✅ JWT authentication system (optional, ready to use)
-- ✅ 3 databases created: `blog_api_dev`, `blog_api_test`, `blog_api_prod`
-- ✅ Built-in entities: Users, Articles, Site Settings
-- ✅ Docker Compose setup
-- ✅ Migration system
-- ✅ Testing framework (BDD-style)
-
-**With GitHub Integration (for workspaces):**
+### Project Tasks
 
 ```bash
-# Create workspace + push to GitHub organization
-tstack create workspace my-saas --github-org=your-company
-
-# Creates:
-# - Local folders: my-saas-api/, my-saas-admin-ui/
-# - GitHub repos: your-company/my-saas-api, your-company/my-saas-admin-ui
-# - Git initialized + initial commit + pushed to remote
-# - All tracked in workspace metadata
+deno task dev              # Start dev server (with watch)
+deno task test             # Run tests
+deno task migrate:generate # Generate migrations
+deno task migrate:run      # Run migrations
+deno task db:seed          # Seed database
+deno task db:studio        # Open Drizzle Studio
 ```
 
 ---
 
-## Workspace Management
+## Project Structure
 
-### Create Workspace
-
-Create a workspace with multiple projects (api, admin-ui, etc.):
-
-```bash
-# Create workspace with default components (api + admin-ui)
-tstack create workspace my-app
-
-# Create workspace with specific components
-tstack create workspace my-app --with-api --with-admin-ui
-
-# Create workspace with only API
-tstack create workspace my-app --with-api
-
-# Create workspace and skip admin-ui
-tstack create workspace my-app --skip-admin-ui
-
-# Create workspace with GitHub repos
-tstack create workspace my-app --github-org=your-org
-
-# Create workspace locally only (skip GitHub)
-tstack create workspace my-app --github-org=your-org --skip-remote
-```
-
-### Workspace Structure
+### API Backend
 
 ```text
-my-app/
-├── my-app-api/          # Backend API (Deno + Hono + Drizzle)
-│   └── .git/           # Initialized with initial commit
-└── my-app-admin-ui/    # Admin dashboard (Fresh + Preact)
-    └── .git/           # Initialized with initial commit
+my-project-api/
+├── src/
+│   ├── main.ts              # App entry point
+│   ├── auth/                # JWT authentication (included)
+│   ├── config/              # Database & environment config
+│   ├── entities/            # Your domain entities
+│   │   ├── articles/        # Example entity
+│   │   ├── site_settings/   # Dynamic app configuration
+│   │   └── users/           # User management
+│   └── shared/              # Middleware & utilities
+├── migrations/              # Drizzle migrations
+├── scripts/                 # Seeding scripts
+├── deno.json                # Tasks & config
+├── docker-compose.yml       # PostgreSQL setup
+└── .env.example             # Environment template
 ```
 
-### Destroy Workspace
+### Admin UI Frontend
 
-```bash
-# Destroy workspace (removes projects and databases)
-tstack destroy workspace my-app
-
-# Force destroy (skip confirmation)
-tstack destroy workspace my-app --force
-
-# Destroy workspace and delete GitHub repos
-tstack destroy workspace my-app --delete-remote
+```text
+my-project-admin-ui/
+├── components/              # Reusable UI components
+├── config/                  # Entity configurations
+├── entities/                # Entity-specific pages & logic
+├── islands/                 # Interactive Preact components
+├── lib/                     # API client & utilities
+├── routes/                  # Fresh file-based routing
+├── static/                  # Static assets
+├── main.ts                  # Fresh entry point
+├── client.ts                # Client-side entry
+├── deno.json                # Tasks & config
+└── tailwind.config.ts       # Tailwind + DaisyUI
 ```
-
-**What gets deleted:**
-
-- Project directories and all files
-- Development databases (`{project}_dev`)
-- Test databases (`{project}_test`)
-- Production databases (`{project}_prod`)
-- Remote GitHub repositories (if `--delete-remote` specified)
-- Workspace metadata from tracking database
 
 ---
 
-## Scaffold Entities
+## Tech Stack
 
-Generate complete MVC structures with minimal boilerplate:
+| Layer | Technology |
+|-------|------------|
+| Runtime | Deno 2.0+ |
+| Framework | Hono |
+| ORM | Drizzle |
+| Database | PostgreSQL 16+ |
+| Validation | Zod |
+| Admin UI | Fresh + Preact + DaisyUI |
 
-```bash
-# Scaffold products entity
-tstack scaffold products
+---
 
-# Creates 8 files:
-# - product.model.ts          (Drizzle schema)
-# - product.dto.ts            (Zod validation)
-# - product.service.ts        (Business logic - extends BaseService)
-# - product.controller.ts     (HTTP handlers - extends BaseController)
-# - product.route.ts          (Public API routes)
-# - product.admin.route.ts    (Admin panel routes)
-# - product.test.ts           (API tests)
-# - product.admin.test.ts     (Admin tests)
+## API Endpoints
+
+### Default Routes
+
+```text
+GET  /           # API info
+GET  /health     # Health check
 ```
 
-### Base Abstractions Pattern (70-80% Less Code)
+### After `tstack scaffold products`
 
-**Why?** Admin panels need standardized CRUD operations for every entity. The
-base classes generate this boilerplate automatically, letting you focus on
-business logic.
+**Public API:**
 
-**Two-Tier Design:**
+```text
+GET    /api/products      # List all
+GET    /api/products/:id  # Get one
+POST   /api/products      # Create
+PUT    /api/products/:id  # Update
+DELETE /api/products/:id  # Delete
+```
 
-1. **Admin API** (`/ts-admin/*`) - Always uses base classes for consistency
-   - Powers reusable admin UI (list/search/filter/bulk operations)
-   - Rails-style: same structure for all entities
+**Admin API (protected):**
 
-2. **Public API** (`/api/*`) - Uses base classes when appropriate
-   - Standard CRUD: Use base classes (saves 70-80% code)
-   - Custom logic: Override or implement from scratch
+```text
+GET    /ts-admin/products              # List with pagination/search
+POST   /ts-admin/products              # Create
+GET    /ts-admin/products/:id          # Get details
+PUT    /ts-admin/products/:id          # Update
+DELETE /ts-admin/products/:id          # Delete
+POST   /ts-admin/products/bulk-delete  # Bulk delete
+```
 
-Generated entities use **base classes** to eliminate boilerplate:
+---
+
+## Base Abstractions Pattern
+
+Generated entities use base classes to eliminate boilerplate:
 
 ```typescript
-// Service - Just add custom logic
-export class ProductService
-  extends BaseService<Product, CreateDTO, UpdateDTO, ResponseDTO> {
+// Service - Add custom logic via lifecycle hooks
+export class ProductService extends BaseService<Product, CreateDTO, UpdateDTO> {
   protected override async beforeCreate(data: CreateDTO) {
-    return { ...data, slug: slugify(data.name) }; // Auto-generate slug
+    return { ...data, slug: slugify(data.name) };
   }
 }
 
@@ -374,718 +242,118 @@ export class ProductController extends BaseController<typeof productService> {
     super(productService, "Product", {
       update: {
         requireAuth: true,
-        ownershipCheck: (p, uid) => p.ownerId === uid,
+        ownershipCheck: (product, userId) => product.ownerId === userId,
       },
     });
   }
 }
-
-// Public API - Auto-generated CRUD routes
-const routes = BaseRouteFactory.createCrudRoutes({
-  basePath: "/products",
-  controller: ProductControllerStatic,
-  schemas: { create: CreateProductSchema, update: UpdateProductSchema },
-  publicRoutes: ["getAll", "getById"], // No auth required
-});
-
-// Admin API - Standardized for admin panel UI
-const adminRoutes = AdminRouteFactory.createAdminRoutes({
-  basePath: "/ts-admin/products",
-  adapter: new DrizzleAdapter(db, products),
-  requireRole: ["admin", "superadmin"],
-});
 ```
 
-**What You Get:**
+**What you get:**
 
-- ✅ Lifecycle hooks: `beforeCreate`, `afterCreate`, `beforeUpdate`,
-  `afterUpdate`, `beforeDelete`, `afterDelete`
-- ✅ Declarative authorization: ownership checks, role-based access, superadmin
-  bypass
-- ✅ Auto-generated routes: Standard CRUD + admin panel endpoints
-- ✅ Type-safe: Full TypeScript generics
-
-**Learn More:** See
-[packages/api-starter/README.md](packages/api-starter/README.md#9-base-abstractions-pattern)
-for detailed examples and when to use custom implementations.
+- Lifecycle hooks: `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`, `afterDelete`
+- Declarative authorization with ownership checks
+- Auto-generated CRUD routes
+- Full TypeScript generics
 
 ---
 
-## Project Structure
-
-```text
-my-project/
-├── src/
-│   ├── main.ts              # App entry point
-│   ├── auth/                # JWT authentication (optional)
-│   ├── config/
-│   │   ├── database.ts      # PostgreSQL connection
-│   │   └── env.ts           # Environment config
-│   ├── entities/            # Your domain entities
-│   │   ├── articles/        # Example: Blog/content entity
-│   │   ├── site_settings/   # Built-in: Dynamic app configuration
-│   │   └── users/           # Built-in: User management
-│   └── shared/
-│       ├── middleware/      # Error handling, logging
-│       └── utils/           # Response, validation helpers
-├── migrations/              # Drizzle migrations
-├── scripts/                 # Database seeding scripts
-├── tests/                   # Colocated test files
-├── deno.json               # Deno configuration & tasks
-├── drizzle.config.ts       # Drizzle config
-├── docker-compose.yml      # PostgreSQL setup
-└── .env.example            # Environment template
-```
-
-### Built-in Entities
-
-TStack starter includes reference entities out of the box:
-
-1. **Articles** - Example blog/content entity with authorization
-   - Public read access
-   - Protected write operations (auth required)
-   - Author-based permissions
-
-2. **Site Settings** - Dynamic configuration system
-   - Key-value storage with JSONB
-   - Public/private setting separation
-   - Frontend-accessible configuration API
-   - Default settings: site_info, contact_info, theme_config, feature_flags,
-     email_settings, api_config
-
-3. **Users** - User management & JWT authentication
-   - Registration and login
-   - Role-based access (user, superadmin)
-   - Password hashing with Argon2
-
-**Seeding Built-in Data:**
-
-```bash
-# Seed all default data
-deno task db:seed
-
-# Or individually:
-deno task db:seed:superadmin   # Create superadmin user
-deno task db:seed:alpha        # Create test user
-deno task db:seed:site         # Create default site settings
-```
-
----
-
-## Available Commands
-
-### TStack CLI
-
-```bash
-# Project commands
-tstack create <project>     # Create new project
-tstack destroy <project>    # Remove project and drop databases
-
-# Workspace commands
-tstack create workspace <name>   # Create workspace with multiple projects
-tstack destroy workspace <name>  # Remove workspace, projects, and databases
-
-# Scaffolding
-tstack scaffold <entity>    # Generate entity (model, controller, routes, tests)
-
-# Help
-tstack --help              # Show help
-tstack --version           # Show version
-```
-
-### Project Commands
-
-```bash
-deno task dev              # Start development server (with watch)
-deno task start            # Start production server
-deno task migrate:generate # Generate migrations
-deno task migrate:run      # Run migrations
-deno task db:studio        # Open Drizzle Studio
-deno task test             # Run tests
-deno task fmt              # Format code
-deno task lint             # Lint code
-```
-
----
-
-## Tech Stack
-
-| Layer      | Technology | Version |
-| ---------- | ---------- | ------- |
-| Runtime    | Deno       | 2.5.4+  |
-| Framework  | Hono       | 4.6.3   |
-| ORM        | Drizzle    | 0.33.0  |
-| Database   | PostgreSQL | 16+     |
-| Validation | Zod        | 3.23.0  |
-
----
-
-## Environment Variables
+## Environment Setup
 
 ```bash
 # .env
 ENVIRONMENT=development
 PORT=8000
-DATABASE_URL=postgresql://tonystack:password@localhost:5432/tonystack
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-LOG_LEVEL=info
+DATABASE_URL=postgresql://postgres:password@localhost:5432/my_app_dev
+JWT_SECRET=your-secret-key
+SUPERADMIN_EMAIL=admin@example.com
+SUPERADMIN_PASSWORD=your-password
 ```
 
 ---
 
-## Docker Deployment
+## Why TStack?
 
-### Development
+**The Problem:** Every new backend project means hours spent on folder structure, CRUD boilerplate, database config, validation, error handling - the same patterns over and over.
 
-```bash
-docker-compose up -d
-```
+**The Solution:** TStack generates all of this in seconds. Focus on business logic, not plumbing.
 
-### Production
+| Without TStack | With TStack |
+|---------------|-------------|
+| 2-4 hours setup per project | Minutes |
+| Copy-paste CRUD patterns | `tstack scaffold entity` |
+| Manual route registration | Auto-discovery |
+| Repetitive admin panels | Config-driven CRUD UI |
 
-Set environment variables:
+### AI Prompt Savings
 
-```bash
-export ENVIRONMENT=production
-export DATABASE_URL=postgresql://user:pass@host:5432/db
-```
+If you're using AI assistants to write boilerplate, TStack saves significant time and money:
 
-Then:
+| Task | Manual AI Prompts | With TStack | Savings |
+|------|-------------------|-------------|--------|
+| Project setup | 50-100 prompts | 1 command | ~$5-15 |
+| Entity scaffold (each) | 15-30 prompts | 1 command | ~$2-5 |
+| 10-entity project | 200-400 prompts | 11 commands | ~$65-165 |
 
-```bash
-docker-compose --profile prod up -d
-```
+*Estimates based on typical AI coding assistant usage at $0.10-0.25 per prompt cycle.*
 
----
+### Good Fit
 
-## What You Get
+- PostgreSQL-first, type-safe API development
+- Fast entity scaffolding with tests included
+- JWT auth included by default (ready to use, not forced)
+- Clean, modifiable generated code
 
-### Default Endpoints
+### Not Ideal For
 
-- `GET /` - API information
-- `GET /health` - Health check
-
-### Built-in Entity Endpoints
-
-TStack starter includes these pre-built endpoints:
-
-**Site Settings** (Dynamic Configuration) - Public API:
-
-- `GET /site-settings` - List all public settings
-- `GET /site-settings/:idOrKey` - Get setting by ID or key
-
-**Site Settings Admin API** - Protected Endpoints:
-
-- `GET /ts-admin/site-settings` - List all settings (superadmin only)
-- `GET /ts-admin/site-settings/:id` - Get specific setting (superadmin only)
-- `POST /ts-admin/site-settings` - Create setting (superadmin only)
-- `PUT /ts-admin/site-settings/:id` - Update setting (superadmin only)
-- `DELETE /ts-admin/site-settings/:id` - Delete setting (superadmin only)
-
-**Articles** (Example Content Entity) - Public API:
-
-- `GET /api/articles` - List published articles
-- `GET /api/articles/:id` - Get article by ID
-- `POST /api/articles` - Create article (auth required)
-- `PUT /api/articles/:id` - Update own article
-- `DELETE /api/articles/:id` - Delete own article
-
-**Articles Admin API** - Protected Endpoints:
-
-- `GET /ts-admin/articles` - List all articles (superadmin/admin only)
-- `GET /ts-admin/articles/:id` - Get article (superadmin/admin only)
-- `POST /ts-admin/articles` - Create article (superadmin/admin only)
-- `PUT /ts-admin/articles/:id` - Update article (superadmin/admin only)
-- `DELETE /ts-admin/articles/:id` - Delete article (superadmin/admin only)
-- `POST /ts-admin/articles/bulk-delete` - Bulk delete (superadmin/admin only)
-
-### Scaffolded Entity Endpoints
-
-After `tstack scaffold products`:
-
-**Public API** (`/api/products`):
-
-- `GET /api/products` - List all
-- `GET /api/products/:id` - Get one
-- `POST /api/products` - Create
-- `PUT /api/products/:id` - Update
-- `DELETE /api/products/:id` - Delete
-
-**Admin API** (`/ts-admin/products`) - Protected:
-
-- `GET /ts-admin/products` - List all products with pagination/search
-  (superadmin/admin)
-- `GET /ts-admin/products/new` - Get new product form metadata
-  (superadmin/admin)
-- `POST /ts-admin/products` - Create product (superadmin/admin)
-- `GET /ts-admin/products/:id` - Get product details (superadmin/admin)
-- `GET /ts-admin/products/:id/edit` - Get edit form metadata (superadmin/admin)
-- `PUT /ts-admin/products/:id` - Update product (superadmin/admin)
-- `PATCH /ts-admin/products/:id` - Partial update (superadmin/admin)
-- `DELETE /ts-admin/products/:id` - Delete product (superadmin/admin)
-- `POST /ts-admin/products/bulk-delete` - Bulk delete products
-  (superadmin/admin)
-
----
-
-## Using Site Settings
-
-### Frontend Configuration
-
-Site settings provide a dynamic configuration API for your frontend:
-
-```typescript
-// Fetch public configuration at app startup
-const config = await fetch("http://localhost:8000/site-settings")
-  .then((res) => res.json());
-
-// Use configuration in your app
-const { site_info, theme_config, feature_flags } = config;
-
-// Apply theme
-document.documentElement.style.setProperty(
-  "--primary-color",
-  theme_config.primaryColor,
-);
-
-// Toggle features
-if (feature_flags.enableComments) {
-  renderComments();
-}
-
-// Display site info
-document.title = site_info.siteName;
-```
-
-### Backend Configuration
-
-Access private settings (not exposed to frontend):
-
-```typescript
-import { SiteSettingService } from "./entities/site_settings/site-setting.service.ts";
-
-// Get email configuration
-const emailConfig = await SiteSettingService.getByKey("email_settings");
-sendEmail({
-  host: emailConfig.value.smtp_host,
-  port: emailConfig.value.smtp_port,
-});
-
-// Get API rate limits
-const apiConfig = await SiteSettingService.getByKey("api_config");
-const maxRequests = apiConfig.value.rateLimit.maxRequests;
-```
-
-### Default Settings
-
-Run `deno task db:seed:site` to create 6 default settings:
-
-| Setting        | Public | Use Case                                  |
-| -------------- | ------ | ----------------------------------------- |
-| site_info      | Yes    | Site name, tagline, logo - display in UI  |
-| contact_info   | Yes    | Email, phone, social links - contact page |
-| theme_config   | Yes    | Colors, fonts - apply to frontend theme   |
-| feature_flags  | Yes    | Toggle features - enable/disable features |
-| email_settings | No     | SMTP config - backend email sending       |
-| api_config     | No     | Rate limits, CORS - API configuration     |
-
-**Updating Settings:**
-
-```bash
-# Via API (superadmin required)
-curl -X PUT http://localhost:8000/site-settings/1 \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"value": {"siteName": "Updated Name"}}'
-
-# Or modify scripts/seed-site-settings.ts and re-run
-deno task db:seed:site
-```
-
----
-
-## Example: Building a Blog API
-
-```bash
-# 1. Create project
-tstack create blog-api && cd blog-api
-
-# 2. Start PostgreSQL
-docker-compose up -d postgres
-
-# 3. Scaffold entities
-tstack scaffold articles
-tstack scaffold comments
-tstack scaffold categories
-
-# 4. Customize models
-# Add title, content, etc. to article.model.ts
-
-# 5. Register routes in main.ts
-
-# 6. Generate and run migrations
-deno task migrate:generate
-deno task migrate:run
-
-# 7. Start server
-deno task dev
-```
-
-Done! You have a working blog API.
-
----
-
-## Removing Projects
-
-### Destroy Single Project
-
-When you no longer need a single API project:
-
-```bash
-# Destroy with confirmation prompt
-tstack destroy blog-api
-
-# Force destroy (skip confirmation)
-tstack destroy blog-api --force
-```
-
-**What Gets Deleted:**
-
-- ✅ Project directory and all files
-- ✅ Development database (`blog_api_dev`)
-- ✅ Test database (`blog_api_test`)
-- ✅ Production database (`blog_api_prod`)
-- ✅ Project metadata from tracking database
-
-**Safety Features:**
-
-- Requires typing project name exactly for confirmation (unless `--force`)
-- Shows what will be deleted before proceeding
-- Searches in current directory and `~/projects`
-- Clear error messages if project not found
-
-### Destroy Workspace
-
-When you no longer need a workspace with multiple projects:
-
-```bash
-# Destroy workspace (local only)
-tstack destroy workspace my-saas
-
-# Force destroy (skip confirmation)
-tstack destroy workspace my-saas --force
-
-# Destroy workspace + delete GitHub repos
-tstack destroy workspace my-saas --delete-remote
-
-# Force destroy + delete GitHub repos
-tstack destroy workspace my-saas --force --delete-remote
-```
-
-**What Gets Deleted:**
-
-- ✅ All project directories (`my-saas-api/`, `my-saas-admin-ui/`)
-- ✅ All databases for each project (dev/test/prod per project)
-- ✅ Workspace directory
-- ✅ Workspace metadata from tracking database
-- ✅ Remote GitHub repositories (if `--delete-remote` specified)
-
-**Example Workflow:**
-
-```bash
-# Create workspace with GitHub repos
-tstack create workspace demo --github-org=my-company
-# Creates: my-company/demo-api, my-company/demo-admin-ui on GitHub
-
-# Later, destroy everything including GitHub repos
-tstack destroy workspace demo --delete-remote
-# Deletes: Local folders + databases + GitHub repos
-```
-
-**⚠️ Warning:**
-
-- `tstack destroy` - Deletes 3 databases (dev/test/prod)
-- `tstack destroy workspace` - Deletes 3 databases **per project** (6 total for
-  API + Admin UI)
-- `--delete-remote` - Permanently deletes GitHub repositories
-
-Make sure to backup any important data before running these commands.
-
----
-
-## Is TStack For You?
-
-### Perfect If You Want
-
-- ✅ **Zero auth bloat** - Authentication included but optional, add what you
-  need
-- ✅ **PostgreSQL first** - No SQLite native binding issues
-- ✅ **Minimal defaults** - Clean, opinionated starting point
-- ✅ **Pure Deno** - No Node.js baggage (or use Node.js stack in future)
-- ✅ **Fast scaffolding** - Generate complete entities in seconds
-- ✅ **Type-safe** - Full TypeScript from database to API responses
-- ✅ **Save time and money** - Reduces development time by 2-4 hours per
-  project, saves $5-15 in AI/token costs per project, and $2-5 per entity
-  scaffold
-
-> **💰 Cost Savings:** TStack eliminates repetitive boilerplate setup, reducing
-> AI prompts and token usage significantly. Developers save approximately **2-4
-> hours of setup time** and **$5-15 in AI credits** per new project, plus **$2-5
-> per entity** scaffolded. This adds up to substantial savings over multiple
-> projects.
-
-### Not Ideal If You Need
-
-- ❌ GraphQL support (REST API only)
-- ❌ All-in-one batteries-included framework (this is a toolkit - you build what
-  you need)
-- ❌ Immediate support for all runtime/framework combinations (Deno + Hono is
-  currently the only stack)
-
----
-
-## Development Workflow
-
-1. **Create** - `tstack create my-api`
-2. **Scaffold** - `tstack scaffold products`
-3. **Customize** - Edit models, add fields
-4. **Generate** - `deno task migrate:generate`
-5. **Migrate** - `deno task migrate:run`
-6. **Test** - `curl http://localhost:8000/api/products`
-7. **Deploy** - `docker-compose up -d`
+- GraphQL (REST only)
+- Non-Deno runtimes (Node.js coming in v2.0)
 
 ---
 
 ## Roadmap
 
-### v1.2 (Current - November 2025) - MVP Kit ✅
+### v1.2 (Current) - MVP Kit
 
-**Workspace Management (Completed) ✅**
+- Workspace management (API + Admin UI)
+- GitHub integration
+- Base abstractions (70-80% less code)
+- Fresh Admin UI Kit
+- Project tracking with Deno KV
 
-- ✅ `tstack create workspace` - Multi-project setup (API + Admin UI)
-- ✅ Component flags: `--with-api`, `--with-admin-ui`, `--skip-*`
-- ✅ GitHub integration: `--github-org` auto-creates and pushes repos
-- ✅ `--skip-remote` flag for local-only development
-- ✅ `tstack destroy workspace` with `--delete-remote` option
-- ✅ Git initialization per project with initial commits
-- ✅ Workspace metadata tracking in KV store
-- ✅ Comprehensive test suite (12 tests: 7 local + 5 GitHub)
+### v1.3 (Q1 2026) - Infrastructure
 
-**Single Project (Existing) ✅**
+- Docker multi-environment setup
+- Kamal deployment config
+- Interactive CLI prompts
+- Public UI starter (Next.js/React)
 
-- ✅ `tstack create` - API scaffolding
-- ✅ `tstack destroy` - Project + database cleanup
-- ✅ `tstack scaffold` - Entity generation with MVC pattern
-- ✅ Auto-discovery route system
-- ✅ PostgreSQL with three-database setup (dev/test/prod)
-- ✅ JWT authentication system (optional)
-- ✅ Rails-style `--skip-*` flags for scaffold
-- ✅ BDD-style testing framework
-- ✅ Site settings with JSON schema validation
-- ✅ Docker Compose setup
-- ✅ **Base Service/Controller Refactoring** (#45) - 70-80% code reduction per
-  entity
-  - BaseService with lifecycle hooks (beforeCreate, afterCreate, beforeUpdate,
-    afterUpdate, beforeDelete, afterDelete)
-  - BaseController with declarative authorization
-  - BaseRouteFactory and AdminRouteFactory for automatic route generation
-  - Full test coverage (6 suites, 111 steps passing)
-- ✅ **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
+### v2.0 (2026) - Expansion
 
-### v1.3 (Q1 2026) - Infrastructure & Deployment
+- Node.js stack support
+- Monitoring & observability
+- Multi-cloud deployment toolkit
+- Mobile admin app (Flutter)
 
-- [ ] **Docker Support** (#43) - Multi-environment Dockerfile setup
-- [ ] **Kamal Deployment** (#7) - Production-ready deployment config
-- [ ] **Interactive Create** (#37) - CLI prompts for project setup
-- [ ] **Public UI Kit** - Next.js/React frontend starter
-
-### v1.3 (Q2 2026) - Communication & Integration
-
-- [ ] **Email Service** (#10) - SMTP + external provider support
-- [ ] **Contact Forms** (#11) - Email notification module
-- [ ] **Redis Integration** (#9) - Caching and job queue
-- [ ] **OAuth Login** (#34) - Gmail, GitHub authentication
-- [ ] **Feature Opt-out** (#38) - Post-creation feature management
-
-### v2.0 (2026) - Multi-Runtime & Expansion
-
-- [ ] **Node.js Stack** - Express + Prisma + PostgreSQL/SQLite
-- [ ] **Metrics Kit** (#41) - Monitoring, observability, Grafana
-- [ ] **Infra Kit** (#40) - Multi-cloud deployment toolkit
-- [ ] **Flutter Kit** (#39) - Super admin mobile app
-- [ ] **Database Seeding** - Enhanced seeding with faker
-- [ ] **Migration Rollback** - `deno task migrate:rollback`
-
-- [ ] **Relationship scaffolding** - `tstack relate articles comments`
-      (auto-setup foreign keys)
-- [ ] **API versioning** - `/api/v1`, `/api/v2` structure generator
-- [ ] **Pagination helper** - Built-in cursor/offset pagination utilities
-- [ ] **Rate limiting** - Simple middleware for API throttling
-- [ ] **CORS presets** - Quick configs for common scenarios
-- [ ] **Health checks** - Enhanced monitoring endpoints (DB, Redis, external
-      APIs)
-- [ ] **Background jobs** - Simple task queue (BullMQ integration)
-
-#### Awesome to Have (Game Changers)
-
-- [ ] **Live reload API docs** - Auto-generated Swagger UI from routes/DTOs
-- [ ] **Database GUI** - Built-in web interface for data management (better than
-      Drizzle Studio)
-- [ ] **API playground** - Interactive testing UI (like GraphiQL but for REST)
-- [ ] **Deployment presets** - One-command deploy to Railway, Fly.io, Render,
-      DigitalOcean
-- [ ] **Monitoring dashboard** - Real-time API metrics, logs, performance
-- [ ] **CLI plugins system** - `tstack plugin add stripe` for common
-      integrations
-- [ ] **Database backup/restore** - `tstack db:backup`, `tstack db:restore`
-- [ ] **Multi-tenancy support** - Tenant isolation helpers for SaaS apps
-
-#### Nice to Have (Polish)
-
-- [ ] **File upload helpers** - S3, Cloudinary, local storage abstractions
-- [ ] **Email templates** - Transactional email system (welcome, reset password,
-      etc.)
-- [ ] **WebSocket rooms** - Real-time features scaffolding
-- [ ] **Search integration** - Elasticsearch/Meilisearch helpers
-- [ ] **Cache layer** - Redis integration with decorators
-- [ ] **Testing utilities** - Test generators for entities
-- [ ] **i18n support** - Multi-language response helpers
-- [ ] **Audit logging** - Automatic change tracking for entities
-- [ ] **Database choice flag** - `--db=postgres|mysql|sqlite`
+See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
 
 ---
 
 ## Contributing
 
-Found a bug? Want to add a feature?
-
 1. Fork the repo
 2. Create a feature branch
 3. Submit a pull request
 
----
-
-## For Core Maintainers
-
-### Quick Reference: Managing Issues & Project Board
-
-#### Create a New Issue
-
-```bash
-# Feature request
-gh issue create \
-  --title "Feature: Your feature title" \
-  --label "type:feature,priority:medium,area:cli" \
-  --body "## Problem
-Describe the problem
-
-## Proposed Solution
-Your solution
-
-## Success Criteria
-- [ ] Item 1
-- [ ] Item 2"
-
-# Bug report
-gh issue create \
-  --title "Bug: Something is broken" \
-  --label "type:bug,priority:high" \
-  --body "## Bug Description
-What's broken
-
-## Steps to Reproduce
-1. Step 1
-2. Step 2
-
-## Expected Behavior
-What should happen
-
-## Actual Behavior
-What actually happens"
-```
-
-#### Add Issue to Project Board
-
-```bash
-# After creating an issue, add it to the project board
-gh project item-add 2 --owner desingh-rajan --url https://github.com/desingh-rajan/tstack-kit/issues/NUMBER
-```
-
-#### Available Labels
-
-- **Type**: `type:feature`, `type:bug`
-- **Priority**: `priority:high`, `priority:medium`, `priority:low`
-- **Area**: `area:cli`, `area:auth`, `area:docs`
-
-#### Working on an Issue
-
-```bash
-# 1. Assign to yourself
-gh issue edit NUMBER --add-assignee @me
-
-# 2. Create branch
-git checkout -b feature/NUMBER-short-description
-
-# 3. Work on it and commit
-git commit -m "feat: your changes
-
-Closes #NUMBER"
-
-# 4. Push and create PR
-git push origin feature/NUMBER-short-description
-gh pr create --title "feat: Your PR title" --body "Closes #NUMBER"
-
-# 5. Merge when ready
-gh pr merge --squash --delete-branch
-```
-
-#### View Project Board
-
-```bash
-# List all issues
-gh issue list
-
-# View issues assigned to you
-gh issue list --assignee @me
-
-# View project board
-open https://github.com/users/desingh-rajan/projects/2
-```
+See [issues](https://github.com/desingh-rajan/tstack-kit/issues) for open tasks.
 
 ---
 
-## Contributors
+## Support
 
-Thanks to all the amazing contributors who have helped build TStack Kit! 🎉
-
-<a href="https://github.com/desingh-rajan/tstack-kit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=desingh-rajan/tstack-kit" alt="Contributors" />
-</a>
-
-Want to contribute? Check out our [Contributing Guidelines](#contributing) above.
-
----
-
-## Supporters
-
-<a href="https://github.com/sponsors/desingh-rajan">
-  <img src="https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge" alt="Sponsor TStack Kit" />
-</a>
-
-TStack Kit is free and open source. If you find it useful, please consider supporting the project:
-
-- ⭐ **Star this repo** - It helps others discover TStack Kit
-- 🐛 **Report bugs** - Help us improve by [opening issues](https://github.com/desingh-rajan/tstack-kit/issues)
-- 💡 **Suggest features** - Share your ideas for making TStack better
-- 💖 **Sponsor** - Support ongoing development via [GitHub Sponsors](https://github.com/sponsors/desingh-rajan)
-
----
-
-## Used By
-
-_Are you using TStack Kit in your project? [Let us know!](https://github.com/desingh-rajan/tstack-kit/issues/new?title=Add%20my%20project%20to%20Used%20By&body=Project%20name:%0AProject%20URL:%0ADescription:)_
-
-<!-- Projects using TStack Kit will be listed here -->
+- **Star this repo** - Helps others discover TStack
+- **Report bugs** - [Open an issue](https://github.com/desingh-rajan/tstack-kit/issues)
+- **Sponsor** - [GitHub Sponsors](https://github.com/sponsors/desingh-rajan)
 
 ---
 
@@ -1095,16 +363,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-## Links
+**Links:** [GitHub](https://github.com/desingh-rajan/tstack-kit) | [Issues](https://github.com/desingh-rajan/tstack-kit/issues) | [Changelog](CHANGELOG.md)
 
-- **GitHub**: <https://github.com/desingh-rajan/tstack-kit>
-- **Issues**: <https://github.com/desingh-rajan/tstack-kit/issues>
-- **Deno**: <https://deno.land>
-- **Hono**: <https://hono.dev>
-- **Drizzle**: <https://orm.drizzle.team>
-
----
-
-Built with for the Deno community
-
-Clean, Fast, Simple.
+Built by [Desingh Rajan](https://desinghrajan.in)

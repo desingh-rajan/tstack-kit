@@ -29,9 +29,6 @@ node_modules/
 *.swo
 *~
 
-# GitHub (keep untracked)
-.github/
-
 # OS
 .DS_Store
 .DS_Store?
