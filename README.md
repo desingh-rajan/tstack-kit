@@ -7,9 +7,9 @@ SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL.
 
 **Project Evolution:**
 
-- ✅ **v1.0** - Starter Kit (Single API project scaffolding)
-- 🔥 **v1.2** - MVP Kit (Multi-project workspaces with API + Admin UI)
-- 🚀 **v2.0** - SaaS Kit (Add payments, mobile, infrastructure, deployment)
+- **v1.0** - Starter Kit (Single API project scaffolding)
+- **v1.2** - MVP Kit (Multi-project workspaces with API + Admin UI)
+- **v2.0** - SaaS Kit (Add payments, mobile, infrastructure, deployment)
 
 ---
 
@@ -19,11 +19,11 @@ SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL.
 
 **Current State (v1.2 - MVP Kit):**
 
-- 🎯 **Single Project**: `tstack create` - API scaffolding with auth, CRUD,
+- **Single Project**: `tstack create` - API scaffolding with auth, CRUD,
   testing
-- 🚀 **Workspaces**: `tstack create workspace` - Multi-project setup (API +
+- **Workspaces**: `tstack create workspace` - Multi-project setup (API +
   Admin UI + GitHub)
-- ⚡ **Entity Generation**: `tstack scaffold` - Complete MVC with tests in
+- **Entity Generation**: `tstack scaffold` - Complete MVC with tests in
   seconds
 
 **Think of it as:**
@@ -121,10 +121,10 @@ Built by [Desingh Rajan](https://desinghrajan.in) and
 
 - **Fast Setup** - Create new projects in seconds
 - **CLI Scaffolding** - Generate complete MVC entities with one command
-- 🔒 **Type-Safe** - Full TypeScript with Drizzle ORM
+- **Type-Safe** - Full TypeScript with Drizzle ORM
 - **PostgreSQL** - Production-ready from day 1
-- 🐳 **Docker Ready** - Includes docker-compose setup
-- 🎨 **Clean MVC** - Organized entity structure
+- **Docker Ready** - Includes docker-compose setup
+- **Clean MVC** - Organized entity structure
 - **Minimal** - No auth bloat, add what you need
 
 ---
@@ -880,10 +880,7 @@ Make sure to backup any important data before running these commands.
   - BaseController with declarative authorization
   - BaseRouteFactory and AdminRouteFactory for automatic route generation
   - Full test coverage (6 suites, 111 steps passing)
-
-**In Progress**
-
-- 🔄 **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
+- ✅ **Fresh Admin UI Kit** (#44) - Config-driven CRUD interface
 
 ### v1.3 (Q1 2026) - Infrastructure & Deployment
 
