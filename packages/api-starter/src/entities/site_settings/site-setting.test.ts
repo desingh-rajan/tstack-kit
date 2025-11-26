@@ -67,7 +67,6 @@ import { like } from "drizzle-orm";
 // ============================================================================
 
 let superadminToken = "";
-const _superadminUserId = 0;
 let regularUserToken = "";
 let testSettingId = 0;
 
@@ -158,7 +157,6 @@ describe("Site Settings API", () => {
       "superadmin",
     );
     superadminToken = superadmin.token;
-    superadminUserId = superadmin.userId;
 
     // Create regular user
     const regular = await createTestUser(

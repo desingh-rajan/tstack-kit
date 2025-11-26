@@ -49,7 +49,6 @@ import { like } from "drizzle-orm";
 // ============================================================================
 
 let superadminToken = "";
-const _superadminUserId = 0;
 let testSettingId = 0;
 
 // ============================================================================
@@ -131,7 +130,6 @@ describe("Site Settings Admin Panel API", () => {
       "superadmin",
     );
     superadminToken = superadmin.token;
-    superadminUserId = superadmin.userId;
   });
 
   afterAll(async () => {
