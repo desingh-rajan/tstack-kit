@@ -1,6 +1,7 @@
 # TStack Kit
 
 [![CI](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/desingh-rajan/tstack-kit/graph/badge.svg)](https://codecov.io/gh/desingh-rajan/tstack-kit)
 [![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 

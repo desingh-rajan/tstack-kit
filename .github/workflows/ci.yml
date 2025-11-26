@@ -49,7 +49,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deno-
 
-      - name: Run CLI tests
+      - name: Run CLI tests with coverage
         working-directory: packages/cli
         env:
           PGHOST: localhost
@@ -57,7 +57,20 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: password
           TSTACK_CLI_TEST: "true"
-        run: deno task test
+        run: deno task test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: packages/cli
+        run: deno coverage coverage --lcov --output=coverage.lcov
+
+      - name: Upload CLI coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/cli/coverage.lcov
+          flags: cli
+          name: cli-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-api-starter:
     name: API Starter Tests
@@ -96,14 +109,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deno-
 
-      - name: Run API Starter tests
+      - name: Run API Starter tests with coverage
         working-directory: packages/api-starter
         env:
           PGHOST: localhost
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: password
-        run: deno task test
+        run: deno task test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: packages/api-starter
+        run: deno coverage coverage --lcov --output=coverage.lcov
+
+      - name: Upload API Starter coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/api-starter/coverage.lcov
+          flags: api-starter
+          name: api-starter-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-admin:
     name: Admin Package Tests
@@ -142,14 +168,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deno-
 
-      - name: Run Admin tests
+      - name: Run Admin tests with coverage
         working-directory: packages/admin
         env:
           PGHOST: localhost
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: password
-        run: deno task test
+        run: deno task test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: packages/admin
+        run: deno coverage coverage --lcov --output=coverage.lcov
+
+      - name: Upload Admin coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: packages/admin/coverage.lcov
+          flags: admin
+          name: admin-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   lint:
     name: Lint & Format
