@@ -1,14 +1,20 @@
 # Plan: Contact Form with Email & Job Queue Support
 
-This plan addresses **Issue #11** (Contact/Enquiry Form Module) while also implementing the foundational infrastructure for **email service** (Issue #10) and **background jobs** (Issue #9) to support Rails-like `deliver_later` patterns.
+This plan addresses **Issue #11** (Contact/Enquiry Form Module) while also
+implementing the foundational infrastructure for **email service** (Issue #10)
+and **background jobs** (Issue #9) to support Rails-like `deliver_later`
+patterns.
 
 ## Overview
 
 We're building three interconnected systems:
 
-1. **Email Service** - Provider-based abstraction supporting SMTP (default), Resend, SendGrid, SES
-2. **Job Queue System** - Redis-backed queue for async operations with Rails-like `deliver_later` API
-3. **Contact/Enquiry Form** - Production-ready module with anti-spam, admin dashboard, and email notifications
+1. **Email Service** - Provider-based abstraction supporting SMTP (default),
+   Resend, SendGrid, SES
+2. **Job Queue System** - Redis-backed queue for async operations with
+   Rails-like `deliver_later` API
+3. **Contact/Enquiry Form** - Production-ready module with anti-spam, admin
+   dashboard, and email notifications
 
 ## Implementation Steps
 
@@ -20,14 +26,16 @@ We're building three interconnected systems:
 
 - **`types.ts`** - Core interfaces and types
 
-  - `EmailOptions` interface (from, to, subject, html, text, replyTo, attachments)
+  - `EmailOptions` interface (from, to, subject, html, text, replyTo,
+    attachments)
   - `EmailResponse` interface (success, messageId, error)
   - `EmailProvider` abstract class with `send()` and `isConfigured()` methods
 
 - **`providers/smtp.provider.ts`** - Default SMTP implementation
 
   - Use `https://deno.land/x/smtp@v0.7.0/mod.ts`
-  - Read env vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SECURE`
+  - Read env vars: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`,
+    `SMTP_SECURE`
   - Support both TLS and non-TLS connections
   - Implement connection pooling for performance
 
@@ -49,13 +57,15 @@ We're building three interconnected systems:
 
 - **`email.service.ts`** - Main service facade
 
-  - Auto-select provider based on `EMAIL_PROVIDER` env var (smtp|resend|sendgrid|ses)
+  - Auto-select provider based on `EMAIL_PROVIDER` env var
+    (smtp|resend|sendgrid|ses)
   - Helper methods: `send()`, `sendHTML()`, `sendText()`
   - Export singleton instance: `emailService`
 
 - **`templates/`** - Email templates
   - `welcome.template.ts` - Welcome email for new users
-  - `contact-admin-notification.template.ts` - Admin notification for new enquiries
+  - `contact-admin-notification.template.ts` - Admin notification for new
+    enquiries
   - `contact-confirmation.template.ts` - Auto-reply to enquiry submitters
   - Template functions return `{ subject, html, text }`
 
@@ -82,7 +92,8 @@ We're building three interconnected systems:
 
   - `enqueue(queue: string, job: any)` - Add job to queue
   - `dequeue(queue: string)` - Pop job from queue
-  - `process(queue: string, handler: Function)` - Worker loop with error handling
+  - `process(queue: string, handler: Function)` - Worker loop with error
+    handling
   - Support job priorities, retry logic, and dead letter queue
 
 - **`worker.ts`** - Background job processor
@@ -190,8 +201,10 @@ export const redis = await connect({
 
 - **`enquiry.service.ts`** - Business logic
 
-  - `create()` - Save enquiry, enqueue admin email, optionally enqueue auto-reply
-  - `list()` - Admin listing with filters (status, date range), pagination, sorting
+  - `create()` - Save enquiry, enqueue admin email, optionally enqueue
+    auto-reply
+  - `list()` - Admin listing with filters (status, date range), pagination,
+    sorting
   - `getById()` - Single enquiry details
   - `updateStatus()` - Change status (auto-update readAt, repliedAt timestamps)
   - `updateNotes()` - Add admin notes
@@ -220,7 +233,7 @@ export const redis = await connect({
   router.post(
     "/api/contact",
     rateLimit({ windowMs: 600000, maxRequests: 3 }), // 3 per 10 min
-    EnquiryController.create
+    EnquiryController.create,
   );
 
   export default router;
@@ -241,7 +254,7 @@ export const redis = await connect({
   router.get("/ts-admin/enquiries/:id", EnquiryController.getById);
   router.patch(
     "/ts-admin/enquiries/:id/status",
-    EnquiryController.updateStatus
+    EnquiryController.updateStatus,
   );
   router.patch("/ts-admin/enquiries/:id/notes", EnquiryController.updateNotes);
   router.delete("/ts-admin/enquiries/:id", EnquiryController.delete);
@@ -276,8 +289,7 @@ export const redis = await connect({
     maxRequests: number;
   }) => {
     return async (c: Context, next: Next) => {
-      const ip =
-        c.req.header("x-forwarded-for") ||
+      const ip = c.req.header("x-forwarded-for") ||
         c.req.header("x-real-ip") ||
         "unknown";
       const key = `rate_limit:${ip}:${c.req.path}`;
@@ -294,7 +306,7 @@ export const redis = await connect({
             success: false,
             error: "Too many requests. Please try again later.",
           },
-          429
+          429,
         );
       }
 
@@ -390,7 +402,7 @@ services:
       - REDIS_PORT=6379
 
   db:
-    # ... existing postgres config
+  # ... existing postgres config
 
   redis:
     image: redis:7-alpine
@@ -465,22 +477,24 @@ tstack create my-api --with-email --with-jobs --with-contact-form
 
 ```typescript
 Logger.code(
-  "--with-email              Add email service support (default: SMTP)"
+  "--with-email              Add email service support (default: SMTP)",
 );
 Logger.code(
-  "--email-provider <name>   Email provider (smtp|resend|sendgrid|ses)"
+  "--email-provider <name>   Email provider (smtp|resend|sendgrid|ses)",
 );
 Logger.code("--with-jobs               Add Redis job queue support");
 Logger.code(
-  "--with-contact-form       Add contact form with email notifications"
+  "--with-contact-form       Add contact form with email notifications",
 );
 ```
 
 **Conditional file generation:**
 
 - If `--with-email`: Copy email service files, add dependencies, update env vars
-- If `--with-jobs`: Copy job queue files, add Redis to docker-compose, add dependencies
-- If `--with-contact-form`: Copy enquiry entity files, add rate limiting middleware
+- If `--with-jobs`: Copy job queue files, add Redis to docker-compose, add
+  dependencies
+- If `--with-contact-form`: Copy enquiry entity files, add rate limiting
+  middleware
 
 ---
 
@@ -503,7 +517,9 @@ Logger.code(
 - **Pros:** Lightweight starter, no Redis requirement by default
 - **Cons:** More setup steps, inconsistent project structures
 
-**Recommendation:** Ship email + contact form by default, make job queue optional via `--with-jobs` flag. This balances "batteries included" with "minimal footprint".
+**Recommendation:** Ship email + contact form by default, make job queue
+optional via `--with-jobs` flag. This balances "batteries included" with
+"minimal footprint".
 
 ### 2. Email Provider Strategy
 
@@ -520,7 +536,8 @@ Logger.code(
 - SendGrid: 100 emails/day free (enterprise standard)
 - AWS SES: 62,000 emails/month free (if hosted on AWS)
 
-**Recommendation:** Default to SMTP, document Gmail setup for quick start, provide clear migration path to external providers for production.
+**Recommendation:** Default to SMTP, document Gmail setup for quick start,
+provide clear migration path to external providers for production.
 
 ### 3. Job Queue: Optional or Always On?
 
@@ -538,7 +555,8 @@ Logger.code(
 - Add job queue when needed
 - **Cons:** Two different email patterns (sync vs async)
 
-**Recommendation:** Include Redis in docker-compose by default, but make job queue **optional via env flag**: `EMAIL_ASYNC=true/false`. This allows:
+**Recommendation:** Include Redis in docker-compose by default, but make job
+queue **optional via env flag**: `EMAIL_ASYNC=true/false`. This allows:
 
 - Development: Synchronous emails (no Redis required)
 - Production: Async emails via job queue (Redis required)
@@ -560,7 +578,8 @@ Logger.code(
 - Learning curve for customization
 - Extra dependency
 
-**Recommendation:** Start with simple string templates (Rails approach with ERB translates well to template literals). Add template engine in v2 if needed.
+**Recommendation:** Start with simple string templates (Rails approach with ERB
+translates well to template literals). Add template engine in v2 if needed.
 
 ### 5. Testing Strategy
 
@@ -640,17 +659,18 @@ Logger.code(
 
 ## Success Criteria
 
-✅ Send emails via SMTP without external dependencies  
-✅ Easy switch to Resend/SendGrid via env variable  
-✅ Background job queue with Redis  
-✅ Rails-like `deliver_later()` API  
-✅ Production-ready contact form with anti-spam  
-✅ Admin dashboard for enquiry management  
-✅ Rate limiting with Redis  
-✅ Clean abstraction (provider-agnostic API)  
-✅ Production-ready error handling  
-✅ Documented and tested  
-✅ Save developers $5-15 in AI costs per project by eliminating boilerplate prompts
+✅ Send emails via SMTP without external dependencies\
+✅ Easy switch to Resend/SendGrid via env variable\
+✅ Background job queue with Redis\
+✅ Rails-like `deliver_later()` API\
+✅ Production-ready contact form with anti-spam\
+✅ Admin dashboard for enquiry management\
+✅ Rate limiting with Redis\
+✅ Clean abstraction (provider-agnostic API)\
+✅ Production-ready error handling\
+✅ Documented and tested\
+✅ Save developers $5-15 in AI costs per project by eliminating boilerplate
+prompts
 
 ---
 
@@ -659,14 +679,18 @@ Logger.code(
 - [Issue #10: Email Service Integration](https://github.com/desingh-rajan/tstack-kit/issues/10)
 - [Issue #9: Redis Integration for Caching and Job Queue](https://github.com/desingh-rajan/tstack-kit/issues/9)
 - [Issue #11: Contact/Enquiry Form Module](https://github.com/desingh-rajan/tstack-kit/issues/11)
-- [Issue #8: Site Configuration Management](https://github.com/desingh-rajan/tstack-kit/issues/8) (completed, can be used for email settings)
+- [Issue #8: Site Configuration Management](https://github.com/desingh-rajan/tstack-kit/issues/8)
+  (completed, can be used for email settings)
 
 ---
 
 ## Notes
 
-- This plan implements three features (email, jobs, contact form) that work together but can be developed independently
+- This plan implements three features (email, jobs, contact form) that work
+  together but can be developed independently
 - Email service is the foundation; job queue and contact form build on top
-- Design follows Rails conventions (`deliver_later`, `deliver_now`) familiar to many developers
-- Provider pattern allows easy extension (add new email providers, new job types)
+- Design follows Rails conventions (`deliver_later`, `deliver_now`) familiar to
+  many developers
+- Provider pattern allows easy extension (add new email providers, new job
+  types)
 - All features are optional via CLI flags, keeping the starter flexible

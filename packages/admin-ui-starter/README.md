@@ -2,7 +2,8 @@
 
 ## DRY, Config-Driven CRUD System for Fresh 2.2.0
 
-This is the **admin-ui-starter** package for TStack Kit - a production-ready admin panel framework built with:
+This is the **admin-ui-starter** package for TStack Kit - a production-ready
+admin panel framework built with:
 
 - **Fresh 2.2.0** (Latest Deno framework)
 - **DaisyUI 5.5.5** (Tailwind component library)

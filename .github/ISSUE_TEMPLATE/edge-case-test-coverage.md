@@ -1,14 +1,16 @@
 ---
 name: Add Comprehensive Edge Case Test Coverage
 about: Improve test coverage for project creation edge cases and error scenarios
-title: '[TEST] Add comprehensive edge case and error scenario tests for project creation'
+title: "[TEST] Add comprehensive edge case and error scenario tests for project creation"
 labels: testing, enhancement, good first issue
-assignees: ''
+assignees: ""
 ---
 
 ## Description
 
-The current test suite covers the happy path and basic scenarios for project creation (API and Admin UI). We need to add comprehensive tests for edge cases, error handling, and failure scenarios to ensure robustness.
+The current test suite covers the happy path and basic scenarios for project
+creation (API and Admin UI). We need to add comprehensive tests for edge cases,
+error handling, and failure scenarios to ensure robustness.
 
 ## Current Coverage
 
@@ -92,13 +94,14 @@ The current test suite covers the happy path and basic scenarios for project cre
 **Test Structure:**
 
 - Group tests by category (validation, filesystem, network, etc.)
-- Use descriptive test names following pattern: `createProject - [scenario]: [expected behavior]`
+- Use descriptive test names following pattern:
+  `createProject - [scenario]: [expected behavior]`
 - Add appropriate `sanitizeResources` and timeout options
 
 **Helper Functions Needed:**
 
 - `mockNetworkFailure()` - Simulate network errors
-- `createReadonlyDirectory()` - Setup permission-denied scenarios  
+- `createReadonlyDirectory()` - Setup permission-denied scenarios
 - `corruptTemplate()` - Test error recovery from bad templates
 - `fillDisk()` - Simulate disk-full conditions (careful with this!)
 
@@ -110,7 +113,8 @@ The current test suite covers the happy path and basic scenarios for project cre
 
 ## Related Files
 
-- `packages/cli/src/commands/create.test.ts` - Main test file (add TODO reference)
+- `packages/cli/src/commands/create.test.ts` - Main test file (add TODO
+  reference)
 - `packages/cli/src/commands/create-admin-ui.test.ts` - Admin UI tests
 - `packages/cli/src/commands/creators/base-creator.ts` - Validation logic
 - `packages/cli/src/commands/creators/api-creator.ts` - Database logic

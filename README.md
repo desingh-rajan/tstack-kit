@@ -4,9 +4,12 @@
 [![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 
-> **A growing SaaS toolkit that scales from day zero.** Ship products, not boilerplate.
+> **A growing SaaS toolkit that scales from day zero.** Ship products, not
+> boilerplate.
 
-TStack Kit is a full-stack toolkit for building type-safe SaaS applications with Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API + Admin UI workspaces in minutes.
+TStack Kit is a full-stack toolkit for building type-safe SaaS applications with
+Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API + Admin UI
+workspaces in minutes.
 
 **What you can build:**
 
@@ -88,16 +91,16 @@ Entity automatically appears in Admin UI sidebar.
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Workspace Management** | Create/destroy multi-project workspaces |
-| **GitHub Integration** | Auto-create repos with `--github-org` flag |
-| **Base Abstractions** | 70-80% less code with BaseService/BaseController |
-| **Admin UI** | Config-driven CRUD with Fresh + DaisyUI |
-| **Type-Safe** | Full TypeScript from database to API |
-| **JWT Auth** | Optional authentication system included |
-| **PostgreSQL** | Three-database setup (dev/test/prod) |
-| **Docker Ready** | docker-compose included |
+| Feature                  | Description                                      |
+| ------------------------ | ------------------------------------------------ |
+| **Workspace Management** | Create/destroy multi-project workspaces          |
+| **GitHub Integration**   | Auto-create repos with `--github-org` flag       |
+| **Base Abstractions**    | 70-80% less code with BaseService/BaseController |
+| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI          |
+| **Type-Safe**            | Full TypeScript from database to API             |
+| **JWT Auth**             | Optional authentication system included          |
+| **PostgreSQL**           | Three-database setup (dev/test/prod)             |
+| **Docker Ready**         | docker-compose included                          |
 
 ---
 
@@ -179,14 +182,14 @@ my-project-admin-ui/
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Runtime | Deno 2.0+ |
-| Framework | Hono |
-| ORM | Drizzle |
-| Database | PostgreSQL 16+ |
-| Validation | Zod |
-| Admin UI | Fresh + Preact + DaisyUI |
+| Layer      | Technology               |
+| ---------- | ------------------------ |
+| Runtime    | Deno 2.0+                |
+| Framework  | Hono                     |
+| ORM        | Drizzle                  |
+| Database   | PostgreSQL 16+           |
+| Validation | Zod                      |
+| Admin UI   | Fresh + Preact + DaisyUI |
 
 ---
 
@@ -251,7 +254,8 @@ export class ProductController extends BaseController<typeof productService> {
 
 **What you get:**
 
-- Lifecycle hooks: `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`, `afterDelete`
+- Lifecycle hooks: `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`,
+  `beforeDelete`, `afterDelete`
 - Declarative authorization with ownership checks
 - Auto-generated CRUD routes
 - Full TypeScript generics
@@ -274,28 +278,33 @@ SUPERADMIN_PASSWORD=your-password
 
 ## Why TStack?
 
-**The Problem:** Every new backend project means hours spent on folder structure, CRUD boilerplate, database config, validation, error handling - the same patterns over and over.
+**The Problem:** Every new backend project means hours spent on folder
+structure, CRUD boilerplate, database config, validation, error handling - the
+same patterns over and over.
 
-**The Solution:** TStack generates all of this in seconds. Focus on business logic, not plumbing.
+**The Solution:** TStack generates all of this in seconds. Focus on business
+logic, not plumbing.
 
-| Without TStack | With TStack |
-|---------------|-------------|
-| 2-4 hours setup per project | Minutes |
-| Copy-paste CRUD patterns | `tstack scaffold entity` |
-| Manual route registration | Auto-discovery |
-| Repetitive admin panels | Config-driven CRUD UI |
+| Without TStack              | With TStack              |
+| --------------------------- | ------------------------ |
+| 2-4 hours setup per project | Minutes                  |
+| Copy-paste CRUD patterns    | `tstack scaffold entity` |
+| Manual route registration   | Auto-discovery           |
+| Repetitive admin panels     | Config-driven CRUD UI    |
 
 ### AI Prompt Savings
 
-If you're using AI assistants to write boilerplate, TStack saves significant time and money:
+If you're using AI assistants to write boilerplate, TStack saves significant
+time and money:
 
-| Task | Manual AI Prompts | With TStack | Savings |
-|------|-------------------|-------------|--------|
-| Project setup | 50-100 prompts | 1 command | ~$5-15 |
-| Entity scaffold (each) | 15-30 prompts | 1 command | ~$2-5 |
-| 10-entity project | 200-400 prompts | 11 commands | ~$65-165 |
+| Task                   | Manual AI Prompts | With TStack | Savings  |
+| ---------------------- | ----------------- | ----------- | -------- |
+| Project setup          | 50-100 prompts    | 1 command   | ~$5-15   |
+| Entity scaffold (each) | 15-30 prompts     | 1 command   | ~$2-5    |
+| 10-entity project      | 200-400 prompts   | 11 commands | ~$65-165 |
 
-*Estimates based on typical AI coding assistant usage at $0.10-0.25 per prompt cycle.*
+_Estimates based on typical AI coding assistant usage at $0.10-0.25 per prompt
+cycle._
 
 ### Good Fit
 
@@ -352,7 +361,8 @@ See [issues](https://github.com/desingh-rajan/tstack-kit/issues) for open tasks.
 ## Support
 
 - **Star this repo** - Helps others discover TStack
-- **Report bugs** - [Open an issue](https://github.com/desingh-rajan/tstack-kit/issues)
+- **Report bugs** -
+  [Open an issue](https://github.com/desingh-rajan/tstack-kit/issues)
 - **Sponsor** - [GitHub Sponsors](https://github.com/sponsors/desingh-rajan)
 
 ---
@@ -363,6 +373,8 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-**Links:** [GitHub](https://github.com/desingh-rajan/tstack-kit) | [Issues](https://github.com/desingh-rajan/tstack-kit/issues) | [Changelog](CHANGELOG.md)
+**Links:** [GitHub](https://github.com/desingh-rajan/tstack-kit) |
+[Issues](https://github.com/desingh-rajan/tstack-kit/issues) |
+[Changelog](CHANGELOG.md)
 
 Built by [Desingh Rajan](https://desinghrajan.in)

@@ -3,7 +3,8 @@
 All notable changes to TStack Kit will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
@@ -30,7 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Highlights
 
-Major feature release introducing the **Admin UI Starter** package, complete workspace management with GitHub integration, and significant improvements to the CLI and API starter templates.
+Major feature release introducing the **Admin UI Starter** package, complete
+workspace management with GitHub integration, and significant improvements to
+the CLI and API starter templates.
 
 ### Added
 
@@ -46,12 +49,15 @@ Major feature release introducing the **Admin UI Starter** package, complete wor
 
 #### Workspace Management
 
-- `tstack create workspace <name>` - Create full-stack workspaces with API + Admin UI
+- `tstack create workspace <name>` - Create full-stack workspaces with API +
+  Admin UI
 - `tstack destroy workspace <name>` - Clean destruction of entire workspaces
 - GitHub Integration - Auto-create repos with `--github-org` flag
-- Deno KV Project Tracking - Track all projects with status lifecycle (active/destroyed)
+- Deno KV Project Tracking - Track all projects with status lifecycle
+  (active/destroyed)
 - `tstack list` - List all tracked projects with status, type, and path
-- `--status` filter - Filter list by project status (`active`, `destroyed`, `all`)
+- `--status` filter - Filter list by project status (`active`, `destroyed`,
+  `all`)
 
 #### CLI Rebrand and UX
 
@@ -63,7 +69,8 @@ Major feature release introducing the **Admin UI Starter** package, complete wor
 
 - `BaseController` - Generic CRUD controller with auth, pagination, search, sort
 - `BaseService` - Generic service layer with Drizzle ORM integration
-- Route factories - `createPublicRoutes()` and `createAdminRoutes()` for quick setup
+- Route factories - `createPublicRoutes()` and `createAdminRoutes()` for quick
+  setup
 - Reduces boilerplate by ~70% for new entities
 
 #### Auto-Sidebar Updates
@@ -75,20 +82,27 @@ Major feature release introducing the **Admin UI Starter** package, complete wor
 
 #### CLI
 
-- Fixed workspace destroy path resolution - Folders now properly deleted when running from different directories (relative vs absolute path fix)
-- Fixed project filtering - Destroyed projects no longer appear in `tstack list` by default
-- Fixed database cleanup patterns - Test databases now match exact patterns to avoid accidental deletion
+- Fixed workspace destroy path resolution - Folders now properly deleted when
+  running from different directories (relative vs absolute path fix)
+- Fixed project filtering - Destroyed projects no longer appear in `tstack list`
+  by default
+- Fixed database cleanup patterns - Test databases now match exact patterns to
+  avoid accidental deletion
 - Renamed `TONYSTACK_TEST_DB` to `TSTACK_TEST_DB` - Consistent naming
 
 #### API Starter
 
-- Fixed migrations strategy - Template now ships WITHOUT migrations; developers generate their own
-- Fixed test database cleanup - Auto-generated migrations are tracked and cleaned up properly
-- Skip database operations for admin-ui - No DB drops when destroying admin-ui projects
+- Fixed migrations strategy - Template now ships WITHOUT migrations; developers
+  generate their own
+- Fixed test database cleanup - Auto-generated migrations are tracked and
+  cleaned up properly
+- Skip database operations for admin-ui - No DB drops when destroying admin-ui
+  projects
 
 #### Tests
 
-- Trustworthy tests - Use `destroyProject` properly, keep destroyed entries for tracking
+- Trustworthy tests - Use `destroyProject` properly, keep destroyed entries for
+  tracking
 - Test isolation - Each test uses unique temp directories and databases
 
 ### Changed (Breaking)
@@ -122,17 +136,21 @@ Major feature release introducing the **Admin UI Starter** package, complete wor
 
 ### Package Versions
 
-| Package | Version | Notes |
-|---------|---------|-------|
-| `@tonystack/cli` | 1.2.0 | CLI tool |
-| `@tonystack/api-starter` | 1.2.0 | API template (renamed from starter) |
-| `@tonystack/admin-ui-starter` | 1.2.0 | NEW - Admin UI template |
-| `@tstack/admin` | 2.0.1 | ORM/Core (independent versioning) |
+| Package                       | Version | Notes                               |
+| ----------------------------- | ------- | ----------------------------------- |
+| `@tonystack/cli`              | 1.2.0   | CLI tool                            |
+| `@tonystack/api-starter`      | 1.2.0   | API template (renamed from starter) |
+| `@tonystack/admin-ui-starter` | 1.2.0   | NEW - Admin UI template             |
+| `@tstack/admin`               | 2.0.1   | ORM/Core (independent versioning)   |
 
 ### Known Issues
 
-- **Deno Formatter Corruption** - VS Code's `formatOnSave` with Deno formatter can corrupt test files containing multi-line `assertEquals()` calls. Workaround: Disable `formatOnSave` for `*.test.ts` files. See [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)
-- **GitHub Integration** - Requires `GITHUB_TOKEN` or `GH_TOKEN` environment variable. Organization repos require appropriate permissions.
+- **Deno Formatter Corruption** - VS Code's `formatOnSave` with Deno formatter
+  can corrupt test files containing multi-line `assertEquals()` calls.
+  Workaround: Disable `formatOnSave` for `*.test.ts` files. See
+  [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)
+- **GitHub Integration** - Requires `GITHUB_TOKEN` or `GH_TOKEN` environment
+  variable. Organization repos require appropriate permissions.
 
 ### Upgrade Guide
 
@@ -162,7 +180,9 @@ From v1.1.x:
 
 ## [1.1.3] - 2025-11-20
 
-Previous stable release. See [GitHub Compare](https://github.com/desingh-rajan/tstack-kit/compare/v1.1.3...v1.2.0) for full diff.
+Previous stable release. See
+[GitHub Compare](https://github.com/desingh-rajan/tstack-kit/compare/v1.1.3...v1.2.0)
+for full diff.
 
 ---
 

@@ -2,7 +2,8 @@
 
 ## Deno Formatter Corruption in Test Files
 
-**Issue:** VS Code's `formatOnSave` with Deno formatter can corrupt test files containing multi-line `assertEquals()` calls.
+**Issue:** VS Code's `formatOnSave` with Deno formatter can corrupt test files
+containing multi-line `assertEquals()` calls.
 
 **Symptoms:**
 
@@ -21,16 +22,13 @@ assertEquals(
 );
 
 // After Deno fmt corrupts it:
-        true,
-      
-      assertEquals(
-        
-        true,
-      
-        await Deno.
-        stat(path).then(() => true).catch(() => false),
-        true,
-      );
+true,
+  assertEquals(
+    true,
+    await Deno
+      .stat(path).then(() => true).catch(() => false),
+    true,
+  );
 ```
 
 **Root Cause:** Deno fmt bug when handling complex multi-line assertions.

@@ -36,7 +36,7 @@ Deno.test("listTrackedProjects - should show created projects", async () => {
 
     // Find our test project
     const ourProject = projects.find(
-      (p) => p.folderName === `${projectName}-api`
+      (p) => p.folderName === `${projectName}-api`,
     );
 
     assertExists(ourProject, "Should find our test project");
@@ -93,30 +93,30 @@ Deno.test({
         (p) =>
           p.folderName === `list-multi-one-${timestamp}-api` ||
           p.folderName === `list-multi-two-${timestamp}-api` ||
-          p.folderName === `list-multi-ws-${timestamp}-api`
+          p.folderName === `list-multi-ws-${timestamp}-api`,
       );
 
       assertEquals(
         ourProjects.length >= 3,
         true,
-        "Should have at least 3 test projects"
+        "Should have at least 3 test projects",
       );
 
       // Verify types
       const apiProjects = ourProjects.filter((p) => p.type === "api");
       const workspaceProjects = ourProjects.filter(
-        (p) => p.type === "workspace"
+        (p) => p.type === "workspace",
       );
 
       assertEquals(
         apiProjects.length,
         3,
-        "Should have 3 API projects (2 standalone + 1 from workspace)"
+        "Should have 3 API projects (2 standalone + 1 from workspace)",
       );
       assertEquals(
         workspaceProjects.length,
         0,
-        "Workspace itself is not tracked, only its projects"
+        "Workspace itself is not tracked, only its projects",
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -169,10 +169,10 @@ Deno.test(
 
       // Find our test projects
       const sortTestOld = projects.find(
-        (p) => p.folderName === "sort-test-old-api"
+        (p) => p.folderName === "sort-test-old-api",
       );
       const sortTestNew = projects.find(
-        (p) => p.folderName === "sort-test-new-api"
+        (p) => p.folderName === "sort-test-new-api",
       );
 
       assertExists(sortTestOld, "Should find old project");
@@ -182,21 +182,21 @@ Deno.test(
       assertEquals(
         sortTestNew!.createdAt > sortTestOld!.createdAt,
         true,
-        "Newer project should have later timestamp"
+        "Newer project should have later timestamp",
       );
 
       // Verify sorting (newest first)
       const ourProjects = projects.filter(
         (p) =>
           p.folderName === "sort-test-old-api" ||
-          p.folderName === "sort-test-new-api"
+          p.folderName === "sort-test-new-api",
       );
 
       if (ourProjects.length === 2) {
         assertEquals(
           ourProjects[0].createdAt >= ourProjects[1].createdAt,
           true,
-          "Should be sorted by createdAt descending"
+          "Should be sorted by createdAt descending",
         );
       }
     } finally {
@@ -213,7 +213,7 @@ Deno.test(
       }).catch(() => {});
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test(
@@ -232,7 +232,7 @@ Deno.test(
 
       const projects = await listProjects();
       const ourProject = projects.find(
-        (p) => p.folderName === `${projectName}-api`
+        (p) => p.folderName === `${projectName}-api`,
       );
 
       assertExists(ourProject, "Should find our project");
@@ -253,7 +253,7 @@ Deno.test(
       }).catch(() => {});
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test(
@@ -274,7 +274,8 @@ Deno.test(
       // Verify it appears in the list
       let projects = await listProjects();
       let ourProject = projects.find(
-        (p) => p.folderName === `${projectName}-api` && p.status !== "destroyed"
+        (p) =>
+          p.folderName === `${projectName}-api` && p.status !== "destroyed",
       );
       assertExists(ourProject, "Should find created project");
       assertEquals(ourProject!.status, "created");
@@ -289,29 +290,30 @@ Deno.test(
       // Verify it's marked as destroyed but still in KV
       projects = await listProjects();
       const allProjects = projects.filter(
-        (p) => p.folderName === `${projectName}-api`
+        (p) => p.folderName === `${projectName}-api`,
       );
       assertEquals(allProjects.length, 1, "Project should still be in KV");
       assertEquals(
         allProjects[0].status,
         "destroyed",
-        "Status should be destroyed"
+        "Status should be destroyed",
       );
 
       // Verify it doesn't appear in filtered list (status !== 'destroyed')
       const activeProjects = projects.filter(
-        (p) => p.folderName === `${projectName}-api` && p.status !== "destroyed"
+        (p) =>
+          p.folderName === `${projectName}-api` && p.status !== "destroyed",
       );
       assertEquals(
         activeProjects.length,
         0,
-        "Destroyed project should not appear in active list"
+        "Destroyed project should not appear in active list",
       );
     } finally {
       await cleanupTempDir(tempDir);
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test("listTrackedProjects - should filter by status flag", async () => {
@@ -346,28 +348,28 @@ Deno.test("listTrackedProjects - should filter by status flag", async () => {
     let projects = await listProjects();
     let filtered = projects.filter((p) => p.status !== "destroyed");
     let ourActive = filtered.filter(
-      (p) => p.folderName === `${activeProject}-api`
+      (p) => p.folderName === `${activeProject}-api`,
     );
     let ourDestroyed = filtered.filter(
-      (p) => p.folderName === `${destroyedProject}-api`
+      (p) => p.folderName === `${destroyedProject}-api`,
     );
     assertEquals(ourActive.length, 1, "Should find active project");
     assertEquals(
       ourDestroyed.length,
       0,
-      "Should NOT find destroyed project by default"
+      "Should NOT find destroyed project by default",
     );
 
     // Test: Get only destroyed projects
     projects = await listProjects();
     filtered = projects.filter((p) => p.status === "destroyed");
     ourDestroyed = filtered.filter(
-      (p) => p.folderName === `${destroyedProject}-api`
+      (p) => p.folderName === `${destroyedProject}-api`,
     );
     assertEquals(
       ourDestroyed.length,
       1,
-      "Should find destroyed project when filtering"
+      "Should find destroyed project when filtering",
     );
     assertEquals(ourDestroyed[0].status, "destroyed");
 
@@ -375,7 +377,7 @@ Deno.test("listTrackedProjects - should filter by status flag", async () => {
     projects = await listProjects();
     ourActive = projects.filter((p) => p.folderName === `${activeProject}-api`);
     ourDestroyed = projects.filter(
-      (p) => p.folderName === `${destroyedProject}-api`
+      (p) => p.folderName === `${destroyedProject}-api`,
     );
     assertEquals(ourActive.length, 1, "Should find active in 'all'");
     assertEquals(ourDestroyed.length, 1, "Should find destroyed in 'all'");
