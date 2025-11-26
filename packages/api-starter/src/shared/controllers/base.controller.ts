@@ -142,6 +142,11 @@ export abstract class BaseController<
 
     // Get validated data from middleware (set by validate() middleware)
     const validatedData = c.get("validatedData");
+    if (validatedData === undefined) {
+      throw new Error(
+        "validatedData not set. Ensure validate() middleware is applied to this route.",
+      );
+    }
     const entity = await this.service.create(validatedData);
 
     return c.json(
@@ -168,6 +173,11 @@ export abstract class BaseController<
 
     // Get validated data from middleware (set by validate() middleware)
     const validatedData = c.get("validatedData");
+    if (validatedData === undefined) {
+      throw new Error(
+        "validatedData not set. Ensure validate() middleware is applied to this route.",
+      );
+    }
     const updatedEntity = await this.service.update(id, validatedData);
 
     if (!updatedEntity) {

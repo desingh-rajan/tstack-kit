@@ -137,6 +137,20 @@ export async function cleanupTestDatabases(): Promise<{
 }
 
 async function dropDatabase(dbName: string): Promise<boolean> {
+  // Validate database name matches expected test patterns before dropping
+  const isTestDatabase = TEST_PATTERNS.some((pattern) => {
+    // Convert SQL LIKE pattern to regex (replace % with .*)
+    const regexPattern = pattern.replace(/%/g, ".*");
+    return new RegExp(`^${regexPattern}$`).test(dbName);
+  });
+
+  if (!isTestDatabase) {
+    console.error(
+      `[ERROR] Refusing to drop "${dbName}" - does not match test patterns`,
+    );
+    return false;
+  }
+
   try {
     const cmd = new Deno.Command("psql", {
       args: [

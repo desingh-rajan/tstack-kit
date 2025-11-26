@@ -1,7 +1,7 @@
-import { Handlers } from "$fresh/server.ts";
+import { define } from "@/utils.ts";
 
-export const handler: Handlers = {
-  POST(_req) {
+export const handler = define.handlers({
+  POST(_ctx) {
     // Clear the auth token cookie
     return new Response("", {
       status: 303,
@@ -12,4 +12,4 @@ export const handler: Handlers = {
       },
     });
   },
-};
+});

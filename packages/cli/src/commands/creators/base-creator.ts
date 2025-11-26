@@ -192,10 +192,21 @@ export abstract class BaseProjectCreator {
     const starterName = this.getStarterTemplateName();
     const starterPath = join(packagesDir, starterName);
 
-    if (!Deno.statSync(starterPath).isDirectory) {
+    try {
+      if (!Deno.statSync(starterPath).isDirectory) {
+        throw new Error(
+          `${starterName} template not found. Make sure TStack is installed correctly.\n` +
+            `Expected path: ${starterPath}`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("template not found")) {
+        throw err;
+      }
       throw new Error(
         `${starterName} template not found. Make sure TStack is installed correctly.\n` +
-          `Expected path: ${starterPath}`,
+          `Expected path: ${starterPath}\n` +
+          `Original error: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
 

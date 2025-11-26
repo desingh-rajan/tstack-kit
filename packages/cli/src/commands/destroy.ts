@@ -232,7 +232,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
       });
 
       const choice = prompt(
-        `Select project to destroy (1-${matches.length}, or 'all' to destroy all):`,
+        `Select project to destroy (1-${matches.length}, or 'all' (case-insensitive) to destroy all):`,
       );
 
       if (choice === null) {

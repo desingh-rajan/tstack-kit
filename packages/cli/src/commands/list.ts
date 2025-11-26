@@ -1,8 +1,31 @@
 import { Logger } from "../utils/logger.ts";
-import { listProjects, ProjectStatus } from "../utils/projectStore.ts";
+import {
+  listProjects,
+  ProjectMetadata,
+  ProjectStatus,
+} from "../utils/projectStore.ts";
 
 export interface ListOptions {
   status?: ProjectStatus | "all"; // Filter by status, or "all" to show everything
+}
+
+/**
+ * Filter projects by status
+ * @param projects - Array of projects to filter
+ * @param status - Status to filter by, "all" to show everything, or undefined to hide destroyed
+ */
+function filterByStatus(
+  projects: ProjectMetadata[],
+  status?: ProjectStatus | "all",
+): ProjectMetadata[] {
+  if (status === "all") {
+    return projects;
+  }
+  if (status) {
+    return projects.filter((p) => p.status === status);
+  }
+  // Default: filter out destroyed projects - only show active ones
+  return projects.filter((p) => p.status !== "destroyed");
 }
 
 /**
@@ -15,15 +38,7 @@ export async function listTrackedProjects(
   Logger.newLine();
 
   const allProjects = await listProjects();
-
-  // Filter by status
-  let projects = allProjects;
-  if (options.status && options.status !== "all") {
-    projects = allProjects.filter((p) => p.status === options.status);
-  } else if (!options.status) {
-    // Default: filter out destroyed projects - only show active ones
-    projects = allProjects.filter((p) => p.status !== "destroyed");
-  }
+  const projects = filterByStatus(allProjects, options.status);
 
   if (projects.length === 0) {
     const statusMsg = options.status && options.status !== "all"

@@ -5,7 +5,7 @@ import { Logger } from "./src/utils/logger.ts";
 import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
 import { destroyProject } from "./src/commands/destroy.ts";
-import { createWorkspace } from "./src/commands/workspace.ts";
+import { createWorkspace, destroyWorkspace } from "./src/commands/workspace.ts";
 import { listTrackedProjects } from "./src/commands/list.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
@@ -288,9 +288,6 @@ async function main() {
 
         // Handle workspace destruction separately
         if (projectType === "workspace") {
-          const { destroyWorkspace } = await import(
-            "./src/commands/workspace.ts"
-          );
           await destroyWorkspace({
             name: projectName,
             force: args.force,
