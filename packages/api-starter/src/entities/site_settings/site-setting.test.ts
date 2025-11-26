@@ -67,7 +67,7 @@ import { like } from "drizzle-orm";
 // ============================================================================
 
 let superadminToken = "";
-let superadminUserId = 0;
+const _superadminUserId = 0;
 let regularUserToken = "";
 let testSettingId = 0;
 

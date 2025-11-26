@@ -268,7 +268,7 @@ export class ScaffoldOrchestrator {
    * Show API next steps
    */
   private showApiInstructions(names: ReturnType<typeof getEntityNames>): void {
-    const { skipValidation, skipAuth, skipTests, skipAdmin } = this.options;
+    const { skipValidation, skipTests, skipAdmin } = this.options;
 
     Logger.subtitle("API Next Steps:");
     Logger.newLine();

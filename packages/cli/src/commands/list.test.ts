@@ -272,8 +272,8 @@ Deno.test(
       });
 
       // Verify it appears in the list
-      let projects = await listProjects();
-      let ourProject = projects.find(
+      const projects = await listProjects();
+      const ourProject = projects.find(
         (p) =>
           p.folderName === `${projectName}-api` && p.status !== "destroyed",
       );

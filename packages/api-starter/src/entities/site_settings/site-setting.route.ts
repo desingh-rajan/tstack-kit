@@ -1,4 +1,3 @@
-import { Hono } from "hono";
 import { SiteSettingController } from "./site-setting.controller.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 import { requireSuperadmin } from "../../shared/middleware/requireRole.ts";

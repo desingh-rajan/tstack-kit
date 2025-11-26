@@ -255,6 +255,7 @@ async function main() {
         Logger.info("Use: tstack create workspace <name>");
         Logger.info("Example: tstack create workspace my-shop");
         Deno.exit(1);
+        break;
       }
 
       case "destroy": {
