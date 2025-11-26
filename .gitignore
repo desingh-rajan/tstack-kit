@@ -29,6 +29,9 @@ node_modules/
 *.swo
 *~
 
+# GitHub (keep untracked)
+.github/
+
 # OS
 .DS_Store
 .DS_Store?
@@ -51,6 +54,12 @@ build/
 tmp/
 temp/
 *.tmp
+
+# Testing workspace (for tstack CLI testing)
+ts-ground/
+
+# Reference projects (temporary, will be removed after implementation)
+reference-kit/
 
 # Docker
 docker-compose.override.yml

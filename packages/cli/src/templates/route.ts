@@ -2,40 +2,34 @@ import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateRouteTemplate(
   names: EntityNames,
-  withAuth = true,
 ): string {
-  if (withAuth) {
-    return `import { Hono } from "hono";
-import { ${names.pascalSingular}Controller } from "./${names.kebabSingular}.controller.ts";
-import { requireAuth } from "../../shared/middleware/auth.ts";
+  return `import { BaseRouteFactory } from "../../shared/routes/base-route.factory.ts";
+import { ${names.pascalSingular}ControllerStatic } from "./${names.kebabSingular}.controller.ts";
+import { Create${names.pascalSingular}Schema, Update${names.pascalSingular}Schema } from "./${names.kebabSingular}.dto.ts";
+// import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 
-const ${names.singular}Routes = new Hono();
+/**
+ * ${names.pascalSingular} Routes
+ * 
+ * Configure your routes:
+ * - publicRoutes: ["getAll", "getById"] - No auth required
+ * - middleware.auth: requireAuth - Protect create/update/delete
+ */
 
-// Protected routes (authentication required)
-${names.singular}Routes.use("/${names.kebabPlural}/*", requireAuth);
-
-${names.singular}Routes.get("/${names.kebabPlural}", ${names.pascalSingular}Controller.getAll);
-${names.singular}Routes.get("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.getById);
-${names.singular}Routes.post("/${names.kebabPlural}", ${names.pascalSingular}Controller.create);
-${names.singular}Routes.put("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.update);
-${names.singular}Routes.delete("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.delete);
-
-export default ${names.singular}Routes;
-`;
-  } else {
-    return `import { Hono } from "hono";
-import { ${names.pascalSingular}Controller } from "./${names.kebabSingular}.controller.ts";
-
-const ${names.singular}Routes = new Hono();
-
-// All routes are public (no authentication)
-${names.singular}Routes.get("/${names.kebabPlural}", ${names.pascalSingular}Controller.getAll);
-${names.singular}Routes.get("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.getById);
-${names.singular}Routes.post("/${names.kebabPlural}", ${names.pascalSingular}Controller.create);
-${names.singular}Routes.put("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.update);
-${names.singular}Routes.delete("/${names.kebabPlural}/:id", ${names.pascalSingular}Controller.delete);
+const ${names.singular}Routes = BaseRouteFactory.createCrudRoutes({
+  basePath: "/${names.kebabPlural}",
+  controller: ${names.pascalSingular}ControllerStatic,
+  schemas: {
+    create: Create${names.pascalSingular}Schema,
+    update: Update${names.pascalSingular}Schema,
+  },
+  // All routes public by default - uncomment to add auth:
+  // publicRoutes: ["getAll", "getById"],
+  // middleware: {
+  //   auth: requireAuth,
+  // },
+});
 
 export default ${names.singular}Routes;
 `;
-  }
 }

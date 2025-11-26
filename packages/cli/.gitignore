@@ -1,0 +1,15 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Test outputs
+test-output/
+*.test.db
+
+# Deno
+.deno/
+
+# OS
+.DS_Store
+Thumbs.db

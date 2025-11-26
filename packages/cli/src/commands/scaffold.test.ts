@@ -1,87 +1,468 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { join } from "@std/path";
 import { scaffoldEntity } from "./scaffold.ts";
+import { createWorkspace } from "./workspace.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
 import { fileExists } from "../utils/fileWriter.ts";
 
-Deno.test("scaffoldEntity - generates all 8 files by default (includes admin and tests)", async () => {
+/**
+ * Scaffold Test Suite - Orchestrator Pattern + Admin-UI Integration
+ *
+ * Tests cover:
+ * 1. Default behavior (API + admin-UI if exists)
+ * 2. --skip-admin-ui flag
+ * 3. --only-api flag
+ * 4. --only-admin-ui flag
+ * 5. No admin-ui project (API only)
+ * 6. Invalid flag combinations
+ * 7. Content validation (API files)
+ * 8. Content validation (admin-UI files)
+ */
+
+/**
+ * Helper: Get first directory name from a directory
+ */
+async function getFirstDirName(dirPath: string): Promise<string | null> {
+  for await (const entry of Deno.readDir(dirPath)) {
+    if (entry.isDirectory) {
+      return entry.name;
+    }
+  }
+  return null;
+}
+
+/**
+ * Helper: Create minimal API project structure
+ * Some tests need a basic API structure with deno.json
+ */
+async function createMinimalApiProject(tempDir: string): Promise<void> {
+  // Create src directory
+  await Deno.mkdir(join(tempDir, "src"), { recursive: true });
+
+  // Create minimal deno.json to mark it as a Deno project
+  await Deno.writeTextFile(
+    join(tempDir, "deno.json"),
+    JSON.stringify(
+      {
+        name: "test-project",
+        tasks: {
+          dev: "echo dev",
+        },
+      },
+      null,
+      2
+    )
+  );
+}
+
+// =============================================================================
+// TEST SUITE 1: Basic API Scaffolding (No Admin-UI)
+// =============================================================================
+
+Deno.test(
+  "scaffold - generates 8 API files by default (no admin-ui project)",
+  async () => {
+    const tempDir = await createTempDir();
+    try {
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: tempDir,
+      });
+
+      // Check all 8 API files exist (5 core + 1 test + 1 admin route + 1 admin test)
+      const basePath = join(tempDir, "src", "entities", "products");
+      assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
+      assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
+      assertEquals(
+        await fileExists(join(basePath, "product.service.ts")),
+        true
+      );
+      assertEquals(
+        await fileExists(join(basePath, "product.controller.ts")),
+        true
+      );
+      assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
+      assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
+      assertEquals(
+        await fileExists(join(basePath, "product.admin.route.ts")),
+        true
+      );
+      assertEquals(
+        await fileExists(join(basePath, "product.admin.test.ts")),
+        true
+      );
+
+      // Should NOT generate admin-UI files (no admin-ui project exists)
+      const adminUiPath = join(tempDir, "..", "test-admin-ui");
+      assertEquals(await fileExists(adminUiPath), false);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  }
+);
+
+Deno.test(
+  "scaffold - skipAdmin flag generates only 6 files (no admin routes)",
+  async () => {
+    const tempDir = await createTempDir();
+    try {
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: tempDir,
+        skipAdmin: true,
+      });
+
+      const basePath = join(tempDir, "src", "entities", "products");
+      assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
+      assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
+      assertEquals(
+        await fileExists(join(basePath, "product.service.ts")),
+        true
+      );
+      assertEquals(
+        await fileExists(join(basePath, "product.controller.ts")),
+        true
+      );
+      assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
+      assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
+      assertEquals(
+        await fileExists(join(basePath, "product.admin.route.ts")),
+        false
+      );
+      assertEquals(
+        await fileExists(join(basePath, "product.admin.test.ts")),
+        false
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  }
+);
+
+Deno.test("scaffold - skipTests flag generates no test files", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
       entityName: "product",
       targetDir: tempDir,
+      skipTests: true,
     });
 
-    // Check all 8 files exist (5 core + 1 test + 1 admin route + 1 admin test)
     const basePath = join(tempDir, "src", "entities", "products");
     assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
     assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
     assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
     assertEquals(
       await fileExists(join(basePath, "product.controller.ts")),
-      true,
+      true
     );
     assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
+    assertEquals(await fileExists(join(basePath, "product.test.ts")), false);
     assertEquals(
       await fileExists(join(basePath, "product.admin.route.ts")),
-      true,
-      "Admin route should be generated by default",
+      true
     );
     assertEquals(
       await fileExists(join(basePath, "product.admin.test.ts")),
-      true,
-      "Admin test should be generated by default",
+      false
     );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - skipAdmin flag generates only 6 files (no admin)", async () => {
+// =============================================================================
+// TEST SUITE 2: Admin-UI Integration Tests
+// =============================================================================
+
+Deno.test({
+  name: "scaffold - creates both API and admin-UI when admin-ui project exists",
+  // Disable resource sanitizer - createWorkspace opens KV databases
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      // Create workspace with both API and admin-UI
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
+
+      // Find the API project directory
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
+
+      // Scaffold entity
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+      });
+
+      // Check API files
+      const apiBasePath = join(apiDir, "src", "entities", "products");
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.model.ts")),
+        true
+      );
+      assertEquals(await fileExists(join(apiBasePath, "product.dto.ts")), true);
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.service.ts")),
+        true
+      );
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.controller.ts")),
+        true
+      );
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.route.ts")),
+        true
+      );
+
+      // Check admin-UI files
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "config", "entities", "products.config.tsx")
+        ),
+        true,
+        "Should create entity config"
+      );
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "routes", "admin", "products", "index.tsx")
+        ),
+        true,
+        "Should create list page"
+      );
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "routes", "admin", "products", "[id].tsx")
+        ),
+        true,
+        "Should create show page"
+      );
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "routes", "admin", "products", "new.tsx")
+        ),
+        true,
+        "Should create create page"
+      );
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "routes", "admin", "products", "[id]", "edit.tsx")
+        ),
+        true,
+        "Should create edit page"
+      );
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "scaffold - --skip-admin-ui skips admin-UI even when project exists",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      // Create workspace with both projects
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
+
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
+
+      // Scaffold with --skip-admin-ui
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+        skipAdminUi: true,
+      });
+
+      // Check API files exist
+      const apiBasePath = join(apiDir, "src", "entities", "products");
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.model.ts")),
+        true
+      );
+
+      // Check admin-UI files do NOT exist
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "config", "entities", "products.config.tsx")
+        ),
+        false,
+        "Should NOT create admin-UI files"
+      );
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "scaffold - --only-api creates only API files",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      // Create workspace with both projects
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
+
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
+
+      // Scaffold with --only-api
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+        onlyApi: true,
+      });
+
+      // API files should exist
+      const apiBasePath = join(apiDir, "src", "entities", "products");
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.model.ts")),
+        true
+      );
+
+      // Admin-UI files should NOT exist
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "config", "entities", "products.config.tsx")
+        ),
+        false
+      );
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "scaffold - --only-admin-ui creates only admin-UI files",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      // Create workspace
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
+
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
+
+      // Scaffold with --only-admin-ui
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+        onlyAdminUi: true,
+      });
+
+      // API files should NOT exist
+      const apiBasePath = join(apiDir, "src", "entities", "products");
+      assertEquals(
+        await fileExists(join(apiBasePath, "product.model.ts")),
+        false
+      );
+
+      // Admin-UI files SHOULD exist
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "config", "entities", "products.config.tsx")
+        ),
+        true
+      );
+      assertEquals(
+        await fileExists(
+          join(adminUiDir, "routes", "admin", "products", "index.tsx")
+        ),
+        true
+      );
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
+});
+
+// =============================================================================
+// TEST SUITE 3: Error Handling
+// =============================================================================
+
+Deno.test("scaffold - errors on --only-api with --only-admin-ui", async () => {
   const tempDir = await createTempDir();
   try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipAdmin: true,
-    });
-
-    // Check only 6 standard files exist (no admin route)
-    const basePath = join(tempDir, "src", "entities", "products");
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
-    assertEquals(
-      await fileExists(join(basePath, "product.controller.ts")),
-      true,
-    );
-    assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.route.ts")),
-      false,
-      "Admin route should NOT be generated with skipAdmin flag",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.test.ts")),
-      false,
-      "Admin test should NOT be generated with skipAdmin flag",
+    await assertRejects(
+      async () => {
+        await scaffoldEntity({
+          entityName: "product",
+          targetDir: tempDir,
+          onlyApi: true,
+          onlyAdminUi: true,
+        });
+      },
+      Error,
+      "Cannot use --only-api and --only-admin-ui together"
     );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - uses correct folder naming (snake_plural)", async () => {
+// =============================================================================
+// TEST SUITE 4: Entity Naming Tests (from original suite)
+// =============================================================================
+
+Deno.test("scaffold - uses correct folder naming (snake_plural)", async () => {
   const tempDir = await createTempDir();
   try {
+    await createMinimalApiProject(tempDir);
+
     await scaffoldEntity({
       entityName: "blog-post",
       targetDir: tempDir,
     });
 
-    // Folder should be blog_posts (snake_case plural)
     const entityDir = join(tempDir, "src", "entities", "blog_posts");
     const stat = await Deno.stat(entityDir);
     assertEquals(stat.isDirectory, true);
@@ -90,7 +471,7 @@ Deno.test("scaffoldEntity - uses correct folder naming (snake_plural)", async ()
   }
 });
 
-Deno.test("scaffoldEntity - uses correct file naming (kebab-singular)", async () => {
+Deno.test("scaffold - uses correct file naming (kebab-singular)", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -98,7 +479,6 @@ Deno.test("scaffoldEntity - uses correct file naming (kebab-singular)", async ()
       targetDir: tempDir,
     });
 
-    // Files should be blog-post.*.ts (kebab-case singular)
     const basePath = join(tempDir, "src", "entities", "blog_posts");
     assertEquals(await fileExists(join(basePath, "blog-post.model.ts")), true);
     assertEquals(await fileExists(join(basePath, "blog-post.dto.ts")), true);
@@ -107,7 +487,7 @@ Deno.test("scaffoldEntity - uses correct file naming (kebab-singular)", async ()
   }
 });
 
-Deno.test("scaffoldEntity - handles plural input correctly", async () => {
+Deno.test("scaffold - handles plural input correctly", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -115,7 +495,6 @@ Deno.test("scaffoldEntity - handles plural input correctly", async () => {
       targetDir: tempDir,
     });
 
-    // Should singularize to 'product'
     const basePath = join(tempDir, "src", "entities", "products");
     assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
   } finally {
@@ -123,7 +502,7 @@ Deno.test("scaffoldEntity - handles plural input correctly", async () => {
   }
 });
 
-Deno.test("scaffoldEntity - handles snake_case input", async () => {
+Deno.test("scaffold - handles snake_case input", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -134,34 +513,22 @@ Deno.test("scaffoldEntity - handles snake_case input", async () => {
     const basePath = join(tempDir, "src", "entities", "site_settings");
     assertEquals(
       await fileExists(join(basePath, "site-setting.model.ts")),
-      true,
+      true
     );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - handles PascalCase input", async () => {
+// =============================================================================
+// TEST SUITE 5: Content Validation (API Files)
+// =============================================================================
+
+Deno.test("scaffold - model contains correct table name", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
-      entityName: "BlogPost",
-      targetDir: tempDir,
-    });
-
-    // PascalCase "BlogPost" becomes "blogposts" folder (lowercase, no separator)
-    const basePath = join(tempDir, "src", "entities", "blogposts");
-    assertEquals(await fileExists(join(basePath, "blogpost.model.ts")), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - model file contains correct table name", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
+      entityName: "blog-post",
       targetDir: tempDir,
     });
 
@@ -169,48 +536,31 @@ Deno.test("scaffoldEntity - model file contains correct table name", async () =>
       tempDir,
       "src",
       "entities",
-      "products",
-      "product.model.ts",
+      "blog_posts",
+      "blog-post.model.ts"
     );
     const content = await Deno.readTextFile(modelPath);
 
-    // Should contain: pgTable("products", {
-    assertEquals(content.includes('pgTable("products"'), true);
+    // Check for correct camelCase plural variable name and snake_case table name
+    assertEquals(
+      content.includes('export const blogPosts = pgTable("blog_posts"'),
+      true
+    );
+    assertEquals(content.includes("...commonColumns"), true);
+    assertEquals(
+      content.includes("// TODO: Add your custom fields here"),
+      true
+    );
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - route file contains correct endpoint paths", async () => {
+Deno.test("scaffold - service extends BaseService", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
       entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const routePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.route.ts",
-    );
-    const content = await Deno.readTextFile(routePath);
-
-    // Should contain /products routes
-    assertEquals(content.includes('"/products"'), true);
-    assertEquals(content.includes('"/products/:id"'), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - service file uses correct naming", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "blog-post",
       targetDir: tempDir,
     });
 
@@ -218,19 +568,22 @@ Deno.test("scaffoldEntity - service file uses correct naming", async () => {
       tempDir,
       "src",
       "entities",
-      "blog_posts",
-      "blog-post.service.ts",
+      "products",
+      "product.service.ts"
     );
     const content = await Deno.readTextFile(servicePath);
 
-    // Should have BlogPostService class
-    assertEquals(content.includes("class BlogPostService"), true);
+    assertEquals(
+      content.includes('from "../../shared/services/base.service.ts"'),
+      true
+    );
+    assertEquals(content.includes("extends BaseService"), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - controller file uses correct naming", async () => {
+Deno.test("scaffold - controller extends BaseController", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
@@ -243,787 +596,229 @@ Deno.test("scaffoldEntity - controller file uses correct naming", async () => {
       "src",
       "entities",
       "products",
-      "product.controller.ts",
+      "product.controller.ts"
     );
     const content = await Deno.readTextFile(controllerPath);
 
-    // Should have ProductController class
-    assertEquals(content.includes("class ProductController"), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - dto file has create and update DTOs", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const dtoPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.dto.ts",
-    );
-    const content = await Deno.readTextFile(dtoPath);
-
-    // Should have CreateProductDTO and UpdateProductDTO (uppercase DTO)
-    assertEquals(content.includes("CreateProductDTO"), true);
-    assertEquals(content.includes("UpdateProductDTO"), true);
-    assertEquals(content.includes("ProductResponseDTO"), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - test file has CRUD test structure", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const testPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.test.ts",
-    );
-    const content = await Deno.readTextFile(testPath);
-
-    // Should have test descriptions with the endpoint
-    assertEquals(content.includes("/products"), true);
-    assertEquals(content.includes("POST"), true);
-    assertEquals(content.includes("GET"), true);
-    assertEquals(content.includes("PUT"), true);
-    assertEquals(content.includes("DELETE"), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-// Note: Testing Deno.exit() behavior is complex in tests
-// These cases are covered by the isValidEntityName tests in stringUtils.test.ts
-// The scaffold command will call Deno.exit(1) if validation fails
-
-Deno.test("scaffoldEntity - force flag overwrites existing files", async () => {
-  const tempDir = await createTempDir();
-  try {
-    // Create entity first time
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const modelPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.model.ts",
-    );
-    const originalContent = await Deno.readTextFile(modelPath);
-
-    // Modify the file
-    await Deno.writeTextFile(modelPath, "// Modified content");
-    const modifiedContent = await Deno.readTextFile(modelPath);
-    assertEquals(modifiedContent, "// Modified content");
-
-    // Scaffold again with force
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      force: true,
-    });
-
-    // Should be overwritten with original template
-    const newContent = await Deno.readTextFile(modelPath);
-    assertEquals(newContent, originalContent);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - without force flag, entity dir exists check works", async () => {
-  const tempDir = await createTempDir();
-  try {
-    // Create entity first time
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const entityDir = join(tempDir, "src", "entities", "products");
-    const exists = await Deno.stat(entityDir);
-    assertEquals(exists.isDirectory, true);
-
-    // Note: Second scaffold without force would call Deno.exit(1)
-    // This is tested implicitly - the error handling path exists
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - handles irregular pluralization (person)", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "person",
-      targetDir: tempDir,
-    });
-
-    // Folder should be 'people' (irregular plural)
-    const basePath = join(tempDir, "src", "entities", "people");
-    assertEquals(await fileExists(join(basePath, "person.model.ts")), true);
-
-    // Check table name is 'people'
-    const modelPath = join(basePath, "person.model.ts");
-    const content = await Deno.readTextFile(modelPath);
-    assertEquals(content.includes('pgTable("people"'), true);
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - handles complex naming (site_settings)", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "site_settings",
-      targetDir: tempDir,
-    });
-
-    const basePath = join(tempDir, "src", "entities", "site_settings");
     assertEquals(
-      await fileExists(join(basePath, "site-setting.model.ts")),
-      true,
+      content.includes('from "../../shared/controllers/base.controller.ts"'),
+      true
     );
-    assertEquals(
-      await fileExists(join(basePath, "site-setting.dto.ts")),
-      true,
-    );
-    assertEquals(
-      await fileExists(join(basePath, "site-setting.service.ts")),
-      true,
-    );
-    assertEquals(
-      await fileExists(join(basePath, "site-setting.controller.ts")),
-      true,
-    );
-    assertEquals(
-      await fileExists(join(basePath, "site-setting.route.ts")),
-      true,
-    );
-    assertEquals(
-      await fileExists(join(basePath, "site-setting.test.ts")),
-      true,
-    );
+    assertEquals(content.includes("extends BaseController"), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
 });
 
-Deno.test("scaffoldEntity - generates valid file structure", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
+// =============================================================================
+// TEST SUITE 6: Content Validation (Admin-UI Files)
+// =============================================================================
 
-    const basePath = join(tempDir, "src", "entities", "products");
-    const files = [
-      "product.model.ts",
-      "product.dto.ts",
-      "product.service.ts",
-      "product.controller.ts",
-      "product.route.ts",
-      "product.test.ts",
-      "product.admin.route.ts",
-      "product.admin.test.ts",
-    ];
+Deno.test({
+  name: "scaffold - admin-UI config has correct structure",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
 
-    // Check all files exist and have content
-    for (const file of files) {
-      const filePath = join(basePath, file);
-      const exists = await fileExists(filePath);
-      assertEquals(exists, true, `${file} should exist`);
-
-      const content = await Deno.readTextFile(filePath);
-      assertEquals(
-        content.length > 0,
-        true,
-        `${file} should have content`,
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
       );
+
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+      });
+
+      const configPath = join(
+        adminUiDir,
+        "config",
+        "entities",
+        "products.config.tsx"
+      );
+      const content = await Deno.readTextFile(configPath);
+
+      // Check essential config properties
+      assertEquals(content.includes("export const productConfig"), true);
+      assertEquals(content.includes('name: "products"'), true);
+      assertEquals(content.includes('singularName: "Product"'), true);
+      assertEquals(content.includes('pluralName: "Products"'), true);
+      assertEquals(content.includes('apiPath: "/ts-admin/products"'), true);
+      assertEquals(content.includes("fields: ["), true);
+      assertEquals(content.includes("canCreate: true"), true);
+      assertEquals(content.includes("canEdit: true"), true);
+      assertEquals(content.includes("canDelete: true"), true);
+    } finally {
+      await cleanupTempDir(workspaceDir);
     }
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
+  },
 });
 
-Deno.test("scaffoldEntity - admin route contains correct imports", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
+Deno.test({
+  name: "scaffold - admin-UI list page uses DataTable",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
 
-    const adminRoutePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.admin.route.ts",
-    );
-    const content = await Deno.readTextFile(adminRoutePath);
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
 
-    // Should import @tstack/admin modules
-    assertEquals(
-      content.includes('from "@tstack/admin"'),
-      true,
-      "Should import from @tstack/admin",
-    );
-    assertEquals(
-      content.includes("HonoAdminAdapter"),
-      true,
-      "Should import HonoAdminAdapter",
-    );
-    assertEquals(
-      content.includes("DrizzleAdapter"),
-      true,
-      "Should import DrizzleAdapter",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+      });
+
+      const listPagePath = join(
+        adminUiDir,
+        "routes",
+        "admin",
+        "products",
+        "index.tsx"
+      );
+      const content = await Deno.readTextFile(listPagePath);
+
+      assertEquals(
+        content.includes('from "@/components/admin/DataTable.tsx"'),
+        true
+      );
+      assertEquals(content.includes("<DataTable"), true);
+      assertEquals(content.includes("createCRUDHandlers"), true);
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
 });
 
-Deno.test("scaffoldEntity - admin route has correct baseUrl", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
+Deno.test({
+  name: "scaffold - admin-UI show page uses ShowPage",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
 
-    const adminRoutePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.admin.route.ts",
-    );
-    const content = await Deno.readTextFile(adminRoutePath);
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
 
-    // Should have ADMIN_BASE_URL constant
-    assertEquals(
-      content.includes('const ADMIN_BASE_URL = "/ts-admin/products"'),
-      true,
-      "Should have ADMIN_BASE_URL constant defined",
-    );
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+      });
 
-    // Should use the constant in baseUrl config
-    assertEquals(
-      content.includes("baseUrl: ADMIN_BASE_URL"),
-      true,
-      "Should use ADMIN_BASE_URL constant for baseUrl",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
+      const showPagePath = join(
+        adminUiDir,
+        "routes",
+        "admin",
+        "products",
+        "[id].tsx"
+      );
+      const content = await Deno.readTextFile(showPagePath);
+
+      assertEquals(
+        content.includes('from "@/components/admin/ShowPage.tsx"'),
+        true
+      );
+      assertEquals(content.includes("<ShowPage"), true);
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
 });
 
-Deno.test("scaffoldEntity - admin route has CRUD operations", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
+Deno.test({
+  name: "scaffold - admin-UI form pages use GenericForm",
+  sanitizeResources: false,
+  fn: async () => {
+    const workspaceDir = await createTempDir();
+    try {
+      await createWorkspace({
+        name: `test-workspace-${Date.now()}`,
+        targetDir: workspaceDir,
+        withApi: true,
+        withAdminUi: true,
+        skipRemote: true,
+      });
 
-    const adminRoutePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.admin.route.ts",
-    );
-    const content = await Deno.readTextFile(adminRoutePath);
+      const workspaceName = await getFirstDirName(workspaceDir);
+      const apiDir = join(workspaceDir, workspaceName!, `${workspaceName}-api`);
+      const adminUiDir = join(
+        workspaceDir,
+        workspaceName!,
+        `${workspaceName}-admin-ui`
+      );
 
-    // Should have all CRUD methods
-    assertEquals(content.includes(".list()"), true, "Should have list method");
-    assertEquals(content.includes(".new()"), true, "Should have new method");
-    assertEquals(
-      content.includes(".create()"),
-      true,
-      "Should have create method",
-    );
-    assertEquals(content.includes(".show()"), true, "Should have show method");
-    assertEquals(content.includes(".edit()"), true, "Should have edit method");
-    assertEquals(
-      content.includes(".update()"),
-      true,
-      "Should have update method",
-    );
-    assertEquals(
-      content.includes(".destroy()"),
-      true,
-      "Should have destroy method",
-    );
-    assertEquals(
-      content.includes(".bulkDelete()"),
-      true,
-      "Should have bulkDelete method",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
+      await scaffoldEntity({
+        entityName: "product",
+        targetDir: apiDir,
+      });
 
-Deno.test("scaffoldEntity - admin route has correct entity references", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "blog-post",
-      targetDir: tempDir,
-    });
+      // Check create page
+      const createPagePath = join(
+        adminUiDir,
+        "routes",
+        "admin",
+        "products",
+        "new.tsx"
+      );
+      const createContent = await Deno.readTextFile(createPagePath);
+      assertEquals(
+        createContent.includes('from "@/components/admin/GenericForm.tsx"'),
+        true
+      );
+      assertEquals(createContent.includes("<GenericForm"), true);
 
-    const adminRoutePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "blog_posts",
-      "blog-post.admin.route.ts",
-    );
-    const content = await Deno.readTextFile(adminRoutePath);
-
-    // Should reference correct entity names
-    assertEquals(
-      content.includes('entityName: "blogPost"'),
-      true,
-      "Should have camelCase singular entity name",
-    );
-    assertEquals(
-      content.includes('entityNamePlural: "blogPosts"'),
-      true,
-      "Should have camelCase plural entity name",
-    );
-
-    // Should have ADMIN_BASE_URL constant with kebab-case plural
-    assertEquals(
-      content.includes('const ADMIN_BASE_URL = "/ts-admin/blog-posts"'),
-      true,
-      "Should have ADMIN_BASE_URL constant with kebab-case plural URL",
-    );
-
-    // Should use the constant in baseUrl config
-    assertEquals(
-      content.includes("baseUrl: ADMIN_BASE_URL"),
-      true,
-      "Should use ADMIN_BASE_URL constant for baseUrl",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-// Tests for --skip-tests flag
-Deno.test("scaffoldEntity - skipTests flag skips test file generation", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipTests: true,
-    });
-
-    const basePath = join(tempDir, "src", "entities", "products");
-    // All other files should exist
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
-    assertEquals(
-      await fileExists(join(basePath, "product.controller.ts")),
-      true,
-    );
-    assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-
-    // Test files should NOT exist
-    assertEquals(
-      await fileExists(join(basePath, "product.test.ts")),
-      false,
-      "Regular test file should NOT be generated with skipTests flag",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.route.ts")),
-      true,
-      "Admin route should still be generated",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.test.ts")),
-      false,
-      "Admin test file should NOT be generated with skipTests flag",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - skipTests and skipAdmin combined", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipTests: true,
-      skipAdmin: true,
-    });
-
-    const basePath = join(tempDir, "src", "entities", "products");
-    // Core files should exist
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
-    assertEquals(
-      await fileExists(join(basePath, "product.controller.ts")),
-      true,
-    );
-    assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-
-    // Test and admin files should NOT exist
-    assertEquals(
-      await fileExists(join(basePath, "product.test.ts")),
-      false,
-      "Regular test file should NOT be generated",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.route.ts")),
-      false,
-      "Admin route should NOT be generated",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.test.ts")),
-      false,
-      "Admin test file should NOT be generated",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-// Tests for --skip-auth flag
-Deno.test("scaffoldEntity - default generates routes with auth middleware", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const routePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.route.ts",
-    );
-    const content = await Deno.readTextFile(routePath);
-
-    // Should have auth imports and middleware
-    assertEquals(
-      content.includes('from "../../shared/middleware/auth.ts"'),
-      true,
-      "Should import auth middleware",
-    );
-    assertEquals(
-      content.includes("requireAuth"),
-      true,
-      "Should use requireAuth middleware",
-    );
-    assertEquals(
-      content.includes("// Protected routes (authentication required)"),
-      true,
-      "Should have auth comment",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - skipAuth flag generates public routes", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipAuth: true,
-    });
-
-    const routePath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.route.ts",
-    );
-    const content = await Deno.readTextFile(routePath);
-
-    // Should NOT have auth imports or middleware
-    assertEquals(
-      content.includes('from "../../shared/middleware/auth.ts"'),
-      false,
-      "Should NOT import auth middleware",
-    );
-    assertEquals(
-      content.includes("requireAuth"),
-      false,
-      "Should NOT use requireAuth middleware",
-    );
-    assertEquals(
-      content.includes("// All routes are public (no authentication)"),
-      true,
-      "Should have public routes comment",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-// Tests for --skip-validation flag
-Deno.test("scaffoldEntity - default generates DTOs with Zod validation", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const dtoPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.dto.ts",
-    );
-    const content = await Deno.readTextFile(dtoPath);
-
-    // Should have Zod imports and schemas
-    assertEquals(
-      content.includes('import { z } from "zod"'),
-      true,
-      "Should import zod",
-    );
-    assertEquals(
-      content.includes("CreateProductSchema = z.object"),
-      true,
-      "Should have CreateProductSchema with Zod",
-    );
-    assertEquals(
-      content.includes("UpdateProductSchema = z.object"),
-      true,
-      "Should have UpdateProductSchema with Zod",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - skipValidation flag generates plain interfaces", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipValidation: true,
-    });
-
-    const dtoPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.dto.ts",
-    );
-    const content = await Deno.readTextFile(dtoPath);
-
-    // Should NOT have Zod imports
-    assertEquals(
-      content.includes('import { z } from "zod"'),
-      false,
-      "Should NOT import zod",
-    );
-    assertEquals(
-      content.includes("export interface CreateProductDTO"),
-      true,
-      "Should have CreateProductDTO as interface",
-    );
-    assertEquals(
-      content.includes("export interface UpdateProductDTO"),
-      true,
-      "Should have UpdateProductDTO as interface",
-    );
-    assertEquals(
-      content.includes("no validation"),
-      true,
-      "Should have 'no validation' comment",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - default controller uses ValidationUtil", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-    });
-
-    const controllerPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.controller.ts",
-    );
-    const content = await Deno.readTextFile(controllerPath);
-
-    // Should use ValidationUtil
-    assertEquals(
-      content.includes('from "../../shared/utils/validation.ts"'),
-      true,
-      "Should import ValidationUtil",
-    );
-    assertEquals(
-      content.includes("ValidationUtil.validateSync"),
-      true,
-      "Should use ValidationUtil.validateSync",
-    );
-    assertEquals(
-      content.includes("CreateProductSchema"),
-      true,
-      "Should use CreateProductSchema",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-Deno.test("scaffoldEntity - skipValidation controller skips ValidationUtil", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipValidation: true,
-    });
-
-    const controllerPath = join(
-      tempDir,
-      "src",
-      "entities",
-      "products",
-      "product.controller.ts",
-    );
-    const content = await Deno.readTextFile(controllerPath);
-
-    // Should NOT use ValidationUtil
-    assertEquals(
-      content.includes('from "../../shared/utils/validation.ts"'),
-      false,
-      "Should NOT import ValidationUtil",
-    );
-    assertEquals(
-      content.includes("ValidationUtil"),
-      false,
-      "Should NOT use ValidationUtil",
-    );
-    assertEquals(
-      content.includes("No validation"),
-      true,
-      "Should have 'No validation' comment",
-    );
-    assertEquals(
-      content.includes("CreateProductDTO = await c.req.json()") ||
-        content.includes(
-          "Create${names.pascalSingular}DTO = await c.req.json()",
-        ),
-      true,
-      "Should use type assertion instead of validation",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
-});
-
-// Test combined flags
-Deno.test("scaffoldEntity - all skip flags combined", async () => {
-  const tempDir = await createTempDir();
-  try {
-    await scaffoldEntity({
-      entityName: "product",
-      targetDir: tempDir,
-      skipAdmin: true,
-      skipTests: true,
-      skipAuth: true,
-      skipValidation: true,
-    });
-
-    const basePath = join(tempDir, "src", "entities", "products");
-
-    // Core files should exist
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
-    assertEquals(
-      await fileExists(join(basePath, "product.controller.ts")),
-      true,
-    );
-    assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-
-    // Optional files should NOT exist
-    assertEquals(
-      await fileExists(join(basePath, "product.test.ts")),
-      false,
-      "Test file should NOT be generated",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.route.ts")),
-      false,
-      "Admin route should NOT be generated",
-    );
-    assertEquals(
-      await fileExists(join(basePath, "product.admin.test.ts")),
-      false,
-      "Admin test should NOT be generated",
-    );
-
-    // Check route is public
-    const routePath = join(basePath, "product.route.ts");
-    const routeContent = await Deno.readTextFile(routePath);
-    assertEquals(
-      routeContent.includes("requireAuth"),
-      false,
-      "Route should NOT have auth",
-    );
-
-    // Check DTO has no validation
-    const dtoPath = join(basePath, "product.dto.ts");
-    const dtoContent = await Deno.readTextFile(dtoPath);
-    assertEquals(
-      dtoContent.includes("z.object"),
-      false,
-      "DTO should NOT have Zod schemas",
-    );
-  } finally {
-    await cleanupTempDir(tempDir);
-  }
+      // Check edit page
+      const editPagePath = join(
+        adminUiDir,
+        "routes",
+        "admin",
+        "products",
+        "[id]",
+        "edit.tsx"
+      );
+      const editContent = await Deno.readTextFile(editPagePath);
+      assertEquals(
+        editContent.includes('from "@/components/admin/GenericForm.tsx"'),
+        true
+      );
+      assertEquals(editContent.includes("<GenericForm"), true);
+    } finally {
+      await cleanupTempDir(workspaceDir);
+    }
+  },
 });

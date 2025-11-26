@@ -1,0 +1,66 @@
+{
+  "name": "@tonystack/starter",
+  "version": "1.1.3",
+  "exports": "./src/main.ts",
+  "tasks": {
+    "dev": "deno run --allow-all --watch src/main.ts",
+    "start": "deno run --allow-all src/main.ts",
+    "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
+    "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
+    "db:seed:superadmin": "deno run --allow-all scripts/seed-superadmin.ts",
+    "db:seed:alpha": "deno run --allow-all scripts/seed-alpha-user.ts",
+    "db:seed:user": "deno run --allow-all scripts/seed-regular-user.ts",
+    "db:seed:site": "deno run --allow-all scripts/seed-site-settings.ts",
+    "env:validate": "deno run --allow-env scripts/validate-env.ts",
+    "setup": "deno task env:validate && deno task migrate:run && deno task db:seed",
+    "migrate:generate": "deno run --allow-all scripts/migrate-generate.ts",
+    "migrate:run": "deno run --allow-all scripts/migrate-run.ts",
+    "db:studio": "deno run --allow-all scripts/db-studio.ts",
+    "test": "deno run --allow-all scripts/setup-test-full.ts && ENVIRONMENT=test deno test --allow-all src/_test_setup.ts src/ && deno run --allow-all scripts/cleanup-test-db.ts",
+    "test:only": "ENVIRONMENT=test deno test --allow-all src/_test_setup.ts src/",
+    "test:setup": "ENVIRONMENT=test deno run --allow-all scripts/setup-test-db.ts",
+    "test:migrate": "ENVIRONMENT=test deno task migrate:run",
+    "test:seed": "ENVIRONMENT=test deno task db:seed",
+    "test:reset": "deno task test:setup && deno task test:migrate && deno task test:seed",
+    "test:watch": "ENVIRONMENT=test deno test --allow-all --watch src/",
+    "test:coverage": "deno run --allow-all scripts/setup-test-full.ts && ENVIRONMENT=test deno test --allow-all --coverage=coverage src/ && deno run --allow-all scripts/cleanup-test-db.ts",
+    "test:check": "deno run --allow-all scripts/test-health-check.ts",
+    "cleanup:test-db": "deno run --allow-all scripts/cleanup-test-db.ts",
+    "fmt": "deno fmt",
+    "lint": "deno lint"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@std/fs": "jsr:@std/fs@^1.0.20",
+    "@std/testing/bdd": "jsr:@std/testing@^1.0.0/bdd",
+    "@std/dotenv/load": "jsr:@std/dotenv@^0.225.0/load",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.0",
+    "@tstack/admin": "jsr:@tstack/admin@^2.0.1",
+    "jose": "npm:jose@^5.9.6",
+    "hono": "jsr:@hono/hono@^4.6.0",
+    "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
+    "hono/logger": "jsr:@hono/hono@^4.6.0/logger",
+    "hono/jwt": "jsr:@hono/hono@^4.6.0/jwt",
+    "drizzle-orm": "npm:drizzle-orm@^0.36.0",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
+    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",
+    "drizzle-kit": "npm:drizzle-kit@^0.28.0",
+    "drizzle-zod": "npm:drizzle-zod@^0.5.0",
+    "postgres": "npm:postgres@^3.4.0",
+    "zod": "npm:zod@^3.23.0"
+  },
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended", "workspace"],
+      "include": ["no-unversioned-import", "no-import-prefix"]
+    }
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  }
+}

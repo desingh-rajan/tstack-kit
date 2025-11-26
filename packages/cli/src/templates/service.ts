@@ -1,96 +1,49 @@
 import type { EntityNames } from "../utils/stringUtils.ts";
 
 export function generateServiceTemplate(names: EntityNames): string {
-  return `import { eq } from "drizzle-orm";
-import { db } from "../../config/database.ts";
-import { ${names.plural}, type ${names.pascalSingular}, type New${names.pascalSingular} } from "./${names.kebabSingular}.model.ts";
-import { NotFoundError } from "../../shared/utils/errors.ts";
+  return `import { db } from "../../config/database.ts";
+import { ${names.plural}, type ${names.pascalSingular} } from "./${names.kebabSingular}.model.ts";
+import { BaseService } from "../../shared/services/base.service.ts";
 import type {
- Create${names.pascalSingular}DTO,
- Update${names.pascalSingular}DTO,
- ${names.pascalSingular}ResponseDTO,
+  Create${names.pascalSingular}DTO,
+  Update${names.pascalSingular}DTO,
+  ${names.pascalSingular}ResponseDTO,
 } from "./${names.kebabSingular}.dto.ts";
 
-export class ${names.pascalSingular}Service {
- // Get all ${names.plural}
- static async getAll(): Promise<${names.pascalSingular}ResponseDTO[]> {
- const result = await db.select().from(${names.plural});
- return result;
- }
+/**
+ * ${names.pascalSingular} Service
+ * 
+ * Extends BaseService to inherit standard CRUD operations:
+ * - getAll(), getById(), create(), update(), delete()
+ * - Pagination, filtering, batch operations
+ * 
+ * Override methods to add custom logic:
+ * - Custom queries (joins, filters)
+ * - Validation (beforeCreate, beforeUpdate hooks)
+ * - Business logic (slug generation, etc.)
+ */
 
- // Get ${names.singular} by ID
- static async getById(id: number): Promise<${names.pascalSingular}ResponseDTO | null> {
- const result = await db
- .select()
- .from(${names.plural})
- .where(eq(${names.plural}.id, id))
- .limit(1);
+export class ${names.pascalSingular}Service extends BaseService<
+  ${names.pascalSingular},
+  Create${names.pascalSingular}DTO,
+  Update${names.pascalSingular}DTO,
+  ${names.pascalSingular}ResponseDTO
+> {
+  constructor() {
+    super(db, ${names.plural});
+  }
 
- if (result.length === 0) {
- return null;
- }
-
- return result[0];
- }
-
- // Create new ${names.singular}
- static async create(data: Create${names.pascalSingular}DTO): Promise<${names.pascalSingular}ResponseDTO> {
- const newRecord = await db
- .insert(${names.plural})
- .values({
- ...data,
- // createdAt and updatedAt are auto-set by database defaults
- })
- .returning();
-
- return newRecord[0];
- }
-
- // Update ${names.singular}
- static async update(
- id: number,
- data: Update${names.pascalSingular}DTO
- ): Promise<${names.pascalSingular}ResponseDTO | null> {
- const updated = await db
- .update(${names.plural})
- .set({
- ...data,
- updatedAt: new Date(), // Update timestamp
- })
- .where(eq(${names.plural}.id, id))
- .returning();
-
- if (updated.length === 0) {
- return null;
- }
-
- return updated[0];
- }
-
- // Delete ${names.singular}
- static async delete(id: number): Promise<boolean> {
- const deleted = await db
- .delete(${names.plural})
- .where(eq(${names.plural}.id, id))
- .returning();
-
- return deleted.length > 0;
- }
-
- // Soft delete ${names.singular} (deactivate)
- // TODO: Implement soft delete if you have an isActive or deletedAt field
- // static async softDelete(id: number): Promise<boolean> {
- //   const updated = await db
- //     .update(${names.plural})
- //     .set({
- //       isActive: false,
- //       updatedAt: new Date(),
- //     })
- //     .where(eq(${names.plural}.id, id))
- //     .returning();
- //
- //   return updated.length > 0;
- // }
+  // Add custom methods here
+  // Example: Override getAll() to add filters, joins, etc.
+  // override async getAll() { ... }
+  
+  // Example: Use lifecycle hooks for validation
+  // protected override async beforeCreate(data: Create${names.pascalSingular}DTO) {
+  //   // Custom validation or transformation
+  //   return data;
+  // }
 }
+
+export const ${names.singular}Service = new ${names.pascalSingular}Service();
 `;
 }
