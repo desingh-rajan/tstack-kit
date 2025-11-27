@@ -83,14 +83,17 @@ async function createTestUser(
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
-  const [user] = await db.insert(users).values({
-    email,
-    username: name.replace(/\s+/g, "").toLowerCase(),
-    password: await hashPassword(password),
-    role,
-    isActive: true,
-    isEmailVerified: true,
-  }).returning();
+  const [user] = await db
+    .insert(users)
+    .values({
+      email,
+      username: name.replace(/\s+/g, "").toLowerCase(),
+      password: await hashPassword(password),
+      role,
+      isActive: true,
+      isEmailVerified: true,
+    })
+    .returning();
 
   const loginRes = await app.request("/auth/login", {
     method: "POST",

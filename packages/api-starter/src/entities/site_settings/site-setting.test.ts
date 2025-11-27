@@ -88,7 +88,7 @@ async function apiRequest(
 ): Promise<Response> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers as Record<string, string>,
+    ...(options.headers as Record<string, string>),
   };
 
   if (token) {
@@ -112,14 +112,17 @@ async function createTestUser(
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
-  const [user] = await db.insert(users).values({
-    email,
-    username: name.replace(/\s+/g, "").toLowerCase(),
-    password: await hashPassword(password),
-    role,
-    isActive: true,
-    isEmailVerified: true,
-  }).returning();
+  const [user] = await db
+    .insert(users)
+    .values({
+      email,
+      username: name.replace(/\s+/g, "").toLowerCase(),
+      password: await hashPassword(password),
+      role,
+      isActive: true,
+      isEmailVerified: true,
+    })
+    .returning();
 
   const loginRes = await app.request("/auth/login", {
     method: "POST",
@@ -199,20 +202,16 @@ describe("Site Settings API", () => {
 
     it("should allow unauthenticated users to get setting by ID", async () => {
       // First create a setting
-      const createRes = await apiRequest(
-        "/site-settings",
-        superadminToken,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            key: "test_public_setting",
-            category: "general",
-            value: { enabled: true },
-            isPublic: true,
-            description: "Public test setting",
-          }),
-        },
-      );
+      const createRes = await apiRequest("/site-settings", superadminToken, {
+        method: "POST",
+        body: JSON.stringify({
+          key: "test_public_setting",
+          category: "general",
+          value: { enabled: true },
+          isPublic: true,
+          description: "Public test setting",
+        }),
+      });
       const createData = await createRes.json();
       testSettingId = createData.data.id;
 
@@ -266,37 +265,29 @@ describe("Site Settings API", () => {
     });
 
     it("should reject create from non-superadmin user", async () => {
-      const response = await apiRequest(
-        "/site-settings",
-        regularUserToken,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            key: "unauthorized_setting",
-            category: "general",
-            value: {},
-          }),
-        },
-      );
+      const response = await apiRequest("/site-settings", regularUserToken, {
+        method: "POST",
+        body: JSON.stringify({
+          key: "unauthorized_setting",
+          category: "general",
+          value: {},
+        }),
+      });
 
       assertEquals(response.status, 403);
     });
 
     it("should allow superadmin to create setting", async () => {
-      const response = await apiRequest(
-        "/site-settings",
-        superadminToken,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            key: "superadmin_setting",
-            category: "features",
-            value: { feature: "enabled" },
-            isPublic: false,
-            description: "Admin-only setting",
-          }),
-        },
-      );
+      const response = await apiRequest("/site-settings", superadminToken, {
+        method: "POST",
+        body: JSON.stringify({
+          key: "superadmin_setting",
+          category: "features",
+          value: { feature: "enabled" },
+          isPublic: false,
+          description: "Admin-only setting",
+        }),
+      });
 
       assertEquals(response.status, 201);
 

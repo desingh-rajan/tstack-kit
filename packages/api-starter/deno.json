@@ -1,7 +1,4 @@
 {
-  "name": "@tonystack/starter",
-  "version": "1.2.1",
-  "exports": "./src/main.ts",
   "tasks": {
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
@@ -55,20 +52,12 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended",
-        "workspace"
-      ],
-      "include": [
-        "no-unversioned-import",
-        "no-import-prefix"
-      ]
+      "tags": ["recommended", "workspace"],
+      "include": ["no-unversioned-import", "no-import-prefix"]
     }
   },
   "compilerOptions": {
-    "lib": [
-      "deno.window"
-    ],
+    "lib": ["deno.window"],
     "strict": true
   }
 }
