@@ -187,18 +187,24 @@ main() {
     # Cache dependencies first
     deno cache mod.ts
     
-    deno install \
-        --global \
-        --allow-read \
-        --allow-write \
-        --allow-env \
-        --allow-run \
-        --allow-net \
-        --unstable-kv \
-        --config deno.json \
-        --name tstack \
-        --force \
-        mod.ts
+    # Create a wrapper script that includes the config
+    DENO_BIN="$HOME/.deno/bin"
+    mkdir -p "$DENO_BIN"
+    
+    cat > "$DENO_BIN/tstack" << 'WRAPPER'
+#!/bin/sh
+exec deno run \
+    --allow-read \
+    --allow-write \
+    --allow-env \
+    --allow-run \
+    --allow-net \
+    --unstable-kv \
+    --config "$HOME/.tstack/packages/cli/deno.json" \
+    "$HOME/.tstack/packages/cli/mod.ts" "$@"
+WRAPPER
+    
+    chmod +x "$DENO_BIN/tstack"
     
     success "CLI installed"
     
