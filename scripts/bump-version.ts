@@ -35,7 +35,7 @@ for (const file of jsonFiles) {
   console.log(`[ok] Updated ${file.name}: v${oldVersion} -> v${version}`);
 }
 
-// Update install.sh version
+// Update install.sh version (only TSTACK_VERSION, URL uses variable interpolation)
 const installShPath = "./install.sh";
 let installShContent = await Deno.readTextFile(installShPath);
 const oldVersionMatch = installShContent.match(/TSTACK_VERSION="([^"]+)"/);
@@ -43,10 +43,6 @@ const oldInstallVersion = oldVersionMatch?.[1] || "unknown";
 installShContent = installShContent.replace(
   /TSTACK_VERSION="[^"]+"/,
   `TSTACK_VERSION="${version}"`,
-);
-installShContent = installShContent.replace(
-  /TSTACK_RELEASE_URL="https:\/\/github\.com\/desingh-rajan\/tstack-kit\/archive\/refs\/tags\/v[^"]+\.tar\.gz"/,
-  `TSTACK_RELEASE_URL="https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${version}.tar.gz"`,
 );
 await Deno.writeTextFile(installShPath, installShContent);
 console.log(`[ok] Updated install.sh: v${oldInstallVersion} -> v${version}`);

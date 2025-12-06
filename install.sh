@@ -6,7 +6,7 @@
 
 set -e
 
-TSTACK_VERSION="1.2.2"
+TSTACK_VERSION="1.2.3"
 TSTACK_RELEASE_URL="https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${TSTACK_VERSION}.tar.gz"
 TSTACK_INSTALL_DIR="$HOME/.tstack"
 
@@ -206,18 +206,14 @@ main() {
     echo "======================================="
     printf "${GREEN}Installation complete!${NC}\n"
     echo ""
-    echo "Next steps:"
+    echo "Verify installation:"
+    echo "  tstack --version"
     echo ""
-    echo "  1. Restart your terminal or run:"
-    echo "     source $(get_shell_config)"
+    echo "If command not found, restart your terminal or run:"
+    echo "  source $(get_shell_config)"
     echo ""
-    echo "  2. Verify installation:"
-    echo "     tstack --version"
-    echo ""
-    echo "  3. Create your first project:"
-    echo "     tstack create workspace my-app"
-    echo ""
-    echo "Documentation: https://github.com/desingh-rajan/tstack-kit/tree/main/docs"
+    echo "Create your first project:"
+    echo "  tstack create workspace my-app"
     echo ""
 }
 

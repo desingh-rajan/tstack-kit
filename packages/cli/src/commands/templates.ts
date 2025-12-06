@@ -80,8 +80,12 @@ export function listTemplatesCommand(): void {
   console.log("");
   console.log("Scaffold entities within a project:");
   console.log(cyan("  $ tstack scaffold <entity-name>"));
-  console.log(gray("  Generates: routes, handlers, service, repository, schema, tests"));
+  console.log(
+    gray("  Generates: routes, handlers, service, repository, schema, tests"),
+  );
   console.log("");
-  console.log("Documentation: https://github.com/desingh-rajan/tstack-kit/tree/main/docs");
+  console.log(
+    "Documentation: https://github.com/desingh-rajan/tstack-kit/tree/main/docs",
+  );
   console.log("");
 }

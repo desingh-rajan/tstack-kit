@@ -52,7 +52,9 @@ async function getLatestRelease(): Promise<GitHubRelease | null> {
 async function getReleaseByTag(tag: string): Promise<GitHubRelease | null> {
   try {
     const normalizedTag = tag.startsWith("v") ? tag : `v${tag}`;
-    const response = await fetch(`${GITHUB_API}/releases/tags/${normalizedTag}`);
+    const response = await fetch(
+      `${GITHUB_API}/releases/tags/${normalizedTag}`,
+    );
     if (!response.ok) return null;
     return await response.json();
   } catch {
@@ -64,8 +66,11 @@ async function getReleaseByTag(tag: string): Promise<GitHubRelease | null> {
  * Download and extract a release
  */
 async function downloadAndExtract(version: string): Promise<boolean> {
-  const normalizedVersion = version.startsWith("v") ? version.slice(1) : version;
-  const tarballUrl = `https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${normalizedVersion}.tar.gz`;
+  const normalizedVersion = version.startsWith("v")
+    ? version.slice(1)
+    : version;
+  const tarballUrl =
+    `https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${normalizedVersion}.tar.gz`;
 
   console.log(blue(`[info]`), `Downloading v${normalizedVersion}...`);
 
@@ -100,7 +105,13 @@ async function downloadAndExtract(version: string): Promise<boolean> {
 
     // Extract tarball
     const extractProcess = new Deno.Command("tar", {
-      args: ["-xzf", tempFile, "-C", TSTACK_INSTALL_DIR, "--strip-components=1"],
+      args: [
+        "-xzf",
+        tempFile,
+        "-C",
+        TSTACK_INSTALL_DIR,
+        "--strip-components=1",
+      ],
     });
 
     const result = await extractProcess.output();

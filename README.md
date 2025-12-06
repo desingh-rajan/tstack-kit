@@ -26,13 +26,11 @@ workspaces in minutes.
 ## Quick Start
 
 ```bash
-# Install Deno (if not installed)
-curl -fsSL https://deno.land/install.sh | sh
-
 # Install TStack CLI
-git clone https://github.com/desingh-rajan/tstack-kit.git
-cd tstack-kit/packages/cli
-deno task install
+curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
+
+# Verify installation (restart terminal if command not found)
+tstack --version
 
 # Create your first workspace
 tstack create workspace my-app
