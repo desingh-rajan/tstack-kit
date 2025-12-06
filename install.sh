@@ -118,6 +118,13 @@ main() {
         error "This installer requires curl or wget. Please install one of them."
     fi
     
+    # Check for unzip (required by Deno installer)
+    if ! check_command unzip; then
+        warn "unzip not found (required for Deno installation)"
+        info "Please install unzip: apt install unzip (Debian/Ubuntu) or yum install unzip (RHEL/CentOS)"
+        error "Cannot proceed without unzip"
+    fi
+    
     # Step 1: Check/Install Deno
     info "Checking for Deno..."
     if check_command deno; then
@@ -176,6 +183,9 @@ main() {
     # Step 4: Install CLI globally
     info "Installing tstack command..."
     cd "$TSTACK_INSTALL_DIR/packages/cli"
+    
+    # Cache dependencies first
+    deno cache mod.ts
     
     deno install \
         --global \
