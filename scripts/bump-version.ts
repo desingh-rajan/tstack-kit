@@ -6,6 +6,7 @@
  * This script updates the kit release version in:
  * - Root deno.json (source of truth for kit version)
  * - CLI package (the distributed tool published to JSR)
+ * - install.sh (installation script version)
  *
  * Note: api-starter and admin-ui-starter are templates that get copied
  * to user projects—they don't have versions as they're not published.
@@ -19,13 +20,13 @@ if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
   Deno.exit(1);
 }
 
-// Files to update with kit version
-const files = [
+// JSON files to update with kit version
+const jsonFiles = [
   { path: "./deno.json", name: "root" },
   { path: "./packages/cli/deno.json", name: "cli" },
 ];
 
-for (const file of files) {
+for (const file of jsonFiles) {
   const content = await Deno.readTextFile(file.path);
   const json = JSON.parse(content);
   const oldVersion = json.version;
@@ -33,6 +34,22 @@ for (const file of files) {
   await Deno.writeTextFile(file.path, JSON.stringify(json, null, 2) + "\n");
   console.log(`[ok] Updated ${file.name}: v${oldVersion} -> v${version}`);
 }
+
+// Update install.sh version
+const installShPath = "./install.sh";
+let installShContent = await Deno.readTextFile(installShPath);
+const oldVersionMatch = installShContent.match(/TSTACK_VERSION="([^"]+)"/);
+const oldInstallVersion = oldVersionMatch?.[1] || "unknown";
+installShContent = installShContent.replace(
+  /TSTACK_VERSION="[^"]+"/,
+  `TSTACK_VERSION="${version}"`,
+);
+installShContent = installShContent.replace(
+  /TSTACK_RELEASE_URL="https:\/\/github\.com\/desingh-rajan\/tstack-kit\/archive\/refs\/tags\/v[^"]+\.tar\.gz"/,
+  `TSTACK_RELEASE_URL="https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${version}.tar.gz"`,
+);
+await Deno.writeTextFile(installShPath, installShContent);
+console.log(`[ok] Updated install.sh: v${oldInstallVersion} -> v${version}`);
 
 console.log(
   `\n[info] Template packages (api-starter, admin-ui-starter) don't have versions`,

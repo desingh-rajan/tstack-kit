@@ -7,6 +7,8 @@ import { createProject } from "./src/commands/create.ts";
 import { destroyProject } from "./src/commands/destroy.ts";
 import { createWorkspace, destroyWorkspace } from "./src/commands/workspace.ts";
 import { listTrackedProjects } from "./src/commands/list.ts";
+import { listVersionsCommand, upgradeCommand } from "./src/commands/upgrade.ts";
+import { listTemplatesCommand } from "./src/commands/templates.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -32,6 +34,15 @@ function showHelp() {
   );
   Logger.code(
     "                           Options: --status <created|destroyed|all>",
+  );
+  Logger.code(
+    "upgrade [version]          Upgrade to latest or specific version",
+  );
+  Logger.code(
+    "versions                   List available versions",
+  );
+  Logger.code(
+    "templates                  List available starter templates",
   );
   Logger.code("--help, -h                 Show this help message");
   Logger.code("--version, -v              Show version number");
@@ -102,6 +113,9 @@ function showHelp() {
   Logger.code("tstack scaffold orders --force");
   Logger.code("tstack destroy api my-shop    # Destroy my-shop-api");
   Logger.code("tstack destroy my-shop        # Find and select from matches");
+  Logger.code("tstack upgrade                # Upgrade to latest version");
+  Logger.code("tstack upgrade 1.3.0          # Upgrade to specific version");
+  Logger.code("tstack versions               # List available versions");
   Logger.newLine();
   Logger.subtitle("Documentation:");
   Logger.code("https://github.com/yourusername/tonystack");
@@ -331,6 +345,22 @@ async function main() {
             | "all"
             | undefined,
         });
+        break;
+      }
+
+      case "upgrade": {
+        const targetVersion = args._[1]?.toString();
+        await upgradeCommand(targetVersion);
+        break;
+      }
+
+      case "versions": {
+        await listVersionsCommand();
+        break;
+      }
+
+      case "templates": {
+        listTemplatesCommand();
         break;
       }
 
