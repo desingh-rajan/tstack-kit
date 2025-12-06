@@ -195,6 +195,7 @@ main() {
         --allow-run \
         --allow-net \
         --unstable-kv \
+        --config deno.json \
         --name tstack \
         --force \
         mod.ts
