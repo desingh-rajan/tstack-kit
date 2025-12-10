@@ -380,3 +380,5 @@ export const orderAdminConfig = {
 
 The config-driven approach means new features add config options, not new code
 patterns. This extensibility was a design goal from day one.
+
+Next: [Testing Guide](./testing-guide.md)

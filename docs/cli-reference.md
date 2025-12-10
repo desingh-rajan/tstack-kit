@@ -309,3 +309,5 @@ Every error includes:
 - **Context** - Where the failure occurred
 
 This is more work to implement but saves hours of debugging for users.
+
+Next: [Entity Scaffolding](./entity-scaffolding.md)

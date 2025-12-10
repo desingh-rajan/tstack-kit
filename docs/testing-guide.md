@@ -534,3 +534,5 @@ TStack projects include GitHub Actions workflow:
 2. **No watch mode** - `deno task test`, not `deno task test:watch`
 3. **Exit codes** - Tests fail CI on any assertion failure
 4. **Parallelization** - Deno runs tests in parallel by default
+
+Next: [Architecture](./architecture.md)

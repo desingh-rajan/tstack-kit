@@ -423,3 +423,5 @@ This is separate from the CLI (`@tonystack/cli`) because:
    CLI code.
 
 4. **Clear boundaries** - CLI creates projects. Admin package runs in projects.
+
+Next: [Admin Panel](./admin-panel.md)

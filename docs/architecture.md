@@ -539,3 +539,5 @@ stack that tries to support everything supports nothing well.
 
 If your needs diverge from TStack's bets, fork it. The code is explicit and
 modifiable. That's the point.
+
+Next: [Docs Index](./README.md)

@@ -69,11 +69,7 @@ deno task db:studio        # Open Drizzle Studio
 
 ## Next Steps
 
-- [Entity Scaffolding](./entity-scaffolding.md) - Generate your first entity
-- [Admin Panel](./admin-panel.md) - Access the admin interface
-- [Testing Guide](./testing-guide.md) - Write tests for your entities
-
----
+Next: [CLI Reference](./cli-reference.md)
 
 ## Design Philosophy: Why TStack Works This Way
 

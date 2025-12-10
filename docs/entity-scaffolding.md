@@ -383,3 +383,5 @@ from the starter kit, which means:
 
 The cost is some complexity in the scaffold command. The benefit is complete
 transparency in what code you receive.
+
+Next: [Base Abstractions](./base-abstractions.md)

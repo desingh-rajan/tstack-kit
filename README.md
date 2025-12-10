@@ -12,6 +12,8 @@ TStack Kit is a full-stack toolkit for building type-safe SaaS applications with
 Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API + Admin UI
 workspaces in minutes.
 
+**Documentation:** [docs/README.md](./docs/README.md) for quick navigation to getting started, CLI, scaffolding, admin, testing, and architecture guides.
+
 **What you can build:**
 
 - Internal tools and admin dashboards
