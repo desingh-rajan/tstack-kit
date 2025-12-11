@@ -7,7 +7,7 @@ import { randomBytes, scrypt } from "node:crypto";
 export function hashPassword(password: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const salt = randomBytes(16).toString("hex");
-    scrypt(password, salt, 64, (err, derivedKey) => {
+    scrypt(password, salt, 64, (err: Error | null, derivedKey: Buffer) => {
       if (err) reject(err);
       resolve(`${salt}:${derivedKey.toString("hex")}`);
     });
@@ -29,7 +29,7 @@ export function verifyPassword(
       return reject(new Error("Invalid hash format"));
     }
 
-    scrypt(password, salt, 64, (err, derivedKey) => {
+    scrypt(password, salt, 64, (err: Error | null, derivedKey: Buffer) => {
       if (err) reject(err);
       resolve(key === derivedKey.toString("hex"));
     });
