@@ -60,3 +60,4 @@ reference-kit/
 
 # Docker
 docker-compose.override.yml
+.notes/
