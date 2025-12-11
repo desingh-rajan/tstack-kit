@@ -1,4 +1,5 @@
 import { randomBytes, scrypt } from "node:crypto";
+import { Buffer } from "node:buffer";
 
 /**
  * Hash a password using scrypt
