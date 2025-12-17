@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VARIANT_TYPES } from "./variant-option.model.ts";
+import { VARIANT_TYPES as _VARIANT_TYPES } from "./variant-option.model.ts";
 
 /**
  * Variant Option DTOs

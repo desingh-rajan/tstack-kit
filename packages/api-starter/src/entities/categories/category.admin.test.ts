@@ -31,7 +31,7 @@ let parentCategoryId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -46,7 +46,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user"
+  role: "superadmin" | "admin" | "user" = "user",
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -97,7 +97,7 @@ describe("Category Admin Panel API", () => {
       "cat-superadmin@test.local",
       "Cat Superadmin",
       "SuperSecure123!",
-      "superadmin"
+      "superadmin",
     );
     superadminToken = superadmin.token;
 
@@ -106,7 +106,7 @@ describe("Category Admin Panel API", () => {
       "cat-admin@test.local",
       "Cat Admin",
       "AdminSecure123!",
-      "admin"
+      "admin",
     );
     adminToken = admin.token;
 
@@ -115,7 +115,7 @@ describe("Category Admin Panel API", () => {
       "cat-user@test.local",
       "Cat User",
       "UserSecure123!",
-      "user"
+      "user",
     );
     userToken = user.token;
   });
@@ -170,7 +170,7 @@ describe("Category Admin Panel API", () => {
       assertEquals(response.status, 200);
       assertEquals(
         response.headers.get("content-type")?.split(";")[0],
-        "application/json"
+        "application/json",
       );
 
       const json = await response.json();
@@ -194,7 +194,7 @@ describe("Category Admin Panel API", () => {
     it("should support pagination parameters", async () => {
       const response = await adminRequest(
         `${BASE_URL}?page=1&limit=10`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -261,7 +261,7 @@ describe("Category Admin Panel API", () => {
     it("should support search functionality", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=Parent`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -273,7 +273,7 @@ describe("Category Admin Panel API", () => {
     it("should support sorting parameters", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=displayOrder&sortOrder=asc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -291,7 +291,7 @@ describe("Category Admin Panel API", () => {
     it("should return single category as JSON", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testCategoryId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -303,7 +303,7 @@ describe("Category Admin Panel API", () => {
     it("should return entity metadata with data for edit form", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testCategoryId}/edit`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -339,7 +339,7 @@ describe("Category Admin Panel API", () => {
             displayOrder: 2,
             isActive: true,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -376,7 +376,7 @@ describe("Category Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -384,7 +384,7 @@ describe("Category Admin Panel API", () => {
       // Verify deletion
       const getRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
-        superadminToken
+        superadminToken,
       );
       assertEquals(getRes.status, 404);
     });
@@ -420,7 +420,7 @@ describe("Category Admin Panel API", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids }),
-        }
+        },
       );
 
       assertEquals(deleteRes.status, 200);

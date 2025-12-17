@@ -7,7 +7,7 @@ import { BaseService } from "@/lib/base-service.ts";
 import type {
   BulkDeleteResponse,
   VariantOption,
-  VariantOptionsByType,
+  VariantOptionsByType as _VariantOptionsByType,
 } from "./variant-option.types.ts";
 
 export class VariantOptionService extends BaseService<VariantOption> {

@@ -18,7 +18,7 @@ import { categories } from "../categories/category.model.ts";
 // ============================================================================
 
 let activeProductId = "";
-let activeProductSlug = "active-test-product";
+const activeProductSlug = "active-test-product";
 let testBrandId = "";
 let testCategoryId = "";
 
@@ -174,7 +174,7 @@ describe("Product Public API", () => {
 
     it("should filter by categoryId", async () => {
       const response = await app.request(
-        `/products?categoryId=${testCategoryId}`
+        `/products?categoryId=${testCategoryId}`,
       );
 
       assertEquals(response.status, 200);
@@ -226,7 +226,7 @@ describe("Product Public API", () => {
 
     it("should return empty array for no matches", async () => {
       const response = await app.request(
-        "/products?search=NonExistentProductXYZ123"
+        "/products?search=NonExistentProductXYZ123",
       );
 
       assertEquals(response.status, 200);
@@ -319,7 +319,7 @@ describe("Product Public API", () => {
   describe("Edge Cases", () => {
     it("should handle URL-encoded slug", async () => {
       const response = await app.request(
-        `/products/slug/${encodeURIComponent(activeProductSlug)}`
+        `/products/slug/${encodeURIComponent(activeProductSlug)}`,
       );
 
       assertEquals(response.status, 200);
@@ -341,7 +341,7 @@ describe("Product Public API", () => {
 
     it("should handle SQL injection attempts safely", async () => {
       const response = await app.request(
-        "/products?search='; DROP TABLE products;--"
+        "/products?search='; DROP TABLE products;--",
       );
 
       // Should not crash, either 200 with empty or handled

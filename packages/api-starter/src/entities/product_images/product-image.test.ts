@@ -132,7 +132,7 @@ describe("Product Image Public API", () => {
 
       // Find primary image
       const primary = json.data.find(
-        (img: { isPrimary: boolean }) => img.isPrimary
+        (img: { isPrimary: boolean }) => img.isPrimary,
       );
       assertExists(primary);
       assertEquals(primary.displayOrder, 1);
@@ -149,7 +149,7 @@ describe("Product Image Public API", () => {
 
     it("should return empty array for product with no images", async () => {
       const response = await app.request(
-        `/products/${productWithNoImages}/images`
+        `/products/${productWithNoImages}/images`,
       );
 
       assertEquals(response.status, 200);

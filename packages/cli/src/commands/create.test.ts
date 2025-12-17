@@ -3,7 +3,7 @@ import { assertNotEquals } from "@std/assert";
 import { join } from "@std/path";
 import { createProject } from "./create.ts";
 import { cleanupTempDir, createTempDir } from "../../tests/helpers/tempDir.ts";
-import { fileExists, dirExists } from "../utils/fileWriter.ts";
+import { dirExists, fileExists } from "../utils/fileWriter.ts";
 import { loadConfig } from "../utils/config.ts";
 
 /**
@@ -77,11 +77,11 @@ Deno.test("createProject - copies all starter files", async () => {
     assertEquals(await fileExists(join(projectPath, ".env.example")), true);
     assertEquals(
       await fileExists(join(projectPath, "docker-compose.yml")),
-      true
+      true,
     );
     assertEquals(
       await fileExists(join(projectPath, "drizzle.config.ts")),
-      true
+      true,
     );
     assertEquals(await fileExists(join(projectPath, "src", "main.ts")), true);
   } finally {
@@ -154,7 +154,7 @@ Deno.test(
     } finally {
       await cleanupTempDir(tempDir);
     }
-  }
+  },
 );
 
 Deno.test(
@@ -177,7 +177,7 @@ Deno.test(
     } finally {
       await cleanupTempDir(tempDir);
     }
-  }
+  },
 );
 
 Deno.test("createProject - handles project names with hyphens", async () => {
@@ -225,7 +225,7 @@ Deno.test(
     } finally {
       await cleanupTempDir(tempDir);
     }
-  }
+  },
 );
 
 Deno.test("createProject - validates project name (letters only)", async () => {
@@ -362,7 +362,7 @@ Deno.test(
     } finally {
       await cleanupTempDir(tempDir);
     }
-  }
+  },
 );
 
 // ============================================================================
@@ -381,24 +381,24 @@ async function databaseExists(dbName: string): Promise<boolean> {
 
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${dbName}'"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
+        args: [
+          "-c",
+          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${dbName}'"`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      })
       : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-tAc",
-            `SELECT 1 FROM pg_database WHERE datname='${dbName}'`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
+        args: [
+          "-u",
+          "postgres",
+          "psql",
+          "-tAc",
+          `SELECT 1 FROM pg_database WHERE datname='${dbName}'`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
 
     const { stdout } = await cmd.output();
     const result = new TextDecoder().decode(stdout).trim();
@@ -418,24 +418,24 @@ async function dropDatabase(dbName: string): Promise<void> {
 
     const cmd = config.sudoPassword
       ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
+        args: [
+          "-c",
+          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -c "DROP DATABASE IF EXISTS ${dbName}"`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      })
       : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-c",
-            `DROP DATABASE IF EXISTS ${dbName}`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
+        args: [
+          "-u",
+          "postgres",
+          "psql",
+          "-c",
+          `DROP DATABASE IF EXISTS ${dbName}`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
 
     await cmd.output();
   } catch {
@@ -454,24 +454,24 @@ async function cleanupAllTestDatabases(): Promise<void> {
     // Get list of all databases with tstack_test_ prefix
     const listCmd = config.sudoPassword
       ? new Deno.Command("sh", {
-          args: [
-            "-c",
-            `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'"`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        })
+        args: [
+          "-c",
+          `echo "${config.sudoPassword}" | sudo -S -u postgres psql -tAc "SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'"`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      })
       : new Deno.Command("sudo", {
-          args: [
-            "-u",
-            "postgres",
-            "psql",
-            "-tAc",
-            `SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'`,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        });
+        args: [
+          "-u",
+          "postgres",
+          "psql",
+          "-tAc",
+          `SELECT datname FROM pg_database WHERE datname LIKE '${TEST_DB_PREFIX}%'`,
+        ],
+        stdout: "piped",
+        stderr: "piped",
+      });
 
     const { stdout } = await listCmd.output();
     const databases = new TextDecoder()
@@ -561,7 +561,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "createProject - creates ALL dev, test, and prod databases (integration test)",
+  name:
+    "createProject - creates ALL dev, test, and prod databases (integration test)",
   ignore: SKIP_DB_SETUP, // Only runs when TSTACK_TEST_DB=true
   async fn() {
     const tempDir = await createTempDir();
@@ -590,17 +591,17 @@ Deno.test({
       assertEquals(
         devExists,
         true,
-        `Development database ${dbName} should exist`
+        `Development database ${dbName} should exist`,
       );
       assertEquals(
         testExists,
         true,
-        `Test database ${testDbName} should exist`
+        `Test database ${testDbName} should exist`,
       );
       assertEquals(
         prodExists,
         true,
-        `Production database ${prodDbName} should exist`
+        `Production database ${prodDbName} should exist`,
       );
     } finally {
       // Cleanup all databases
@@ -641,7 +642,7 @@ import { initTestKv } from "../../tests/helpers/testKv.ts";
 if (Deno.env.get("TSTACK_CLI_TEST") !== "true") {
   Deno.env.set("TSTACK_CLI_TEST", "true");
   console.log(
-    "📝 Auto-enabled test mode: Using isolated KV store at ~/.tstack/projects-test.db"
+    "📝 Auto-enabled test mode: Using isolated KV store at ~/.tstack/projects-test.db",
   );
 }
 
@@ -668,7 +669,7 @@ Deno.test({
       assertEquals(
         folderExists,
         true,
-        "Project folder should exist with -api suffix"
+        "Project folder should exist with -api suffix",
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -697,18 +698,18 @@ Deno.test(
       assertEquals(
         metadata!.name,
         "kv-test-shop",
-        "Should store original name"
+        "Should store original name",
       );
       assertEquals(metadata!.type, "api", "Should store project type");
       assertEquals(
         metadata!.folderName,
         "kv-test-shop-api",
-        "Should store folder name with suffix"
+        "Should store folder name with suffix",
       );
       assertEquals(
         metadata!.path,
         join(tempDir, "kv-test-shop-api"),
-        "Should store correct path"
+        "Should store correct path",
       );
 
       // Check databases are tracked
@@ -716,17 +717,17 @@ Deno.test(
       assertEquals(
         metadata!.databases.dev,
         "kv_test_shop_api_dev",
-        "Should track dev database"
+        "Should track dev database",
       );
       assertEquals(
         metadata!.databases.test,
         "kv_test_shop_api_test",
-        "Should track test database"
+        "Should track test database",
       );
       assertEquals(
         metadata!.databases.prod,
         "kv_test_shop_api_prod",
-        "Should track prod database"
+        "Should track prod database",
       );
 
       // Check timestamps
@@ -735,14 +736,14 @@ Deno.test(
       assertEquals(
         typeof metadata!.createdAt,
         "number",
-        "createdAt should be a number"
+        "createdAt should be a number",
       );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteProject("kv-test-shop-api").catch(() => {});
       closeKv();
     }
-  }
+  },
 );
 
 // TODO: After refactoring, workspace type is no longer supported directly in create.ts
@@ -810,7 +811,7 @@ Deno.test("createProject - should track multiple projects", async () => {
     const ourProjects = projects.filter(
       (p) =>
         p.folderName === "multi-test-one-api" ||
-        p.folderName === "multi-test-two-api"
+        p.folderName === "multi-test-two-api",
     );
 
     assertEquals(ourProjects.length >= 2, true, "Should track both projects");
@@ -842,12 +843,12 @@ Deno.test(
       assertEquals(
         await exists(projectPath),
         true,
-        "Should create foo-shopy-api folder"
+        "Should create foo-shopy-api folder",
       );
       assertEquals(
         await exists(wrongPath),
         false,
-        "Should NOT create foo-shopy-api-api folder"
+        "Should NOT create foo-shopy-api-api folder",
       );
 
       // Check KV store has correct folder name
@@ -860,7 +861,7 @@ Deno.test(
       await deleteProject("foo-shopy-api").catch(() => {});
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test("KV store - should be created in home directory", async () => {
@@ -891,7 +892,7 @@ Deno.test("KV store - should use separate test database", async () => {
   assertEquals(
     testKvPath !== prodKvPath,
     true,
-    "Test and production KV paths should be different"
+    "Test and production KV paths should be different",
   );
 
   closeKv();
@@ -945,7 +946,7 @@ Deno.test(
       assertEquals(
         firstProject?.status,
         "created",
-        "Status should be 'created'"
+        "Status should be 'created'",
       );
       assertExists(firstProject?.createdAt, "Should have createdAt timestamp");
       assertExists(firstProject?.updatedAt, "Should have updatedAt timestamp");
@@ -965,20 +966,20 @@ Deno.test(
         assertEquals(
           error instanceof Error && error.message.includes("already exists"),
           true,
-          "Should throw 'already exists' error"
+          "Should throw 'already exists' error",
         );
       }
       assertEquals(
         errorThrown,
         true,
-        "Should have thrown error for duplicate project in test mode"
+        "Should have thrown error for duplicate project in test mode",
       );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteProject("status-test-api");
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test(
@@ -1015,24 +1016,24 @@ Deno.test(
       assertEquals(
         recreatedProject?.status,
         "created",
-        "Status should be 'created'"
+        "Status should be 'created'",
       );
       assertEquals(
         recreatedProject?.createdAt,
         firstCreatedAt,
-        "createdAt should be preserved"
+        "createdAt should be preserved",
       );
       assertNotEquals(
         recreatedProject?.updatedAt,
         firstCreatedAt,
-        "updatedAt should be different"
+        "updatedAt should be different",
       );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteProject("status-test-api");
       closeKv();
     }
-  }
+  },
 );
 
 Deno.test(
@@ -1067,7 +1068,7 @@ Deno.test(
       assertEquals(
         recreatedProject?.status,
         "created",
-        "Status should be 'created'"
+        "Status should be 'created'",
       );
 
       // Verify folder was recreated
@@ -1078,7 +1079,7 @@ Deno.test(
       await deleteProject("status-test-api");
       closeKv();
     }
-  }
+  },
 );
 
 // --latest flag tests
@@ -1107,7 +1108,7 @@ Deno.test({
       assertExists(denoJson.imports["hono"], "Should have Hono import");
       assertExists(
         denoJson.imports["drizzle-orm"],
-        "Should have Drizzle import"
+        "Should have Drizzle import",
       );
       assertExists(denoJson.imports["zod"], "Should have Zod import");
 
@@ -1116,7 +1117,7 @@ Deno.test({
       assertEquals(
         honoImport.includes("jsr:@hono/hono@^"),
         true,
-        "Should have JSR Hono import with version"
+        "Should have JSR Hono import with version",
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -1149,14 +1150,14 @@ Deno.test(
       assertExists(denoJson.imports["hono"], "Should have Hono import");
       assertExists(
         denoJson.imports["drizzle-orm"],
-        "Should have Drizzle import"
+        "Should have Drizzle import",
       );
     } finally {
       await cleanupTempDir(tempDir);
       await deleteProject("test-default-api").catch(() => {});
       closeKv();
     }
-  }
+  },
 );
 // --skip-listing flag tests
 
@@ -1181,44 +1182,44 @@ Deno.test({
       assertEquals(
         await dirExists(join(entitiesPath, "brands")),
         false,
-        "Should not have brands directory"
+        "Should not have brands directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "categories")),
         false,
-        "Should not have categories directory"
+        "Should not have categories directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "products")),
         false,
-        "Should not have products directory"
+        "Should not have products directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "product_images")),
         false,
-        "Should not have product_images directory"
+        "Should not have product_images directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "product_variants")),
         false,
-        "Should not have product_variants directory"
+        "Should not have product_variants directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "variant_options")),
         false,
-        "Should not have variant_options directory"
+        "Should not have variant_options directory",
       );
 
       // Should still have non-listing entities
       assertEquals(
         await dirExists(join(entitiesPath, "articles")),
         true,
-        "Should have articles directory"
+        "Should have articles directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "site_settings")),
         true,
-        "Should have site_settings directory"
+        "Should have site_settings directory",
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -1227,7 +1228,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "createProject - api: --skip-listing filters listing exports from index.ts",
+  name:
+    "createProject - api: --skip-listing filters listing exports from index.ts",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
@@ -1249,19 +1251,19 @@ Deno.test({
         indexContent.includes("from './brands") ||
           indexContent.includes('from "./brands'),
         false,
-        "Should not export brands"
+        "Should not export brands",
       );
       assertEquals(
         indexContent.includes("from './products") ||
           indexContent.includes('from "./products'),
         false,
-        "Should not export products"
+        "Should not export products",
       );
       assertEquals(
         indexContent.includes("from './categories") ||
           indexContent.includes('from "./categories'),
         false,
-        "Should not export categories"
+        "Should not export categories",
       );
 
       // Should still export non-listing entities
@@ -1269,7 +1271,7 @@ Deno.test({
         indexContent.includes("articles") ||
           indexContent.includes("site_settings"),
         true,
-        "Should export non-listing entities"
+        "Should export non-listing entities",
       );
     } finally {
       await cleanupTempDir(tempDir);
@@ -1298,17 +1300,17 @@ Deno.test({
       assertEquals(
         await dirExists(join(entitiesPath, "brands")),
         true,
-        "Should have brands directory"
+        "Should have brands directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "products")),
         true,
-        "Should have products directory"
+        "Should have products directory",
       );
       assertEquals(
         await dirExists(join(entitiesPath, "categories")),
         true,
-        "Should have categories directory"
+        "Should have categories directory",
       );
     } finally {
       await cleanupTempDir(tempDir);

@@ -121,7 +121,7 @@ describe("Product Variant Public API", () => {
 
     it("should return empty array for product with no variants", async () => {
       const response = await app.request(
-        `/products/${productWithNoVariants}/variants`
+        `/products/${productWithNoVariants}/variants`,
       );
 
       assertEquals(response.status, 200);

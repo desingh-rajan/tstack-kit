@@ -13,7 +13,7 @@ import { productVariants } from "./product-variant.model.ts";
 import { products } from "../products/product.model.ts";
 import { authTokens } from "../../auth/auth-token.model.ts";
 import { users } from "../../auth/user.model.ts";
-import { like, eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 
 // ============================================================================
 // MODULE-LEVEL STATE
@@ -32,7 +32,7 @@ let testVariantId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -47,7 +47,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user"
+  role: "superadmin" | "admin" | "user" = "user",
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -110,7 +110,7 @@ describe("Product Variant Admin Panel API", () => {
       "var-superadmin@test.local",
       "Var Superadmin",
       "SuperSecure123!",
-      "superadmin"
+      "superadmin",
     );
     superadminToken = superadmin.token;
 
@@ -118,7 +118,7 @@ describe("Product Variant Admin Panel API", () => {
       "var-admin@test.local",
       "Var Admin",
       "AdminSecure123!",
-      "admin"
+      "admin",
     );
     adminToken = admin.token;
 
@@ -126,7 +126,7 @@ describe("Product Variant Admin Panel API", () => {
       "var-user@test.local",
       "Var User",
       "UserSecure123!",
-      "user"
+      "user",
     );
     userToken = user.token;
   });
@@ -414,7 +414,7 @@ describe("Product Variant Admin Panel API", () => {
     it("should return single variant by ID", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testVariantId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -426,7 +426,7 @@ describe("Product Variant Admin Panel API", () => {
       const fakeId = "00000000-0000-0000-0000-000000000000";
       const response = await adminRequest(
         `${BASE_URL}/${fakeId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 404);
@@ -435,7 +435,7 @@ describe("Product Variant Admin Panel API", () => {
     it("should search by SKU", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=PROD-SM`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -446,7 +446,7 @@ describe("Product Variant Admin Panel API", () => {
     it("should sort by stockQuantity", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=stockQuantity&sortOrder=desc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -458,7 +458,7 @@ describe("Product Variant Admin Panel API", () => {
     it("should sort by price", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=price&sortOrder=asc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -488,7 +488,7 @@ describe("Product Variant Admin Panel API", () => {
             options: { size: "Small", color: "Red" },
             isActive: true,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -514,7 +514,7 @@ describe("Product Variant Admin Panel API", () => {
             options: { size: "Small", color: "Red" },
             isActive: true,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -540,7 +540,7 @@ describe("Product Variant Admin Panel API", () => {
             options: { size: "Small", color: "Crimson Red" },
             isActive: true,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -566,7 +566,7 @@ describe("Product Variant Admin Panel API", () => {
             options: { size: "Small", color: "Crimson Red" },
             isActive: false,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -620,7 +620,7 @@ describe("Product Variant Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -628,7 +628,7 @@ describe("Product Variant Admin Panel API", () => {
       // Verify deleted
       const getRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
-        superadminToken
+        superadminToken,
       );
       assertEquals(getRes.status, 404);
     });
@@ -666,7 +666,7 @@ describe("Product Variant Admin Panel API", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids }),
-        }
+        },
       );
 
       assertEquals(deleteRes.status, 200);

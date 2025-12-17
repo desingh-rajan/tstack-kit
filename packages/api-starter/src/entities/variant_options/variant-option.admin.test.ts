@@ -32,7 +32,7 @@ let sizeOptionId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -47,7 +47,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user"
+  role: "superadmin" | "admin" | "user" = "user",
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -96,7 +96,7 @@ describe("Variant Option Admin Panel API", () => {
       "vo-superadmin@test.local",
       "VO Superadmin",
       "SuperSecure123!",
-      "superadmin"
+      "superadmin",
     );
     superadminToken = superadmin.token;
 
@@ -104,7 +104,7 @@ describe("Variant Option Admin Panel API", () => {
       "vo-admin@test.local",
       "VO Admin",
       "AdminSecure123!",
-      "admin"
+      "admin",
     );
     adminToken = admin.token;
 
@@ -112,7 +112,7 @@ describe("Variant Option Admin Panel API", () => {
       "vo-user@test.local",
       "VO User",
       "UserSecure123!",
-      "user"
+      "user",
     );
     userToken = user.token;
   });
@@ -163,7 +163,7 @@ describe("Variant Option Admin Panel API", () => {
     it("should reject expired or malformed JWT", async () => {
       const response = await adminRequest(
         BASE_URL,
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.invalid"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.invalid",
       );
       assertEquals(response.status, 401);
     });
@@ -238,7 +238,7 @@ describe("Variant Option Admin Panel API", () => {
       // Verify all colors exist
       const listRes = await adminRequest(
         `${BASE_URL}?search=Color`,
-        superadminToken
+        superadminToken,
       );
       const list = await listRes.json();
       assertEquals(list.data.length >= 4, true); // At least 4 colors
@@ -351,7 +351,7 @@ describe("Variant Option Admin Panel API", () => {
     it("should return single option by ID", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${colorOptionId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -364,7 +364,7 @@ describe("Variant Option Admin Panel API", () => {
       const fakeId = "00000000-0000-0000-0000-000000000000";
       const response = await adminRequest(
         `${BASE_URL}/${fakeId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 404);
@@ -373,7 +373,7 @@ describe("Variant Option Admin Panel API", () => {
     it("should filter by type via search", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=Size`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -387,7 +387,7 @@ describe("Variant Option Admin Panel API", () => {
     it("should support sorting by displayOrder", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=displayOrder&sortOrder=asc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -399,7 +399,7 @@ describe("Variant Option Admin Panel API", () => {
     it("should return edit form metadata", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${colorOptionId}/edit`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -430,7 +430,7 @@ describe("Variant Option Admin Panel API", () => {
             type: "Color",
             displayOrder: 1,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -453,7 +453,7 @@ describe("Variant Option Admin Panel API", () => {
             type: "Color",
             displayOrder: 99,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -476,7 +476,7 @@ describe("Variant Option Admin Panel API", () => {
             name: "Non-existent",
             type: "Color",
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 404);
@@ -496,7 +496,7 @@ describe("Variant Option Admin Panel API", () => {
             name: "Hacked Color",
             type: "Color",
           }),
-        }
+        },
       );
 
       // Should not succeed
@@ -531,7 +531,7 @@ describe("Variant Option Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -539,7 +539,7 @@ describe("Variant Option Admin Panel API", () => {
       // Verify deletion
       const getRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
-        superadminToken
+        superadminToken,
       );
       assertEquals(getRes.status, 404);
     });
@@ -576,7 +576,7 @@ describe("Variant Option Admin Panel API", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids }),
-        }
+        },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -593,7 +593,7 @@ describe("Variant Option Admin Panel API", () => {
       const response = await adminRequest(
         `${BASE_URL}/${fakeId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(response.status, 404);
@@ -603,7 +603,7 @@ describe("Variant Option Admin Panel API", () => {
       const response = await adminRequest(
         `${BASE_URL}/${sizeOptionId}`,
         userToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       // Should not succeed

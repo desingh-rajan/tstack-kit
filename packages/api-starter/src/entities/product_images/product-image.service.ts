@@ -2,7 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "../../config/database.ts";
 import { productImages } from "./product-image.model.ts";
 import { products } from "../products/product.model.ts";
-import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
+import { NotFoundError } from "../../shared/utils/errors.ts";
 import { BaseService } from "../../shared/services/base.service.ts";
 import type {
   CreateProductImageDTO,
@@ -85,7 +85,7 @@ export class ProductImageService extends BaseService<
   /**
    * Override getById to work with UUID (string) IDs
    */
-  override async getById(id: string): Promise<ProductImageResponseDTO | null> {
+  override getById(id: string): Promise<ProductImageResponseDTO | null> {
     return this.getByIdString(id);
   }
 

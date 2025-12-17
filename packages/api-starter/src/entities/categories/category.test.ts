@@ -170,7 +170,7 @@ describe("Category Public API", () => {
   describe("GET /categories/:id/children", () => {
     it("should return children of a category", async () => {
       const response = await app.request(
-        `/categories/${rootCategoryId}/children`
+        `/categories/${rootCategoryId}/children`,
       );
 
       assertEquals(response.status, 200);
@@ -181,14 +181,14 @@ describe("Category Public API", () => {
 
       // Should contain the child category
       const child = json.data.find(
-        (c: { id: string }) => c.id === childCategoryId
+        (c: { id: string }) => c.id === childCategoryId,
       );
       assertExists(child);
     });
 
     it("should return empty array for category with no children", async () => {
       const response = await app.request(
-        `/categories/${childCategoryId}/children`
+        `/categories/${childCategoryId}/children`,
       );
 
       assertEquals(response.status, 200);

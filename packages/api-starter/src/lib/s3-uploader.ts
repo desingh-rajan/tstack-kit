@@ -10,8 +10,7 @@ import {
   PutObjectCommand,
   type PutObjectCommandInput,
   S3Client,
-} from "npm:@aws-sdk/client-s3";
-import { config } from "../config/env.ts";
+} from "@aws-sdk/client-s3";
 
 export interface S3Config {
   accessKeyId: string;

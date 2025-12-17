@@ -187,7 +187,7 @@ describe("Variant Option Public API", () => {
     it("should handle type with special characters safely", async () => {
       // Test SQL injection attempt is handled safely
       const response = await app.request(
-        "/variant-options/type/Color'; DROP TABLE variant_options;--"
+        "/variant-options/type/Color'; DROP TABLE variant_options;--",
       );
 
       // Should not crash, either 200 with empty or handled error

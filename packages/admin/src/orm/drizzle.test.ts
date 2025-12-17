@@ -32,7 +32,7 @@ const testUsersWithUUID = pgTable("test_admin_users_uuid", {
 const connectionString = Deno.env.get("DATABASE_URL");
 if (!connectionString) {
   throw new Error(
-    "DATABASE_URL not found. Run: ENVIRONMENT=test deno task test"
+    "DATABASE_URL not found. Run: ENVIRONMENT=test deno task test",
   );
 }
 
@@ -112,7 +112,7 @@ Deno.test(
   async () => {
     await recreateTestTables();
     await seedTestData();
-  }
+  },
 );
 
 Deno.test(
@@ -142,7 +142,7 @@ Deno.test(
     assertEquals(result.totalPages, 5);
     assertEquals(result.hasPrevious, false);
     assertEquals(result.hasNext, true);
-  }
+  },
 );
 
 Deno.test(
@@ -167,7 +167,7 @@ Deno.test(
     assertEquals(result.page, 3);
     assertEquals(result.hasPrevious, true);
     assertEquals(result.hasNext, true);
-  }
+  },
 );
 
 Deno.test(
@@ -191,7 +191,7 @@ Deno.test(
     assertEquals(result.data.length, 10);
     assertEquals(result.page, 5);
     assertEquals(result.hasNext, false);
-  }
+  },
 );
 
 Deno.test(
@@ -217,7 +217,7 @@ Deno.test(
     // Should find Product 1, Product 10-19 (11 results)
     assertEquals(result.data.length, 10);
     assertEquals(result.total, 11);
-  }
+  },
 );
 
 Deno.test(
@@ -242,7 +242,7 @@ Deno.test(
 
     assertEquals(result.data.length, 5);
     assertEquals(result.data[0].price, 100); // Lowest price first
-  }
+  },
 );
 
 Deno.test(
@@ -267,7 +267,7 @@ Deno.test(
 
     assertEquals(result.data.length, 5);
     assertEquals(result.data[0].price, 5000); // Highest price first
-  }
+  },
 );
 
 Deno.test(
@@ -291,7 +291,7 @@ Deno.test(
 
     assertExists(product);
     assertExists(product?.name);
-  }
+  },
 );
 
 Deno.test(
@@ -310,7 +310,7 @@ Deno.test(
     const product = await adapter.findById(999);
 
     assertEquals(product, null);
-  }
+  },
 );
 
 Deno.test(
@@ -334,7 +334,7 @@ Deno.test(
 
     assertExists(product);
     assertExists(product?.name);
-  }
+  },
 );
 
 Deno.test(
@@ -353,9 +353,9 @@ Deno.test(
     await assertRejects(
       async () => await adapter.findById("invalid"),
       Error,
-      "Invalid number ID"
+      "Invalid number ID",
     );
-  }
+  },
 );
 
 Deno.test(
@@ -381,7 +381,7 @@ Deno.test(
     assertExists(newProduct.id);
     assertEquals(newProduct.name, "New Product");
     assertEquals(newProduct.price, 9999);
-  }
+  },
 );
 
 Deno.test(
@@ -409,7 +409,7 @@ Deno.test(
     assertExists(updated);
     assertEquals(updated?.name, "Updated Product");
     assertEquals(updated?.price, 1111);
-  }
+  },
 );
 
 Deno.test(
@@ -430,7 +430,7 @@ Deno.test(
     });
 
     assertEquals(updated, null);
-  }
+  },
 );
 
 Deno.test(
@@ -457,7 +457,7 @@ Deno.test(
     // Verify it's gone
     const check = await adapter.findById(secondId);
     assertEquals(check, null);
-  }
+  },
 );
 
 Deno.test(
@@ -476,7 +476,7 @@ Deno.test(
     const deleted = await adapter.delete(999);
 
     assertEquals(deleted, false);
-  }
+  },
 );
 
 Deno.test(
@@ -508,7 +508,7 @@ Deno.test(
     assertEquals(product1, null);
     assertEquals(product2, null);
     assertEquals(product3, null);
-  }
+  },
 );
 
 Deno.test(
@@ -527,7 +527,7 @@ Deno.test(
     const deletedCount = await adapter.bulkDelete([]);
 
     assertEquals(deletedCount, 0);
-  }
+  },
 );
 
 Deno.test(
@@ -548,7 +548,7 @@ Deno.test(
     // After all previous tests (seed 50, create +1, delete -1, bulkDelete -3)
     // we should have 47 records left
     assertEquals(count, 47);
-  }
+  },
 );
 
 Deno.test(
@@ -568,7 +568,7 @@ Deno.test(
 
     // Product 1, Product 10-19 (but some deleted) = should be less than 11
     assertEquals(count > 0, true);
-  }
+  },
 );
 
 // Tests for string IDs (UUID)
@@ -590,7 +590,7 @@ Deno.test(
     assertExists(user);
     assertEquals(user?.email, "user1@test.com");
     assertEquals(user?.username, "user1");
-  }
+  },
 );
 
 Deno.test(
@@ -613,7 +613,7 @@ Deno.test(
 
     assertEquals(result.data.length, 3);
     assertEquals(result.total, 3);
-  }
+  },
 );
 
 Deno.test(
@@ -637,7 +637,7 @@ Deno.test(
 
     assertExists(newUser);
     assertEquals(newUser.email, "newuser@test.com");
-  }
+  },
 );
 
 Deno.test(
@@ -657,12 +657,12 @@ Deno.test(
       "550e8400-e29b-41d4-a716-446655440001",
       {
         username: "updated_user2",
-      }
+      },
     );
 
     assertExists(updated);
     assertEquals(updated?.username, "updated_user2");
-  }
+  },
 );
 
 Deno.test(
@@ -679,11 +679,11 @@ Deno.test(
     });
 
     const deleted = await adapter.delete(
-      "550e8400-e29b-41d4-a716-446655440002"
+      "550e8400-e29b-41d4-a716-446655440002",
     );
 
     assertEquals(deleted, true);
-  }
+  },
 );
 
 Deno.test(
@@ -705,7 +705,7 @@ Deno.test(
     ]);
 
     assertEquals(deletedCount, 2);
-  }
+  },
 );
 
 // Cleanup test - must run last to close DB connection
@@ -717,5 +717,5 @@ Deno.test(
   },
   async () => {
     await sql.end();
-  }
+  },
 );

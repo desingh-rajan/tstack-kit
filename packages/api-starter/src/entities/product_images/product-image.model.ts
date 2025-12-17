@@ -5,7 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
+  uniqueIndex as _uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";

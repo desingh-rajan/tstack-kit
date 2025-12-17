@@ -14,7 +14,7 @@ import { brands } from "../brands/brand.model.ts";
 import { categories } from "../categories/category.model.ts";
 import { authTokens } from "../../auth/auth-token.model.ts";
 import { users } from "../../auth/user.model.ts";
-import { like, isNull } from "drizzle-orm";
+import { like } from "drizzle-orm";
 
 // ============================================================================
 // MODULE-LEVEL STATE
@@ -34,7 +34,7 @@ let testCategoryId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -49,7 +49,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user"
+  role: "superadmin" | "admin" | "user" = "user",
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -124,7 +124,7 @@ describe("Product Admin Panel API", () => {
       "prod-superadmin@test.local",
       "Prod Superadmin",
       "SuperSecure123!",
-      "superadmin"
+      "superadmin",
     );
     superadminToken = superadmin.token;
 
@@ -132,7 +132,7 @@ describe("Product Admin Panel API", () => {
       "prod-admin@test.local",
       "Prod Admin",
       "AdminSecure123!",
-      "admin"
+      "admin",
     );
     adminToken = admin.token;
 
@@ -140,7 +140,7 @@ describe("Product Admin Panel API", () => {
       "prod-user@test.local",
       "Prod User",
       "UserSecure123!",
-      "user"
+      "user",
     );
     userToken = user.token;
   });
@@ -422,7 +422,7 @@ describe("Product Admin Panel API", () => {
     it("should return single product by ID", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testProductId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -434,7 +434,7 @@ describe("Product Admin Panel API", () => {
       const fakeId = "00000000-0000-0000-0000-000000000000";
       const response = await adminRequest(
         `${BASE_URL}/${fakeId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 404);
@@ -443,7 +443,7 @@ describe("Product Admin Panel API", () => {
     it("should search by product name", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=Full`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -455,7 +455,7 @@ describe("Product Admin Panel API", () => {
     it("should search by SKU", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=FULL-001`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -466,7 +466,7 @@ describe("Product Admin Panel API", () => {
     it("should sort by price ascending", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=price&sortOrder=asc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -477,7 +477,7 @@ describe("Product Admin Panel API", () => {
     it("should sort by price descending", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=price&sortOrder=desc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -506,7 +506,7 @@ describe("Product Admin Panel API", () => {
             slug: "basic-product",
             price: "109.99",
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -531,7 +531,7 @@ describe("Product Admin Panel API", () => {
             price: "109.99",
             stockQuantity: 50,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -555,7 +555,7 @@ describe("Product Admin Panel API", () => {
             price: "109.99",
             isActive: false,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -593,7 +593,7 @@ describe("Product Admin Panel API", () => {
             slug: "full-product", // Already taken by another product
             price: "109.99",
           }),
-        }
+        },
       );
 
       assertNotEquals(response.status, 200);
@@ -630,7 +630,7 @@ describe("Product Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${softDeleteProductId}/soft`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -648,7 +648,7 @@ describe("Product Admin Panel API", () => {
       const restoreRes = await adminRequest(
         `${BASE_URL}/${softDeleteProductId}/restore`,
         superadminToken,
-        { method: "POST" }
+        { method: "POST" },
       );
 
       assertEquals(restoreRes.status, 200);
@@ -689,7 +689,7 @@ describe("Product Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -697,7 +697,7 @@ describe("Product Admin Panel API", () => {
       // Verify completely removed
       const getRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
-        superadminToken
+        superadminToken,
       );
       assertEquals(getRes.status, 404);
     });
@@ -734,7 +734,7 @@ describe("Product Admin Panel API", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids }),
-        }
+        },
       );
 
       assertEquals(deleteRes.status, 200);

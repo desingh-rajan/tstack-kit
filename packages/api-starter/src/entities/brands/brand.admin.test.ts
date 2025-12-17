@@ -30,7 +30,7 @@ let testBrandId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -45,7 +45,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user"
+  role: "superadmin" | "admin" | "user" = "user",
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -96,7 +96,7 @@ describe("Brand Admin Panel API", () => {
       "superadmin@test.local",
       "Test Superadmin",
       "SuperSecure123!",
-      "superadmin"
+      "superadmin",
     );
     superadminToken = superadmin.token;
 
@@ -105,7 +105,7 @@ describe("Brand Admin Panel API", () => {
       "admin@test.local",
       "Test Admin",
       "AdminSecure123!",
-      "admin"
+      "admin",
     );
     adminToken = admin.token;
 
@@ -114,7 +114,7 @@ describe("Brand Admin Panel API", () => {
       "user@test.local",
       "Test User",
       "UserSecure123!",
-      "user"
+      "user",
     );
     userToken = user.token;
   });
@@ -169,7 +169,7 @@ describe("Brand Admin Panel API", () => {
       assertEquals(response.status, 200);
       assertEquals(
         response.headers.get("content-type")?.split(";")[0],
-        "application/json"
+        "application/json",
       );
 
       const json = await response.json();
@@ -193,7 +193,7 @@ describe("Brand Admin Panel API", () => {
     it("should support pagination parameters", async () => {
       const response = await adminRequest(
         `${BASE_URL}?page=1&limit=10`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -234,7 +234,7 @@ describe("Brand Admin Panel API", () => {
     it("should support search functionality", async () => {
       const response = await adminRequest(
         `${BASE_URL}?search=Test`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -246,7 +246,7 @@ describe("Brand Admin Panel API", () => {
     it("should support sorting parameters", async () => {
       const response = await adminRequest(
         `${BASE_URL}?sortBy=createdAt&sortOrder=desc`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -264,7 +264,7 @@ describe("Brand Admin Panel API", () => {
     it("should return single brand as JSON", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testBrandId}`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -276,7 +276,7 @@ describe("Brand Admin Panel API", () => {
     it("should return entity metadata with data for edit form", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testBrandId}/edit`,
-        superadminToken
+        superadminToken,
       );
 
       assertEquals(response.status, 200);
@@ -310,7 +310,7 @@ describe("Brand Admin Panel API", () => {
             description: "Updated description",
             isActive: true,
           }),
-        }
+        },
       );
 
       assertEquals(response.status, 200);
@@ -347,7 +347,7 @@ describe("Brand Admin Panel API", () => {
       const deleteRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
         superadminToken,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       assertEquals(deleteRes.status, 200);
@@ -355,7 +355,7 @@ describe("Brand Admin Panel API", () => {
       // Verify deletion
       const getRes = await adminRequest(
         `${BASE_URL}/${deleteId}`,
-        superadminToken
+        superadminToken,
       );
       assertEquals(getRes.status, 404);
     });
@@ -391,7 +391,7 @@ describe("Brand Admin Panel API", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ ids }),
-        }
+        },
       );
 
       assertEquals(deleteRes.status, 200);

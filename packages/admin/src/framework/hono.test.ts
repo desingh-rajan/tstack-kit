@@ -129,7 +129,7 @@ async function makeRequest(
     method?: string;
     headers?: Record<string, string>;
     body?: string | FormData;
-  }
+  },
 ) {
   const req = new Request(`http://localhost${path}`, {
     method: options?.method || "GET",
@@ -176,7 +176,7 @@ Deno.test(
   async () => {
     await recreateTestTable();
     await seedTestData();
-  }
+  },
 );
 
 // ============================================================================
@@ -194,7 +194,7 @@ Deno.test(
     // Expect 500 error (thrown error in handler)
     assertEquals(res.status, 500);
     // Just check it's an error - the error message might be wrapped
-  }
+  },
 );
 
 Deno.test(
@@ -210,7 +210,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const json = await res.json();
     assertEquals(json.data.length, 5);
-  }
+  },
 );
 
 Deno.test(
@@ -226,7 +226,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const json = await res.json();
     assertExists(json.data);
-  }
+  },
 );
 
 Deno.test(
@@ -240,7 +240,7 @@ Deno.test(
     // Expect 500 error (thrown error in handler)
     assertEquals(res.status, 500);
     // Just check it's an error - the error message might be wrapped
-  }
+  },
 );
 
 Deno.test(
@@ -257,7 +257,7 @@ Deno.test(
     });
 
     assertEquals(res.status, 200);
-  }
+  },
 );
 
 // ============================================================================
@@ -284,7 +284,7 @@ Deno.test(
     assertEquals(json.page, 1);
     assertExists(json.data[0].id);
     assertExists(json.data[0].name);
-  }
+  },
 );
 
 Deno.test(
@@ -304,7 +304,7 @@ Deno.test(
     const json = await res.json();
     assertEquals(json.data.length, 5);
     assertExists(json.data[0].name);
-  }
+  },
 );
 
 Deno.test(
@@ -322,7 +322,7 @@ Deno.test(
     assertEquals(json.data.length, 2);
     assertEquals(json.total, 5);
     assertEquals(json.hasNext, true);
-  }
+  },
 );
 
 Deno.test(
@@ -336,14 +336,14 @@ Deno.test(
       "/ts-admin/products?search=Product%201",
       {
         headers: { Accept: "application/json" },
-      }
+      },
     );
 
     assertEquals(res.status, 200);
     const json = await res.json();
     assertEquals(json.data.length, 1);
     assertEquals(json.data[0].name, "Test Product 1");
-  }
+  },
 );
 
 // ============================================================================
@@ -368,7 +368,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const body = await res.text();
     assertStringIncludes(body, "Test Product");
-  }
+  },
 );
 
 Deno.test(
@@ -391,7 +391,7 @@ Deno.test(
     const json = await res.json();
     assertEquals(json.id, productId);
     assertExists(json.name);
-  }
+  },
 );
 
 Deno.test(
@@ -403,7 +403,7 @@ Deno.test(
     const res = await makeRequest(app, "/ts-admin/products/99999");
 
     assertEquals(res.status, 404);
-  }
+  },
 );
 
 // ============================================================================
@@ -426,7 +426,7 @@ Deno.test(
     assertEquals(json.entityName, "product");
     assertEquals(json.mode, "create");
     assertExists(json.columns);
-  }
+  },
 );
 
 // ============================================================================
@@ -457,7 +457,7 @@ Deno.test(
     assertEquals(json.name, "New Product");
     assertEquals(json.price, 999);
     assertExists(json.id);
-  }
+  },
 );
 
 // ============================================================================
@@ -486,7 +486,7 @@ Deno.test(
     assertEquals(json.mode, "edit");
     assertEquals(json.data.name, productName);
     assertExists(json.columns);
-  }
+  },
 );
 
 Deno.test(
@@ -498,7 +498,7 @@ Deno.test(
     const res = await makeRequest(app, "/ts-admin/products/99999/edit");
 
     assertEquals(res.status, 404);
-  }
+  },
 );
 
 // ============================================================================
@@ -530,7 +530,7 @@ Deno.test(
     const json = await res.json();
     assertEquals(json.name, "Updated Product");
     assertEquals(json.price, 555);
-  }
+  },
 );
 
 Deno.test(
@@ -546,7 +546,7 @@ Deno.test(
     });
 
     assertEquals(res.status, 404);
-  }
+  },
 );
 
 // ============================================================================
@@ -573,7 +573,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const json = await res.json();
     assertEquals(json.message, "Deleted successfully");
-  }
+  },
 );
 
 Deno.test(
@@ -588,7 +588,7 @@ Deno.test(
     });
 
     assertEquals(res.status, 404);
-  }
+  },
 );
 
 // ============================================================================
@@ -622,7 +622,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const json = await res.json();
     assertEquals(json.count, 2);
-  }
+  },
 );
 
 // ============================================================================
@@ -643,7 +643,7 @@ Deno.test(
     assertEquals(res.status, 200);
     const json = await res.json();
     assertExists(json.data);
-  }
+  },
 );
 
 Deno.test(
@@ -654,7 +654,7 @@ Deno.test(
 
     const res = await makeRequest(app, "/ts-admin/products");
     assertEquals(res.status, 404);
-  }
+  },
 );
 
 // Cleanup test - must run last to close DB connection
@@ -666,5 +666,5 @@ Deno.test(
   },
   async () => {
     await sql.end();
-  }
+  },
 );

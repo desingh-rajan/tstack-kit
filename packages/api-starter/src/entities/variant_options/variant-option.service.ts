@@ -94,7 +94,7 @@ export class VariantOptionService extends BaseService<
   /**
    * Override getById to work with UUID (string) IDs
    */
-  override async getById(id: string): Promise<VariantOptionResponseDTO | null> {
+  override getById(id: string): Promise<VariantOptionResponseDTO | null> {
     return this.getByIdString(id);
   }
 
