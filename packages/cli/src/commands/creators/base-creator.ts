@@ -14,6 +14,7 @@ export interface BaseCreateOptions {
   latest?: boolean;
   skipDbSetup?: boolean;
   forceOverwrite?: boolean;
+  skipListing?: boolean;
 }
 
 export interface ProjectCreatorResult {
@@ -214,6 +215,18 @@ export abstract class BaseProjectCreator {
   }
 
   /**
+   * Product listing entity directories to exclude when --skip-listing is used
+   */
+  protected static readonly LISTING_ENTITIES = [
+    "brands",
+    "categories",
+    "products",
+    "product_images",
+    "product_variants",
+    "variant_options",
+  ];
+
+  /**
    * Copy template files
    */
   protected async copyTemplate(starterPath: string): Promise<void> {
@@ -228,8 +241,97 @@ export abstract class BaseProjectCreator {
       const destPath = join(this.projectPath, entry.name);
 
       Logger.info(`Cooking ${entry.name}...`);
-      await copy(sourcePath, destPath, { overwrite: false });
+
+      if (this.options.skipListing && entry.name === "src") {
+        // Special handling for src directory to filter out listing entities
+        await this.copyDirectoryWithFilter(sourcePath, destPath);
+      } else {
+        await copy(sourcePath, destPath, { overwrite: false });
+      }
     }
+  }
+
+  /**
+   * Copy directory with filtering for listing entities
+   */
+  protected async copyDirectoryWithFilter(
+    srcPath: string,
+    destPath: string,
+  ): Promise<void> {
+    await Deno.mkdir(destPath, { recursive: true });
+
+    for await (const entry of Deno.readDir(srcPath)) {
+      const sourcePath = join(srcPath, entry.name);
+      const targetPath = join(destPath, entry.name);
+
+      if (entry.name === "entities" && this.options.skipListing) {
+        // Filter entities directory
+        await this.copyEntitiesWithFilter(sourcePath, targetPath);
+      } else if (entry.isDirectory) {
+        await copy(sourcePath, targetPath, { overwrite: false });
+      } else {
+        await Deno.copyFile(sourcePath, targetPath);
+      }
+    }
+  }
+
+  /**
+   * Copy entities directory excluding listing entities
+   */
+  protected async copyEntitiesWithFilter(
+    srcPath: string,
+    destPath: string,
+  ): Promise<void> {
+    await Deno.mkdir(destPath, { recursive: true });
+
+    for await (const entry of Deno.readDir(srcPath)) {
+      const sourcePath = join(srcPath, entry.name);
+      const targetPath = join(destPath, entry.name);
+
+      // Skip listing entities
+      if (BaseProjectCreator.LISTING_ENTITIES.includes(entry.name)) {
+        Logger.info(`  Skipping listing entity: ${entry.name}`);
+        continue;
+      }
+
+      if (entry.isDirectory) {
+        await copy(sourcePath, targetPath, { overwrite: false });
+      } else {
+        // Handle index.ts - need to filter out listing entity exports
+        if (entry.name === "index.ts") {
+          await this.copyFilteredIndexFile(sourcePath, targetPath);
+        } else {
+          await Deno.copyFile(sourcePath, targetPath);
+        }
+      }
+    }
+  }
+
+  /**
+   * Copy index.ts file with listing entity exports filtered out
+   */
+  protected async copyFilteredIndexFile(
+    srcPath: string,
+    destPath: string,
+  ): Promise<void> {
+    const content = await Deno.readTextFile(srcPath);
+    const lines = content.split("\n");
+
+    const filteredLines = lines.filter((line) => {
+      // Check if line exports a listing entity
+      for (const entity of BaseProjectCreator.LISTING_ENTITIES) {
+        if (
+          line.includes(`from "./${entity}`) ||
+          line.includes(`from './${entity}`)
+        ) {
+          Logger.info(`  Filtering export: ${entity}`);
+          return false;
+        }
+      }
+      return true;
+    });
+
+    await Deno.writeTextFile(destPath, filteredLines.join("\n"));
   }
 
   /**

@@ -76,6 +76,12 @@ function showHelp() {
   Logger.code(
     "--only-admin-ui            Scaffold admin-UI files only (scaffold only)",
   );
+  Logger.code(
+    "--skip-listing             Skip product listing entities (create api only)",
+  );
+  Logger.code(
+    "--skip-db-setup            Skip database setup (create api only)",
+  );
   Logger.newLine();
   Logger.subtitle("Workspace Options:");
   Logger.code(
@@ -140,6 +146,8 @@ async function main() {
       "skip-admin-ui", // NEW: Skip admin-UI scaffolding
       "only-api", // NEW: Only scaffold API
       "only-admin-ui", // NEW: Only scaffold admin-UI
+      "skip-listing", // Skip product listing entities
+      "skip-db-setup", // Skip database setup
       "with-api",
       "with-admin-ui",
       "with-ui",
@@ -226,6 +234,8 @@ async function main() {
             projectType: "api",
             targetDir: args.dir,
             latest: args.latest,
+            skipListing: args["skip-listing"],
+            skipDbSetup: args["skip-db-setup"],
           });
         } else if (type === "admin-ui") {
           await createProject({

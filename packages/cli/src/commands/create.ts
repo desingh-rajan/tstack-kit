@@ -10,6 +10,7 @@ export interface CreateOptions {
   latest?: boolean;
   skipDbSetup?: boolean;
   forceOverwrite?: boolean;
+  skipListing?: boolean;
 }
 
 /**

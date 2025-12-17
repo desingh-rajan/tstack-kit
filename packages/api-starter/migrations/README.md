@@ -41,7 +41,14 @@ This will create migration files based on all your `*.model.ts` files:
 
 - `src/auth/user.model.ts`
 - `src/auth/auth-token.model.ts`
-- `src/entities/articles/article.model.ts` (reference example)
+- `src/entities/articles/article.model.ts`
+- `src/entities/brands/brand.model.ts`
+- `src/entities/categories/category.model.ts`
+- `src/entities/products/product.model.ts`
+- `src/entities/product_images/product-image.model.ts`
+- `src/entities/product_variants/product-variant.model.ts`
+- `src/entities/variant_options/variant-option.model.ts`
+- `src/entities/site_settings/site-setting.model.ts`
 
 ### 3. Run Migrations
 

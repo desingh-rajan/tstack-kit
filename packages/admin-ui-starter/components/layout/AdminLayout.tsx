@@ -20,6 +20,12 @@ export function AdminLayout({ children, currentPath }: AdminLayoutProps) {
   // Example: { path: "/admin/products", label: "Products", icon: "📦" }
   const menuItems = [
     { path: "/admin/articles", label: "Articles", icon: "📄" },
+    { path: "/admin/products", label: "Products", icon: "📦" },
+    { path: "/admin/categories", label: "Categories", icon: "📁" },
+    { path: "/admin/brands", label: "Brands", icon: "🏷" },
+    { path: "/admin/variant-options", label: "Variant Options", icon: "🎨" },
+    { path: "/admin/product-images", label: "Product Images", icon: "🖼" },
+    { path: "/admin/product-variants", label: "Product Variants", icon: "📊" },
     { path: "/admin/site-settings", label: "Site Settings", icon: "⚙" },
     { path: "/admin/users", label: "Users", icon: "👤" },
   ];

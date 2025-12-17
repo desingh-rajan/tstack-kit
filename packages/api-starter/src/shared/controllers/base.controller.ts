@@ -73,10 +73,10 @@ export interface AuthConfig {
 export abstract class BaseController<
   ServiceType extends {
     getAll: () => Promise<any[]>;
-    getById: (id: number) => Promise<any | null>;
+    getById: (id: number | string) => Promise<any | null>;
     create: (data: any) => Promise<any>;
-    update: (id: number, data: any) => Promise<any | null>;
-    delete: (id: number) => Promise<boolean>;
+    update: (id: number | string, data: any) => Promise<any | null>;
+    delete: (id: number | string) => Promise<boolean>;
   },
 > {
   protected authConfig: {
@@ -283,16 +283,36 @@ export abstract class BaseController<
   // ============================================================================
 
   /**
-   * Parse and validate ID parameter from route
+   * UUID v4 regex pattern for validation
    */
-  protected parseId(c: Context): number {
-    const id = parseInt(c.req.param("id"));
+  private static readonly UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-    if (isNaN(id) || id <= 0) {
-      throw new BadRequestError("Invalid ID format");
+  /**
+   * Parse and validate ID parameter from route
+   * Supports both numeric IDs (integer) and UUID strings
+   */
+  protected parseId(c: Context): number | string {
+    const rawId = c.req.param("id");
+
+    if (!rawId || rawId.trim() === "") {
+      throw new BadRequestError("ID parameter is required");
     }
 
-    return id;
+    // Check if it's a valid UUID
+    if (BaseController.UUID_REGEX.test(rawId)) {
+      return rawId;
+    }
+
+    // Try parsing as numeric ID
+    const numericId = parseInt(rawId, 10);
+    if (!isNaN(numericId) && numericId > 0) {
+      return numericId;
+    }
+
+    throw new BadRequestError(
+      "Invalid ID format. Expected a positive integer or UUID.",
+    );
   }
 
   // ============================================================================

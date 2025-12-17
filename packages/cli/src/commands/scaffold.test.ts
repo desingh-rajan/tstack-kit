@@ -65,30 +65,30 @@ Deno.test(
     const tempDir = await createTempDir();
     try {
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: tempDir,
       });
 
       // Check all 8 API files exist (5 core + 1 test + 1 admin route + 1 admin test)
-      const basePath = join(tempDir, "src", "entities", "products");
-      assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-      assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
+      const basePath = join(tempDir, "src", "entities", "tickets");
+      assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.dto.ts")), true);
       assertEquals(
-        await fileExists(join(basePath, "product.service.ts")),
+        await fileExists(join(basePath, "ticket.service.ts")),
         true,
       );
       assertEquals(
-        await fileExists(join(basePath, "product.controller.ts")),
+        await fileExists(join(basePath, "ticket.controller.ts")),
         true,
       );
-      assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-      assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.route.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.test.ts")), true);
       assertEquals(
-        await fileExists(join(basePath, "product.admin.route.ts")),
+        await fileExists(join(basePath, "ticket.admin.route.ts")),
         true,
       );
       assertEquals(
-        await fileExists(join(basePath, "product.admin.test.ts")),
+        await fileExists(join(basePath, "ticket.admin.test.ts")),
         true,
       );
 
@@ -107,30 +107,30 @@ Deno.test(
     const tempDir = await createTempDir();
     try {
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: tempDir,
         skipAdmin: true,
       });
 
-      const basePath = join(tempDir, "src", "entities", "products");
-      assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-      assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
+      const basePath = join(tempDir, "src", "entities", "tickets");
+      assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.dto.ts")), true);
       assertEquals(
-        await fileExists(join(basePath, "product.service.ts")),
+        await fileExists(join(basePath, "ticket.service.ts")),
         true,
       );
       assertEquals(
-        await fileExists(join(basePath, "product.controller.ts")),
+        await fileExists(join(basePath, "ticket.controller.ts")),
         true,
       );
-      assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-      assertEquals(await fileExists(join(basePath, "product.test.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.route.ts")), true);
+      assertEquals(await fileExists(join(basePath, "ticket.test.ts")), true);
       assertEquals(
-        await fileExists(join(basePath, "product.admin.route.ts")),
+        await fileExists(join(basePath, "ticket.admin.route.ts")),
         false,
       );
       assertEquals(
-        await fileExists(join(basePath, "product.admin.test.ts")),
+        await fileExists(join(basePath, "ticket.admin.test.ts")),
         false,
       );
     } finally {
@@ -143,27 +143,27 @@ Deno.test("scaffold - skipTests flag generates no test files", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
-      entityName: "product",
+      entityName: "ticket",
       targetDir: tempDir,
       skipTests: true,
     });
 
-    const basePath = join(tempDir, "src", "entities", "products");
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.dto.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.service.ts")), true);
+    const basePath = join(tempDir, "src", "entities", "tickets");
+    assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
+    assertEquals(await fileExists(join(basePath, "ticket.dto.ts")), true);
+    assertEquals(await fileExists(join(basePath, "ticket.service.ts")), true);
     assertEquals(
-      await fileExists(join(basePath, "product.controller.ts")),
+      await fileExists(join(basePath, "ticket.controller.ts")),
       true,
     );
-    assertEquals(await fileExists(join(basePath, "product.route.ts")), true);
-    assertEquals(await fileExists(join(basePath, "product.test.ts")), false);
+    assertEquals(await fileExists(join(basePath, "ticket.route.ts")), true);
+    assertEquals(await fileExists(join(basePath, "ticket.test.ts")), false);
     assertEquals(
-      await fileExists(join(basePath, "product.admin.route.ts")),
+      await fileExists(join(basePath, "ticket.admin.route.ts")),
       true,
     );
     assertEquals(
-      await fileExists(join(basePath, "product.admin.test.ts")),
+      await fileExists(join(basePath, "ticket.admin.test.ts")),
       false,
     );
   } finally {
@@ -202,62 +202,62 @@ Deno.test({
 
       // Scaffold entity
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
       });
 
       // Check API files
-      const apiBasePath = join(apiDir, "src", "entities", "products");
+      const apiBasePath = join(apiDir, "src", "entities", "tickets");
       assertEquals(
-        await fileExists(join(apiBasePath, "product.model.ts")),
+        await fileExists(join(apiBasePath, "ticket.model.ts")),
         true,
       );
-      assertEquals(await fileExists(join(apiBasePath, "product.dto.ts")), true);
+      assertEquals(await fileExists(join(apiBasePath, "ticket.dto.ts")), true);
       assertEquals(
-        await fileExists(join(apiBasePath, "product.service.ts")),
-        true,
-      );
-      assertEquals(
-        await fileExists(join(apiBasePath, "product.controller.ts")),
+        await fileExists(join(apiBasePath, "ticket.service.ts")),
         true,
       );
       assertEquals(
-        await fileExists(join(apiBasePath, "product.route.ts")),
+        await fileExists(join(apiBasePath, "ticket.controller.ts")),
+        true,
+      );
+      assertEquals(
+        await fileExists(join(apiBasePath, "ticket.route.ts")),
         true,
       );
 
       // Check admin-UI files
       assertEquals(
         await fileExists(
-          join(adminUiDir, "config", "entities", "products.config.tsx"),
+          join(adminUiDir, "config", "entities", "tickets.config.tsx"),
         ),
         true,
         "Should create entity config",
       );
       assertEquals(
         await fileExists(
-          join(adminUiDir, "routes", "admin", "products", "index.tsx"),
+          join(adminUiDir, "routes", "admin", "tickets", "index.tsx"),
         ),
         true,
         "Should create list page",
       );
       assertEquals(
         await fileExists(
-          join(adminUiDir, "routes", "admin", "products", "[id].tsx"),
+          join(adminUiDir, "routes", "admin", "tickets", "[id].tsx"),
         ),
         true,
         "Should create show page",
       );
       assertEquals(
         await fileExists(
-          join(adminUiDir, "routes", "admin", "products", "new.tsx"),
+          join(adminUiDir, "routes", "admin", "tickets", "new.tsx"),
         ),
         true,
         "Should create create page",
       );
       assertEquals(
         await fileExists(
-          join(adminUiDir, "routes", "admin", "products", "[id]", "edit.tsx"),
+          join(adminUiDir, "routes", "admin", "tickets", "[id]", "edit.tsx"),
         ),
         true,
         "Should create edit page",
@@ -293,22 +293,22 @@ Deno.test({
 
       // Scaffold with --skip-admin-ui
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
         skipAdminUi: true,
       });
 
       // Check API files exist
-      const apiBasePath = join(apiDir, "src", "entities", "products");
+      const apiBasePath = join(apiDir, "src", "entities", "tickets");
       assertEquals(
-        await fileExists(join(apiBasePath, "product.model.ts")),
+        await fileExists(join(apiBasePath, "ticket.model.ts")),
         true,
       );
 
       // Check admin-UI files do NOT exist
       assertEquals(
         await fileExists(
-          join(adminUiDir, "config", "entities", "products.config.tsx"),
+          join(adminUiDir, "config", "entities", "tickets.config.tsx"),
         ),
         false,
         "Should NOT create admin-UI files",
@@ -344,22 +344,22 @@ Deno.test({
 
       // Scaffold with --only-api
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
         onlyApi: true,
       });
 
       // API files should exist
-      const apiBasePath = join(apiDir, "src", "entities", "products");
+      const apiBasePath = join(apiDir, "src", "entities", "tickets");
       assertEquals(
-        await fileExists(join(apiBasePath, "product.model.ts")),
+        await fileExists(join(apiBasePath, "ticket.model.ts")),
         true,
       );
 
       // Admin-UI files should NOT exist
       assertEquals(
         await fileExists(
-          join(adminUiDir, "config", "entities", "products.config.tsx"),
+          join(adminUiDir, "config", "entities", "tickets.config.tsx"),
         ),
         false,
       );
@@ -394,28 +394,28 @@ Deno.test({
 
       // Scaffold with --only-admin-ui
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
         onlyAdminUi: true,
       });
 
       // API files should NOT exist
-      const apiBasePath = join(apiDir, "src", "entities", "products");
+      const apiBasePath = join(apiDir, "src", "entities", "tickets");
       assertEquals(
-        await fileExists(join(apiBasePath, "product.model.ts")),
+        await fileExists(join(apiBasePath, "ticket.model.ts")),
         false,
       );
 
       // Admin-UI files SHOULD exist
       assertEquals(
         await fileExists(
-          join(adminUiDir, "config", "entities", "products.config.tsx"),
+          join(adminUiDir, "config", "entities", "tickets.config.tsx"),
         ),
         true,
       );
       assertEquals(
         await fileExists(
-          join(adminUiDir, "routes", "admin", "products", "index.tsx"),
+          join(adminUiDir, "routes", "admin", "tickets", "index.tsx"),
         ),
         true,
       );
@@ -435,7 +435,7 @@ Deno.test("scaffold - errors on --only-api with --only-admin-ui", async () => {
     await assertRejects(
       async () => {
         await scaffoldEntity({
-          entityName: "product",
+          entityName: "ticket",
           targetDir: tempDir,
           onlyApi: true,
           onlyAdminUi: true,
@@ -491,12 +491,12 @@ Deno.test("scaffold - handles plural input correctly", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
-      entityName: "products",
+      entityName: "tickets",
       targetDir: tempDir,
     });
 
-    const basePath = join(tempDir, "src", "entities", "products");
-    assertEquals(await fileExists(join(basePath, "product.model.ts")), true);
+    const basePath = join(tempDir, "src", "entities", "tickets");
+    assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
   } finally {
     await cleanupTempDir(tempDir);
   }
@@ -560,7 +560,7 @@ Deno.test("scaffold - service extends BaseService", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
-      entityName: "product",
+      entityName: "ticket",
       targetDir: tempDir,
     });
 
@@ -568,8 +568,8 @@ Deno.test("scaffold - service extends BaseService", async () => {
       tempDir,
       "src",
       "entities",
-      "products",
-      "product.service.ts",
+      "tickets",
+      "ticket.service.ts",
     );
     const content = await Deno.readTextFile(servicePath);
 
@@ -587,7 +587,7 @@ Deno.test("scaffold - controller extends BaseController", async () => {
   const tempDir = await createTempDir();
   try {
     await scaffoldEntity({
-      entityName: "product",
+      entityName: "ticket",
       targetDir: tempDir,
     });
 
@@ -595,8 +595,8 @@ Deno.test("scaffold - controller extends BaseController", async () => {
       tempDir,
       "src",
       "entities",
-      "products",
-      "product.controller.ts",
+      "tickets",
+      "ticket.controller.ts",
     );
     const content = await Deno.readTextFile(controllerPath);
 
@@ -637,7 +637,7 @@ Deno.test({
       );
 
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
       });
 
@@ -645,16 +645,16 @@ Deno.test({
         adminUiDir,
         "config",
         "entities",
-        "products.config.tsx",
+        "tickets.config.tsx",
       );
       const content = await Deno.readTextFile(configPath);
 
       // Check essential config properties
-      assertEquals(content.includes("export const productConfig"), true);
-      assertEquals(content.includes('name: "products"'), true);
-      assertEquals(content.includes('singularName: "Product"'), true);
-      assertEquals(content.includes('pluralName: "Products"'), true);
-      assertEquals(content.includes('apiPath: "/ts-admin/products"'), true);
+      assertEquals(content.includes("export const ticketConfig"), true);
+      assertEquals(content.includes('name: "tickets"'), true);
+      assertEquals(content.includes('singularName: "Ticket"'), true);
+      assertEquals(content.includes('pluralName: "Tickets"'), true);
+      assertEquals(content.includes('apiPath: "/ts-admin/tickets"'), true);
       assertEquals(content.includes("fields: ["), true);
       assertEquals(content.includes("canCreate: true"), true);
       assertEquals(content.includes("canEdit: true"), true);
@@ -688,7 +688,7 @@ Deno.test({
       );
 
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
       });
 
@@ -696,7 +696,7 @@ Deno.test({
         adminUiDir,
         "routes",
         "admin",
-        "products",
+        "tickets",
         "index.tsx",
       );
       const content = await Deno.readTextFile(listPagePath);
@@ -736,7 +736,7 @@ Deno.test({
       );
 
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
       });
 
@@ -744,7 +744,7 @@ Deno.test({
         adminUiDir,
         "routes",
         "admin",
-        "products",
+        "tickets",
         "[id].tsx",
       );
       const content = await Deno.readTextFile(showPagePath);
@@ -783,7 +783,7 @@ Deno.test({
       );
 
       await scaffoldEntity({
-        entityName: "product",
+        entityName: "ticket",
         targetDir: apiDir,
       });
 
@@ -792,7 +792,7 @@ Deno.test({
         adminUiDir,
         "routes",
         "admin",
-        "products",
+        "tickets",
         "new.tsx",
       );
       const createContent = await Deno.readTextFile(createPagePath);
@@ -807,7 +807,7 @@ Deno.test({
         adminUiDir,
         "routes",
         "admin",
-        "products",
+        "tickets",
         "[id]",
         "edit.tsx",
       );

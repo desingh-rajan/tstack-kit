@@ -5,9 +5,9 @@
   "license": "MIT",
   "description": "Production-ready admin CRUD API for TStack Kit. Pure JSON API with pagination, search, sorting, and role-based access control. Framework-agnostic, ORM-agnostic architecture.",
   "tasks": {
-    "test": "ENVIRONMENT=test deno test --allow-all --no-check --unsafely-ignore-certificate-errors src/_test_setup.ts src/ && deno run --allow-all scripts/cleanup-test-db.ts",
+    "test": "ENVIRONMENT=test deno test --allow-all --no-check --trace-leaks src/_test_setup.ts src/ ; deno run --allow-all scripts/cleanup-test-db.ts",
     "test:watch": "ENVIRONMENT=test deno test --allow-all --no-check --watch src/_test_setup.ts src/",
-    "test:coverage": "ENVIRONMENT=test deno test --allow-all --no-check --coverage=coverage src/_test_setup.ts src/ && deno run --allow-all scripts/cleanup-test-db.ts",
+    "test:coverage": "ENVIRONMENT=test deno test --allow-all --no-check --coverage=coverage src/_test_setup.ts src/ ; deno run --allow-all scripts/cleanup-test-db.ts",
     "cleanup:test-db": "deno run --allow-all scripts/cleanup-test-db.ts",
     "fmt": "deno fmt",
     "lint": "deno lint"
