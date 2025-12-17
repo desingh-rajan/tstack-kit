@@ -69,6 +69,7 @@ Creates:
 - JWT authentication (included by default)
 - Role-based access control (user/admin/superadmin)
 - Built-in entities: Users, Articles, Site Settings
+- Product listing entities (brands, categories, products, variants)
 
 ### Entity Scaffolding
 
@@ -112,6 +113,7 @@ Entity automatically appears in Admin UI sidebar.
 # Create projects
 tstack create workspace my-app          # Full workspace (API + Admin UI)
 tstack create workspace my-app --github-org=your-org  # With GitHub repos
+tstack create workspace my-app --skip-listing  # Skip product listing entities
 tstack create api my-api                # API only
 
 # Scaffold entities
@@ -153,6 +155,12 @@ my-project-api/
 │   ├── config/              # Database & environment config
 │   ├── entities/            # Your domain entities
 │   │   ├── articles/        # Example entity
+│   │   ├── brands/          # Product brands
+│   │   ├── categories/      # Product categories
+│   │   ├── products/        # Products with variants
+│   │   ├── product_images/  # Product image gallery
+│   │   ├── product_variants/ # SKU variants (size, color)
+│   │   ├── variant_options/ # Variant option values
 │   │   ├── site_settings/   # Dynamic app configuration
 │   │   └── users/           # User management
 │   └── shared/              # Middleware & utilities

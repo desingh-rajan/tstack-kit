@@ -12,10 +12,12 @@ Creates a full workspace with API + Admin UI projects.
 
 **Options:**
 
-| Option               | Description                          |
-| -------------------- | ------------------------------------ |
-| `--github-org=<org>` | Create GitHub repos in specified org |
-| `--skip-git`         | Skip git initialization              |
+| Option               | Description                              |
+| -------------------- | ---------------------------------------- |
+| `--github-org=<org>` | Create GitHub repos in specified org     |
+| `--skip-git`         | Skip git initialization                  |
+| `--skip-listing`     | Skip product listing entities            |
+| `--skip-db-setup`    | Skip database creation                   |
 
 **Example:**
 
@@ -217,6 +219,27 @@ well:
 tstack scaffold products              # Full entity with admin panel
 tstack scaffold products --skip-admin # No admin routes/tests
 ```
+
+### The --skip-listing Flag
+
+By default, workspaces include product listing entities (brands, categories,
+products, variants). Use `--skip-listing` for non-e-commerce projects:
+
+```bash
+tstack create workspace my-blog --skip-listing  # No product entities
+tstack create workspace my-shop                 # Includes product entities
+```
+
+**Included product listing entities:**
+
+| Entity           | Description                          |
+| ---------------- | ------------------------------------ |
+| brands           | Product brands with logo support     |
+| categories       | Hierarchical product categories      |
+| products         | Main product entity with SEO fields  |
+| product_images   | Product image gallery                |
+| product_variants | SKU variants (size, color, etc.)     |
+| variant_options  | Available variant option values      |
 
 **When to skip admin:**
 
