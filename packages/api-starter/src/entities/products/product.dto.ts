@@ -19,8 +19,14 @@ export const CreateProductSchema = z.object({
     .optional(), // Auto-generated from name if not provided
   description: z.string().max(10000, "Description too long").optional()
     .nullable(),
-  brandId: z.string().uuid("Invalid brand ID").optional().nullable(),
-  categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
+  brandId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid brand ID").nullable(),
+  ).optional(),
+  categoryId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid category ID").nullable(),
+  ).optional(),
   specifications: z.record(z.string(), z.any()).optional().default({}),
   price: z.string().or(z.number()).transform((val) => String(val)),
   compareAtPrice: z.string().or(z.number()).transform((val) => String(val))
@@ -45,8 +51,14 @@ export const UpdateProductSchema = z.object({
     )
     .optional(),
   description: z.string().max(10000).optional().nullable(),
-  brandId: z.string().uuid("Invalid brand ID").optional().nullable(),
-  categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
+  brandId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid brand ID").nullable(),
+  ).optional(),
+  categoryId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid category ID").nullable(),
+  ).optional(),
   specifications: z.record(z.string(), z.any()).optional(),
   price: z.string().or(z.number()).transform((val) => String(val)).optional(),
   compareAtPrice: z.string().or(z.number()).transform((val) => String(val))

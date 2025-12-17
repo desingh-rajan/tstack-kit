@@ -256,7 +256,9 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
               data[field.name] = value;
             }
           } else {
-            data[field.name] = value;
+            // Convert empty strings to null for optional string fields (like UUIDs)
+            const strValue = value as string;
+            data[field.name] = strValue === "" ? null : strValue;
           }
         }
 

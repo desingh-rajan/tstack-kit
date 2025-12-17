@@ -8,7 +8,10 @@ import { z } from "zod";
 
 // Create Product Variant DTO
 export const CreateProductVariantSchema = z.object({
-  productId: z.string().uuid("Invalid product ID"),
+  productId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid product ID"),
+  ),
   sku: z.string().max(100, "SKU too long").optional().nullable(),
   price: z.string().or(z.number()).transform((val) => val ? String(val) : null)
     .optional().nullable(),
@@ -18,7 +21,10 @@ export const CreateProductVariantSchema = z.object({
   stockQuantity: z.number().int().min(0, "Stock cannot be negative").optional()
     .default(0),
   options: z.record(z.string(), z.string()).default({}), // e.g., {"size": "10 inch"}
-  imageId: z.string().uuid("Invalid image ID").optional().nullable(),
+  imageId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid image ID").nullable(),
+  ).optional(),
   isActive: z.boolean().optional().default(true),
 });
 
@@ -36,7 +42,10 @@ export const UpdateProductVariantSchema = z.object({
   ).optional().nullable(),
   stockQuantity: z.number().int().min(0).optional(),
   options: z.record(z.string(), z.string()).optional(),
-  imageId: z.string().uuid("Invalid image ID").optional().nullable(),
+  imageId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid image ID").nullable(),
+  ).optional(),
   isActive: z.boolean().optional(),
 });
 

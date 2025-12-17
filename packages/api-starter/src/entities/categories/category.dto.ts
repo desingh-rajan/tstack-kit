@@ -19,7 +19,10 @@ export const CreateCategorySchema = z.object({
     .optional(), // Auto-generated from name if not provided
   description: z.string().max(2000, "Description too long").optional()
     .nullable(),
-  parentId: z.string().uuid("Invalid parent category ID").optional().nullable(),
+  parentId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid parent category ID").nullable(),
+  ).optional(),
   icon: z.string().max(100, "Icon name too long").optional().nullable(),
   displayOrder: z.number().int().min(0).optional().default(0),
   isActive: z.boolean().optional().default(true),
@@ -39,7 +42,10 @@ export const UpdateCategorySchema = z.object({
     )
     .optional(),
   description: z.string().max(2000).optional().nullable(),
-  parentId: z.string().uuid("Invalid parent category ID").optional().nullable(),
+  parentId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid parent category ID").nullable(),
+  ).optional(),
   icon: z.string().max(100).optional().nullable(),
   displayOrder: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),

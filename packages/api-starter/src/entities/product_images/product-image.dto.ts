@@ -8,7 +8,10 @@ import { z } from "zod";
 
 // Create Product Image DTO (used after S3 upload)
 export const CreateProductImageSchema = z.object({
-  productId: z.string().uuid("Invalid product ID"),
+  productId: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().uuid("Invalid product ID"),
+  ),
   url: z.string().url("Invalid image URL"),
   thumbnailUrl: z.string().url("Invalid thumbnail URL").optional().nullable(),
   altText: z.string().max(255, "Alt text too long").optional().nullable(),

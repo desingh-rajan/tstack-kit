@@ -22,6 +22,7 @@ function formatZodErrors(zodError: ZodError, isProduction: boolean) {
     // Development: Full error details for debugging
     return zodError.errors.map((err) => ({
       ...err, // Include all Zod error details in dev mode
+      field: err.path.join(".") || "unknown",
       code: err.code,
       message: err.message,
       path: err.path,
