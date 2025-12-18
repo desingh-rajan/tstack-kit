@@ -66,7 +66,13 @@ export interface AdminConfig<T> {
  * ```
  */
 export class HonoAdminAdapter<T> {
-  private config: Required<AdminConfig<T>>;
+  private config: AdminConfig<T> & {
+    entityNamePlural: string;
+    searchable: string[];
+    sortable: string[];
+    allowedRoles: UserRole[];
+    baseUrl: string;
+  };
 
   constructor(config: AdminConfig<T>) {
     // Set defaults
@@ -140,7 +146,7 @@ export class HonoAdminAdapter<T> {
    *
    * Example: GET /ts-admin/products/new
    */
-  new(): (c: Context) => Promise<Response> {
+  new(): (c: Context) => Response {
     return (c: Context) => {
       this.checkAuth(c);
 
