@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
-import { products } from "./product.model.ts";
+import { type Product, products } from "./product.model.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 import { ProductControllerStatic } from "./product.controller.ts";
 
@@ -14,7 +14,7 @@ import { ProductControllerStatic } from "./product.controller.ts";
 
 const ADMIN_BASE_URL = "/ts-admin/products";
 
-// Create ORM adapter
+// Create ORM adapter (auto-generates slug from name)
 const ormAdapter = new DrizzleAdapter(products, {
   db,
   idColumn: "id",
@@ -22,7 +22,7 @@ const ormAdapter = new DrizzleAdapter(products, {
 });
 
 // Create admin adapter
-const productAdmin = new HonoAdminAdapter({
+const productAdmin = new HonoAdminAdapter<Product>({
   ormAdapter,
   entityName: "product",
   entityNamePlural: "products",

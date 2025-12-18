@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { DrizzleAdapter, HonoAdminAdapter } from "@tstack/admin";
 import { db } from "../../config/database.ts";
-import { categories } from "./category.model.ts";
+import { categories, type Category } from "./category.model.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 import { CategoryControllerStatic } from "./category.controller.ts";
 
@@ -14,7 +14,7 @@ import { CategoryControllerStatic } from "./category.controller.ts";
 
 const ADMIN_BASE_URL = "/ts-admin/categories";
 
-// Create ORM adapter
+// Create ORM adapter (auto-generates slug from name)
 const ormAdapter = new DrizzleAdapter(categories, {
   db,
   idColumn: "id",
@@ -22,7 +22,7 @@ const ormAdapter = new DrizzleAdapter(categories, {
 });
 
 // Create admin adapter
-const categoryAdmin = new HonoAdminAdapter({
+const categoryAdmin = new HonoAdminAdapter<Category>({
   ormAdapter,
   entityName: "category",
   entityNamePlural: "categories",
