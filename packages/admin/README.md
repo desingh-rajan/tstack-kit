@@ -4,17 +4,18 @@
 >
 > Pure JSON API for admin operations - bring your own frontend
 
-**Version:** 2.0.0\
-**Status:** [SUCCESS] Production Ready (72/72 tests passing)\
+**Version:** 2.1.0\
+**Status:** Production Ready (28/28 tests passing)\
 **License:** MIT
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-- **[Quick Start](#quick-start)** - Get started in 5 minutes
-- **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** - Security analysis (Grade A)
-- **[STATUS.md](./STATUS.md)** - Implementation status & roadmap
+- [Quick Start](#quick-start) - Get started in 5 minutes
+- [Auto-Features](#auto-features-v210) - Slug generation, display order, hooks
+- [API Reference](#api-reference) - DrizzleAdapter and HonoAdminAdapter
+- [SECURITY_AUDIT.md](./SECURITY_AUDIT.md) - Security analysis (Grade A)
 
 ---
 
@@ -50,10 +51,10 @@ app.delete("/api/admin/products/:id", admin.destroy());
 
 **You Get:**
 
-- [SUCCESS] Full CRUD JSON API with pagination, search, sorting
-- [SUCCESS] Works with ANY frontend (React, Vue, Angular, Svelte, Astro)
-- [SUCCESS] Type-safe, framework-agnostic, ORM-agnostic
-- [SUCCESS] Production-tested (72 tests, real database, NO MOCKS)
+- Full CRUD JSON API with pagination, search, sorting
+- Works with any frontend (React, Vue, Angular, Svelte, Astro)
+- Type-safe, framework-agnostic, ORM-agnostic
+- Production-tested (28 tests passing)
 
 ---
 
@@ -63,25 +64,32 @@ app.delete("/api/admin/products/:id", admin.destroy());
 
 - Zero configuration required
 - Type-safe with full TypeScript generics
-- Framework-agnostic (Hono now, Express future)
-- ORM-agnostic (Drizzle now, Sequelize/Prisma future)
-- [SUCCESS] Production-ready (72/72 tests passing)
+- Framework-agnostic (Hono now, Express planned)
+- ORM-agnostic (Drizzle now, Prisma planned)
+- Production-ready (28/28 tests passing)
+
+**Auto-Features (v2.1.0):**
+
+- Auto-slug generation from `name` column with uniqueness (-1, -2 suffix)
+- Auto-increment `displayOrder` on create
+- Shift `displayOrder` on update (Rails acts_as_list style)
+- Empty value cleanup (null/undefined/"" removed before insert)
+- beforeCreate/beforeUpdate hooks for custom transformations
 
 **API:**
 
-- 📡 Pure JSON responses (API-first architecture)
+- Pure JSON responses (API-first architecture)
 - Full-text search across columns
-- 📄 Efficient pagination
-- 🔄 Sortable columns
-- Bulk operations
-- 🌐 Works with any frontend framework
+- Efficient pagination with metadata
+- Sortable columns (asc/desc)
+- Bulk delete operations
 
 **Security:**
 
-- 🔒 Authentication & authorization checks
+- Authentication and authorization middleware support
 - Role-based access control
 - SQL injection protection (parameterized queries)
-- [SUCCESS] Type-safe input validation
+- Type-safe input validation
 
 ---
 
@@ -98,7 +106,7 @@ Or add to `deno.json`:
 ```json
 {
   "imports": {
-    "@tstack/admin": "jsr:@tstack/admin@^1.0.0"
+    "@tstack/admin": "jsr:@tstack/admin@^2.1.0"
   }
 }
 ```
@@ -231,50 +239,102 @@ curl "http://localhost:8000/admin/products?search=widget&page=1&limit=20"
 
 ## Testing
 
-**Philosophy:** **Mocks lie. Real databases tell the truth.**
-
-All 73 tests run against real PostgreSQL. Zero mocks. Zero lies.
+Core unit tests run without database dependency.
 
 ```bash
-# Run all tests
 deno task test
+```
 
-# Test results
-[SUCCESS] Core Pagination:   22/22 tests
-[SUCCESS] Drizzle Adapter:   26/26 tests (real PostgreSQL)
-[SUCCESS] Hono Adapter:      25/25 tests (real HTTP + DB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TOTAL:            73/73 passing | 0 failed
+```
+Core Pagination ........ 22/22 tests
+Slug Generation ........ 2/2  tests (13 steps)
+DisplayOrder Logic ..... 4/4  tests (11 steps)
+────────────────────────────────────────────
+TOTAL                   28/28 passing
+```
+
+---
+
+## Auto-Features (v2.1.0)
+
+### Auto-Slug Generation
+
+When your table has both `name` and `slug` columns, DrizzleAdapter automatically
+generates a URL-friendly slug from the name:
+
+```typescript
+// Create with just name - slug is auto-generated
+await adapter.create({ name: "My Product" });
+// Result: { name: "My Product", slug: "my-product" }
+
+// Duplicate names get unique slugs
+await adapter.create({ name: "My Product" });
+// Result: { name: "My Product", slug: "my-product-1" }
+```
+
+### Auto-Increment displayOrder
+
+When your table has a `displayOrder` column:
+
+- **Create**: Always appends to end (max + 1)
+- **Update**: Shifts other items to make room at new position
+
+```typescript
+// Items: [A:0, B:1, C:2]
+await adapter.create({ name: "D" });
+// Items: [A:0, B:1, C:2, D:3]
+
+// Move D to position 1
+await adapter.update(idD, { displayOrder: 1 });
+// Items: [A:0, D:1, B:2, C:3]
+```
+
+### beforeCreate / beforeUpdate Hooks
+
+Transform data before saving:
+
+```typescript
+const admin = new HonoAdminAdapter({
+  ormAdapter: new DrizzleAdapter(products, { db }),
+  entityName: "product",
+  beforeCreate: (data) => ({
+    ...data,
+    createdBy: "system",
+  }),
+  beforeUpdate: (data) => ({
+    ...data,
+    modifiedBy: "system",
+  }),
+});
 ```
 
 ---
 
 ## Future Extensions
 
-**Coming Soon:**
-
 ### Framework Adapters
 
-- [SUCCESS] **Hono** (complete)
-- 🚧 **Express** (planned)
+| Adapter | Status   |
+| ------- | -------- |
+| Hono    | Complete |
+| Express | Planned  |
 
 ### ORM Adapters
 
-- [SUCCESS] **Drizzle** (complete)
-- 🚧 **Sequelize** (planned)
-- 🚧 **Prisma** (planned)
+| Adapter | Status   |
+| ------- | -------- |
+| Drizzle | Complete |
+| Prisma  | Planned  |
 
-**For Contributors:**
+### Contributing New Adapters
 
-When implementing new adapters, you **MUST**:
+When implementing new adapters:
 
-1. [SUCCESS] Follow the same adapter patterns
-2. [SUCCESS] Write all 20+ tests (real databases, NO MOCKS)
-3. [SUCCESS] Maintain type safety
-4. [SUCCESS] Support both number and string IDs
-5. [SUCCESS] Follow the same naming conventions
-
-See the architecture diagram above for design patterns.
+1. Follow the existing adapter patterns
+2. Write comprehensive tests (no mocks)
+3. Maintain full type safety
+4. Support both integer and UUID primary keys
+5. Follow naming conventions
 
 ---
 
@@ -402,7 +462,7 @@ Follow the steps above for complete TStack Kit integration.
 // deno.json
 {
   "imports": {
-    "@tstack/admin": "jsr:@tstack/admin@^1.0.0"
+    "@tstack/admin": "jsr:@tstack/admin@^2.1.0"
   }
 }
 ```
@@ -475,9 +535,9 @@ More advanced usage patterns coming in future releases.
 
 ## Security
 
-**Grade A** (see [SECURITY_AUDIT.md](./SECURITY_AUDIT.md))
+Security Grade: **A** (see [SECURITY_AUDIT.md](./SECURITY_AUDIT.md))
 
-[SUCCESS] **Implemented:**
+**Implemented:**
 
 - Authentication checks via middleware
 - Authorization with role-based access
@@ -485,32 +545,22 @@ More advanced usage patterns coming in future releases.
 - Type-safe input handling
 - Error message sanitization
 
-[WARNING] **Recommended Additions:**
+**Recommended Additions:**
 
-1. CSRF protection (use Hono's CSRF middleware)
-2. XSS escaping (use template library with auto-escaping)
-3. Rate limiting (use `hono-rate-limit`)
-
-See **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** for complete analysis.
+- CSRF protection (use Hono's CSRF middleware)
+- Rate limiting (use `hono-rate-limit`)
 
 ---
 
 ## Contributing
 
-We welcome contributions! When adding features:
+Contributions welcome. Requirements:
 
-1. **Follow Existing Patterns** - Match current code style
-2. **Write Tests** - Real database tests, NO MOCKS
-3. **Maintain Type Safety** - Full TypeScript with strict mode
-4. **Document Everything** - Update README and add examples
-5. **Test Before PR** - All 73+ tests must pass
-
-**Adding New Adapters:**
-
-- Follow the adapter pattern shown in existing implementations
-- Follow adapter interface patterns
-- Write minimum 20+ tests per adapter
-- Test with real database (NO MOCKS)
+1. Follow existing code patterns
+2. Write tests (no mocks)
+3. Maintain type safety
+4. Update documentation
+5. All tests must pass before PR
 
 ---
 
@@ -556,17 +606,7 @@ MIT License - See [LICENSE](../../LICENSE) file for details.
 
 ## Credits
 
-**Maintainers:** TStack Kit Team\
-**Version:** 1.0.0\
-**Last Updated:** November 13, 2025
+**Maintainers:** TStack Kit Team
 
-**Built with:**
-
-- [Hono](https://hono.dev/) - Web framework
-- [Drizzle](https://orm.drizzle.team/) - ORM
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Deno](https://deno.com/) - Runtime
-
----
-
-**Together, we build better tools!**
+**Built with:** [Hono](https://hono.dev/) |
+[Drizzle ORM](https://orm.drizzle.team/) | [Deno](https://deno.com/)

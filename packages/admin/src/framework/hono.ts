@@ -36,6 +36,12 @@ export interface AdminConfig<T> {
 
   /** Base URL for admin routes (default: "/ts-admin/{entityName}") */
   baseUrl?: string;
+
+  /** Hook called before creating a record - use to transform/validate data */
+  beforeCreate?: (data: Partial<T>) => Partial<T> | Promise<Partial<T>>;
+
+  /** Hook called before updating a record - use to transform/validate data */
+  beforeUpdate?: (data: Partial<T>) => Partial<T> | Promise<Partial<T>>;
 }
 
 /**
@@ -160,9 +166,14 @@ export class HonoAdminAdapter<T> {
     return async (c: Context) => {
       this.checkAuth(c);
 
-      const body = await this.parseBody(c);
+      let body = await this.parseBody(c);
 
       try {
+        // Apply beforeCreate hook if provided
+        if (this.config.beforeCreate) {
+          body = await this.config.beforeCreate(body as Partial<T>);
+        }
+
         const newRecord = await this.config.ormAdapter.create(
           body as Partial<T>,
         );
@@ -219,9 +230,14 @@ export class HonoAdminAdapter<T> {
       this.checkAuth(c);
 
       const id = c.req.param("id");
-      const body = await this.parseBody(c);
+      let body = await this.parseBody(c);
 
       try {
+        // Apply beforeUpdate hook if provided
+        if (this.config.beforeUpdate) {
+          body = await this.config.beforeUpdate(body as Partial<T>);
+        }
+
         const updated = await this.config.ormAdapter.update(
           id,
           body as Partial<T>,

@@ -5,7 +5,18 @@
  * Supports both number and string (UUID) primary keys.
  */
 
-import { asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type {
   EntityId,
@@ -119,14 +130,135 @@ export class DrizzleAdapter<T extends Record<string, any>>
 
   /**
    * Create a new record
+   * Auto-generates slug from name if table has both columns and slug is not provided
+   * Ensures slug uniqueness by appending -1, -2, etc. if duplicate exists
+   * Auto-increments displayOrder if column exists and no value provided
    */
   async create(data: Partial<T>): Promise<T> {
+    // deno-lint-ignore no-explicit-any
+    const createData: any = { ...data };
+
+    // Remove undefined, null, and empty string values so DB defaults are applied
+    for (const key of Object.keys(createData)) {
+      if (
+        createData[key] === undefined ||
+        createData[key] === null ||
+        createData[key] === ""
+      ) {
+        delete createData[key];
+      }
+    }
+
+    // Auto-generate slug from name if:
+    // 1. Table has both 'slug' and 'name' columns
+    // 2. 'name' is provided but 'slug' is not
+    if (
+      "slug" in this.table &&
+      "name" in this.table &&
+      createData.name &&
+      !createData.slug
+    ) {
+      const baseSlug = this.generateSlug(createData.name);
+      createData.slug = await this.ensureUniqueSlug(baseSlug);
+    }
+
+    // Handle displayOrder: always auto-increment on create
+    // User can adjust position via update after creation
+    if ("displayOrder" in this.table) {
+      createData.displayOrder = await this.getNextDisplayOrder();
+    }
+
     const result = await this.db
       .insert(this.table)
-      .values(data)
+      .values(createData)
       .returning();
 
     return result[0] as T;
+  }
+
+  /**
+   * Get the next display order value (max + 1)
+   */
+  private async getNextDisplayOrder(): Promise<number> {
+    const result = await this.db
+      .select({ max: sql<number>`COALESCE(MAX(display_order), -1) + 1` })
+      .from(this.table);
+
+    return result[0]?.max ?? 0;
+  }
+
+  /**
+   * Shift display order values to make room at a position
+   * All items with displayOrder >= targetOrder get incremented by 1
+   */
+  private async shiftDisplayOrders(
+    targetOrder: number,
+    excludeId?: EntityId,
+  ): Promise<void> {
+    if (!("displayOrder" in this.table)) return;
+
+    // Build condition: displayOrder >= targetOrder AND (id != excludeId if provided)
+    const conditions = [gte(this.table.displayOrder, targetOrder)];
+    if (excludeId !== undefined) {
+      const parsedId = this.parseId(excludeId);
+      conditions.push(ne(this.table[this.idColumn], parsedId));
+    }
+
+    await this.db
+      .update(this.table)
+      .set({ displayOrder: sql`display_order + 1` })
+      .where(and(...conditions));
+  }
+  /**
+   * Generate a URL-friendly slug from a string
+   */
+  private generateSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "") // Remove non-word chars (except spaces and hyphens)
+      .replace(/[\s_-]+/g, "-") // Replace spaces and underscores with hyphens
+      .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+  }
+
+  /**
+   * Ensure slug is unique by appending -1, -2, etc. if duplicate exists
+   */
+  private async ensureUniqueSlug(baseSlug: string): Promise<string> {
+    // Check if slug column exists
+    if (!("slug" in this.table)) {
+      return baseSlug;
+    }
+
+    // Check if base slug exists
+    const existing = await this.db
+      .select({ slug: this.table.slug })
+      .from(this.table)
+      .where(ilike(this.table.slug, `${baseSlug}%`));
+
+    if (existing.length === 0) {
+      return baseSlug;
+    }
+
+    // Extract existing slugs
+    const existingSlugs = new Set(
+      existing.map((r: { slug: string }) => r.slug.toLowerCase()),
+    );
+
+    // If base slug doesn't exist, use it
+    if (!existingSlugs.has(baseSlug)) {
+      return baseSlug;
+    }
+
+    // Find next available number
+    let counter = 1;
+    let uniqueSlug = `${baseSlug}-${counter}`;
+    while (existingSlugs.has(uniqueSlug)) {
+      counter++;
+      uniqueSlug = `${baseSlug}-${counter}`;
+    }
+
+    return uniqueSlug;
   }
 
   /**
@@ -140,6 +272,14 @@ export class DrizzleAdapter<T extends Record<string, any>>
     const updateData: any = { ...data };
     if ("updatedAt" in this.table) {
       updateData.updatedAt = new Date();
+    }
+
+    // Handle displayOrder: shift existing items if position changes
+    if (
+      "displayOrder" in this.table &&
+      updateData.displayOrder !== undefined
+    ) {
+      await this.shiftDisplayOrders(updateData.displayOrder, id);
     }
 
     const result = await this.db

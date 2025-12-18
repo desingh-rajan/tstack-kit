@@ -132,7 +132,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
 
         let item: T;
         if (config.idField === "id") {
-          item = await config.service.getById!(parseInt(identifier));
+          item = await config.service.getById!(identifier);
         } else {
           item = await config.service.getByKey!(identifier);
         }
@@ -353,7 +353,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
 
         let item: T;
         if (config.idField === "id") {
-          item = await config.service.getById!(parseInt(identifier));
+          item = await config.service.getById!(identifier);
         } else {
           item = await config.service.getByKey!(identifier);
         }
@@ -410,7 +410,9 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
           const value = form.get(field.name);
 
           if (field.type === "boolean") {
-            data[field.name] = value === "on";
+            // Checkbox: if not in form, it's unchecked (false)
+            // if value is "on" or "true", it's checked (true)
+            data[field.name] = value === "on" || value === "true";
           } else if (field.type === "number") {
             data[field.name] = value ? parseInt(value as string) : null;
           } else if (field.type === "json") {
@@ -420,7 +422,9 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
               data[field.name] = value;
             }
           } else {
-            data[field.name] = value;
+            // Convert empty strings to null for optional string fields (like UUIDs)
+            const strValue = value as string;
+            data[field.name] = strValue === "" ? null : strValue;
           }
         }
 
@@ -443,7 +447,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
 
           let item: T;
           if (config.idField === "id") {
-            item = await config.service.getById!(parseInt(identifier));
+            item = await config.service.getById!(identifier);
           } else {
             item = await config.service.getByKey!(identifier);
           }
@@ -461,7 +465,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
         config.service.setClient(apiClient);
 
         await config.service.update(
-          config.idField === "id" ? parseInt(identifier) : identifier,
+          config.idField === "id" ? identifier : identifier,
           data as Partial<T>,
         );
 
@@ -477,7 +481,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
         const identifier = ctx.params[config.idField];
         let item: T;
         if (config.idField === "id") {
-          item = await config.service.getById!(parseInt(identifier));
+          item = await config.service.getById!(identifier);
         } else {
           item = await config.service.getByKey!(identifier);
         }
@@ -512,7 +516,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
         config.service.setClient(apiClient);
 
         if (config.idField === "id") {
-          await config.service.delete!(parseInt(identifier));
+          await config.service.delete!(identifier);
         } else {
           await config.service.delete!(identifier);
         }
