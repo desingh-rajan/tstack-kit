@@ -152,7 +152,7 @@ main() {
     # Step 2: Check Deno version (need 2.0+)
     DENO_MAJOR=$(deno --version | head -n 1 | cut -d ' ' -f 2 | cut -d '.' -f 1)
     if [ "$DENO_MAJOR" -lt 2 ]; then
-        warn "TStack requires Deno 2.0+. You have Deno $DENO_MAJOR.x"
+        warn "TStack requires Deno 2.6+. You have Deno $DENO_MAJOR.x"
         info "Upgrading Deno..."
         deno upgrade
         success "Deno upgraded"

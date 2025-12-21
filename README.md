@@ -194,7 +194,7 @@ my-project-admin-ui/
 
 | Layer      | Technology               |
 | ---------- | ------------------------ |
-| Runtime    | Deno 2.0+                |
+| Runtime    | Deno 2.6+                |
 | Framework  | Hono                     |
 | ORM        | Drizzle                  |
 | Database   | PostgreSQL 16+           |
