@@ -9,7 +9,7 @@ export type ProjectStatus = "creating" | "created" | "destroying" | "destroyed";
 
 export interface ProjectMetadata {
   name: string; // Original name without suffix (e.g., "foo-bar-shop")
-  type: "api" | "admin-ui" | "workspace";
+  type: "api" | "admin-ui" | "store" | "workspace";
   folderName: string; // Actual folder name (e.g., "foo-bar-shop-api")
   path: string; // Absolute path to project
   databases?: { // Optional: only for API projects

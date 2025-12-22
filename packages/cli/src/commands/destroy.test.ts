@@ -601,7 +601,7 @@ Deno.test({
       metadata = await getProject(folderName);
       assertExists(metadata, "Metadata should still exist after destroy");
       assertEquals(
-        metadata.status,
+        metadata!.status,
         "destroyed",
         "Status should be 'destroyed'",
       );
@@ -634,8 +634,8 @@ Deno.test(
       // Verify KV metadata is correct
       const metadata = await getProject(folderName);
       assertExists(metadata, "Metadata should exist");
-      assertEquals(metadata.path, folderPath, "Path should match");
-      assertEquals(metadata.databases?.dev, `kv_metadata_test_api_dev`);
+      assertEquals(metadata!.path, folderPath, "Path should match");
+      assertEquals(metadata!.databases?.dev, `kv_metadata_test_api_dev`);
 
       // Verify folder exists
       let folderExists = await exists(folderPath, { isDirectory: true });
@@ -825,7 +825,7 @@ Deno.test({
       const apiMetadata = await getProject("shop-api");
       assertExists(apiMetadata, "API metadata should still exist");
       assertEquals(
-        apiMetadata.status,
+        apiMetadata!.status,
         "destroyed",
         "API status should be 'destroyed'",
       );
@@ -833,7 +833,7 @@ Deno.test({
       const uiMetadata = await getProject("shop-admin-ui");
       assertExists(uiMetadata, "Admin UI metadata should still exist");
       assertEquals(
-        uiMetadata.status,
+        uiMetadata!.status,
         "created",
         "Admin UI status should still be 'created'",
       );
@@ -894,7 +894,7 @@ Deno.test({
       const apiMetadata = await getProject("store-api");
       assertExists(apiMetadata, "API metadata should still exist");
       assertEquals(
-        apiMetadata.status,
+        apiMetadata!.status,
         "destroyed",
         "API status should be 'destroyed'",
       );
@@ -902,7 +902,7 @@ Deno.test({
       const uiMetadata = await getProject("store-admin-ui");
       assertExists(uiMetadata);
       assertEquals(
-        uiMetadata.status,
+        uiMetadata!.status,
         "created",
         "Admin UI status should still be 'created'",
       );
@@ -951,7 +951,7 @@ Deno.test({
       const metadata = await getProject("cart-api");
       assertExists(metadata, "Metadata should still exist");
       assertEquals(
-        metadata.status,
+        metadata!.status,
         "destroyed",
         "Status should be 'destroyed'",
       );
@@ -1064,7 +1064,7 @@ Deno.test({
       const metadata = await getProject("foo-bar-api");
       assertExists(metadata, "Metadata should still exist");
       assertEquals(
-        metadata.status,
+        metadata!.status,
         "destroyed",
         "Status should be 'destroyed'",
       );
@@ -1157,7 +1157,7 @@ Deno.test({
       const metadata = await getProject("status-force-test-api");
       assertExists(metadata, "Metadata should still exist");
       assertEquals(
-        metadata.status,
+        metadata!.status,
         "destroyed",
         "Status should be 'destroyed' after force destroy",
       );
@@ -1201,7 +1201,7 @@ Deno.test({
       const metadata = await getProject("status-manual-test-api");
       assertExists(metadata, "Metadata should still exist");
       assertEquals(
-        metadata.status,
+        metadata!.status,
         "destroyed",
         "Status should be 'destroyed'",
       );

@@ -49,7 +49,7 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
-    const workspaceName = "test-default-workspace";
+    const workspaceName = generateWorkspaceName();
 
     try {
       await createWorkspace({
@@ -61,15 +61,17 @@ Deno.test({
       // Verify workspace metadata
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.name, workspaceName);
-      assertEquals(workspace.components.api, true);
-      assertEquals(workspace.components.adminUi, true);
-      assertEquals(workspace.projects.length, 2); // api + admin-ui
+      assertEquals(workspace!.name, workspaceName);
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, true);
+      assertEquals(workspace!.components.store, true);
+      assertEquals(workspace!.projects.length, 3); // api + admin-ui + store
 
       // Verify folders exist
       const workspacePath = join(tempDir, workspaceName);
       const apiPath = join(workspacePath, `${workspaceName}-api`);
       const adminUiPath = join(workspacePath, `${workspaceName}-admin-ui`);
+      const storePath = join(workspacePath, `${workspaceName}-store`);
 
       assertEquals(
         await Deno.stat(workspacePath)
@@ -85,6 +87,12 @@ Deno.test({
       );
       assertEquals(
         await Deno.stat(adminUiPath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+      );
+      assertEquals(
+        await Deno.stat(storePath)
           .then(() => true)
           .catch(() => false),
         true,
@@ -122,11 +130,11 @@ Deno.test({
       // Verify workspace created locally
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.githubRepos.length, 0); // No GitHub repos
+      assertEquals(workspace!.githubRepos.length, 0); // No GitHub repos
 
       // Verify both components created by default
-      assertEquals(workspace.components.api, true);
-      assertEquals(workspace.components.adminUi, true);
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, true);
 
       // Cleanup
       await destroyWorkspace({
@@ -158,9 +166,9 @@ Deno.test({
 
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.components.api, true);
-      assertEquals(workspace.components.adminUi, false);
-      assertEquals(workspace.projects.length, 1); // api only
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, false);
+      assertEquals(workspace!.projects.length, 1); // api only
 
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
       assertEquals(
@@ -187,7 +195,7 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
-    const workspaceName = "test-skip-admin";
+    const workspaceName = generateWorkspaceName();
 
     try {
       await createWorkspace({
@@ -199,9 +207,98 @@ Deno.test({
 
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.components.api, true);
-      assertEquals(workspace.components.adminUi, false);
-      assertEquals(workspace.projects.length, 1); // api only
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, false);
+      assertEquals(workspace!.components.store, true); // store created by default
+      assertEquals(workspace!.projects.length, 2); // api + store
+
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name: "createWorkspace - creates workspace with --skip-store",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        skipStore: true,
+        skipRemote: true,
+      });
+
+      const workspace = await getWorkspace(workspaceName);
+      assertExists(workspace);
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, true);
+      assertEquals(workspace!.components.store, false);
+      assertEquals(workspace!.projects.length, 2); // api + admin-ui
+
+      const workspacePath = join(tempDir, workspaceName);
+      const storePath = join(workspacePath, `${workspaceName}-store`);
+
+      assertEquals(
+        await Deno.stat(storePath)
+          .then(() => true)
+          .catch(() => false),
+        false,
+      ); // Store should NOT exist
+
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name: "createWorkspace - creates workspace with --with-store only",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        withStore: true,
+        skipRemote: true,
+      });
+
+      const workspace = await getWorkspace(workspaceName);
+      assertExists(workspace);
+      assertEquals(workspace!.components.store, true);
+      assertEquals(workspace!.components.api, false);
+      assertEquals(workspace!.components.adminUi, false);
+      assertEquals(workspace!.projects.length, 1); // store only
+
+      const workspacePath = join(tempDir, workspaceName);
+      const storePath = join(workspacePath, `${workspaceName}-store`);
+
+      assertEquals(
+        await Deno.stat(storePath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+      );
 
       await destroyWorkspace({
         name: workspaceName,
@@ -360,13 +457,13 @@ Deno.test({
 
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.githubOrg, GITHUB_ORG);
-      assertEquals(workspace.githubRepos.length, 1);
+      assertEquals(workspace!.githubOrg, GITHUB_ORG);
+      assertEquals(workspace!.githubRepos.length, 1);
 
-      const apiRepo = workspace.githubRepos.find((r) => r.type === "api");
+      const apiRepo = workspace!.githubRepos.find((r) => r.type === "api");
       assertExists(apiRepo);
-      assertEquals(apiRepo.name, `${workspaceName}-api`);
-      assertEquals(apiRepo.url.includes(GITHUB_ORG), true);
+      assertEquals(apiRepo!.name, `${workspaceName}-api`);
+      assertEquals(apiRepo!.url.includes(GITHUB_ORG), true);
 
       // Verify remote is configured
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
@@ -414,7 +511,7 @@ Deno.test({
 
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.githubRepos.length, 0); // No remote repos
+      assertEquals(workspace!.githubRepos.length, 0); // No remote repos
 
       // Verify no remote configured
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
@@ -497,24 +594,24 @@ Deno.test({
       // Verify workspace metadata
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.components.api, true);
-      assertEquals(workspace.components.adminUi, true);
-      assertEquals(workspace.githubOrg, GITHUB_ORG);
-      assertEquals(workspace.githubRepos.length, 2); // api + admin-ui
+      assertEquals(workspace!.components.api, true);
+      assertEquals(workspace!.components.adminUi, true);
+      assertEquals(workspace!.githubOrg, GITHUB_ORG);
+      assertEquals(workspace!.githubRepos.length, 2); // api + admin-ui
 
       // Verify both repos exist in metadata
-      const apiRepo = workspace.githubRepos.find((r) => r.type === "api");
-      const adminUiRepo = workspace.githubRepos.find((r) =>
+      const apiRepo = workspace!.githubRepos.find((r) => r.type === "api");
+      const adminUiRepo = workspace!.githubRepos.find((r) =>
         r.type === "admin-ui"
       );
 
       assertExists(apiRepo);
-      assertEquals(apiRepo.name, `${workspaceName}-api`);
-      assertEquals(apiRepo.url.includes(GITHUB_ORG), true);
+      assertEquals(apiRepo!.name, `${workspaceName}-api`);
+      assertEquals(apiRepo!.url.includes(GITHUB_ORG), true);
 
       assertExists(adminUiRepo);
-      assertEquals(adminUiRepo.name, `${workspaceName}-admin-ui`);
-      assertEquals(adminUiRepo.url.includes(GITHUB_ORG), true);
+      assertEquals(adminUiRepo!.name, `${workspaceName}-admin-ui`);
+      assertEquals(adminUiRepo!.url.includes(GITHUB_ORG), true);
 
       // Verify remote URLs configured for both projects
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
@@ -580,10 +677,10 @@ Deno.test({
       // Verify workspace metadata
       const workspace = await getWorkspace(workspaceName);
       assertExists(workspace);
-      assertEquals(workspace.name, workspaceName);
-      assertEquals(workspace.components.api, false);
-      assertEquals(workspace.components.adminUi, true);
-      assertEquals(workspace.projects.length, 1); // admin-ui only
+      assertEquals(workspace!.name, workspaceName);
+      assertEquals(workspace!.components.api, false);
+      assertEquals(workspace!.components.adminUi, true);
+      assertEquals(workspace!.projects.length, 1); // admin-ui only
 
       // Verify only admin-ui folder exists
       const workspacePath = join(tempDir, workspaceName);

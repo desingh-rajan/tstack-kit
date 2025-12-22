@@ -9,7 +9,7 @@ import { getProject, updateProject } from "../../utils/projectStore.ts";
 
 export interface BaseCreateOptions {
   projectName: string;
-  projectType: "api" | "admin-ui" | "workspace";
+  projectType: "api" | "admin-ui" | "store" | "workspace";
   targetDir?: string;
   latest?: boolean;
   skipDbSetup?: boolean;

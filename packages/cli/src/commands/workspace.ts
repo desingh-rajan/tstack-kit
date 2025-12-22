@@ -22,6 +22,7 @@ export interface WorkspaceOptions {
   // Inclusive flags (only create specified components)
   withApi?: boolean;
   withAdminUi?: boolean;
+  withStore?: boolean;
   withUi?: boolean;
   withInfra?: boolean;
   withMobile?: boolean;
@@ -30,6 +31,7 @@ export interface WorkspaceOptions {
   // Exclusive flags (skip specific components, create all others)
   skipApi?: boolean;
   skipAdminUi?: boolean;
+  skipStore?: boolean;
   skipUi?: boolean;
   skipInfra?: boolean;
   skipMobile?: boolean;
@@ -56,6 +58,7 @@ const RESERVED_SUFFIXES = [
 type ComponentType =
   | "api"
   | "admin-ui"
+  | "store"
   | "ui"
   | "infra"
   | "mobile"
@@ -64,6 +67,7 @@ type ComponentType =
 const AVAILABLE_COMPONENTS: ComponentType[] = [
   "api",
   "admin-ui",
+  "store",
   // Future components (not yet implemented)
   // "ui",
   // "infra",
@@ -106,10 +110,12 @@ function validateWorkspaceName(name: string): void {
  */
 function determineComponents(options: WorkspaceOptions): ComponentType[] {
   const hasWithFlags = options.withApi || options.withAdminUi ||
+    options.withStore ||
     options.withUi || options.withInfra ||
     options.withMobile || options.withMetrics;
 
   const hasSkipFlags = options.skipApi || options.skipAdminUi ||
+    options.skipStore ||
     options.skipUi || options.skipInfra ||
     options.skipMobile || options.skipMetrics;
 
@@ -126,6 +132,7 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
     // Only create specified components
     if (options.withApi) components.push("api");
     if (options.withAdminUi) components.push("admin-ui");
+    if (options.withStore) components.push("store");
     if (options.withUi) components.push("ui");
     if (options.withInfra) components.push("infra");
     if (options.withMobile) components.push("mobile");
@@ -145,6 +152,9 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
     if (options.skipMetrics) {
       components = components.filter((c) => c !== "metrics");
     }
+    if (options.skipStore) {
+      components = components.filter((c) => c !== "store");
+    }
   } else {
     // Default: create all available components
     components = [...AVAILABLE_COMPONENTS];
@@ -152,7 +162,7 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
 
   // Filter to only implemented components
   const implementedComponents = components.filter((c) =>
-    c === "api" || c === "admin-ui"
+    c === "api" || c === "admin-ui" || c === "store"
   );
 
   if (implementedComponents.length === 0) {
@@ -165,7 +175,7 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
 
   // Warn about future components
   const futureComponents = components.filter((c) =>
-    c !== "api" && c !== "admin-ui"
+    c !== "api" && c !== "admin-ui" && c !== "store"
   );
   if (futureComponents.length > 0) {
     Logger.warning(
@@ -297,9 +307,22 @@ async function createRemoteRepo(
       throw new Error("Failed to create remote repository");
     }
 
+    if (!repoUrl) {
+      throw new Error("Failed to create remote repository");
+    }
+
+    // Authenticated URL for git operations (prevents password prompts)
+    let authenticatedUrl = repoUrl;
+    if (githubToken && repoUrl.startsWith("https://")) {
+      const url = new URL(repoUrl);
+      url.username = "oauth2";
+      url.password = githubToken;
+      authenticatedUrl = url.toString();
+    }
+
     // Add remote
     const remoteCmd = new Deno.Command("git", {
-      args: ["remote", "add", "origin", repoUrl],
+      args: ["remote", "add", "origin", authenticatedUrl],
       cwd: projectPath,
       stdout: "piped",
       stderr: "piped",
@@ -511,6 +534,7 @@ export async function createWorkspace(
       components: {
         api: componentTypes.includes("api"),
         adminUi: componentTypes.includes("admin-ui"),
+        store: componentTypes.includes("store"),
         ui: componentTypes.includes("ui"),
         infra: componentTypes.includes("infra"),
         mobile: componentTypes.includes("mobile"),
@@ -530,9 +554,9 @@ export async function createWorkspace(
       try {
         await createProject({
           projectName: name,
-          projectType: type as "api" | "admin-ui",
+          projectType: type as "api" | "admin-ui" | "store",
           targetDir: workspacePath,
-          skipDbSetup: type === "admin-ui", // Only API needs database
+          skipDbSetup: type === "admin-ui" || type === "store", // Only API needs database
         });
 
         const projectPath = join(workspacePath, projectName);
@@ -542,7 +566,7 @@ export async function createWorkspace(
           metadata.projects.push({
             folderName: projectName,
             path: projectPath,
-            type: type as "api" | "admin-ui",
+            type: type as "api" | "admin-ui" | "store",
             projectKey: projectName,
             addedBy: "workspace-init",
             addedAt: new Date(),

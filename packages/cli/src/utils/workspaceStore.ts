@@ -10,7 +10,13 @@ export type WorkspaceStatus =
   | "created"
   | "destroying"
   | "destroyed";
-export type ProjectType = "api" | "admin-ui" | "ui" | "infra" | "mobile";
+export type ProjectType =
+  | "api"
+  | "admin-ui"
+  | "store"
+  | "ui"
+  | "infra"
+  | "mobile";
 
 export interface WorkspaceMetadata {
   name: string; // e.g., "vega-groups"
@@ -34,6 +40,7 @@ export interface WorkspaceMetadata {
   components: {
     api: boolean;
     adminUi: boolean;
+    store: boolean;
     ui: boolean;
     infra: boolean;
     mobile: boolean;

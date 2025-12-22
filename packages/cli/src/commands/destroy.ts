@@ -9,7 +9,7 @@ import {
 
 export interface DestroyOptions {
   projectName: string;
-  projectType?: "api" | "admin-ui" | "workspace";
+  projectType?: "api" | "admin-ui" | "store" | "workspace";
   force?: boolean;
   skipDbSetup?: boolean; // Skip database operations (for testing)
   interactive?: boolean; // Allow interactive prompts (default: true)
@@ -430,7 +430,7 @@ export async function destroyProject(options: DestroyOptions): Promise<void> {
   // Step 2: Remove project directory
   Logger.step("Removing project directory...");
 
-  if (await dirExists(projectPath)) {
+  if (projectPath && await dirExists(projectPath)) {
     try {
       await Deno.remove(projectPath, { recursive: true });
       Logger.success(`[OK] Removed: ${projectPath}`);

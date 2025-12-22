@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-run --unstable-kv
 
 import { parseArgs } from "@std/cli/parse-args";
+import "@std/dotenv/load"; // Auto-load .env file
 import { Logger } from "./src/utils/logger.ts";
 import { scaffoldEntity } from "./src/commands/scaffold.ts";
 import { createProject } from "./src/commands/create.ts";
@@ -100,6 +101,9 @@ function showHelp() {
     "--with-admin               Create admin project (workspace only)",
   );
   Logger.code(
+    "--with-store               Create storefront project (workspace only)",
+  );
+  Logger.code(
     "--namespace <name>         Custom namespace (workspace only)",
   );
   Logger.code(
@@ -153,11 +157,13 @@ async function main() {
       "with-ui",
       "with-infra",
       "with-mobile",
+      "with-store",
       "with-metrics",
       "skip-api",
       "skip-ui",
       "skip-infra",
       "skip-mobile",
+      "skip-store",
       "skip-metrics",
       "skip-remote",
     ],
@@ -216,12 +222,14 @@ async function main() {
             withUi: args["with-ui"],
             withInfra: args["with-infra"],
             withMobile: args["with-mobile"],
+            withStore: args["with-store"],
             withMetrics: args["with-metrics"],
             skipApi: args["skip-api"],
             skipAdminUi: args["skip-admin-ui"],
             skipUi: args["skip-ui"],
             skipInfra: args["skip-infra"],
             skipMobile: args["skip-mobile"],
+            skipStore: args["skip-store"],
             skipMetrics: args["skip-metrics"],
             skipRemote: args["skip-remote"],
             githubOrg: args["github-org"],
@@ -287,13 +295,13 @@ async function main() {
         const firstArg = args._[1]?.toString();
         const secondArg = args._[2]?.toString();
 
-        const validTypes = ["api", "admin-ui", "workspace"];
-        let projectType: "api" | "admin-ui" | "workspace" | undefined;
+        const validTypes = ["api", "admin-ui", "store", "workspace"];
+        let projectType: "api" | "admin-ui" | "store" | "workspace" | undefined;
         let projectName: string;
 
         if (firstArg && validTypes.includes(firstArg)) {
           // New syntax: tstack destroy <type> <name>
-          projectType = firstArg as "api" | "admin-ui" | "workspace";
+          projectType = firstArg as "api" | "admin-ui" | "store" | "workspace";
           projectName = secondArg || "";
         } else {
           // Old syntax: tstack destroy <folder-name> (backward compatibility)
