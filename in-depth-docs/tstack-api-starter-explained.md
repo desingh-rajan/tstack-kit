@@ -144,7 +144,7 @@ away.
 
 ### Deployment
 
-This API is built on **Hono**, which is a modern "standard" framework. usage
+This API is built on **Hono**, which is a modern "standard" framework.
 
 - It runs on standard Node.js servers (DigitalOcean, AWS EC2).
 - It runs on Edge networks (Cloudflare Workers, Deno Deploy).

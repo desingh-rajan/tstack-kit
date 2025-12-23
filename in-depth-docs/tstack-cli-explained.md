@@ -164,7 +164,7 @@ tstack destroy <name>
 
 ---
 
-## 5. Command Reference
+## 4. Command Reference
 
 Here is the complete cheat sheet for what you can do.
 
@@ -220,7 +220,7 @@ Remove a project and its databases.
 
 ---
 
-## 4. Troubleshooting & Internals
+## 5. Troubleshooting & Internals
 
 **Where is the data stored?** The CLI stores its memory in a standard file at
 `~/.tstack/projects.db`.
