@@ -152,10 +152,15 @@ authentication by default).
 tstack create my-backend
 
 # Create with latest stable dependency versions
-tstack create my-api --latest
+tstack create workspace my-app --skip-listing  # Skip product listing entities
+tstack create api my-api                # API only
+tstack create store my-store            # Storefront onlyjects
 
 # Create in specific directory
 tstack create my-backend --dir ~/projects
+
+# Create a standalone storefront
+tstack create store my-store
 ```
 
 **Dependency Version Strategy:**

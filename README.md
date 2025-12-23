@@ -9,8 +9,7 @@
 > boilerplate.
 
 TStack Kit is a full-stack toolkit for building type-safe SaaS applications with
-Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API + Admin UI
-workspaces in minutes.
+Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API, Admin UI, and Storefront workspaces in minutes.
 
 **Documentation:** [docs/README.md](./docs/README.md) for quick navigation to
 getting started, CLI, scaffolding, admin, testing, and architecture guides.
@@ -64,6 +63,7 @@ Creates:
 
 - **my-shop-api/** - Backend API (Deno + Hono + Drizzle + PostgreSQL)
 - **my-shop-admin-ui/** - Admin dashboard (Fresh + Preact + DaisyUI)
+- **my-shop-store/** - Storefront (Fresh + Preact + Tailwind CSS)
 - 3 databases per project (dev/test/prod)
 - Git initialized with initial commit
 - JWT authentication (included by default)
@@ -100,6 +100,7 @@ Entity automatically appears in Admin UI sidebar.
 | **GitHub Integration**   | Auto-create repos with `--github-org` flag       |
 | **Base Abstractions**    | 70-80% less code with BaseService/BaseController |
 | **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI          |
+| **Storefront**           | Public e-commerce site with Fresh + Tailwind     |
 | **Type-Safe**            | Full TypeScript from database to API             |
 | **JWT Auth**             | Optional authentication system included          |
 | **PostgreSQL**           | Three-database setup (dev/test/prod)             |
@@ -115,6 +116,8 @@ tstack create workspace my-app          # Full workspace (API + Admin UI)
 tstack create workspace my-app --github-org=your-org  # With GitHub repos
 tstack create workspace my-app --skip-listing  # Skip product listing entities
 tstack create api my-api                # API only
+tstack create admin-ui my-admin         # Admin UI only
+tstack create store my-store            # Storefront only
 
 # Scaffold entities
 tstack scaffold products                # Generate full MVC entity
@@ -186,6 +189,19 @@ my-project-admin-ui/
 ├── client.ts                # Client-side entry
 ├── deno.json                # Tasks & config
 └── tailwind.config.ts       # Tailwind + DaisyUI
+
+### Storefront
+
+```text
+my-project-store/
+├── components/              # Reusable UI components (Hero, Features, etc.)
+├── islands/                 # Interactive Preact islands
+├── routes/                  # Fresh file-based routing
+├── static/                  # Static assets
+├── main.ts                  # Fresh entry point
+├── deno.json                # Tasks & config
+└── vite.config.ts           # Vite + Tailwind
+```
 ```
 
 ---
@@ -200,6 +216,7 @@ my-project-admin-ui/
 | Database   | PostgreSQL 16+           |
 | Validation | Zod                      |
 | Admin UI   | Fresh + Preact + DaisyUI |
+| Storefront | Fresh + Preact + Tailwind|
 
 ---
 
