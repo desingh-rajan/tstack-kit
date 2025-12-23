@@ -1,5 +1,3 @@
-import { JSX } from "preact";
-
 export default function Navbar() {
   return (
     <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
