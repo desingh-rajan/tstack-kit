@@ -116,6 +116,7 @@ function showHelp() {
   Logger.code("tstack create api my-api --latest");
   Logger.code("tstack create admin-ui my-admin");
   Logger.code("tstack create workspace vega-groups");
+  Logger.code("tstack create store my-store");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold products --skip-admin-ui");
   Logger.code("tstack scaffold products --only-api");
