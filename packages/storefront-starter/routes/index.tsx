@@ -1,5 +1,6 @@
 import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
+import Navbar from "../components/Navbar.tsx";
 import Hero from "../components/Hero.tsx";
 import Features from "../components/Features.tsx";
 import About from "../components/About.tsx";
@@ -19,6 +20,7 @@ export default define.page(function Home(ctx) {
         />
       </Head>
 
+      <Navbar />
       <Hero />
       <Features />
       <About />
