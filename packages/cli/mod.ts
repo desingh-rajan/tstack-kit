@@ -22,7 +22,7 @@ function showHelp() {
 
   Logger.subtitle("Commands:");
   Logger.code(
-    "create <type> <name>       Create a new project (types: api, admin-ui, workspace)",
+    "create <type> <name>       Create a new project (types: api, admin-ui, store, workspace)",
   );
   Logger.code(
     "scaffold <entity-name>     Generate a new entity with all MVC files",
@@ -194,12 +194,12 @@ async function main() {
         const type = args._[1]?.toString();
         const projectName = args._[2]?.toString();
 
-        const validTypes = ["api", "admin-ui", "workspace"];
+        const validTypes = ["api", "admin-ui", "store", "workspace"];
 
         if (!type || !validTypes.includes(type)) {
           Logger.error("Project type is required");
           Logger.info("Usage: tstack create <type> <name>");
-          Logger.info("Types: api, admin-ui, workspace");
+          Logger.info("Types: api, admin-ui, store, workspace");
           Logger.info("Example: tstack create api my-backend");
           Deno.exit(1);
         }
@@ -249,6 +249,13 @@ async function main() {
           await createProject({
             projectName,
             projectType: "admin-ui",
+            targetDir: args.dir,
+            latest: args.latest,
+          });
+        } else if (type === "store") {
+          await createProject({
+            projectName,
+            projectType: "store",
             targetDir: args.dir,
             latest: args.latest,
           });

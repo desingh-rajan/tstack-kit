@@ -21,8 +21,11 @@ tstack create workspace my-app
 cd my-app/my-app-api
 ```
 
-This creates a workspace with product listing entities (brands, categories,
-products, variants). For non-e-commerce projects:
+This creates a workspace with:
+- **API** (Backend)
+- **Admin UI** (Dashboard)
+- **Storefront** (Public Site)
+- Product listing entities (brands, categories, products, variants).
 
 ```bash
 tstack create workspace my-blog --skip-listing

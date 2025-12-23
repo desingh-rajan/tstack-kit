@@ -59,7 +59,9 @@ tstack create my-backend
 
 This creates a complete backend project with:
 
-- Pre-configured Hono server
+- Pre-configured Hono server (API)
+- **NEW**: Premium Storefront (Fresh + Tailwind)
+- Admin Dashboard (Fresh + DaisyUI)
 - Drizzle ORM setup
 - PostgreSQL database configuration
 - Environment files (.env, .env.example, etc.)
@@ -624,9 +626,9 @@ your system.
 
 2. **Workspaces** (from `tstack workspace create`):
    - Workspace name
-   - All component projects with their paths
+   - All component projects (api, admin-ui, store) with their paths
    - GitHub repositories (if created)
-   - Component flags (api, adminUi, etc.)
+   - Component flags (api, adminUi, store, etc.)
    - Creation timestamp
 
 ### Why KV Store?

@@ -151,6 +151,12 @@ export async function fetchAllLatestVersions(
     // JSR packages
     { registry: "jsr" as const, name: "@std/dotenv", key: "@std/dotenv" },
     { registry: "jsr" as const, name: "@hono/hono", key: "hono" },
+    { registry: "jsr" as const, name: "@fresh/core", key: "fresh" },
+    {
+      registry: "jsr" as const,
+      name: "@fresh/plugin-vite",
+      key: "@fresh/plugin-vite",
+    },
     // npm packages
     { registry: "npm" as const, name: "jose", key: "jose" },
     { registry: "npm" as const, name: "drizzle-orm", key: "drizzle-orm" },
@@ -158,6 +164,22 @@ export async function fetchAllLatestVersions(
     // Note: drizzle-zod removed from template - schemas defined manually in DTOs
     { registry: "npm" as const, name: "postgres", key: "postgres" },
     { registry: "npm" as const, name: "zod", key: "zod" },
+    { registry: "npm" as const, name: "preact", key: "preact" },
+    {
+      registry: "npm" as const,
+      name: "@preact/signals",
+      key: "@preact/signals",
+    },
+    { registry: "npm" as const, name: "vite", key: "vite" },
+    { registry: "npm" as const, name: "tailwindcss", key: "tailwindcss" },
+    {
+      registry: "npm" as const,
+      name: "@tailwindcss/vite",
+      key: "@tailwindcss/vite",
+    },
+    { registry: "npm" as const, name: "daisyui", key: "daisyui" },
+    { registry: "npm" as const, name: "autoprefixer", key: "autoprefixer" },
+    { registry: "npm" as const, name: "postcss", key: "postcss" },
   ];
 
   const results: Record<string, string> = {};

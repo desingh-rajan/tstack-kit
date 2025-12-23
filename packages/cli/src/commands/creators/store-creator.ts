@@ -1,5 +1,5 @@
 import { join } from "@std/path";
-import { exists } from "@std/fs";
+
 import { Logger } from "../../utils/logger.ts";
 import { saveProject } from "../../utils/projectStore.ts";
 import { BaseProjectCreator } from "./base-creator.ts";
@@ -13,10 +13,19 @@ export class StoreProjectCreator extends BaseProjectCreator {
     return "storefront-starter";
   }
 
+  private async fileExists(path: string): Promise<boolean> {
+    try {
+      await Deno.stat(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   protected async configureProject(): Promise<void> {
     // Update .env.example with API URL if needed
     const envPath = join(this.projectPath, ".env.example");
-    if (await exists(envPath)) {
+    if (await this.fileExists(envPath)) {
       Logger.info("Storefront environment configured");
     }
   }
@@ -67,7 +76,7 @@ export class StoreProjectCreator extends BaseProjectCreator {
     // Copy .env.example to .env
     const envExamplePath = join(this.projectPath, ".env.example");
     const envPath = join(this.projectPath, ".env");
-    if (await exists(envExamplePath)) {
+    if (await this.fileExists(envExamplePath)) {
       await Deno.copyFile(envExamplePath, envPath);
       Logger.info(".env file created");
     }

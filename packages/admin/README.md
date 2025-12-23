@@ -467,7 +467,7 @@ Follow the steps above for complete TStack Kit integration.
 }
 ```
 
-2. **Create admin route for existing model:**
+1. **Create admin route for existing model:**
 
 ```typescript
 // src/admin/product.admin.route.ts
@@ -502,14 +502,14 @@ productAdminRoutes.post("/bulk-delete", admin.bulkDelete());
 export { productAdminRoutes };
 ```
 
-3. **Register in your app:**
+1. **Register in your app:**
 
 ```typescript
 // src/main.ts
 app.route("/admin/products", productAdminRoutes);
 ```
 
-4. **Ensure auth middleware sets user:**
+1. **Ensure auth middleware sets user:**
 
 ```typescript
 // Your auth middleware must do: c.set("user", user)

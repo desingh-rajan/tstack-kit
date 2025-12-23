@@ -43,6 +43,11 @@ my-app/
     ├── .git/                  # Own git repo
     ├── deno.json              # Own dependencies
     └── routes/
+└── my-app-store/              # Public Storefront
+    ├── .git/
+    ├── deno.json
+    └── routes/
+
 ```
 
 Each project:
@@ -62,6 +67,7 @@ Each project:
 | Database      | PostgreSQL 16+           |
 | Validation    | Zod                      |
 | Admin UI      | Fresh + Preact + DaisyUI |
+| Storefront    | Fresh + Preact + Tailwind|
 
 ## Data Flow
 

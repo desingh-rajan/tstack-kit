@@ -25,10 +25,9 @@ Creates a full workspace with API + Admin UI projects.
 tstack create workspace my-shop --github-org=mycompany
 ```
 
-**Creates:**
-
 - `my-shop-api/` - Backend API
 - `my-shop-admin-ui/` - Admin dashboard
+- `my-shop-store/` - Public Storefront
 - 3 databases (dev/test/prod)
 
 ### Create API Only
