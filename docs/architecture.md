@@ -47,7 +47,6 @@ my-app/
     ├── .git/
     ├── deno.json
     └── routes/
-
 ```
 
 Each project:
@@ -59,15 +58,15 @@ Each project:
 
 ## Tech Stack
 
-| Layer         | Technology               |
-| ------------- | ------------------------ |
-| Runtime       | Deno 2.6+                |
-| API Framework | Hono                     |
-| ORM           | Drizzle                  |
-| Database      | PostgreSQL 16+           |
-| Validation    | Zod                      |
-| Admin UI      | Fresh + Preact + DaisyUI |
-| Storefront    | Fresh + Preact + Tailwind|
+| Layer         | Technology                |
+| ------------- | ------------------------- |
+| Runtime       | Deno 2.6+                 |
+| API Framework | Hono                      |
+| ORM           | Drizzle                   |
+| Database      | PostgreSQL 16+            |
+| Validation    | Zod                       |
+| Admin UI      | Fresh + Preact + DaisyUI  |
+| Storefront    | Fresh + Preact + Tailwind |
 
 ## Data Flow
 

@@ -1,5 +1,3 @@
-import type { JSX } from "preact";
-
 export default function Hero() {
   return (
     <div class="relative overflow-hidden bg-white">

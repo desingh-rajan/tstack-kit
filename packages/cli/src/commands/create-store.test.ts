@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert } from "@std/assert";
 import { join } from "@std/path";
 import { fileExists } from "../../tests/helpers/tempDir.ts";
 
@@ -10,7 +10,7 @@ Deno.test({
     const projectName = "test-store";
     const projectPath = join(TEST_DIR, projectName);
     const modTsPath = join(Deno.cwd(), "mod.ts");
-    
+
     // Run the create command
     const command = new Deno.Command(Deno.execPath(), {
       args: [
@@ -36,14 +36,20 @@ Deno.test({
       console.log("STDOUT:", stdout);
       console.error("STDERR:", stderr);
     }
-    
+
     assert(output.success, "Command failed");
-    assert(stdout.includes("Storefront project created successfully!"), "Missing success message");
+    assert(
+      stdout.includes("Storefront project created successfully!"),
+      "Missing success message",
+    );
 
     // Check directory structure
     assert(await fileExists(projectPath, "deno.json"), "deno.json not created");
-    assert(await fileExists(projectPath, "routes/index.tsx"), "routes/index.tsx not created");
-    
+    assert(
+      await fileExists(projectPath, "routes/index.tsx"),
+      "routes/index.tsx not created",
+    );
+
     // Verify destroy command
     const destroyCommand = new Deno.Command(Deno.execPath(), {
       args: [
@@ -63,16 +69,19 @@ Deno.test({
 
     const destroyOutput = await destroyCommand.output();
     const destroyStdout = new TextDecoder().decode(destroyOutput.stdout);
-    
+
     assert(destroyOutput.success, "Destroy command failed");
-    assert(destroyStdout.includes("Project destroyed successfully"), "Missing destroy success message");
-    
+    assert(
+      destroyStdout.includes("Project destroyed successfully"),
+      "Missing destroy success message",
+    );
+
     // Check directory removed
     try {
-        await Deno.stat(projectPath);
-        assert(false, "Project directory should have been removed");
+      await Deno.stat(projectPath);
+      assert(false, "Project directory should have been removed");
     } catch {
-        assert(true, "Project directory removed");
+      assert(true, "Project directory removed");
     }
-  }
+  },
 });

@@ -1,5 +1,3 @@
-import type { JSX } from "preact";
-
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 

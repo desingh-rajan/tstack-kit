@@ -1,5 +1,3 @@
-import type { JSX } from "preact";
-
 export default function Contact() {
   return (
     <div class="isolate bg-white px-6 py-24 sm:py-32 lg:px-8">

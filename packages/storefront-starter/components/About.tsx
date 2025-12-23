@@ -1,5 +1,3 @@
-import type { JSX } from "preact";
-
 export default function About() {
   return (
     <div class="bg-white py-16 sm:py-24">

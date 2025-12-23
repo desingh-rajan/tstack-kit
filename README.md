@@ -9,7 +9,8 @@
 > boilerplate.
 
 TStack Kit is a full-stack toolkit for building type-safe SaaS applications with
-Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API, Admin UI, and Storefront workspaces in minutes.
+Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API, Admin UI,
+and Storefront workspaces in minutes.
 
 **Documentation:** [docs/README.md](./docs/README.md) for quick navigation to
 getting started, CLI, scaffolding, admin, testing, and architecture guides.
@@ -176,7 +177,7 @@ my-project-api/
 
 ### Admin UI Frontend
 
-```text
+````text
 my-project-admin-ui/
 ├── components/              # Reusable UI components
 ├── config/                  # Entity configurations
@@ -201,9 +202,9 @@ my-project-store/
 ├── main.ts                  # Fresh entry point
 ├── deno.json                # Tasks & config
 └── vite.config.ts           # Vite + Tailwind
-```
-```
+````
 
+````
 ---
 
 ## Tech Stack
@@ -227,7 +228,7 @@ my-project-store/
 ```text
 GET  /           # API info
 GET  /health     # Health check
-```
+````
 
 ### After `tstack scaffold products`
 

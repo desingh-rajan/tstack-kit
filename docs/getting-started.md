@@ -22,6 +22,7 @@ cd my-app/my-app-api
 ```
 
 This creates a workspace with:
+
 - **API** (Backend)
 - **Admin UI** (Dashboard)
 - **Storefront** (Public Site)
