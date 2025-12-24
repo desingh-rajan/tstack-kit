@@ -5,6 +5,7 @@
  */
 
 import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
+import RelationshipSelect from "@/islands/RelationshipSelect.tsx";
 
 interface FormProps {
   config: EntityConfig<unknown>;
@@ -305,6 +306,33 @@ export function GenericForm(
             )}
           </div>
         );
+
+      case "relationship": {
+        // Handle relationship fields (BelongsTo) with RelationshipSelect island
+        const rel = field.relationship;
+        if (!rel || rel.type !== "belongsTo") {
+          // HasMany relationships are shown on ShowPage, not in forms
+          return null;
+        }
+
+        const endpoint = rel.endpoint || `/api/admin/${rel.entity}`;
+        return (
+          <RelationshipSelect
+            key={field.name}
+            name={field.name}
+            label={field.label}
+            endpoint={endpoint}
+            labelField={rel.labelField}
+            valueField={rel.valueField || "id"}
+            value={value ? String(value) : undefined}
+            placeholder={field.placeholder}
+            required={field.required}
+            helpText={field.helpText}
+            error={error}
+            searchable={rel.searchable !== false}
+          />
+        );
+      }
 
       default:
         // Default to text input

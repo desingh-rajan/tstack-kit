@@ -105,7 +105,13 @@ export const productConfig: EntityConfig<Product> = {
     {
       name: "brandId",
       label: "Brand",
-      type: "string",
+      type: "relationship",
+      relationship: {
+        type: "belongsTo",
+        entity: "brands",
+        labelField: "name",
+        searchable: true,
+      },
       showInList: false,
       showInShow: true,
       showInForm: true,
@@ -114,7 +120,13 @@ export const productConfig: EntityConfig<Product> = {
     {
       name: "categoryId",
       label: "Category",
-      type: "string",
+      type: "relationship",
+      relationship: {
+        type: "belongsTo",
+        entity: "categories",
+        labelField: "name",
+        searchable: true,
+      },
       showInList: false,
       showInShow: true,
       showInForm: true,

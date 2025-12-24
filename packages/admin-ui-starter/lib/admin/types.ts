@@ -29,7 +29,43 @@ export type FieldType =
   | "select"
   | "json"
   | "status"
-  | "badge";
+  | "badge"
+  | "relationship";
+
+/**
+ * Relationship configuration for entity references
+ * Supports BelongsTo (foreign key) and HasMany (child collection) patterns
+ */
+export type RelationshipType =
+  | "belongsTo"
+  | "hasMany"
+  | "hasOne"
+  | "manyToMany";
+
+export interface RelationshipConfig {
+  /** Type of relationship */
+  type: RelationshipType;
+  /** Target entity name (e.g., "brands", "categories") */
+  entity: string;
+  /** API endpoint for fetching options (defaults to /ts-admin/{entity}) */
+  endpoint?: string;
+  /** Field to display in dropdown/list (e.g., "name") */
+  labelField: string;
+  /** Field to use as value (defaults to "id") */
+  valueField?: string;
+  /** For hasMany: foreign key field on child entity (e.g., "productId") */
+  filterKey?: string;
+  /** For hasMany: columns to show in nested table */
+  columns?: string[];
+  /** Allow creating new related records inline */
+  allowCreate?: boolean;
+  /** Allow inline editing of related records */
+  allowInlineEdit?: boolean;
+  /** Enable search/autocomplete (default: true for belongsTo) */
+  searchable?: boolean;
+  /** Preload options on form load (default: true for small datasets) */
+  preload?: boolean;
+}
 
 export interface FieldConfig {
   name: string;
@@ -46,6 +82,9 @@ export interface FieldConfig {
 
   // For select fields
   options?: Array<{ value: string | number; label: string }>;
+
+  // For relationship fields (type: "relationship")
+  relationship?: RelationshipConfig;
 
   // For custom rendering
   render?: (
