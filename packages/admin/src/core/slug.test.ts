@@ -134,7 +134,10 @@ Deno.test("ensureUniqueSlugSync", async (t) => {
 
 Deno.test("ensureUniqueSlug (async)", async (t) => {
   await t.step("returns base slug when no conflicts", async () => {
-    const result = await ensureUniqueSlug("test-product", async () => false);
+    const result = await ensureUniqueSlug(
+      "test-product",
+      () => Promise.resolve(false),
+    );
     assertEquals(result, "test-product");
   });
 
@@ -142,7 +145,7 @@ Deno.test("ensureUniqueSlug (async)", async (t) => {
     const existingSlugs = new Set(["test-product"]);
     const result = await ensureUniqueSlug(
       "test-product",
-      async (slug) => existingSlugs.has(slug),
+      (slug) => Promise.resolve(existingSlugs.has(slug)),
     );
     assertEquals(result, "test-product-1");
   });
@@ -155,7 +158,7 @@ Deno.test("ensureUniqueSlug (async)", async (t) => {
     ]);
     const result = await ensureUniqueSlug(
       "test-product",
-      async (slug) => existingSlugs.has(slug),
+      (slug) => Promise.resolve(existingSlugs.has(slug)),
     );
     assertEquals(result, "test-product-3");
   });

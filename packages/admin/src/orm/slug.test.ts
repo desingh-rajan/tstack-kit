@@ -15,7 +15,7 @@ Deno.test("Slug Generation", async (t) => {
   await t.step("handles multiple spaces", () => {
     assertEquals(
       generateSlug("Test   Multiple   Spaces"),
-      "test-multiple-spaces"
+      "test-multiple-spaces",
     );
   });
 
@@ -70,7 +70,7 @@ Deno.test("Slug Generation - Real World Examples", async (t) => {
     assertEquals(generateSlug("iPhone 15 Pro Max"), "iphone-15-pro-max");
     assertEquals(
       generateSlug("Samsung Galaxy S24 Ultra"),
-      "samsung-galaxy-s24-ultra"
+      "samsung-galaxy-s24-ultra",
     );
     assertEquals(generateSlug('MacBook Pro 16"'), "macbook-pro-16");
   });
