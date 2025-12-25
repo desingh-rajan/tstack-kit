@@ -42,6 +42,14 @@ export {
   type PaginationMeta,
 } from "./src/core/pagination.ts";
 
+// Slug utilities
+export {
+  ensureUniqueSlug,
+  ensureUniqueSlugSync,
+  generateSlug,
+  isValidSlug,
+} from "./src/core/slug.ts";
+
 // ORM adapters
 export type { IORMAdapter } from "./src/orm/base.ts";
 export { DrizzleAdapter } from "./src/orm/drizzle.ts";

@@ -32,7 +32,7 @@
     "@std/testing/bdd": "jsr:@std/testing@^1.0.0/bdd",
     "@std/dotenv/load": "jsr:@std/dotenv@^0.225.0/load",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.0",
-    "@tstack/admin": "jsr:@tstack/admin@^2.1.0",
+    "@tstack/admin": "../admin/mod.ts",
     "jose": "npm:jose@^5.9.6",
     "hono": "jsr:@hono/hono@^4.6.0",
     "hono/cors": "jsr:@hono/hono@^4.6.0/cors",

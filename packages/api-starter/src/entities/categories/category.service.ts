@@ -3,7 +3,7 @@ import { db } from "../../config/database.ts";
 import { categories, type CategoryWithChildren } from "./category.model.ts";
 import { BadRequestError } from "../../shared/utils/errors.ts";
 import { BaseService } from "../../shared/services/base.service.ts";
-import { ensureUniqueSlug, generateSlug } from "../../lib/slug.ts";
+import { ensureUniqueSlugSync, generateSlug } from "@tstack/admin";
 import type {
   CategoryResponseDTO,
   CreateCategoryDTO,
@@ -36,7 +36,7 @@ export class CategoryService extends BaseService<
 
     // Check for existing slugs and make unique if needed
     const existingSlugs = await this.getExistingSlugs();
-    slug = ensureUniqueSlug(slug, existingSlugs);
+    slug = ensureUniqueSlugSync(slug, existingSlugs);
 
     // Validate parent exists if provided
     if (data.parentId) {
@@ -79,7 +79,7 @@ export class CategoryService extends BaseService<
     // If name changed but slug not provided, generate new slug
     if (data.name && !data.slug) {
       const existingSlugs = await this.getExistingSlugs(id);
-      data.slug = ensureUniqueSlug(generateSlug(data.name), existingSlugs);
+      data.slug = ensureUniqueSlugSync(generateSlug(data.name), existingSlugs);
     }
 
     // Prevent circular reference

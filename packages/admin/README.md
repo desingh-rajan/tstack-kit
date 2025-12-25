@@ -4,8 +4,8 @@
 >
 > Pure JSON API for admin operations - bring your own frontend
 
-**Version:** 2.1.0\
-**Status:** Production Ready (28/28 tests passing)\
+**Version:** 2.2.0\
+**Status:** Production Ready (31/31 tests passing)\
 **License:** MIT
 
 ---
@@ -66,7 +66,7 @@ app.delete("/api/admin/products/:id", admin.destroy());
 - Type-safe with full TypeScript generics
 - Framework-agnostic (Hono now, Express planned)
 - ORM-agnostic (Drizzle now, Prisma planned)
-- Production-ready (28/28 tests passing)
+- Production-ready (31/31 tests passing)
 
 **Auto-Features (v2.1.0):**
 
@@ -247,10 +247,10 @@ deno task test
 
 ```
 Core Pagination ........ 22/22 tests
-Slug Generation ........ 2/2  tests (13 steps)
+Slug Generation ........ 5/5  tests (31 steps)
 DisplayOrder Logic ..... 4/4  tests (11 steps)
 ────────────────────────────────────────────
-TOTAL                   28/28 passing
+TOTAL                   31/31 passing
 ```
 
 ---
@@ -306,6 +306,74 @@ const admin = new HonoAdminAdapter({
     modifiedBy: "system",
   }),
 });
+```
+
+---
+
+## Slug Utilities (v2.2.0)
+
+Standalone slug utilities for SEO-friendly URL generation. Use these directly in your services without the full admin adapter.
+
+### Installation
+
+```typescript
+import {
+  generateSlug,
+  ensureUniqueSlug,
+  ensureUniqueSlugSync,
+  isValidSlug,
+} from "@tstack/admin";
+```
+
+### generateSlug
+
+Converts any string to a URL-safe slug:
+
+```typescript
+generateSlug("iPhone 15 Pro Max");
+// Returns: "iphone-15-pro-max"
+
+generateSlug("Men's Clothing & Accessories");
+// Returns: "mens-clothing-accessories"
+
+generateSlug("test_category_name");
+// Returns: "test-category-name"
+```
+
+### ensureUniqueSlug (Async)
+
+Ensures slug uniqueness with database lookup support:
+
+```typescript
+// With database query
+const slug = await ensureUniqueSlug("cast-iron-kadai", async (s) => {
+  const existing = await db.query.products.findFirst({
+    where: eq(products.slug, s),
+  });
+  return !!existing;
+});
+// Returns: "cast-iron-kadai" or "cast-iron-kadai-1" if exists
+```
+
+### ensureUniqueSlugSync
+
+Synchronous version when slugs are already in memory:
+
+```typescript
+const existingSlugs = ["test-product", "test-product-1"];
+ensureUniqueSlugSync("test-product", existingSlugs);
+// Returns: "test-product-2"
+```
+
+### isValidSlug
+
+Validates slug format (lowercase, hyphens, no special chars):
+
+```typescript
+isValidSlug("test-product");     // true
+isValidSlug("Test-Product");     // false (uppercase)
+isValidSlug("test--product");    // false (consecutive hyphens)
+isValidSlug("test_product");     // false (underscore)
 ```
 
 ---
