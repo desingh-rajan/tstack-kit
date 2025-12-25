@@ -96,22 +96,34 @@ Deno.test("Slug Generation - Real World Examples", async (t) => {
 Deno.test("ensureUniqueSlugSync", async (t) => {
   await t.step("returns base slug when no conflicts", () => {
     const existingSlugs: string[] = [];
-    assertEquals(ensureUniqueSlugSync("test-product", existingSlugs), "test-product");
+    assertEquals(
+      ensureUniqueSlugSync("test-product", existingSlugs),
+      "test-product",
+    );
   });
 
   await t.step("appends -1 when base slug exists", () => {
     const existingSlugs = ["test-product"];
-    assertEquals(ensureUniqueSlugSync("test-product", existingSlugs), "test-product-1");
+    assertEquals(
+      ensureUniqueSlugSync("test-product", existingSlugs),
+      "test-product-1",
+    );
   });
 
   await t.step("increments suffix until unique", () => {
     const existingSlugs = ["test-product", "test-product-1", "test-product-2"];
-    assertEquals(ensureUniqueSlugSync("test-product", existingSlugs), "test-product-3");
+    assertEquals(
+      ensureUniqueSlugSync("test-product", existingSlugs),
+      "test-product-3",
+    );
   });
 
   await t.step("handles gaps in numbering", () => {
     const existingSlugs = ["test-product", "test-product-1", "test-product-3"];
-    assertEquals(ensureUniqueSlugSync("test-product", existingSlugs), "test-product-2");
+    assertEquals(
+      ensureUniqueSlugSync("test-product", existingSlugs),
+      "test-product-2",
+    );
   });
 
   await t.step("works with empty base slug", () => {
@@ -136,7 +148,11 @@ Deno.test("ensureUniqueSlug (async)", async (t) => {
   });
 
   await t.step("increments suffix until unique", async () => {
-    const existingSlugs = new Set(["test-product", "test-product-1", "test-product-2"]);
+    const existingSlugs = new Set([
+      "test-product",
+      "test-product-1",
+      "test-product-2",
+    ]);
     const result = await ensureUniqueSlug(
       "test-product",
       async (slug) => existingSlugs.has(slug),

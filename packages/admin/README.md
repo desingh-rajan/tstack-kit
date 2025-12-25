@@ -312,15 +312,16 @@ const admin = new HonoAdminAdapter({
 
 ## Slug Utilities (v2.2.0)
 
-Standalone slug utilities for SEO-friendly URL generation. Use these directly in your services without the full admin adapter.
+Standalone slug utilities for SEO-friendly URL generation. Use these directly in
+your services without the full admin adapter.
 
 ### Installation
 
 ```typescript
 import {
-  generateSlug,
   ensureUniqueSlug,
   ensureUniqueSlugSync,
+  generateSlug,
   isValidSlug,
 } from "@tstack/admin";
 ```
@@ -370,10 +371,10 @@ ensureUniqueSlugSync("test-product", existingSlugs);
 Validates slug format (lowercase, hyphens, no special chars):
 
 ```typescript
-isValidSlug("test-product");     // true
-isValidSlug("Test-Product");     // false (uppercase)
-isValidSlug("test--product");    // false (consecutive hyphens)
-isValidSlug("test_product");     // false (underscore)
+isValidSlug("test-product"); // true
+isValidSlug("Test-Product"); // false (uppercase)
+isValidSlug("test--product"); // false (consecutive hyphens)
+isValidSlug("test_product"); // false (underscore)
 ```
 
 ---
