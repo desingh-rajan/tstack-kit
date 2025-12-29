@@ -1623,7 +1623,7 @@ S3_BUCKET_NAME=your-bucket-name
 S3_PREFIX=my-project/dev
 ```
 
-2. **S3 Bucket Configuration**:
+1. **S3 Bucket Configuration**:
    - Go to S3 bucket > Permissions > Block public access
    - Uncheck "Block all public access" (or just ACL-related blocks)
    - Images are uploaded with `public-read` ACL

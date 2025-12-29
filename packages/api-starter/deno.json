@@ -2,6 +2,7 @@
   "tasks": {
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
+    "routes": "deno run --allow-all scripts/list-routes.ts",
     "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
     "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
     "db:seed:superadmin": "deno run --allow-all scripts/seed-superadmin.ts",
@@ -38,6 +39,7 @@
     "hono/cors": "jsr:@hono/hono@^4.6.0/cors",
     "hono/logger": "jsr:@hono/hono@^4.6.0/logger",
     "hono/jwt": "jsr:@hono/hono@^4.6.0/jwt",
+    "hono/dev": "jsr:@hono/hono@^4.6.0/dev",
     "drizzle-orm": "npm:drizzle-orm@^0.36.0",
     "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
     "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",

@@ -475,14 +475,14 @@ S3_BUCKET_NAME=your-bucket-name
 S3_PREFIX=my-project/dev
 ```
 
-2. **S3 Bucket Setup**:
+1. **S3 Bucket Setup**:
    - Create an S3 bucket in your AWS account
    - Go to Permissions > Block public access
    - Uncheck "Block all public access" (images need public-read ACL)
    - Images are stored at:
      `{bucket}/{prefix}/{entity}/{entityId}/{imageId}.{ext}`
 
-3. **Using Image Uploads**:
+2. **Using Image Uploads**:
    - Products entity has image support out of the box
    - Admin UI provides drag-drop image upload via `ImageUploadPane`
    - API handles S3 upload/delete automatically

@@ -309,7 +309,7 @@ JWT_EXPIRY=7d
     Logger.code("deno task dev");
     Logger.newLine();
 
-    Logger.subtitle("🔐 Authentication System Included:");
+    Logger.subtitle("[AUTH] Authentication System Included:");
     Logger.newLine();
     Logger.info("Seed superadmin user:");
     Logger.code("deno task db:seed");
@@ -318,23 +318,8 @@ JWT_EXPIRY=7d
     Logger.code("Email: set via SUPERADMIN_EMAIL environment variable");
     Logger.code("Password: set via SUPERADMIN_PASSWORD environment variable");
     Logger.newLine();
-    Logger.info("Available auth endpoints:");
-    Logger.code("POST /auth/register - Create new user");
-    Logger.code("POST /auth/login - Login user");
-    Logger.code("POST /auth/logout - Logout (requires token)");
-    Logger.code("GET /auth/me - Get current user (requires token)");
-    Logger.code("PUT /auth/change-password - Change password (requires token)");
-    Logger.newLine();
-    Logger.info("Admin management endpoints:");
-    Logger.code("POST /admin/users - Create admin user");
-    Logger.code("GET /admin/users - List all users");
-    Logger.code("GET /admin/users/:id - Get user by ID");
-    Logger.code("PUT /admin/users/:id - Update user");
-    Logger.code("DELETE /admin/users/:id - Delete user");
-    Logger.newLine();
-    Logger.info(
-      "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
-    );
+    Logger.info("View all available routes:");
+    Logger.code("deno task routes");
     Logger.newLine();
     Logger.warning("[WARNING] Change superadmin password in production!");
     Logger.newLine();

@@ -423,7 +423,7 @@ The Admin UI includes a reusable `ImageUploadPane` island for S3 image uploads.
 }
 ```
 
-2. Use in your show/edit page:
+1. Use in your show/edit page:
 
 ```typescript
 import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
