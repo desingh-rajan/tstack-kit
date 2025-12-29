@@ -169,6 +169,10 @@ JWT_EXPIRY=7d
     // Setup environment files
     Logger.step("Setting up environment...");
 
+    // Enable migrations tracking for user projects
+    // (Template has migrations/ gitignored, but user projects should track them)
+    await this.enableMigrationsTracking();
+
     // 1. Copy .env.example to .env automatically
     const envExamplePath = join(this.projectPath, ".env.example");
     const envPath = join(this.projectPath, ".env");
@@ -332,11 +336,36 @@ JWT_EXPIRY=7d
       "Note: Routes are clean (no /api prefix). Deployment path prefix handled by proxy.",
     );
     Logger.newLine();
-    Logger.warning("[WARNING] ⚠️  Change superadmin password in production!");
+    Logger.warning("[WARNING] Change superadmin password in production!");
     Logger.newLine();
 
     Logger.subtitle("Your API will be available at:");
     Logger.code("http://localhost:8000");
     Logger.newLine();
+  }
+
+  /**
+   * Remove migrations/ from .gitignore so user projects track their migrations
+   * The template has it gitignored, but scaffolded projects should commit migrations
+   */
+  private async enableMigrationsTracking(): Promise<void> {
+    const gitignorePath = join(this.projectPath, ".gitignore");
+    try {
+      let content = await Deno.readTextFile(gitignorePath);
+
+      // Remove migrations/ line and its comment
+      content = content.replace(
+        /# Migrations \(generated fresh from schema for this template\)\n# Note: User projects SHOULD commit their migrations for schema history\nmigrations\/\n\n?/g,
+        "",
+      );
+
+      // Also handle simpler format if comment is different
+      content = content.replace(/migrations\/\n/g, "");
+
+      await Deno.writeTextFile(gitignorePath, content);
+      Logger.info("Migrations tracking enabled (removed from .gitignore)");
+    } catch {
+      // .gitignore doesn't exist or can't be read - not critical
+    }
   }
 }

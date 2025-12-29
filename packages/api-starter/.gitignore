@@ -14,6 +14,10 @@ deno.lock
 # Test artifacts
 .migrations_generated_by_test
 
+# Migrations (generated fresh from schema for this template)
+# Note: User projects SHOULD commit their migrations for schema history
+migrations/
+
 # Logs
 logs/
 *.log
