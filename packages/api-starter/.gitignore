@@ -1,11 +1,14 @@
 # Deno
 .env
 .env.local
-# Allow template env files (used by CLI during project creation)
+.env.development.local
+.env.test.local
+.env.production.local
+.env.docker
+
+# Keep example file as template reference
 !.env.example
-!.env.development.local
-!.env.test.local
-!.env.production.local
+
 deno.lock
 
 # Test artifacts

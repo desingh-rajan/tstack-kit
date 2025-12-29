@@ -22,6 +22,13 @@ export interface Product extends Record<string, unknown> {
   // Populated from joins
   brand?: { id: string; name: string; slug: string } | null;
   category?: { id: string; name: string; slug: string } | null;
+  // Primary image (from product_images with isPrimary=true)
+  primaryImage?: {
+    id: string;
+    url: string;
+    thumbnailUrl?: string | null;
+    altText?: string | null;
+  } | null;
 }
 
 export interface CreateProductInput {

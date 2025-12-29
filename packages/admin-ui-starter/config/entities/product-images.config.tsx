@@ -13,8 +13,8 @@ export const productImageConfig: EntityConfig<ProductImage> = {
   apiPath: "/ts-admin/product-images",
   idField: "id",
 
-  displayField: "altText",
-  descriptionField: "url",
+  displayField: "url",
+  descriptionField: "altText",
 
   service: productImageService,
 

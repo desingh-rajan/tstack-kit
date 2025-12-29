@@ -30,7 +30,8 @@ export type FieldType =
   | "json"
   | "status"
   | "badge"
-  | "relationship";
+  | "relationship"
+  | "image";
 
 /**
  * Relationship configuration for entity references
@@ -96,6 +97,22 @@ export interface FieldConfig {
   placeholder?: string;
   helpText?: string;
   rows?: number; // for textarea
+
+  // For image fields (type: "image")
+  imageConfig?: {
+    /** Entity type for S3 path (e.g., "products", "categories") */
+    entityType: string;
+    /** Field name containing the entity ID (defaults to "id") */
+    entityIdField?: string;
+    /** Allow multiple images */
+    multiple?: boolean;
+    /** Accepted file types */
+    accept?: string;
+    /** Max file size in bytes */
+    maxSize?: number;
+    /** Max number of files */
+    maxFiles?: number;
+  };
 
   // Validation
   validate?: (value: unknown) => string | undefined;

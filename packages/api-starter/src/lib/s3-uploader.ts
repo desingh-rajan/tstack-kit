@@ -1,8 +1,14 @@
 /**
  * S3 Upload Service
  *
- * Simple S3 upload for product images without image processing
- * Bucket structure: {bucket}/{prefix}/products/{product-id}/{filename}
+ * Simple S3 upload for entity images without image processing
+ * Bucket structure: {bucket}/{prefix}/{entityType}/{entity-id}/{filename}
+ *
+ * NOTE: For public ACL to work, the S3 bucket must have:
+ * - "Block public access" settings disabled (or ACLs enabled)
+ * - Bucket policy allowing public read (optional, ACL can handle it)
+ *
+ * TODO: Add presigned URL support for secure assets (invoices, personal images)
  */
 
 import {
@@ -48,6 +54,8 @@ export class S3Uploader {
   private client: S3Client;
   private bucket: string;
   private prefix: string;
+  private accessKeyId: string;
+  private secretAccessKey: string;
 
   constructor(s3Config?: Partial<S3Config>) {
     const finalConfig: S3Config = {
@@ -61,6 +69,8 @@ export class S3Uploader {
         "default/development",
     };
 
+    this.accessKeyId = finalConfig.accessKeyId;
+    this.secretAccessKey = finalConfig.secretAccessKey;
     this.client = new S3Client({
       region: finalConfig.region,
       credentials: {
@@ -73,22 +83,57 @@ export class S3Uploader {
   }
 
   /**
-   * Upload a product image to S3
+   * Check if S3 is properly configured
+   * Returns false if credentials or bucket are missing
+   */
+  isConfigured(): boolean {
+    return !!(
+      this.accessKeyId &&
+      this.secretAccessKey &&
+      this.bucket
+    );
+  }
+
+  /**
+   * Get configuration status for debugging
+   */
+  getConfigStatus(): { configured: boolean; missing: string[] } {
+    const missing: string[] = [];
+    if (!this.accessKeyId) missing.push("AWS_ACCESS_KEY_ID");
+    if (!this.secretAccessKey) missing.push("AWS_SECRET_ACCESS_KEY");
+    if (!this.bucket) missing.push("S3_BUCKET_NAME");
+    return { configured: missing.length === 0, missing };
+  }
+
+  /**
+   * Upload an image to S3 for any entity type (generic method)
    *
-   * @param productId - UUID of the product
+   * @param entityType - Type of entity (e.g., "products", "categories", "brands")
+   * @param entityId - UUID of the entity
    * @param imageId - UUID for this image
    * @param body - Image data as Uint8Array or Buffer
    * @param contentType - MIME type (e.g., "image/jpeg", "image/png", "image/webp")
+   * @param isPublic - Whether to set public-read ACL (default: true)
    * @returns Upload result with URL and key
    */
-  async uploadProductImage(
-    productId: string,
+  async uploadEntityImage(
+    entityType: string,
+    entityId: string,
     imageId: string,
     body: Uint8Array,
     contentType: string,
+    isPublic: boolean = true,
   ): Promise<UploadResult> {
+    if (!this.isConfigured()) {
+      const status = this.getConfigStatus();
+      throw new Error(
+        `S3 not configured. Missing: ${status.missing.join(", ")}`,
+      );
+    }
+
     const extension = this.getExtensionFromContentType(contentType);
-    const key = `${this.prefix}/products/${productId}/${imageId}.${extension}`;
+    const key =
+      `${this.prefix}/${entityType}/${entityId}/${imageId}.${extension}`;
 
     const params: PutObjectCommandInput = {
       Bucket: this.bucket,
@@ -96,6 +141,7 @@ export class S3Uploader {
       Body: body,
       ContentType: contentType,
       CacheControl: "public, max-age=31536000, immutable",
+      ...(isPublic && { ACL: "public-read" }),
     };
 
     await this.client.send(new PutObjectCommand(params));
@@ -106,18 +152,45 @@ export class S3Uploader {
   }
 
   /**
-   * Delete a product image from S3
+   * Upload a product image to S3 (convenience method)
    *
    * @param productId - UUID of the product
+   * @param imageId - UUID for this image
+   * @param body - Image data as Uint8Array or Buffer
+   * @param contentType - MIME type (e.g., "image/jpeg", "image/png", "image/webp")
+   * @returns Upload result with URL and key
+   */
+  uploadProductImage(
+    productId: string,
+    imageId: string,
+    body: Uint8Array,
+    contentType: string,
+  ): Promise<UploadResult> {
+    return this.uploadEntityImage(
+      "products",
+      productId,
+      imageId,
+      body,
+      contentType,
+    );
+  }
+
+  /**
+   * Delete an entity image from S3 (generic method)
+   *
+   * @param entityType - Type of entity (e.g., "products", "categories")
+   * @param entityId - UUID of the entity
    * @param imageId - UUID of the image
    * @param extension - File extension (jpg, png, webp)
    */
-  async deleteProductImage(
-    productId: string,
+  async deleteEntityImage(
+    entityType: string,
+    entityId: string,
     imageId: string,
     extension: string = "jpg",
   ): Promise<void> {
-    const key = `${this.prefix}/products/${productId}/${imageId}.${extension}`;
+    const key =
+      `${this.prefix}/${entityType}/${entityId}/${imageId}.${extension}`;
 
     await this.client.send(
       new DeleteObjectCommand({
@@ -125,6 +198,58 @@ export class S3Uploader {
         Key: key,
       }),
     );
+  }
+
+  /**
+   * Delete an image from S3 using its full URL
+   * Extracts the S3 key from the URL and deletes the object
+   *
+   * @param imageUrl - Full S3 URL (e.g., https://bucket.s3.amazonaws.com/prefix/products/uuid/uuid.jpg)
+   */
+  async deleteByUrl(imageUrl: string): Promise<void> {
+    if (!imageUrl) return;
+
+    try {
+      // Extract key from URL
+      // URL format: https://bucket.s3.amazonaws.com/key or https://s3.region.amazonaws.com/bucket/key
+      const url = new URL(imageUrl);
+      let key = url.pathname;
+
+      // Remove leading slash
+      if (key.startsWith("/")) {
+        key = key.substring(1);
+      }
+
+      // If bucket is in path (s3.region.amazonaws.com/bucket/key), remove bucket prefix
+      if (url.hostname.startsWith("s3.") && key.startsWith(this.bucket + "/")) {
+        key = key.substring(this.bucket.length + 1);
+      }
+
+      await this.client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+        }),
+      );
+    } catch (error) {
+      console.warn(`Failed to delete from S3: ${imageUrl}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a product image from S3 (convenience method)
+   *
+   * @param productId - UUID of the product
+   * @param imageId - UUID of the image
+   * @param extension - File extension (jpg, png, webp)
+   */
+  deleteProductImage(
+    productId: string,
+    imageId: string,
+    extension: string = "jpg",
+  ): Promise<void> {
+    return this.deleteEntityImage("products", productId, imageId, extension);
   }
 
   /**

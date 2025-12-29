@@ -30,6 +30,20 @@ export class ProductImageController
   uploadImage = async (c: Context) => {
     const productId = c.req.param("productId");
 
+    // Check if S3 is configured
+    if (!s3Uploader.isConfigured()) {
+      const status = s3Uploader.getConfigStatus();
+      return c.json(
+        ApiResponse.error(
+          `S3 storage not configured. Missing environment variables: ${
+            status.missing.join(", ")
+          }. ` +
+            "Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME in your .env file.",
+        ),
+        503,
+      );
+    }
+
     const formData = await c.req.formData();
     const file = formData.get("file") as File | null;
     const altText = formData.get("altText") as string | null;
@@ -57,27 +71,37 @@ export class ProductImageController
     // Upload to S3
     const imageId = crypto.randomUUID();
     const buffer = new Uint8Array(await file.arrayBuffer());
-    const uploadResult = await s3Uploader.uploadProductImage(
-      productId,
-      imageId,
-      buffer,
-      file.type,
-    );
 
-    // Save to database
-    const image = await productImageService.create({
-      productId,
-      url: uploadResult.url,
-      thumbnailUrl: uploadResult.url, // Same URL for now (no processing)
-      altText,
-      isPrimary,
-      displayOrder: 0, // Will be updated by afterCreate hook based on existing images
-    });
+    try {
+      const uploadResult = await s3Uploader.uploadProductImage(
+        productId,
+        imageId,
+        buffer,
+        file.type,
+      );
 
-    return c.json(
-      ApiResponse.success(image, "Image uploaded successfully"),
-      201,
-    );
+      // Save to database
+      const image = await productImageService.create({
+        productId,
+        url: uploadResult.url,
+        thumbnailUrl: uploadResult.url, // Same URL for now (no processing)
+        altText,
+        isPrimary,
+        displayOrder: 0, // Will be updated by afterCreate hook based on existing images
+      });
+
+      return c.json(
+        ApiResponse.success(image, "Image uploaded successfully"),
+        201,
+      );
+    } catch (error) {
+      console.error("S3 upload error:", error);
+      const message = error instanceof Error ? error.message : "Upload failed";
+      return c.json(
+        ApiResponse.error(`Failed to upload image: ${message}`),
+        500,
+      );
+    }
   };
 
   /**
@@ -116,15 +140,15 @@ export class ProductImageController
       return c.json(ApiResponse.error("Image not found"), 404);
     }
 
-    // Delete from database (S3 deletion can be async/background)
+    // Delete from database first
     await productImageService.delete(imageId);
 
-    // Try to delete from S3 (don't fail if S3 delete fails)
+    // Delete from S3 using the actual URL stored in DB
     try {
-      await s3Uploader.deleteProductImage(image.productId, imageId);
+      await s3Uploader.deleteByUrl(image.url);
     } catch (_error) {
       // Log but don't fail - image might not exist in S3 or config might be missing
-      console.warn(`Failed to delete image from S3: ${imageId}`);
+      console.warn(`Failed to delete image from S3: ${image.url}`);
     }
 
     return c.json(ApiResponse.success(null, "Image deleted successfully"));

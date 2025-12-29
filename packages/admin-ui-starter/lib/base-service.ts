@@ -18,6 +18,21 @@ export interface ListResponse<T> {
 }
 
 /**
+ * API Response wrapper format from backend
+ * Backend returns: { status: "success", data: ..., pagination?: ... }
+ */
+interface ApiResponse<T> {
+  status: string;
+  data: T;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
  * Base service that provides standard CRUD operations
  * Extend this instead of duplicating code for each entity
  */
@@ -30,7 +45,7 @@ export class BaseService<T> {
     this.client = client;
   }
 
-  list(params?: Record<string, unknown>): Promise<ListResponse<T>> {
+  async list(params?: Record<string, unknown>): Promise<ListResponse<T>> {
     const searchParams = new URLSearchParams();
 
     if (params) {
@@ -43,26 +58,66 @@ export class BaseService<T> {
 
     const query = searchParams.toString();
     const path = query ? `${this.basePath}?${query}` : this.basePath;
-    return this.client.get<ListResponse<T>>(path);
+    const response = await this.client.get<ApiResponse<T[]>>(path);
+
+    // Unwrap API response format: { status, data, pagination }
+    return {
+      success: response.status === "success",
+      data: response.data || [],
+      pagination: response.pagination || {
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 0,
+      },
+    };
   }
 
-  getById(id: string | number): Promise<T> {
-    return this.client.get<T>(`${this.basePath}/${id}`);
+  async getById(id: string | number): Promise<T> {
+    const response = await this.client.get<ApiResponse<T> | T>(
+      `${this.basePath}/${id}`,
+    );
+    // Handle both wrapped { status, data } and unwrapped responses
+    if (
+      response && typeof response === "object" && "status" in response &&
+      "data" in response
+    ) {
+      return (response as ApiResponse<T>).data;
+    }
+    return response as T;
   }
 
-  getByKey(key: string): Promise<T> {
-    return this.client.get<T>(`${this.basePath}/${key}`);
+  async getByKey(key: string): Promise<T> {
+    const response = await this.client.get<ApiResponse<T> | T>(
+      `${this.basePath}/${key}`,
+    );
+    // Handle both wrapped { status, data } and unwrapped responses
+    if (
+      response && typeof response === "object" && "status" in response &&
+      "data" in response
+    ) {
+      return (response as ApiResponse<T>).data;
+    }
+    return response as T;
   }
 
-  create(data: Partial<T>): Promise<T> {
-    return this.client.post<T>(this.basePath, data);
+  async create(data: Partial<T>): Promise<T> {
+    const response = await this.client.post<ApiResponse<T>>(
+      this.basePath,
+      data,
+    );
+    return response.data;
   }
 
-  update(id: string | number, data: Partial<T>): Promise<T> {
-    return this.client.put<T>(`${this.basePath}/${id}`, data);
+  async update(id: string | number, data: Partial<T>): Promise<T> {
+    const response = await this.client.put<ApiResponse<T>>(
+      `${this.basePath}/${id}`,
+      data,
+    );
+    return response.data;
   }
 
-  delete(id: string | number): Promise<void> {
-    return this.client.delete(`${this.basePath}/${id}`).then(() => undefined);
+  async delete(id: string | number): Promise<void> {
+    await this.client.delete(`${this.basePath}/${id}`);
   }
 }

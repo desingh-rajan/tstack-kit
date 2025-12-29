@@ -6,6 +6,7 @@ import {
   getTableColumns,
   gt,
   gte,
+  inArray,
   isNull,
   like,
   lte,
@@ -16,6 +17,7 @@ import { db } from "../../config/database.ts";
 import { products, type ProductWithRelations } from "./product.model.ts";
 import { brands } from "../brands/brand.model.ts";
 import { categories } from "../categories/category.model.ts";
+import { productImages } from "../product_images/product-image.model.ts";
 import { BadRequestError } from "../../shared/utils/errors.ts";
 import { BaseService } from "../../shared/services/base.service.ts";
 import { ensureUniqueSlugSync, generateSlug } from "@tstack/admin";
@@ -265,6 +267,160 @@ export class ProductService extends BaseService<
   }
 
   /**
+   * Admin list: Get ALL products with relations and primary images
+   * Unlike getProducts(), this includes inactive products for admin panel
+   *
+   * TODO: This endpoint is designed to support multiple frontends (Web, Flutter)
+   * Returns: products with brand, category, and primaryImage populated
+   */
+  async getProductsForAdmin(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }): Promise<{
+    data: Array<
+      ProductWithRelations & {
+        primaryImage: {
+          id: string;
+          url: string;
+          thumbnailUrl: string | null;
+          altText: string | null;
+        } | null;
+      }
+    >;
+    pagination: {
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const { page, pageSize, search, sortBy = "createdAt", sortOrder = "desc" } =
+      options;
+    const offset = (page - 1) * pageSize;
+
+    // Build conditions - include ALL products (active and inactive) for admin
+    const conditions: ReturnType<typeof eq>[] = [
+      isNull(products.deletedAt), // Only exclude soft-deleted
+    ];
+
+    // Build where clause
+    let whereClause = and(...conditions);
+
+    // Search filter
+    if (search) {
+      const searchPattern = `%${search}%`;
+      whereClause = and(
+        whereClause,
+        or(
+          like(products.name, searchPattern),
+          like(products.description, searchPattern),
+          like(products.sku, searchPattern),
+        ),
+      );
+    }
+
+    // Sort
+    const orderByColumn = sortBy === "price"
+      ? products.price
+      : sortBy === "name"
+      ? products.name
+      : sortBy === "stockQuantity"
+      ? products.stockQuantity
+      : products.createdAt;
+
+    const orderByDirection = sortOrder === "asc"
+      ? asc(orderByColumn)
+      : desc(orderByColumn);
+
+    // Execute query with joins
+    const result = await db
+      .select({
+        ...getTableColumns(products),
+        brand: {
+          id: brands.id,
+          name: brands.name,
+          slug: brands.slug,
+        },
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+        },
+      })
+      .from(products)
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(whereClause)
+      .orderBy(orderByDirection)
+      .limit(pageSize)
+      .offset(offset);
+
+    // Count total
+    const countResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+      .where(whereClause);
+
+    const total = countResult[0]?.count ?? 0;
+
+    // Get primary images for all products in result
+    const productIds = result.map((p) => p.id);
+    let imageMap = new Map<
+      string,
+      {
+        id: string;
+        url: string;
+        thumbnailUrl: string | null;
+        altText: string | null;
+      }
+    >();
+
+    if (productIds.length > 0) {
+      const primaryImages = await db
+        .select({
+          id: productImages.id,
+          productId: productImages.productId,
+          url: productImages.url,
+          thumbnailUrl: productImages.thumbnailUrl,
+          altText: productImages.altText,
+        })
+        .from(productImages)
+        .where(
+          and(
+            inArray(productImages.productId, productIds),
+            eq(productImages.isPrimary, true),
+          ),
+        );
+
+      imageMap = new Map(primaryImages.map((img) => [img.productId, {
+        id: img.id,
+        url: img.url,
+        thumbnailUrl: img.thumbnailUrl,
+        altText: img.altText,
+      }]));
+    }
+
+    return {
+      data: result.map((row) => ({
+        ...row,
+        specifications: row.specifications as Record<string, unknown>,
+        brand: row.brand?.id ? row.brand : null,
+        category: row.category?.id ? row.category : null,
+        primaryImage: imageMap.get(row.id) || null,
+      })),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
+  }
+
+  /**
    * Get product by slug with relations
    */
   async getBySlug(slug: string): Promise<ProductWithRelations | null> {
@@ -307,7 +463,7 @@ export class ProductService extends BaseService<
   }
 
   /**
-   * Get product by ID with relations
+   * Get product by ID with relations and primary image
    */
   override async getById(id: string): Promise<ProductWithRelations | null> {
     const result = await db
@@ -334,12 +490,30 @@ export class ProductService extends BaseService<
       return null;
     }
 
+    // Get primary image
+    const primaryImageResult = await db
+      .select({
+        id: productImages.id,
+        url: productImages.url,
+        thumbnailUrl: productImages.thumbnailUrl,
+        altText: productImages.altText,
+      })
+      .from(productImages)
+      .where(
+        and(
+          eq(productImages.productId, id),
+          eq(productImages.isPrimary, true),
+        ),
+      )
+      .limit(1);
+
     const row = result[0];
     return {
       ...row,
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
+      primaryImage: primaryImageResult[0] || null,
     };
   }
 

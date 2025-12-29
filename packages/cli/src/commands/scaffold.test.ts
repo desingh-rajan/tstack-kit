@@ -20,6 +20,38 @@ import { fileExists } from "../utils/fileWriter.ts";
  */
 
 /**
+ * Helper: Drop databases created by workspace tests
+ * Workspace "test-workspace-123" creates databases: test_workspace_123_api_dev/test/prod
+ */
+async function dropWorkspaceDatabases(workspaceName: string): Promise<void> {
+  // Convert workspace name to database prefix: test-workspace-123 -> test_workspace_123_api
+  const dbPrefix = workspaceName.replace(/-/g, "_") + "_api";
+  const envs = ["dev", "test", "prod"];
+
+  for (const env of envs) {
+    const dbName = `${dbPrefix}_${env}`;
+    try {
+      const cmd = new Deno.Command("psql", {
+        args: [
+          "-U",
+          "postgres",
+          "-h",
+          "localhost",
+          "-c",
+          `DROP DATABASE IF EXISTS ${dbName}`,
+        ],
+        env: { PGPASSWORD: "password" },
+        stdout: "piped",
+        stderr: "piped",
+      });
+      await cmd.output();
+    } catch {
+      // Ignore errors during cleanup
+    }
+  }
+}
+
+/**
  * Helper: Get first directory name from a directory
  */
 async function getFirstDirName(dirPath: string): Promise<string | null> {
@@ -73,10 +105,7 @@ Deno.test(
       const basePath = join(tempDir, "src", "entities", "tickets");
       assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
       assertEquals(await fileExists(join(basePath, "ticket.dto.ts")), true);
-      assertEquals(
-        await fileExists(join(basePath, "ticket.service.ts")),
-        true,
-      );
+      assertEquals(await fileExists(join(basePath, "ticket.service.ts")), true);
       assertEquals(
         await fileExists(join(basePath, "ticket.controller.ts")),
         true,
@@ -115,10 +144,7 @@ Deno.test(
       const basePath = join(tempDir, "src", "entities", "tickets");
       assertEquals(await fileExists(join(basePath, "ticket.model.ts")), true);
       assertEquals(await fileExists(join(basePath, "ticket.dto.ts")), true);
-      assertEquals(
-        await fileExists(join(basePath, "ticket.service.ts")),
-        true,
-      );
+      assertEquals(await fileExists(join(basePath, "ticket.service.ts")), true);
       assertEquals(
         await fileExists(join(basePath, "ticket.controller.ts")),
         true,
@@ -181,10 +207,11 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       // Create workspace with both API and admin-UI
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -264,6 +291,7 @@ Deno.test({
       );
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -273,10 +301,11 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       // Create workspace with both projects
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -315,6 +344,7 @@ Deno.test({
       );
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -324,10 +354,11 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       // Create workspace with both projects
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -365,6 +396,7 @@ Deno.test({
       );
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -374,10 +406,11 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       // Create workspace
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -421,6 +454,7 @@ Deno.test({
       );
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -619,9 +653,10 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -661,6 +696,7 @@ Deno.test({
       assertEquals(content.includes("canDelete: true"), true);
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -670,9 +706,10 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -709,6 +746,7 @@ Deno.test({
       assertEquals(content.includes("createCRUDHandlers"), true);
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -718,9 +756,10 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -756,6 +795,7 @@ Deno.test({
       assertEquals(content.includes("<ShowPage"), true);
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });
@@ -765,9 +805,10 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const workspaceDir = await createTempDir();
+    const wsName = `test-workspace-${Date.now()}`;
     try {
       await createWorkspace({
-        name: `test-workspace-${Date.now()}`,
+        name: wsName,
         targetDir: workspaceDir,
         withApi: true,
         withAdminUi: true,
@@ -819,6 +860,7 @@ Deno.test({
       assertEquals(editContent.includes("<GenericForm"), true);
     } finally {
       await cleanupTempDir(workspaceDir);
+      await dropWorkspaceDatabases(wsName);
     }
   },
 });

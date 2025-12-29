@@ -3,19 +3,23 @@
  * Displays ALL fields of a record in a structured layout
  */
 
+import type { ComponentChildren } from "preact";
 import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
 import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
 import { AccessDenied } from "@/components/admin/AccessDenied.tsx";
+import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
 
 interface ShowPageProps<T = Record<string, unknown>> {
   config: EntityConfig<T>;
   item: T;
   error?: string;
   errorStatus?: number;
+  /** Additional content to render after the main fields card */
+  children?: ComponentChildren;
 }
 
 export function ShowPage<T = Record<string, unknown>>(
-  { config, item, error, errorStatus }: ShowPageProps<T>,
+  { config, item, error, errorStatus, children }: ShowPageProps<T>,
 ) {
   // 403 Forbidden - Show access denied page
   if (errorStatus === 403) {
@@ -63,6 +67,72 @@ export function ShowPage<T = Record<string, unknown>>(
   ) => {
     if (field.render) {
       return field.render(value, item as Record<string, unknown>);
+    }
+
+    // Handle relationship fields
+    if (field.type === "relationship" && field.relationship) {
+      const itemData = item as Record<string, unknown>;
+      // Try to get the related entity name from the item data
+      // Common patterns: category, brand, user (for belongsTo)
+      const relationEntity = field.relationship.entity;
+      const labelField = field.relationship.labelField || "name";
+
+      // Check if the related entity data is embedded (e.g., item.category)
+      const singularEntity = relationEntity.replace(/s$/, ""); // categories -> category
+      const relatedData = itemData[singularEntity] as
+        | Record<string, unknown>
+        | undefined;
+
+      if (relatedData && relatedData[labelField]) {
+        const relatedId = relatedData.id || value;
+        return (
+          <a
+            href={`/admin/${relationEntity}/${relatedId}`}
+            class="link link-primary"
+          >
+            {String(relatedData[labelField])}
+          </a>
+        );
+      }
+
+      // Fallback: just show the ID with a link if we have an ID
+      if (value) {
+        return (
+          <a href={`/admin/${relationEntity}/${value}`} class="link link-hover">
+            {String(value)}
+          </a>
+        );
+      }
+
+      return <span class="text-base-content/40">Not set</span>;
+    }
+
+    // Handle image fields - renders ImageUploadPane in read-only mode for show pages
+    // This allows any entity to have images by adding type: "image" with imageConfig
+    if (field.type === "image" && field.imageConfig) {
+      const itemData = item as Record<string, unknown>;
+      const entityId = itemData[field.imageConfig.entityIdField || "id"] as
+        | string
+        | undefined;
+
+      if (entityId) {
+        return (
+          <ImageUploadPane
+            entityType={field.imageConfig.entityType}
+            entityId={entityId}
+            multiple={field.imageConfig.multiple}
+            maxFiles={field.imageConfig.maxFiles}
+            maxSize={field.imageConfig.maxSize}
+            accept={field.imageConfig.accept}
+            variant="pane"
+            label=""
+            helpText=""
+            readOnly
+          />
+        );
+      }
+
+      return <span class="text-base-content/40">No images</span>;
     }
 
     if (value === null || value === undefined) {
@@ -198,6 +268,9 @@ export function ShowPage<T = Record<string, unknown>>(
             </div>
           </div>
         </div>
+
+        {/* Additional content (e.g., product images section) */}
+        {children}
       </div>
     </AdminLayout>
   );

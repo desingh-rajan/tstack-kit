@@ -4,12 +4,13 @@ import { db } from "../../config/database.ts";
 import { type Product, products } from "./product.model.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 import { ProductControllerStatic } from "./product.controller.ts";
+import { ProductImageControllerStatic } from "../product_images/product-image.controller.ts";
 
 /**
  * Product Admin Routes
  *
  * Full CRUD at /ts-admin/products
- * Plus: soft delete, restore
+ * Plus: soft delete, restore, images
  */
 
 const ADMIN_BASE_URL = "/ts-admin/products";
@@ -74,11 +75,36 @@ productAdminRoutes.post(
   ProductControllerStatic.restore,
 );
 
+// Product Images - MUST be before /:id routes to avoid being caught by :id param
+productAdminRoutes.get(
+  `${ADMIN_BASE_URL}/:productId/images`,
+  requireAuth,
+  ProductImageControllerStatic.getByProductId,
+);
+productAdminRoutes.post(
+  `${ADMIN_BASE_URL}/:productId/images`,
+  requireAuth,
+  ProductImageControllerStatic.uploadImage,
+);
+productAdminRoutes.put(
+  `${ADMIN_BASE_URL}/:productId/images/reorder`,
+  requireAuth,
+  ProductImageControllerStatic.reorder,
+);
+
 // CRUD routes
-productAdminRoutes.get(ADMIN_BASE_URL, productAdmin.list());
+// Custom list handler: includes brand, category, primaryImage for admin panel + Flutter
+productAdminRoutes.get(
+  ADMIN_BASE_URL,
+  ProductControllerStatic.adminListWithImages,
+);
 productAdminRoutes.get(`${ADMIN_BASE_URL}/new`, productAdmin.new());
 productAdminRoutes.post(ADMIN_BASE_URL, productAdmin.create());
-productAdminRoutes.get(`${ADMIN_BASE_URL}/:id`, productAdmin.show());
+// Custom show handler to include relations (brand, category)
+productAdminRoutes.get(
+  `${ADMIN_BASE_URL}/:id`,
+  ProductControllerStatic.getByIdWithRelations,
+);
 productAdminRoutes.get(`${ADMIN_BASE_URL}/:id/edit`, productAdmin.edit());
 productAdminRoutes.put(`${ADMIN_BASE_URL}/:id`, productAdmin.update());
 productAdminRoutes.patch(`${ADMIN_BASE_URL}/:id`, productAdmin.update());

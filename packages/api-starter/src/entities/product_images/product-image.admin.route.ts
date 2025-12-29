@@ -49,6 +49,13 @@ const productImageAdminRoutes = new Hono();
 productImageAdminRoutes.use(`${ADMIN_BASE_URL}/*`, requireAuth);
 productImageAdminRoutes.use(ADMIN_BASE_URL, requireAuth);
 
+// Custom: Get images for a product
+productImageAdminRoutes.get(
+  "/ts-admin/products/:productId/images",
+  requireAuth,
+  ProductImageControllerStatic.getByProductId,
+);
+
 // Custom: Upload image for a product
 productImageAdminRoutes.post(
   "/ts-admin/products/:productId/images",

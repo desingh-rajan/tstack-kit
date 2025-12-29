@@ -6,6 +6,7 @@
 
 import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
 import RelationshipSelect from "@/islands/RelationshipSelect.tsx";
+import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
 
 interface FormProps {
   config: EntityConfig<unknown>;
@@ -17,7 +18,12 @@ interface FormProps {
 export function GenericForm(
   { config, item, errors, isEdit }: FormProps,
 ) {
-  const formFields = config.fields.filter((f) => f.showInForm !== false);
+  // Filter fields for form display
+  // - showInForm !== false
+  // - Skip "image" type fields (rendered separately as ImageUploadPane)
+  const formFields = config.fields.filter(
+    (f) => f.showInForm !== false && f.type !== "image",
+  );
 
   const getValue = (fieldName: string): unknown => {
     if (item) {
@@ -331,6 +337,31 @@ export function GenericForm(
             error={error}
             searchable={rel.searchable !== false}
           />
+        );
+      }
+
+      case "image": {
+        // Handle image upload fields with ImageUploadPane island
+        const imgConfig = field.imageConfig;
+        const entityIdField = imgConfig?.entityIdField || config.idField;
+        const entityId = item
+          ? String((item as Record<string, unknown>)[entityIdField] || "")
+          : undefined;
+
+        return (
+          <div key={field.name}>
+            <ImageUploadPane
+              entityType={imgConfig?.entityType || config.name}
+              entityId={isEdit ? entityId : undefined}
+              multiple={imgConfig?.multiple ?? true}
+              accept={imgConfig?.accept}
+              maxSize={imgConfig?.maxSize}
+              maxFiles={imgConfig?.maxFiles}
+              label={field.label}
+              helpText={field.helpText}
+              variant="pane"
+            />
+          </div>
         );
       }
 

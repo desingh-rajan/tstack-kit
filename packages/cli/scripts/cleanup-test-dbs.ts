@@ -60,6 +60,10 @@ const TEST_PATTERNS = [
   // Converted to DB: test_ws_<timestamp>_api_dev, etc.
   "test_ws_%",
 
+  // scaffold.test.ts: dynamic names "test-workspace-<timestamp>"
+  // Converted to DB: test_workspace_<timestamp>_api_dev, etc.
+  "test_workspace_%",
+
   // list.test.ts: "list-multi-one-<timestamp>", "list-multi-ws-<timestamp>"
   // Converted to DB: list_multi_%
   "list_multi_%",

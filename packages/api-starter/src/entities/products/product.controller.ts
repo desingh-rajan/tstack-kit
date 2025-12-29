@@ -67,6 +67,53 @@ export class ProductController extends BaseController<typeof productService> {
     await productService.restore(id);
     return c.json(ApiResponse.success(null, "Product restored successfully"));
   };
+
+  /**
+   * Get product by ID with relations (admin only)
+   * Returns brand and category objects for display
+   */
+  getByIdWithRelations = async (c: Context) => {
+    const id = c.req.param("id");
+    const product = await productService.getById(id);
+
+    if (!product) {
+      return c.json(ApiResponse.error("Product not found"), 404);
+    }
+
+    return c.json(ApiResponse.success(product));
+  };
+
+  /**
+   * Admin list with primary images (admin only)
+   * Returns all products (including inactive) with brand, category, and primaryImage
+   *
+   * TODO: This endpoint is designed to support multiple frontends (Web, Flutter)
+   * Ensure any changes maintain backwards compatibility
+   */
+  adminListWithImages = async (c: Context) => {
+    const url = new URL(c.req.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "20");
+    const search = url.searchParams.get("search") || undefined;
+    const sortBy = url.searchParams.get("sortBy") || "createdAt";
+    const sortOrder = (url.searchParams.get("sortOrder") || "desc") as
+      | "asc"
+      | "desc";
+
+    const result = await productService.getProductsForAdmin({
+      page,
+      pageSize,
+      search,
+      sortBy,
+      sortOrder,
+    });
+
+    return c.json({
+      status: "success",
+      data: result.data,
+      pagination: result.pagination,
+    });
+  };
 }
 
 const controller = new ProductController();
@@ -76,4 +123,6 @@ export const ProductControllerStatic = {
   getBySlug: controller.getBySlug,
   softDelete: controller.softDelete,
   restore: controller.restore,
+  getByIdWithRelations: controller.getByIdWithRelations,
+  adminListWithImages: controller.adminListWithImages,
 };

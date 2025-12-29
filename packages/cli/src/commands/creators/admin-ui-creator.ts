@@ -87,6 +87,23 @@ export class AdminUiProjectCreator extends BaseProjectCreator {
       Logger.info(".env file created");
     }
 
+    // Install npm dependencies (vite, tailwindcss, etc.)
+    Logger.step("Installing dependencies...");
+    const installCmd = new Deno.Command("deno", {
+      args: ["install"],
+      cwd: this.projectPath,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const installResult = await installCmd.output();
+    if (installResult.success) {
+      Logger.info("Dependencies installed");
+    } else {
+      Logger.warning(
+        "Failed to install dependencies. Run 'deno install' manually.",
+      );
+    }
+
     Logger.newLine();
   }
 
@@ -119,15 +136,11 @@ export class AdminUiProjectCreator extends BaseProjectCreator {
     Logger.code(`cd ${this.folderName}`);
     Logger.newLine();
 
-    Logger.info("2. Install dependencies:");
-    Logger.code("deno install");
-    Logger.newLine();
-
-    Logger.info("3. Start development server:");
+    Logger.info("2. Start development server:");
     Logger.code("deno task dev");
     Logger.newLine();
 
-    Logger.subtitle("🎨 Admin UI Features:");
+    Logger.subtitle("Admin UI Features:");
     Logger.newLine();
     Logger.info("✅ Config-driven CRUD system");
     Logger.info("✅ Generic DataTable, ShowPage, and GenericForm components");
