@@ -71,7 +71,7 @@ if (!hasMigrations) {
   console.log("[INFO] No migrations found, generating from schema...");
   try {
     const generate = new Deno.Command("deno", {
-      args: ["task", "migrate:generate"],
+      args: ["task", "db:generate"],
       env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
       stdout: "piped",
       stderr: "piped",

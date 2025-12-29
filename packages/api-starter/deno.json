@@ -3,27 +3,17 @@
     "dev": "deno run --allow-all --watch src/main.ts",
     "start": "deno run --allow-all src/main.ts",
     "routes": "deno run --allow-all scripts/list-routes.ts",
-    "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
-    "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
-    "db:seed:superadmin": "deno run --allow-all scripts/seed-superadmin.ts",
-    "db:seed:alpha": "deno run --allow-all scripts/seed-alpha-user.ts",
-    "db:seed:user": "deno run --allow-all scripts/seed-regular-user.ts",
-    "db:seed:site": "deno run --allow-all scripts/seed-site-settings.ts",
-    "env:validate": "deno run --allow-env scripts/validate-env.ts",
-    "setup": "deno task env:validate && deno task migrate:run && deno task db:seed",
-    "migrate:generate": "deno run --allow-all scripts/migrate-generate.ts",
-    "migrate:run": "deno run --allow-all scripts/migrate-run.ts",
-    "db:studio": "deno run --allow-all scripts/db-studio.ts",
+    "setup": "deno task db:migrate && deno task db:seed",
     "test": "deno run --allow-all scripts/setup-test-full.ts && ENVIRONMENT=test deno test --allow-all src/_test_setup.ts src/ && deno run --allow-all scripts/cleanup-test-db.ts",
-    "test:only": "ENVIRONMENT=test deno test --allow-all src/_test_setup.ts src/",
-    "test:setup": "ENVIRONMENT=test deno run --allow-all scripts/setup-test-db.ts",
-    "test:migrate": "ENVIRONMENT=test deno task migrate:run",
-    "test:seed": "ENVIRONMENT=test deno task db:seed",
-    "test:reset": "deno task test:setup && deno task test:migrate && deno task test:seed",
     "test:watch": "ENVIRONMENT=test deno test --allow-all --watch src/",
-    "test:coverage": "deno run --allow-all scripts/setup-test-full.ts && ENVIRONMENT=test deno test --allow-all --coverage=coverage src/ && deno run --allow-all scripts/cleanup-test-db.ts",
-    "test:check": "deno run --allow-all scripts/test-health-check.ts",
-    "cleanup:test-db": "deno run --allow-all scripts/cleanup-test-db.ts",
+    "db:create": "deno run --allow-env --allow-net --allow-read scripts/create-db.ts",
+    "db:migrate": "deno run --allow-all scripts/migrate-run.ts",
+    "db:generate": "deno run --allow-all scripts/migrate-generate.ts",
+    "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
+    "db:studio": "deno run --allow-all scripts/db-studio.ts",
+    "migrate:run": "deno task db:migrate",
+    "migrate:generate": "deno task db:generate",
+    "check": "deno fmt --check && deno lint",
     "fmt": "deno fmt",
     "lint": "deno lint"
   },
@@ -49,18 +39,7 @@
     "zod": "npm:zod@^3.23.0",
     "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@^3.700.0"
   },
-  "fmt": {
-    "semiColons": true,
-    "singleQuote": false
-  },
-  "lint": {
-    "rules": {
-      "tags": ["recommended", "workspace"],
-      "include": ["no-unversioned-import", "no-import-prefix"]
-    }
-  },
-  "compilerOptions": {
-    "lib": ["deno.window"],
-    "strict": true
-  }
+  "fmt": { "semiColons": true, "singleQuote": false },
+  "lint": { "rules": { "tags": ["recommended"] } },
+  "compilerOptions": { "lib": ["deno.window"], "strict": true }
 }

@@ -101,7 +101,7 @@ try {
   await sql.end();
   console.log();
   console.log("[SUCCESS] Done! You can now run migrations:");
-  console.log("   deno task migrate:generate");
+  console.log("   deno task db:generate");
   console.log("   deno task migrate:run");
 } catch (error) {
   const errorMessage = error instanceof Error ? error.message : String(error);
