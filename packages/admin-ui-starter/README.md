@@ -151,17 +151,84 @@ const handlers = createCRUDHandlers(postConfig);
 
 ## Supported Field Types
 
-| Type       | UI Output           | Form Input                      |
-| ---------- | ------------------- | ------------------------------- |
-| `string`   | Text                | `<input type="text">`           |
-| `text`     | Truncated/formatted | `<textarea>`                    |
-| `number`   | Number              | `<input type="number">`         |
-| `boolean`  | Badge (Yes/No)      | `<checkbox>`                    |
-| `date`     | Formatted date      | `<input type="date">`           |
-| `datetime` | Formatted datetime  | `<input type="datetime-local">` |
-| `email`    | Link                | `<input type="email">`          |
-| `select`   | Badge/text          | `<select>` with options         |
-| `json`     | Pretty JSON         | `<textarea>`                    |
+| Type           | UI Output           | Form Input                      |
+| -------------- | ------------------- | ------------------------------- |
+| `string`       | Text                | `<input type="text">`           |
+| `text`         | Truncated/formatted | `<textarea>`                    |
+| `number`       | Number              | `<input type="number">`         |
+| `boolean`      | Badge (Yes/No)      | `<checkbox>`                    |
+| `date`         | Formatted date      | `<input type="date">`           |
+| `datetime`     | Formatted datetime  | `<input type="datetime-local">` |
+| `email`        | Link                | `<input type="email">`          |
+| `select`       | Badge/text          | `<select>` with options         |
+| `json`         | Pretty JSON         | `<textarea>`                    |
+| `image`        | Image gallery       | `ImageUploadPane` component     |
+| `relationship` | Link to related     | `RelationshipSelect` dropdown   |
+
+## Image Upload Support
+
+The admin UI includes a powerful `ImageUploadPane` island for S3 image uploads.
+
+### Adding Images to an Entity
+
+1. **Add image field to entity config**:
+
+```typescript
+// config/entities/products.config.tsx
+{
+  name: "images",
+  label: "Product Images",
+  type: "image",
+  showInList: false,
+  showInShow: true,
+  showInForm: false,  // Handled separately
+  imageConfig: {
+    entityType: "products",
+    allowMultiple: true,
+    maxFiles: 10,
+    acceptedTypes: ["image/jpeg", "image/png", "image/webp"],
+    maxSizeMB: 5,
+  },
+}
+```
+
+2. **Use in Show/Edit pages**:
+
+```typescript
+// routes/admin/products/[id].tsx
+import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
+
+<ShowPage config={data.config} item={data.item}>
+  <ImageUploadPane
+    entityType="products"
+    entityId={data.item.id}
+    readOnly={false}
+  />
+</ShowPage>;
+```
+
+### ImageUploadPane Features
+
+- Drag-and-drop file upload
+- Image preview before upload
+- Progress indicators
+- Set primary image
+- Delete images (removes from S3)
+- Responsive grid layout
+- Queue uploads on create (uploads after entity save)
+- Immediate uploads on edit
+
+### Props
+
+| Prop             | Type     | Description                                |
+| ---------------- | -------- | ------------------------------------------ |
+| `entityType`     | string   | Entity name for S3 path (e.g., "products") |
+| `entityId`       | string?  | If provided, uploads immediately           |
+| `readOnly`       | boolean  | Disable upload/delete actions              |
+| `maxFiles`       | number   | Maximum files allowed (default: 10)        |
+| `acceptedTypes`  | string[] | MIME types (default: image/*)              |
+| `maxSizeMB`      | number   | Max file size in MB (default: 5)           |
+| `onImagesChange` | function | Callback when images change                |
 
 ## Features
 

@@ -459,6 +459,54 @@ packages/cli/src/templates/
 
 ## Advanced Usage
 
+### S3 Image Upload Configuration
+
+Projects created with TStack include built-in S3 image upload support. To enable
+it:
+
+1. **Configure AWS credentials** in your API's `.env.development.local`:
+
+```bash
+# S3 Configuration
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=your-bucket-name
+S3_PREFIX=my-project/dev
+```
+
+2. **S3 Bucket Setup**:
+   - Create an S3 bucket in your AWS account
+   - Go to Permissions > Block public access
+   - Uncheck "Block all public access" (images need public-read ACL)
+   - Images are stored at:
+     `{bucket}/{prefix}/{entity}/{entityId}/{imageId}.{ext}`
+
+3. **Using Image Uploads**:
+   - Products entity has image support out of the box
+   - Admin UI provides drag-drop image upload via `ImageUploadPane`
+   - API handles S3 upload/delete automatically
+
+**Example: Add images to a custom entity**
+
+After scaffolding, add to your entity config:
+
+```typescript
+// admin-ui: config/entities/posts.config.tsx
+{
+  name: "images",
+  label: "Images",
+  type: "image",
+  imageConfig: {
+    entityType: "posts",
+    allowMultiple: true,
+    maxFiles: 10,
+  },
+}
+```
+
+See the API and Admin UI READMEs for detailed image upload documentation.
+
 ### Configuration File
 
 TonyStack CLI uses a configuration file at `~/.tonystack/config.json` for user

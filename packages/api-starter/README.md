@@ -36,15 +36,20 @@ This is a lightweight REST API built on Deno + Hono + Drizzle (PostgreSQL) with:
 
 Create one of: `.env.development.local` (preferred) or `.env`.
 
-| Variable          | Required  | Default                   | Notes                                         |
-| ----------------- | --------- | ------------------------- | --------------------------------------------- |
-| `DATABASE_URL`    | ✅        | —                         | Postgres connection string (must exist)       |
-| `PORT`            | ❌        | 8000                      | HTTP port                                     |
-| `ENVIRONMENT`     | ❌        | development               | Allowed values: development, test, production |
-| `ALLOWED_ORIGINS` | ❌        | <http://localhost:3000>   | Comma separated list                          |
-| `JWT_SECRET`      | ✅ (prod) | `change-me-in-production` | Replace in production                         |
-| `JWT_ISSUER`      | ❌        | tonystack                 | Token issuer name                             |
-| `JWT_EXPIRY`      | ❌        | 1h                        | e.g. `1h`, `30m`, `7d`                        |
+| Variable                | Required   | Default                   | Notes                                          |
+| ----------------------- | ---------- | ------------------------- | ---------------------------------------------- |
+| `DATABASE_URL`          | Yes        | —                         | Postgres connection string (must exist)        |
+| `PORT`                  | No         | 8000                      | HTTP port                                      |
+| `ENVIRONMENT`           | No         | development               | Allowed values: development, test, production  |
+| `ALLOWED_ORIGINS`       | No         | <http://localhost:3000>   | Comma separated list                           |
+| `JWT_SECRET`            | Yes (prod) | `change-me-in-production` | Replace in production                          |
+| `JWT_ISSUER`            | No         | tonystack                 | Token issuer name                              |
+| `JWT_EXPIRY`            | No         | 1h                        | e.g. `1h`, `30m`, `7d`                         |
+| `AWS_ACCESS_KEY_ID`     | For S3     | —                         | AWS credentials for image uploads              |
+| `AWS_SECRET_ACCESS_KEY` | For S3     | —                         | AWS credentials for image uploads              |
+| `AWS_REGION`            | For S3     | —                         | e.g. `ap-south-1`, `us-east-1`                 |
+| `S3_BUCKET_NAME`        | For S3     | —                         | S3 bucket name for image storage               |
+| `S3_PREFIX`             | For S3     | —                         | Path prefix: `{workspace}/{env}` e.g. `sc/dev` |
 
 Load order (highest priority first): system env → `.env.<env>.local` → `.env`.
 
@@ -1601,7 +1606,82 @@ deno task lint
 
 Run before commits to maintain consistency and catch drift early.
 
-## 18. Deployment (Docker Compose)
+## 18. S3 Image Uploads
+
+The API includes built-in S3 image upload support for entity images (products,
+categories, etc.).
+
+### Setup
+
+1. **Configure AWS credentials** in your `.env.development.local`:
+
+```bash
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=your-bucket-name
+S3_PREFIX=my-project/dev
+```
+
+2. **S3 Bucket Configuration**:
+   - Go to S3 bucket > Permissions > Block public access
+   - Uncheck "Block all public access" (or just ACL-related blocks)
+   - Images are uploaded with `public-read` ACL
+
+### Storage Structure
+
+Images are stored with this path pattern:
+
+```
+{bucket}/{prefix}/{entityType}/{entityId}/{imageId}.{ext}
+```
+
+Example: `my-bucket/sc/dev/products/abc-123/img-456.jpg`
+
+### API Endpoints
+
+For entities with image support (e.g., products):
+
+| Endpoint                                   | Method | Description                         |
+| ------------------------------------------ | ------ | ----------------------------------- |
+| `/ts-admin/products/:id/images`            | GET    | List images for entity              |
+| `/ts-admin/products/:id/images`            | POST   | Upload image (multipart/form-data)  |
+| `/ts-admin/product-images/:id`             | DELETE | Delete image (also removes from S3) |
+| `/ts-admin/product-images/:id/set-primary` | POST   | Set as primary image                |
+
+### Upload Example
+
+```bash
+curl -X POST http://localhost:8000/ts-admin/products/{productId}/images \
+  -H "Authorization: Bearer {token}" \
+  -F "file=@image.jpg" \
+  -F "altText=Product image" \
+  -F "isPrimary=true"
+```
+
+### S3 Uploader Utility
+
+Located at `src/lib/s3-uploader.ts`:
+
+```typescript
+import { S3Uploader } from "../lib/s3-uploader.ts";
+
+const uploader = new S3Uploader();
+
+// Upload
+const result = await uploader.uploadImage(
+  fileBuffer,
+  "products", // entityType
+  "product-123", // entityId
+  "image/jpeg", // contentType
+);
+// Returns: { url, key, bucket }
+
+// Delete by URL (extracts S3 key automatically)
+await uploader.deleteByUrl(imageUrl);
+```
+
+## 19. Deployment (Docker Compose)
 
 ```bash
 export ENVIRONMENT=production

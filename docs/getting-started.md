@@ -57,12 +57,20 @@ Your API is running at `http://localhost:8000`
 Copy `.env.example` to `.env` and configure:
 
 ```bash
+# Required
 ENVIRONMENT=development
 PORT=8000
 DATABASE_URL=postgresql://postgres:password@localhost:5432/my_app_dev
 JWT_SECRET=your-secret-key
 SUPERADMIN_EMAIL=admin@example.com
 SUPERADMIN_PASSWORD=your-password
+
+# Optional: S3 Image Uploads
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=your-bucket
+S3_PREFIX=my-project/dev
 ```
 
 ## Project Tasks

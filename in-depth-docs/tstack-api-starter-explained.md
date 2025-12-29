@@ -142,6 +142,34 @@ away.
   temporary Postgres database, run the test, and wipe it. This guarantees your
   code actually works in the real world.
 
+### S3 Image Uploads
+
+The API includes a ready-to-use S3 uploader for entity images.
+
+**Setup**: Add AWS credentials to your `.env.development.local`:
+
+```bash
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=your-bucket
+S3_PREFIX=my-project/dev
+```
+
+**How it works**:
+
+- Images are stored at `{bucket}/{prefix}/{entity}/{entityId}/{imageId}.{ext}`
+- Example: `my-bucket/sc/dev/products/abc-123/img-456.jpg`
+- The `S3Uploader` class handles upload, delete, and URL generation
+- Product images are managed via `/ts-admin/products/:id/images` endpoints
+- Admin UI provides drag-drop upload via `ImageUploadPane` component
+
+**Key files**:
+
+- `src/lib/s3-uploader.ts` - S3 upload/delete utilities
+- `src/entities/product_images/` - Product image entity
+- `src/entities/products/product.controller.ts` - Upload endpoint handler
+
 ### Deployment
 
 This API is built on **Hono**, which is a modern "standard" framework.

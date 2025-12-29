@@ -36,15 +36,17 @@ export const productAdminConfig = {
 
 ## Column Types
 
-| Type       | Renders As      |
-| ---------- | --------------- |
-| `text`     | Text input      |
-| `number`   | Number input    |
-| `boolean`  | Toggle switch   |
-| `datetime` | Date picker     |
-| `select`   | Dropdown        |
-| `textarea` | Multi-line text |
-| `json`     | JSON editor     |
+| Type           | Renders As            |
+| -------------- | --------------------- |
+| `text`         | Text input            |
+| `number`       | Number input          |
+| `boolean`      | Toggle switch         |
+| `datetime`     | Date picker           |
+| `select`       | Dropdown              |
+| `textarea`     | Multi-line text       |
+| `json`         | JSON editor           |
+| `image`        | Image upload pane     |
+| `relationship` | Related entity select |
 
 ## Column Options
 
@@ -78,6 +80,17 @@ For entity `products`:
 | PUT    | `/ts-admin/products/:id`         | Update record            |
 | DELETE | `/ts-admin/products/:id`         | Delete record            |
 | POST   | `/ts-admin/products/bulk-delete` | Bulk delete              |
+
+## Image Upload Endpoints
+
+For entities with image support (e.g., products):
+
+| Method | Endpoint                                   | Description              |
+| ------ | ------------------------------------------ | ------------------------ |
+| GET    | `/ts-admin/products/:id/images`            | List images for entity   |
+| POST   | `/ts-admin/products/:id/images`            | Upload image (multipart) |
+| DELETE | `/ts-admin/product-images/:id`             | Delete image (and S3)    |
+| POST   | `/ts-admin/product-images/:id/set-primary` | Set primary image        |
 
 ## Query Parameters
 
@@ -380,5 +393,68 @@ export const orderAdminConfig = {
 
 The config-driven approach means new features add config options, not new code
 patterns. This extensibility was a design goal from day one.
+
+---
+
+## Image Upload with ImageUploadPane
+
+The Admin UI includes a reusable `ImageUploadPane` island for S3 image uploads.
+
+### Adding Image Support to an Entity
+
+1. Add an `image` type field to your entity config:
+
+```typescript
+// config/entities/posts.config.tsx
+{
+  name: "images",
+  label: "Images",
+  type: "image",
+  showInList: false,
+  showInShow: true,
+  showInForm: false,
+  imageConfig: {
+    entityType: "posts",
+    allowMultiple: true,
+    maxFiles: 10,
+    acceptedTypes: ["image/jpeg", "image/png", "image/webp"],
+    maxSizeMB: 5,
+  },
+}
+```
+
+2. Use in your show/edit page:
+
+```typescript
+import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
+
+<ShowPage config={config} item={item}>
+  <ImageUploadPane entityType="posts" entityId={item.id} />
+</ShowPage>;
+```
+
+### Features
+
+- **Drag & Drop**: Drop files directly onto the upload zone
+- **Preview**: See images before uploading
+- **Progress**: Visual upload progress indicators
+- **Primary Selection**: Click star icon to set primary image
+- **Delete**: Remove images (also deletes from S3)
+- **Queue Mode**: On create pages, queues uploads until entity is saved
+- **Immediate Mode**: On edit pages, uploads instantly
+
+### S3 Configuration
+
+Configure in your API's `.env.development.local`:
+
+```bash
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_REGION=ap-south-1
+S3_BUCKET_NAME=your-bucket
+S3_PREFIX=my-project/dev
+```
+
+Images are stored at: `{bucket}/{prefix}/{entity}/{entityId}/{imageId}.{ext}`
 
 Next: [Testing Guide](./testing-guide.md)

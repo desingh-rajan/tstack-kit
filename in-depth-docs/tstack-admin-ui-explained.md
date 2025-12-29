@@ -94,3 +94,51 @@ We chose this approach because **Admin Panels are internal tools**. You
 shouldn't spend weeks building them. You should spend minutes. This system
 allows you to build a robust tool for your support staff or operations team in a
 fraction of the time, while still looking professional and polished.
+
+---
+
+## Image Uploads with ImageUploadPane
+
+The Admin UI includes a powerful `ImageUploadPane` island component for S3 image
+uploads. It's used on product pages but can be added to any entity.
+
+### Features
+
+- **Drag & Drop**: Drop files directly onto the upload zone
+- **Preview**: See images before uploading
+- **Progress**: Visual upload progress indicators
+- **Primary Selection**: Click to set a primary image
+- **Delete**: Remove images (also deletes from S3)
+- **Queue Mode**: On "create" pages, queues uploads until entity is saved
+- **Immediate Mode**: On "edit" pages, uploads instantly
+
+### Adding to Your Entity
+
+1. Add an `image` type field to your entity config:
+
+```typescript
+{
+  name: "images",
+  label: "Images",
+  type: "image",
+  showInShow: true,
+  showInForm: false,
+  imageConfig: {
+    entityType: "posts",
+    allowMultiple: true,
+    maxFiles: 10,
+  },
+}
+```
+
+2. Use in your show/edit page:
+
+```typescript
+import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
+
+<ShowPage config={config} item={item}>
+  <ImageUploadPane entityType="posts" entityId={item.id} />
+</ShowPage>;
+```
+
+The API backend handles all S3 operations - you just configure and use.
