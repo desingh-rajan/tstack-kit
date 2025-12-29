@@ -116,9 +116,11 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: password
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/tstack_starter_test
+          ENVIRONMENT: test
         run: |
           deno run --allow-all scripts/setup-test-full.ts
-          ENVIRONMENT=test deno test --allow-all --coverage=coverage src/_test_setup.ts src/
+          deno test --allow-all --coverage=coverage src/_test_setup.ts src/
 
       - name: Generate coverage report
         working-directory: packages/api-starter

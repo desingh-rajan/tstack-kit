@@ -31,7 +31,7 @@ console.log("\n[INFO] Step 1: Creating test database...");
 try {
   const createDb = new Deno.Command("deno", {
     args: ["run", "--allow-all", "scripts/setup-test-db.ts"],
-    env: { ENVIRONMENT: "test" },
+    env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
   });
   const { success: createSuccess } = await createDb.output();
 
@@ -72,6 +72,7 @@ if (!hasMigrations) {
   try {
     const generate = new Deno.Command("deno", {
       args: ["task", "migrate:generate"],
+      env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
       stdout: "piped",
       stderr: "piped",
     });
@@ -114,7 +115,7 @@ try {
       "npm:drizzle-kit@0.28.0",
       "migrate",
     ],
-    env: { ENVIRONMENT: "test" },
+    env: { ...Deno.env.toObject(), ENVIRONMENT: "test" },
   });
   const { success: migrateSuccess } = await migrate.output();
 
