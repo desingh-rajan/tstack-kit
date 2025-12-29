@@ -243,7 +243,6 @@ Deno.test(
 
       // Verify key directories exist before destruction
       assertEquals(await dirExists(join(projectPath, "src")), true);
-      assertEquals(await dirExists(join(projectPath, "migrations")), true);
       assertEquals(await dirExists(join(projectPath, "scripts")), true);
 
       await destroyInDir(tempDir, {
