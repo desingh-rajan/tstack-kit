@@ -415,8 +415,9 @@ describe("Product Admin Panel API", () => {
       const json = await response.json();
       assertExists(json.data);
       assertEquals(Array.isArray(json.data), true);
-      assertExists(json.page);
-      assertExists(json.total);
+      assertExists(json.pagination);
+      assertExists(json.pagination.page);
+      assertExists(json.pagination.total);
     });
 
     it("should return single product by ID", async () => {
@@ -427,6 +428,7 @@ describe("Product Admin Panel API", () => {
 
       assertEquals(response.status, 200);
       const json = await response.json();
+      // Direct product object (not wrapped in ApiResponse)
       assertEquals(json.name, "Basic Product");
     });
 

@@ -3,6 +3,8 @@ import { productService } from "./product.service.ts";
 import { BaseController } from "../../shared/controllers/base.controller.ts";
 import { ApiResponse } from "../../shared/utils/response.ts";
 import { ProductQuerySchema } from "./product.dto.ts";
+import { ForbiddenError } from "../../shared/utils/errors.ts";
+import type { UserRole } from "../../auth/user.model.ts";
 
 /**
  * Product Controller
@@ -11,8 +13,22 @@ import { ProductQuerySchema } from "./product.dto.ts";
  * Admin: Full CRUD at /ts-admin/products
  */
 export class ProductController extends BaseController<typeof productService> {
+  private readonly adminRoles: UserRole[] = ["superadmin", "admin"];
+
   constructor() {
     super(productService, "Product", {});
+  }
+
+  /**
+   * Check if user has admin role
+   */
+  private checkAdminRole(c: Context): void {
+    const user = c.get("user");
+    if (!user || !this.adminRoles.includes(user.role as UserRole)) {
+      throw new ForbiddenError(
+        `Forbidden: Requires one of: ${this.adminRoles.join(", ")}`,
+      );
+    }
   }
 
   /**
@@ -73,6 +89,8 @@ export class ProductController extends BaseController<typeof productService> {
    * Returns brand and category objects for display
    */
   getByIdWithRelations = async (c: Context) => {
+    this.checkAdminRole(c);
+
     const id = c.req.param("id");
     const product = await productService.getById(id);
 
@@ -80,7 +98,7 @@ export class ProductController extends BaseController<typeof productService> {
       return c.json(ApiResponse.error("Product not found"), 404);
     }
 
-    return c.json(ApiResponse.success(product));
+    return c.json(product);
   };
 
   /**
@@ -91,6 +109,7 @@ export class ProductController extends BaseController<typeof productService> {
    * Ensure any changes maintain backwards compatibility
    */
   adminListWithImages = async (c: Context) => {
+    this.checkAdminRole(c);
     const url = new URL(c.req.url);
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("pageSize") || "20");
