@@ -1,0 +1,42 @@
+/**
+ * Category Create Page
+ */
+
+import { define } from "@/utils.ts";
+import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
+import { GenericForm } from "@/components/admin/GenericForm.tsx";
+import { createCRUDHandlers } from "@/lib/admin/crud-handlers.ts";
+import { categoryConfig } from "@/config/entities/categories.config.tsx";
+
+const handlers = createCRUDHandlers(categoryConfig);
+
+export const handler = define.handlers({
+  GET: handlers.createGet,
+  POST: handlers.createPost,
+});
+
+export default define.page<typeof handler>(function ({ data }) {
+  const { config, error, errors, values } = data;
+  return (
+    <AdminLayout currentPath={`/admin/${config.name}`}>
+      <div class="space-y-6">
+        <h1 class="text-3xl font-bold">Create New {config.singularName}</h1>
+        {error && (
+          <div class="alert alert-error">
+            <span>{error}</span>
+          </div>
+        )}
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <GenericForm
+              config={config as any}
+              item={values}
+              errors={errors}
+              isEdit={false}
+            />
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+});

@@ -1,0 +1,48 @@
+# Deno
+.env
+.env.*
+!.env.example
+deno.lock
+
+# Logs
+logs/
+*.log
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+Dockerfile
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage
+coverage/
+
+# Distribution
+dist/
+build/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+tests/
+*.test.ts

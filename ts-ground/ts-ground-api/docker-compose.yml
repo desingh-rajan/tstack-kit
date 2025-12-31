@@ -1,0 +1,89 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: tonystack-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tonystack}
+      POSTGRES_USER: ${POSTGRES_USER:-tonystack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "pg_isready -U ${POSTGRES_USER:-tonystack} -d ${POSTGRES_DB:-tonystack}",
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tonystack-network
+
+  # TonyStack API Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tonystack-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      PORT: ${PORT:-8000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tonystack}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-tonystack}
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      ALPHA_EMAIL: ${ALPHA_EMAIL:-}
+      ALPHA_PASSWORD: ${ALPHA_PASSWORD:-}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    networks:
+      - tonystack-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  tonystack-network:
+    driver: bridge
+
+# Usage:
+# Development (database only):
+#   docker compose up postgres -d
+#
+# Full stack (app + database):
+#   docker compose up -d
+#
+# Build and start:
+#   docker compose up --build -d
+#
+# Stop services:
+#   docker compose down
+#
+# Reset database (removes all data):
+#   docker compose down -v
+#
+# View logs:
+#   docker compose logs -f app
+#   docker compose logs -f postgres
+#
+# Run migrations:
+#   docker compose exec app deno task migrate:run
+#
+# Seed database:
+#   docker compose exec app deno task db:seed
