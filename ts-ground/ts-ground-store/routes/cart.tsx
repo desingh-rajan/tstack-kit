@@ -14,11 +14,13 @@ export const handler = define.handlers({
     api.setToken(token);
     const cartResponse = await api.getCart();
 
-    return ctx.render({
-      cart: cartResponse.data || null,
-      error: cartResponse.success ? null : cartResponse.error,
-      user: ctx.state.user,
-    });
+    return {
+      data: {
+        cart: cartResponse.data || null,
+        error: cartResponse.success ? null : cartResponse.error,
+        user: ctx.state.user,
+      },
+    };
   },
 
   async POST(ctx) {
@@ -63,11 +65,13 @@ export const handler = define.handlers({
     // Reload cart
     const cartResponse = await api.getCart();
 
-    return ctx.render({
-      cart: cartResponse.data || null,
-      error: error || (cartResponse.success ? null : cartResponse.error),
-      user: ctx.state.user,
-    });
+    return {
+      data: {
+        cart: cartResponse.data || null,
+        error: error || (cartResponse.success ? null : cartResponse.error),
+        user: ctx.state.user,
+      },
+    };
   },
 });
 

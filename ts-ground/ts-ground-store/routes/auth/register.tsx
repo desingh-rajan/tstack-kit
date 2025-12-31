@@ -10,15 +10,20 @@ export const handler = define.handlers({
     // Already logged in?
     if (ctx.state.user) {
       const redirect = ctx.url.searchParams.get("redirect") || "/";
-      return ctx.redirect(redirect);
+      return new Response(null, {
+        status: 302,
+        headers: { Location: redirect },
+      });
     }
 
-    return ctx.render({
-      error: null,
-      success: null,
-      email: "",
-      fullName: "",
-    });
+    return {
+      data: {
+        error: null,
+        success: null,
+        email: "",
+        fullName: "",
+      },
+    };
   },
 
   async POST(ctx) {
@@ -30,30 +35,36 @@ export const handler = define.handlers({
 
     // Validation
     if (!email || !password) {
-      return ctx.render({
-        error: "Email and password are required",
-        success: null,
-        email,
-        fullName,
-      });
+      return {
+        data: {
+          error: "Email and password are required",
+          success: null,
+          email,
+          fullName,
+        },
+      };
     }
 
     if (password !== confirmPassword) {
-      return ctx.render({
-        error: "Passwords do not match",
-        success: null,
-        email,
-        fullName,
-      });
+      return {
+        data: {
+          error: "Passwords do not match",
+          success: null,
+          email,
+          fullName,
+        },
+      };
     }
 
     if (password.length < 8) {
-      return ctx.render({
-        error: "Password must be at least 8 characters",
-        success: null,
-        email,
-        fullName,
-      });
+      return {
+        data: {
+          error: "Password must be at least 8 characters",
+          success: null,
+          email,
+          fullName,
+        },
+      };
     }
 
     const response = await api.register({
@@ -63,21 +74,25 @@ export const handler = define.handlers({
     });
 
     if (!response.success) {
-      return ctx.render({
-        error: response.error || "Registration failed",
-        success: null,
-        email,
-        fullName,
-      });
+      return {
+        data: {
+          error: response.error || "Registration failed",
+          success: null,
+          email,
+          fullName,
+        },
+      };
     }
 
-    return ctx.render({
-      error: null,
-      success:
-        "Account created successfully! Please check your email to verify your account.",
-      email: "",
-      fullName: "",
-    });
+    return {
+      data: {
+        error: null,
+        success:
+          "Account created successfully! Please check your email to verify your account.",
+        email: "",
+        fullName: "",
+      },
+    };
   },
 });
 

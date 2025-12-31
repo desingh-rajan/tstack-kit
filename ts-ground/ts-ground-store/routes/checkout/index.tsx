@@ -28,17 +28,22 @@ export const handler = define.handlers({
     ]);
 
     if (!cartResponse.success || !cartResponse.data?.items?.length) {
-      return ctx.redirect("/cart");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/cart" },
+      });
     }
 
-    return ctx.render({
-      cart: cartResponse.data,
-      addresses: addressesResponse.data || [],
-      error: null,
-      step: "address",
-      selectedAddressId: null,
-      paymentMethod: "razorpay",
-    });
+    return {
+      data: {
+        cart: cartResponse.data,
+        addresses: addressesResponse.data || [],
+        error: null,
+        step: "address",
+        selectedAddressId: null,
+        paymentMethod: "razorpay",
+      },
+    };
   },
 
   async POST(ctx) {
@@ -60,20 +65,25 @@ export const handler = define.handlers({
     const addresses = addressesResponse.data || [];
 
     if (!cart?.items?.length) {
-      return ctx.redirect("/cart");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/cart" },
+      });
     }
 
     switch (action) {
       case "select-address": {
         const addressId = formData.get("addressId") as string;
-        return ctx.render({
-          cart,
-          addresses,
-          error: null,
-          step: "payment",
-          selectedAddressId: addressId,
-          paymentMethod: "razorpay",
-        });
+        return {
+          data: {
+            cart,
+            addresses,
+            error: null,
+            step: "payment",
+            selectedAddressId: addressId,
+            paymentMethod: "razorpay",
+          },
+        };
       }
 
       case "select-payment": {
@@ -81,14 +91,16 @@ export const handler = define.handlers({
         const paymentMethod = formData.get("paymentMethod") as
           | "razorpay"
           | "cod";
-        return ctx.render({
-          cart,
-          addresses,
-          error: null,
-          step: "review",
-          selectedAddressId: addressId,
-          paymentMethod,
-        });
+        return {
+          data: {
+            cart,
+            addresses,
+            error: null,
+            step: "review",
+            selectedAddressId: addressId,
+            paymentMethod,
+          },
+        };
       }
 
       case "place-order": {
@@ -106,41 +118,54 @@ export const handler = define.handlers({
         });
 
         if (!orderResponse.success || !orderResponse.data) {
-          return ctx.render({
-            cart,
-            addresses,
-            error: orderResponse.error || "Failed to create order",
-            step: "review",
-            selectedAddressId: addressId,
-            paymentMethod,
-          });
+          return {
+            data: {
+              cart,
+              addresses,
+              error: orderResponse.error || "Failed to create order",
+              step: "review",
+              selectedAddressId: addressId,
+              paymentMethod,
+            },
+          };
         }
 
         const order = orderResponse.data;
 
         if (paymentMethod === "cod") {
           // COD order - redirect to confirmation
-          return ctx.redirect(`/orders/${order.id}?success=true`);
+          return new Response(null, {
+            status: 302,
+            headers: { Location: `/orders/${order.id}?success=true` },
+          });
         }
 
         // Razorpay - redirect to payment page
-        return ctx.redirect(`/checkout/payment?orderId=${order.id}`);
+        return new Response(null, {
+          status: 302,
+          headers: { Location: `/checkout/payment?orderId=${order.id}` },
+        });
       }
 
       case "add-address": {
         // Redirect to add address page
-        return ctx.redirect("/account/addresses/new?redirect=/checkout");
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/account/addresses/new?redirect=/checkout" },
+        });
       }
 
       default:
-        return ctx.render({
-          cart,
-          addresses,
-          error: null,
-          step: "address",
-          selectedAddressId: null,
-          paymentMethod: "razorpay",
-        });
+        return {
+          data: {
+            cart,
+            addresses,
+            error: null,
+            step: "address",
+            selectedAddressId: null,
+            paymentMethod: "razorpay",
+          },
+        };
     }
   },
 });

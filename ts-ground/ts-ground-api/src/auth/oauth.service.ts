@@ -16,7 +16,7 @@ import {
   type OAuthUserProfile,
 } from "../shared/providers/auth/index.ts";
 import {
-  createSmtpProviderFromEnv,
+  createEmailProvider,
   EmailService,
 } from "../shared/providers/email/index.ts";
 
@@ -54,21 +54,20 @@ setInterval(() => {
 
 /**
  * Get email service instance (lazy initialization)
+ * Auto-detects provider: Resend > SES > SMTP
  */
 let emailServiceInstance: EmailService | null = null;
 function getEmailService(): EmailService | null {
   if (!emailServiceInstance) {
-    try {
-      const provider = createSmtpProviderFromEnv();
-      emailServiceInstance = new EmailService(provider, {
-        appName: Deno.env.get("APP_NAME") || "TStack App",
-        appUrl: Deno.env.get("APP_URL") || "http://localhost:8000",
-        supportEmail: Deno.env.get("SUPPORT_EMAIL"),
-      });
-    } catch {
-      // Email not configured - return null
+    const provider = createEmailProvider();
+    if (!provider) {
       return null;
     }
+    emailServiceInstance = new EmailService(provider, {
+      appName: Deno.env.get("APP_NAME") || "TStack App",
+      appUrl: Deno.env.get("APP_URL") || "http://localhost:8000",
+      supportEmail: Deno.env.get("SUPPORT_EMAIL"),
+    });
   }
   return emailServiceInstance;
 }

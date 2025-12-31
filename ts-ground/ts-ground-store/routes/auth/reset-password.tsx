@@ -10,18 +10,22 @@ export const handler = define.handlers({
     const token = ctx.url.searchParams.get("token");
 
     if (!token) {
-      return ctx.render({
-        error: "Invalid reset link. No token provided.",
-        success: null,
-        tokenValid: false,
-      });
+      return {
+        data: {
+          error: "Invalid reset link. No token provided.",
+          success: null,
+          tokenValid: false,
+        },
+      };
     }
 
-    return ctx.render({
-      error: null,
-      success: null,
-      tokenValid: true,
-    });
+    return {
+      data: {
+        error: null,
+        success: null,
+        tokenValid: true,
+      },
+    };
   },
 
   async POST(ctx) {
@@ -31,53 +35,65 @@ export const handler = define.handlers({
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (!token) {
-      return ctx.render({
-        error: "Invalid reset link",
-        success: null,
-        tokenValid: false,
-      });
+      return {
+        data: {
+          error: "Invalid reset link",
+          success: null,
+          tokenValid: false,
+        },
+      };
     }
 
     if (!password || !confirmPassword) {
-      return ctx.render({
-        error: "Password is required",
-        success: null,
-        tokenValid: true,
-      });
+      return {
+        data: {
+          error: "Password is required",
+          success: null,
+          tokenValid: true,
+        },
+      };
     }
 
     if (password !== confirmPassword) {
-      return ctx.render({
-        error: "Passwords do not match",
-        success: null,
-        tokenValid: true,
-      });
+      return {
+        data: {
+          error: "Passwords do not match",
+          success: null,
+          tokenValid: true,
+        },
+      };
     }
 
     if (password.length < 8) {
-      return ctx.render({
-        error: "Password must be at least 8 characters",
-        success: null,
-        tokenValid: true,
-      });
+      return {
+        data: {
+          error: "Password must be at least 8 characters",
+          success: null,
+          tokenValid: true,
+        },
+      };
     }
 
     const response = await api.resetPassword(token, password);
 
     if (!response.success) {
-      return ctx.render({
-        error: response.error ||
-          "Failed to reset password. The link may have expired.",
-        success: null,
-        tokenValid: true,
-      });
+      return {
+        data: {
+          error: response.error ||
+            "Failed to reset password. The link may have expired.",
+          success: null,
+          tokenValid: true,
+        },
+      };
     }
 
-    return ctx.render({
-      error: null,
-      success: "Your password has been reset successfully!",
-      tokenValid: true,
-    });
+    return {
+      data: {
+        error: null,
+        success: "Your password has been reset successfully!",
+        tokenValid: true,
+      },
+    };
   },
 });
 

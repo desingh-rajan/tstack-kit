@@ -14,11 +14,13 @@ export const handler = define.handlers({
     api.setToken(token);
     const response = await api.getAddresses();
 
-    return ctx.render({
-      addresses: response.data || [],
-      error: response.success ? null : response.error,
-      success: null,
-    });
+    return {
+      data: {
+        addresses: response.data || [],
+        error: response.success ? null : response.error,
+        success: null,
+      },
+    };
   },
 
   async POST(ctx) {
@@ -60,11 +62,13 @@ export const handler = define.handlers({
 
     const response = await api.getAddresses();
 
-    return ctx.render({
-      addresses: response.data || [],
-      error,
-      success: successMsg,
-    });
+    return {
+      data: {
+        addresses: response.data || [],
+        error,
+        success: successMsg,
+      },
+    };
   },
 });
 

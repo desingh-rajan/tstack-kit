@@ -15,18 +15,26 @@ export const handler = define.handlers({
     const addressesResponse = await api.getAddresses();
 
     if (!addressesResponse.success || !addressesResponse.data) {
-      return ctx.redirect("/account/addresses");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/account/addresses" },
+      });
     }
 
     const address = addressesResponse.data.find((a) => a.id === ctx.params.id);
     if (!address) {
-      return ctx.redirect("/account/addresses");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/account/addresses" },
+      });
     }
 
-    return ctx.render({
-      error: null,
-      address,
-    });
+    return {
+      data: {
+        error: null,
+        address,
+      },
+    };
   },
 
   async POST(ctx) {
@@ -65,10 +73,12 @@ export const handler = define.handlers({
         a.id === ctx.params.id
       );
 
-      return ctx.render({
-        error: `Please fill in all required fields: ${missing.join(", ")}`,
-        address: { ...address, ...values, id: ctx.params.id },
-      });
+      return {
+        data: {
+          error: `Please fill in all required fields: ${missing.join(", ")}`,
+          address: { ...address, ...values, id: ctx.params.id },
+        },
+      };
     }
 
     const response = await api.updateAddress(ctx.params.id, values);
@@ -79,13 +89,18 @@ export const handler = define.handlers({
         a.id === ctx.params.id
       );
 
-      return ctx.render({
-        error: response.error || "Failed to update address",
-        address: { ...address, ...values, id: ctx.params.id },
-      });
+      return {
+        data: {
+          error: response.error || "Failed to update address",
+          address: { ...address, ...values, id: ctx.params.id },
+        },
+      };
     }
 
-    return ctx.redirect("/account/addresses");
+    return new Response(null, {
+      status: 302,
+      headers: { Location: "/account/addresses" },
+    });
   },
 });
 

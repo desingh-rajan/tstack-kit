@@ -10,9 +10,11 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account");
     if (token instanceof Response) return token;
 
-    return ctx.render({
-      user: ctx.state.user,
-    });
+    return {
+      data: {
+        user: ctx.state.user,
+      },
+    };
   },
 });
 

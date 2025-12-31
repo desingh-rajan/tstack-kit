@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "../shared/utils/password.ts";
 import { createToken } from "../shared/utils/jwt.ts";
 import { BadRequestError, UnauthorizedError } from "../shared/utils/errors.ts";
 import {
-  createSmtpProviderFromEnv,
+  createEmailProvider,
   EmailService,
 } from "../shared/providers/email/index.ts";
 
@@ -23,11 +23,16 @@ function generateToken(): string {
 
 /**
  * Get email service instance (lazy initialization)
+ * Auto-detects provider: Resend > SES > SMTP
  */
 let emailServiceInstance: EmailService | null = null;
-function getEmailService(): EmailService {
+function getEmailService(): EmailService | null {
   if (!emailServiceInstance) {
-    const provider = createSmtpProviderFromEnv();
+    const provider = createEmailProvider();
+    if (!provider) {
+      console.warn("[AuthService] No email provider configured");
+      return null;
+    }
     emailServiceInstance = new EmailService(provider, {
       appName: Deno.env.get("APP_NAME") || "TStack App",
       appUrl: Deno.env.get("APP_URL") || "http://localhost:8000",
@@ -308,12 +313,19 @@ export class AuthService {
       })
       .where(eq(users.id, userId));
 
-    // Build verification URL
-    const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
-    const verificationUrl = `${appUrl}/auth/verify-email?token=${token}`;
+    // Build verification URL - use STOREFRONT_URL for customer-facing links
+    const storefrontUrl = Deno.env.get("STOREFRONT_URL") ||
+      Deno.env.get("APP_URL") || "http://localhost:5174";
+    const verificationUrl = `${storefrontUrl}/auth/verify-email?token=${token}`;
 
     // Send email
     const emailService = getEmailService();
+    if (!emailService) {
+      console.warn(
+        "[AuthService] Email not configured, skipping verification email",
+      );
+      return;
+    }
     const result = await emailService.sendVerificationEmail(
       user.email,
       user.username || user.firstName || "User",
@@ -371,14 +383,16 @@ export class AuthService {
 
     // Send welcome email (non-blocking)
     const emailService = getEmailService();
-    emailService
-      .sendWelcomeEmail(
-        updatedUser.email,
-        updatedUser.username || updatedUser.firstName || "User",
-      )
-      .catch((err) => {
-        console.error("[AuthService] Failed to send welcome email:", err);
-      });
+    if (emailService) {
+      emailService
+        .sendWelcomeEmail(
+          updatedUser.email,
+          updatedUser.username || updatedUser.firstName || "User",
+        )
+        .catch((err) => {
+          console.error("[AuthService] Failed to send welcome email:", err);
+        });
+    }
 
     return toSafeUser(updatedUser);
   }
@@ -450,6 +464,12 @@ export class AuthService {
 
     // Send email
     const emailService = getEmailService();
+    if (!emailService) {
+      console.warn(
+        "[AuthService] Email not configured, skipping password reset email",
+      );
+      return;
+    }
     const result = await emailService.sendPasswordResetEmail(
       user.email,
       user.username || user.firstName || "User",

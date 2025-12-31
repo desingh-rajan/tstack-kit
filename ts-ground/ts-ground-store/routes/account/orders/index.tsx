@@ -36,10 +36,15 @@ export const handler = define.handlers({
     api.setToken(token);
     const response = await api.getOrders();
 
-    return ctx.render({
-      orders: response.data || [],
-      error: response.success ? null : response.error,
-    });
+    // API returns { orders: [...], pagination: {...} }
+    const ordersData = response.data?.orders || response.data || [];
+
+    return {
+      data: {
+        orders: Array.isArray(ordersData) ? ordersData : [],
+        error: response.success ? null : response.error,
+      },
+    };
   },
 });
 

@@ -34,18 +34,22 @@ export const handler = define.handlers({
     const success = ctx.url.searchParams.get("success") === "true";
 
     if (!response.success || !response.data) {
-      return ctx.render({
-        order: null,
-        error: response.error || "Order not found",
-        success: false,
-      });
+      return {
+        data: {
+          order: null,
+          error: response.error || "Order not found",
+          success: false,
+        },
+      };
     }
 
-    return ctx.render({
-      order: response.data,
-      error: null,
-      success,
-    });
+    return {
+      data: {
+        order: response.data,
+        error: null,
+        success,
+      },
+    };
   },
 
   async POST(ctx) {
@@ -60,26 +64,32 @@ export const handler = define.handlers({
       const cancelResponse = await api.cancelOrder(ctx.params.id);
       if (!cancelResponse.success) {
         const response = await api.getOrder(ctx.params.id);
-        return ctx.render({
-          order: response.data,
-          error: cancelResponse.error || "Failed to cancel order",
-          success: false,
-        });
+        return {
+          data: {
+            order: response.data,
+            error: cancelResponse.error || "Failed to cancel order",
+            success: false,
+          },
+        };
       }
 
-      return ctx.render({
-        order: cancelResponse.data,
-        error: null,
-        success: false,
-      });
+      return {
+        data: {
+          order: cancelResponse.data,
+          error: null,
+          success: false,
+        },
+      };
     }
 
     const response = await api.getOrder(ctx.params.id);
-    return ctx.render({
-      order: response.data,
-      error: null,
-      success: false,
-    });
+    return {
+      data: {
+        order: response.data,
+        error: null,
+        success: false,
+      },
+    };
   },
 });
 

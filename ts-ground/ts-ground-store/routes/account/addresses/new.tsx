@@ -11,20 +11,22 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account/addresses/new");
     if (token instanceof Response) return token;
 
-    return ctx.render({
-      error: null,
-      values: {
-        fullName: "",
-        phone: "",
-        addressLine1: "",
-        addressLine2: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "India",
-        isDefault: false,
+    return {
+      data: {
+        error: null,
+        values: {
+          fullName: "",
+          phone: "",
+          addressLine1: "",
+          addressLine2: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: "India",
+          isDefault: false,
+        },
       },
-    });
+    };
   },
 
   async POST(ctx) {
@@ -59,24 +61,31 @@ export const handler = define.handlers({
     const missing = required.filter((f) => !values[f as keyof typeof values]);
 
     if (missing.length > 0) {
-      return ctx.render({
-        error: `Please fill in all required fields: ${missing.join(", ")}`,
-        values,
-      });
+      return {
+        data: {
+          error: `Please fill in all required fields: ${missing.join(", ")}`,
+          values,
+        },
+      };
     }
 
     const response = await api.createAddress(values);
 
     if (!response.success) {
-      return ctx.render({
-        error: response.error || "Failed to create address",
-        values,
-      });
+      return {
+        data: {
+          error: response.error || "Failed to create address",
+          values,
+        },
+      };
     }
 
     // Redirect back
     const redirectUrl = redirect || "/account/addresses";
-    return ctx.redirect(redirectUrl);
+    return new Response(null, {
+      status: 302,
+      headers: { Location: redirectUrl },
+    });
   },
 });
 

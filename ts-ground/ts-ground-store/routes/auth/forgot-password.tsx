@@ -6,12 +6,14 @@ import { define } from "@/utils.ts";
 import { api } from "@/lib/api.ts";
 
 export const handler = define.handlers({
-  GET(ctx) {
-    return ctx.render({
-      error: null,
-      success: null,
-      email: "",
-    });
+  GET(_ctx) {
+    return {
+      data: {
+        error: null,
+        success: null,
+        email: "",
+      },
+    };
   },
 
   async POST(ctx) {
@@ -19,22 +21,26 @@ export const handler = define.handlers({
     const email = formData.get("email") as string;
 
     if (!email) {
-      return ctx.render({
-        error: "Email is required",
-        success: null,
-        email: "",
-      });
+      return {
+        data: {
+          error: "Email is required",
+          success: null,
+          email: "",
+        },
+      };
     }
 
     const _response = await api.forgotPassword(email);
 
     // Always show success to prevent email enumeration
-    return ctx.render({
-      error: null,
-      success:
-        "If an account exists with this email, you will receive a password reset link.",
-      email: "",
-    });
+    return {
+      data: {
+        error: null,
+        success:
+          "If an account exists with this email, you will receive a password reset link.",
+        email: "",
+      },
+    };
   },
 });
 

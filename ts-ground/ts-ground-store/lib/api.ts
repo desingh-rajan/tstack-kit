@@ -117,12 +117,12 @@ export class ApiClient {
   }
 
   getProfile() {
-    return this.request<User>("/profile");
+    return this.request<User>("/users/me/profile");
   }
 
   updateProfile(data: UpdateProfileData) {
-    return this.request<User>("/profile", {
-      method: "PATCH",
+    return this.request<User>("/users/me/profile", {
+      method: "PUT",
       body: data,
     });
   }
@@ -261,14 +261,19 @@ export class ApiClient {
 
 // Types
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  fullName?: string;
-  phone?: string;
-  avatarUrl?: string;
-  emailVerified: boolean;
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  isEmailVerified: boolean;
+  isActive: boolean;
   role: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface RegisterData {
@@ -278,6 +283,8 @@ export interface RegisterData {
 }
 
 export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
   fullName?: string;
   phone?: string;
   avatarUrl?: string;

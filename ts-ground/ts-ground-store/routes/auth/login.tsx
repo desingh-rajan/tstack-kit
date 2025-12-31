@@ -11,13 +11,18 @@ export const handler = define.handlers({
     // Already logged in?
     if (ctx.state.user) {
       const redirect = ctx.url.searchParams.get("redirect") || "/";
-      return ctx.redirect(redirect);
+      return new Response(null, {
+        status: 302,
+        headers: { Location: redirect },
+      });
     }
 
-    return ctx.render({
-      error: null,
-      email: "",
-    });
+    return {
+      data: {
+        error: null,
+        email: "",
+      },
+    };
   },
 
   async POST(ctx) {
@@ -27,19 +32,23 @@ export const handler = define.handlers({
     const redirect = formData.get("redirect") as string || "/";
 
     if (!email || !password) {
-      return ctx.render({
-        error: "Email and password are required",
-        email,
-      });
+      return {
+        data: {
+          error: "Email and password are required",
+          email,
+        },
+      };
     }
 
     const response = await api.login(email, password);
 
     if (!response.success || !response.data) {
-      return ctx.render({
-        error: response.error || "Invalid email or password",
-        email,
-      });
+      return {
+        data: {
+          error: response.error || "Invalid email or password",
+          email,
+        },
+      };
     }
 
     // Set session cookie and redirect

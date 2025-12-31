@@ -14,7 +14,10 @@ export const handler = define.handlers({
 
     const orderId = ctx.url.searchParams.get("orderId");
     if (!orderId) {
-      return ctx.redirect("/checkout");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/checkout" },
+      });
     }
 
     api.setToken(token);
@@ -22,31 +25,41 @@ export const handler = define.handlers({
     // Get order details
     const orderResponse = await api.getOrder(orderId);
     if (!orderResponse.success || !orderResponse.data) {
-      return ctx.redirect("/checkout?error=order-not-found");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/checkout?error=order-not-found" },
+      });
     }
 
     const order = orderResponse.data;
 
     // Check if already paid
     if (order.paymentStatus === "paid") {
-      return ctx.redirect(`/orders/${orderId}?success=true`);
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `/orders/${orderId}?success=true` },
+      });
     }
 
     // Create Razorpay order
     const paymentResponse = await api.createPaymentOrder(orderId);
     if (!paymentResponse.success || !paymentResponse.data) {
-      return ctx.render({
-        order,
-        paymentOrder: null,
-        error: paymentResponse.error || "Failed to create payment order",
-      });
+      return {
+        data: {
+          order,
+          paymentOrder: null,
+          error: paymentResponse.error || "Failed to create payment order",
+        },
+      };
     }
 
-    return ctx.render({
-      order,
-      paymentOrder: paymentResponse.data,
-      error: null,
-    });
+    return {
+      data: {
+        order,
+        paymentOrder: paymentResponse.data,
+        error: null,
+      },
+    };
   },
 });
 
