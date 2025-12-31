@@ -34,9 +34,12 @@ const paymentStatusColors: Record<PaymentStatus, string> = {
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const token = await getSessionToken(ctx);
+    const token = getSessionToken(ctx);
     if (!token) {
-      return ctx.redirect("/auth/login?redirect=/admin/orders");
+      return new Response(null, {
+        status: 303,
+        headers: { Location: "/auth/login?redirect=/admin/orders" },
+      });
     }
 
     orderService.setToken(token);
@@ -56,22 +59,31 @@ export const handler = define.handlers({
         search,
       });
 
-      return ctx.render({
-        orders: response.data,
-        pagination: response.pagination,
-        filters: { status, paymentStatus, search },
-        error: null,
-        errorStatus: null,
-      });
+      // API returns { success, data: { orders, pagination } }
+      const ordersData = response.data?.orders || [];
+      const paginationData = response.data?.pagination || null;
+
+      return {
+        data: {
+          orders: ordersData,
+          pagination: paginationData,
+          filters: { status, paymentStatus, search },
+          error: null,
+          errorStatus: null,
+        },
+      };
     } catch (error) {
+      console.error("[Orders] Error:", error);
       const err = error as { status?: number; message?: string };
-      return ctx.render({
-        orders: [],
-        pagination: null,
-        filters: { status, paymentStatus, search },
-        error: err.message || "Failed to load orders",
-        errorStatus: err.status || 500,
-      });
+      return {
+        data: {
+          orders: [],
+          pagination: null,
+          filters: { status, paymentStatus, search },
+          error: err.message || "Failed to load orders",
+          errorStatus: err.status || 500,
+        },
+      };
     }
   },
 });

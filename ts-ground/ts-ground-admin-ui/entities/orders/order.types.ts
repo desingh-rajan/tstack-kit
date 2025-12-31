@@ -72,12 +72,14 @@ export interface Order {
 
 export interface OrderListResponse {
   success: boolean;
-  data: Order[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+  data: {
+    orders: Order[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   };
 }
 

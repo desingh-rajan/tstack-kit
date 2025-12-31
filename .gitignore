@@ -53,7 +53,7 @@ temp/
 *.tmp
 
 # Testing workspace (for tstack CLI testing)
-ts-ground/
+# ts-ground/
 
 # Reference projects (temporary, will be removed after implementation)
 reference-kit/
