@@ -23,8 +23,9 @@ export class ApiClient {
   private baseUrl: string;
   private token?: string;
 
-  constructor(baseUrl?: string) {
+  constructor(baseUrl?: string, token?: string) {
     this.baseUrl = baseUrl || API_BASE_URL;
+    this.token = token;
   }
 
   setToken(token: string) {
@@ -33,6 +34,13 @@ export class ApiClient {
 
   clearToken() {
     this.token = undefined;
+  }
+
+  /**
+   * Create a new client instance with the specified token
+   */
+  withToken(token: string): ApiClient {
+    return new ApiClient(this.baseUrl, token);
   }
 
   async request<T>(
@@ -60,10 +68,25 @@ export class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        // Format validation errors if present
+        let errorMessage = data.message || data.error ||
+          `HTTP ${response.status}`;
+        if (
+          data.errors && Array.isArray(data.errors) && data.errors.length > 0
+        ) {
+          const fieldErrors = data.errors
+            .map((e: { path?: string[]; message?: string }) => {
+              const field = e.path?.join(".") || "field";
+              return `${field}: ${e.message || "invalid"}`;
+            })
+            .join(", ");
+          errorMessage = fieldErrors || errorMessage;
+        }
         return {
           success: false,
-          error: data.message || data.error || `HTTP ${response.status}`,
+          error: errorMessage,
           message: data.message,
+          errors: data.errors,
         };
       }
 
@@ -164,21 +187,21 @@ export class ApiClient {
   }
 
   addToCart(productId: string, quantity: number, variantId?: string) {
-    return this.request<Cart>("/cart/add", {
+    return this.request<Cart>("/cart/items", {
       method: "POST",
       body: { productId, quantity, variantId },
     });
   }
 
   updateCartItem(itemId: string, quantity: number) {
-    return this.request<Cart>(`/cart/item/${itemId}`, {
-      method: "PATCH",
+    return this.request<Cart>(`/cart/items/${itemId}`, {
+      method: "PUT",
       body: { quantity },
     });
   }
 
   removeCartItem(itemId: string) {
-    return this.request<Cart>(`/cart/item/${itemId}`, {
+    return this.request<Cart>(`/cart/items/${itemId}`, {
       method: "DELETE",
     });
   }
@@ -191,7 +214,7 @@ export class ApiClient {
 
   // Orders
   createOrder(data: CreateOrderData) {
-    return this.request<Order>("/orders", {
+    return this.request<Order>("/checkout/create", {
       method: "POST",
       body: data,
     });
@@ -407,10 +430,16 @@ export interface PaymentOrderResponse {
   razorpayOrderId: string;
   amount: number;
   currency: string;
-  keyId: string;
+  razorpayKeyId: string;
+  orderNumber?: string;
+  prefill?: {
+    email?: string;
+    contact?: string;
+  };
 }
 
 export interface VerifyPaymentData {
+  orderId: string;
   razorpayOrderId: string;
   razorpayPaymentId: string;
   razorpaySignature: string;
@@ -424,7 +453,7 @@ export interface Product {
   price: string;
   compareAtPrice?: string;
   sku?: string;
-  stock: number;
+  stockQuantity: number;
   isActive: boolean;
   categoryId?: string;
   brandId?: string;

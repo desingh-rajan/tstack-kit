@@ -77,8 +77,18 @@ openssl rand -hex 64
 
 ## Email Configuration
 
-The system auto-detects provider. Set `EMAIL_PROVIDER` to override: `resend`,
-`ses`, `smtp`, `auto`
+The system auto-detects the email provider based on your configuration.
+
+### Provider Detection Priority
+
+| Priority | Provider | Condition                                        |
+| -------- | -------- | ------------------------------------------------ |
+| 1        | Explicit | `EMAIL_PROVIDER=resend/ses/smtp`                 |
+| 2        | Resend   | `RESEND_API_KEY` set or `SMTP_PASS` starts `re_` |
+| 3        | SMTP     | `SMTP_HOST` is explicitly configured             |
+| 4        | AWS SES  | `AWS_ACCESS_KEY_ID` exists (default fallback)    |
+
+Set `EMAIL_PROVIDER` to override: `resend`, `ses`, `smtp`, `auto`
 
 ### Common Variables
 
@@ -89,7 +99,7 @@ The system auto-detects provider. Set `EMAIL_PROVIDER` to override: `resend`,
 | `APP_NAME`       | No       | App name in email templates |
 | `SUPPORT_EMAIL`  | No       | Support email in templates  |
 
-### Option 1: Resend (Recommended)
+### Option 1: Resend (Recommended for Quick Start)
 
 Simplest setup. Free tier: 100 emails/day.
 
@@ -98,16 +108,24 @@ Simplest setup. Free tier: 100 emails/day.
 | `RESEND_API_KEY` | `re_xxxxxxxxxxxx`       | [resend.com](https://resend.com)    |
 | `EMAIL_FROM`     | `onboarding@resend.dev` | For testing (or verify your domain) |
 
-### Option 2: AWS SES
+### Option 2: AWS SES (Default Fallback)
 
-| Variable                | Description                                 |
-| ----------------------- | ------------------------------------------- |
-| `SES_ACCESS_KEY_ID`     | AWS access key (or `AWS_ACCESS_KEY_ID`)     |
-| `SES_SECRET_ACCESS_KEY` | AWS secret key (or `AWS_SECRET_ACCESS_KEY`) |
-| `AWS_REGION`            | SES region (default: `us-east-1`)           |
-| `EMAIL_FROM`            | Must be verified in SES console             |
+Uses your AWS credentials. Falls back automatically if AWS keys exist.
 
-### Option 3: SMTP
+| Variable                | Required | Default      | Description                                      |
+| ----------------------- | -------- | ------------ | ------------------------------------------------ |
+| `SES_ACCESS_KEY_ID`     | No       | -            | SES-specific key (or `AWS_ACCESS_KEY_ID`)        |
+| `SES_SECRET_ACCESS_KEY` | No       | -            | SES-specific secret (or `AWS_SECRET_ACCESS_KEY`) |
+| `AWS_REGION`            | No       | `ap-south-1` | AWS region for SES                               |
+| `EMAIL_FROM`            | Yes      | -            | Must be verified in SES console                  |
+
+**SES Sandbox Mode:**
+
+- New accounts start in sandbox (can only send to verified emails)
+- Verify sender email in SES console before sending
+- Request production access when ready for live
+
+### Option 3: SMTP (Gmail, SendGrid, Mailgun)
 
 | Variable    | Gmail            | SendGrid            | Mailgun             |
 | ----------- | ---------------- | ------------------- | ------------------- |
@@ -118,8 +136,8 @@ Simplest setup. Free tier: 100 emails/day.
 
 **Gmail App Password:**
 
-1. Enable 2FA: https://myaccount.google.com/security
-2. Create App Password: https://myaccount.google.com/apppasswords
+1. Enable 2FA: <https://myaccount.google.com/security>
+2. Create App Password: <https://myaccount.google.com/apppasswords>
 
 ---
 
@@ -140,6 +158,13 @@ Simplest setup. Free tier: 100 emails/day.
 **Test Mode:** Keys start with `rzp_test_` **Live Mode:** Keys start with
 `rzp_live_`
 
+**Test Card for Development:**
+
+- Card: `4111 1111 1111 1111`
+- Expiry: Any future date
+- CVV: Any 3 digits
+- OTP: `1234`
+
 ---
 
 ## Google OAuth
@@ -155,7 +180,11 @@ Simplest setup. Free tier: 100 emails/day.
 1. Go to
    [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Create OAuth 2.0 Client ID (Web application)
-3. Add redirect URI: `http://localhost:8000/auth/google/callback`
+3. Add authorized JavaScript origins:
+   - `http://localhost:8000`
+   - `http://localhost:5173`
+   - `http://localhost:5174`
+4. Add redirect URI: `http://localhost:8000/auth/google/callback`
 
 ---
 
@@ -174,6 +203,9 @@ Simplest setup. Free tier: 100 emails/day.
 1. S3 > Bucket > Permissions > Block public access
 2. Uncheck "Block all public access"
 3. Save
+
+**Note:** AWS credentials are shared between S3 and SES. Configure once, use for
+both.
 
 ---
 
@@ -200,7 +232,7 @@ Simplest setup. Free tier: 100 emails/day.
 # Core
 ENVIRONMENT=development
 PORT=8000
-DATABASE_URL=postgresql://postgres:password@localhost:5432/ts_ground_dev
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myapp_dev
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
 
 # JWT
@@ -217,18 +249,31 @@ ADMIN_URL=http://localhost:5173
 SUPERADMIN_EMAIL=admin@example.com
 SUPERADMIN_PASSWORD=your-secure-password
 
-# Email (Resend)
-RESEND_API_KEY=re_xxxxxxxxxxxx
-EMAIL_FROM=onboarding@resend.dev
+# AWS (shared for S3 and SES)
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=ap-south-1
+
+# S3
+S3_BUCKET_NAME=your-bucket-name
+S3_PREFIX=myapp/dev
+
+# Email (uses SES by default if AWS credentials exist)
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_REPLY_TO=support@yourdomain.com
+APP_NAME=My App
+
+# Or use Resend instead (comment out to use SES)
+# RESEND_API_KEY=re_xxxxxxxxxxxx
+# EMAIL_FROM=onboarding@resend.dev
 
 # Razorpay (Test)
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=xxxxxxxxxxxx
 
-# S3 (Optional)
-# AWS_ACCESS_KEY_ID=
-# AWS_SECRET_ACCESS_KEY=
-# S3_BUCKET_NAME=
+# Google OAuth
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 ```
 
 ---
@@ -241,3 +286,5 @@ RAZORPAY_KEY_SECRET=xxxxxxxxxxxx
 - [ ] Use test keys (`rzp_test_*`) in development
 - [ ] Rotate secrets regularly
 - [ ] Different credentials per environment
+- [ ] Verify sender email in SES before going live
+- [ ] Move SES out of sandbox for production

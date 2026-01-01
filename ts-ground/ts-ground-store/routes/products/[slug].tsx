@@ -7,6 +7,7 @@ import { define } from "@/utils.ts";
 import { api } from "@/lib/api.ts";
 import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer.tsx";
+import AddToCart from "@/islands/AddToCart.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -245,7 +246,7 @@ export default define.page<typeof handler>(
 
                 {/* Stock Status */}
                 <div class="mb-6">
-                  {product.stock > 0
+                  {product.stockQuantity > 0
                     ? (
                       <div class="flex items-center gap-2 text-green-600">
                         <svg
@@ -262,9 +263,9 @@ export default define.page<typeof handler>(
                           />
                         </svg>
                         <span class="font-medium">
-                          {product.stock > 10
+                          {product.stockQuantity > 10
                             ? "In Stock"
-                            : `Only ${product.stock} left`}
+                            : `Only ${product.stockQuantity} left`}
                         </span>
                       </div>
                     )
@@ -314,33 +315,13 @@ export default define.page<typeof handler>(
                 )}
 
                 {/* Add to Cart */}
-                <div class="flex gap-4 mb-6">
-                  <div class="flex items-center border border-gray-300 rounded-lg">
-                    <button
-                      type="button"
-                      class="px-4 py-2 text-gray-600 hover:text-gray-900"
-                    >
-                      -
-                    </button>
-                    <span class="px-4 py-2 border-x border-gray-300">1</span>
-                    <button
-                      type="button"
-                      class="px-4 py-2 text-gray-600 hover:text-gray-900"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={product.stock <= 0}
-                    class={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
-                      product.stock > 0
-                        ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                  </button>
+                <div class="mb-6">
+                  <AddToCart
+                    productId={product.id}
+                    productName={product.name}
+                    maxQuantity={product.stockQuantity}
+                    price={product.price}
+                  />
                 </div>
 
                 {/* Description */}

@@ -5,6 +5,10 @@ import autoprefixer from "autoprefixer";
 
 export default defineConfig({
   plugins: [fresh()],
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
   css: {
     postcss: {
       plugins: [tailwindcss, autoprefixer],

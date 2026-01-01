@@ -10,6 +10,7 @@
     "db:migrate": "deno run --allow-all scripts/migrate-run.ts",
     "db:generate": "deno run --allow-all scripts/migrate-generate.ts",
     "db:seed": "deno run --allow-all scripts/seed-superadmin.ts && deno run --allow-all scripts/seed-alpha-user.ts && deno run --allow-all scripts/seed-regular-user.ts && deno run --allow-all scripts/seed-site-settings.ts",
+    "seed:ecommerce": "deno run --allow-all scripts/seed-ecommerce.ts",
     "db:studio": "deno run --allow-all scripts/db-studio.ts",
     "migrate:run": "deno task db:migrate",
     "migrate:generate": "deno task db:generate",

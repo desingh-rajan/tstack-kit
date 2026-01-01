@@ -302,7 +302,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                                 SALE
                               </span>
                             )}
-                          {product.stock <= 0 && (
+                          {product.stockQuantity <= 0 && (
                             <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                               <span class="bg-white text-gray-900 px-4 py-2 rounded-full font-medium">
                                 Out of Stock

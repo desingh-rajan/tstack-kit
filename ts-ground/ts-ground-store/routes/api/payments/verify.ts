@@ -25,6 +25,7 @@ export const handler = define.handlers({
       api.setToken(token);
 
       const response = await api.verifyPayment({
+        orderId: body.orderId,
         razorpayOrderId: body.razorpayOrderId,
         razorpayPaymentId: body.razorpayPaymentId,
         razorpaySignature: body.razorpaySignature,

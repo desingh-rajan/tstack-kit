@@ -343,21 +343,22 @@ export class SesProvider extends BaseEmailProvider {
 
 /**
  * Create SesProvider from environment variables
+ *
+ * Uses AWS credentials if available. Can be triggered by:
+ * - EMAIL_PROVIDER=ses (explicit)
+ * - SES_ACCESS_KEY_ID set (explicit SES config)
+ * - AWS_ACCESS_KEY_ID set (fallback - uses general AWS credentials)
  */
 export function createSesProviderFromEnv(): SesProvider | null {
-  const accessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID") ||
-    Deno.env.get("SES_ACCESS_KEY_ID");
-  const secretAccessKey = Deno.env.get("AWS_SECRET_ACCESS_KEY") ||
-    Deno.env.get("SES_SECRET_ACCESS_KEY");
+  const accessKeyId = Deno.env.get("SES_ACCESS_KEY_ID") ||
+    Deno.env.get("AWS_ACCESS_KEY_ID");
+  const secretAccessKey = Deno.env.get("SES_SECRET_ACCESS_KEY") ||
+    Deno.env.get("AWS_SECRET_ACCESS_KEY");
   const region = Deno.env.get("AWS_REGION") ||
     Deno.env.get("SES_REGION") ||
-    "us-east-1";
+    "ap-south-1";
 
-  // Check if SES is explicitly enabled or if we have SES-specific vars
-  const sesEnabled = Deno.env.get("EMAIL_PROVIDER") === "ses" ||
-    Deno.env.get("SES_ACCESS_KEY_ID");
-
-  if (!sesEnabled || !accessKeyId || !secretAccessKey) {
+  if (!accessKeyId || !secretAccessKey) {
     return null;
   }
 

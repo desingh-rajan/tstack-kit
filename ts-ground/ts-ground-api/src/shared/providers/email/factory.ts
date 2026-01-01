@@ -31,8 +31,8 @@ export type EmailProviderType = "resend" | "ses" | "smtp" | "auto";
  * Detection priority:
  * 1. EMAIL_PROVIDER env var (explicit selection)
  * 2. Resend (if SMTP_PASS starts with "re_" or RESEND_API_KEY is set)
- * 3. AWS SES (if EMAIL_PROVIDER=ses or SES_ACCESS_KEY_ID is set)
- * 4. SMTP (fallback for any SMTP_HOST configuration)
+ * 3. SMTP (if SMTP_HOST is explicitly configured)
+ * 4. AWS SES (default fallback if AWS credentials exist)
  *
  * @returns Email provider instance or null if not configured
  */
@@ -89,25 +89,30 @@ export function createEmailProvider(): IEmailProvider | null {
     return resendProvider;
   }
 
-  // 2. Try AWS SES
-  const sesProvider = createSesProviderFromEnv();
-  if (sesProvider) {
-    console.log("[EmailFactory] Using AWS SES provider (auto-detected)");
-    return sesProvider;
+  // 2. Try SMTP (Gmail, SendGrid, Mailgun, etc.) - only if SMTP_HOST is explicitly set
+  const smtpHost = Deno.env.get("SMTP_HOST");
+  if (smtpHost) {
+    try {
+      const smtpProvider = createSmtpProviderFromEnv();
+      if (smtpProvider) {
+        console.log("[EmailFactory] Using SMTP provider (auto-detected)");
+        return smtpProvider;
+      }
+    } catch (error) {
+      console.warn(
+        "[EmailFactory] SMTP provider creation failed:",
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
 
-  // 3. Try SMTP (Gmail, SendGrid, Mailgun, etc.)
-  try {
-    const smtpProvider = createSmtpProviderFromEnv();
-    if (smtpProvider) {
-      console.log("[EmailFactory] Using SMTP provider (auto-detected)");
-      return smtpProvider;
-    }
-  } catch (error) {
-    console.warn(
-      "[EmailFactory] SMTP provider creation failed:",
-      error instanceof Error ? error.message : error,
+  // 3. Try AWS SES (default fallback if AWS credentials exist)
+  const sesProvider = createSesProviderFromEnv();
+  if (sesProvider) {
+    console.log(
+      "[EmailFactory] Using AWS SES provider (auto-detected/fallback)",
     );
+    return sesProvider;
   }
 
   console.warn(

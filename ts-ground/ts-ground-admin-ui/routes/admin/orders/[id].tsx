@@ -43,9 +43,12 @@ const statusTransitions: Record<OrderStatus, OrderStatus[]> = {
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const token = await getSessionToken(ctx);
+    const token = getSessionToken(ctx);
     if (!token) {
-      return ctx.redirect("/auth/login?redirect=/admin/orders");
+      return new Response(null, {
+        status: 303,
+        headers: { Location: "/auth/login?redirect=/admin/orders" },
+      });
     }
 
     const { id } = ctx.params;
@@ -54,27 +57,38 @@ export const handler = define.handlers({
     try {
       const response = await orderService.getById(id);
 
-      return ctx.render({
-        order: response.data,
-        error: null,
-        errorStatus: null,
-        success: null,
-      });
+      // Handle API response structure variations
+      const orderData = response.data?.data || response.data;
+
+      return {
+        data: {
+          order: orderData,
+          error: null,
+          errorStatus: null,
+          success: null,
+        },
+      };
     } catch (error) {
+      console.error("Error loading order:", error);
       const err = error as { status?: number; message?: string };
-      return ctx.render({
-        order: null,
-        error: err.message || "Failed to load order",
-        errorStatus: err.status || 500,
-        success: null,
-      });
+      return {
+        data: {
+          order: null,
+          error: err.message || "Failed to load order",
+          errorStatus: err.status || 500,
+          success: null,
+        },
+      };
     }
   },
 
   async POST(ctx) {
-    const token = await getSessionToken(ctx);
+    const token = getSessionToken(ctx);
     if (!token) {
-      return ctx.redirect("/auth/login?redirect=/admin/orders");
+      return new Response(null, {
+        status: 303,
+        headers: { Location: "/auth/login?redirect=/admin/orders" },
+      });
     }
 
     const { id } = ctx.params;
@@ -92,13 +106,16 @@ export const handler = define.handlers({
 
       // Reload order
       const response = await orderService.getById(id);
+      const orderData = response.data?.data || response.data;
 
-      return ctx.render({
-        order: response.data,
-        error: null,
-        errorStatus: null,
-        success: `Order status updated to "${newStatus}"`,
-      });
+      return {
+        data: {
+          order: orderData,
+          error: null,
+          errorStatus: null,
+          success: `Order status updated to "${newStatus}"`,
+        },
+      };
     } catch (error) {
       const err = error as { status?: number; message?: string };
 
@@ -106,17 +123,19 @@ export const handler = define.handlers({
       let order = null;
       try {
         const response = await orderService.getById(id);
-        order = response.data;
+        order = response.data?.data || response.data;
       } catch {
         // Ignore
       }
 
-      return ctx.render({
-        order,
-        error: err.message || "Failed to update order status",
-        errorStatus: err.status || 500,
-        success: null,
-      });
+      return {
+        data: {
+          order,
+          error: err.message || "Failed to update order status",
+          errorStatus: err.status || 500,
+          success: null,
+        },
+      };
     }
   },
 });

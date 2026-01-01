@@ -33,18 +33,39 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account/orders");
     if (token instanceof Response) return token;
 
-    api.setToken(token);
-    const response = await api.getOrders();
+    try {
+      api.setToken(token);
+      const response = await api.getOrders();
 
-    // API returns { orders: [...], pagination: {...} }
-    const ordersData = response.data?.orders || response.data || [];
+      // API returns { orders: [...], pagination: {...} } or just an array
+      let ordersData: Order[] = [];
+      if (response.success && response.data) {
+        if (Array.isArray(response.data)) {
+          ordersData = response.data;
+        } else if (
+          response.data.orders && Array.isArray(response.data.orders)
+        ) {
+          ordersData = response.data.orders;
+        }
+      }
 
-    return {
-      data: {
-        orders: Array.isArray(ordersData) ? ordersData : [],
-        error: response.success ? null : response.error,
-      },
-    };
+      return {
+        data: {
+          orders: ordersData,
+          error: response.success
+            ? null
+            : (response.error || "Failed to load orders"),
+        },
+      };
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      return {
+        data: {
+          orders: [],
+          error: "Failed to load orders",
+        },
+      };
+    }
   },
 });
 
@@ -188,7 +209,7 @@ export default define.page<typeof handler>(function OrdersPage({ data }) {
                   {/* Order Items */}
                   <div class="px-6 py-4">
                     <ul class="divide-y divide-gray-200">
-                      {order.items.slice(0, 3).map((item) => (
+                      {(order.items || []).slice(0, 3).map((item) => (
                         <li key={item.id} class="py-4 flex">
                           <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                             {item.productImage
@@ -237,9 +258,9 @@ export default define.page<typeof handler>(function OrdersPage({ data }) {
                       ))}
                     </ul>
 
-                    {order.items.length > 3 && (
+                    {(order.items || []).length > 3 && (
                       <p class="text-sm text-gray-500 mt-2">
-                        +{order.items.length - 3} more items
+                        +{(order.items || []).length - 3} more items
                       </p>
                     )}
                   </div>

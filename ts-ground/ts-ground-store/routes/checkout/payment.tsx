@@ -177,16 +177,21 @@ export default define.page<typeof handler>(function PaymentPage({
             e.preventDefault();
             
             var options = {
-              key: "${paymentOrder.keyId}",
+              key: "${paymentOrder.razorpayKeyId}",
               amount: ${paymentOrder.amount},
               currency: "${paymentOrder.currency}",
-              name: "TS Mart",
+              name: "TStack Store",
               description: "Order ${order.orderNumber}",
               order_id: "${paymentOrder.razorpayOrderId}",
+              image: "",
               prefill: {
                 name: "${user?.fullName || ""}",
                 email: "${user?.email || ""}",
                 contact: "${user?.phone || ""}"
+              },
+              notes: {
+                order_id: "${order.id}",
+                order_number: "${order.orderNumber}"
               },
               theme: {
                 color: "#4F46E5"
@@ -199,6 +204,7 @@ export default define.page<typeof handler>(function PaymentPage({
                     "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
+                    orderId: "${order.id}",
                     razorpayOrderId: response.razorpay_order_id,
                     razorpayPaymentId: response.razorpay_payment_id,
                     razorpaySignature: response.razorpay_signature
@@ -220,14 +226,18 @@ export default define.page<typeof handler>(function PaymentPage({
               },
               modal: {
                 ondismiss: function() {
-                  // User closed the modal
-                }
+                  // User closed the modal without completing payment
+                  console.log("Payment modal closed by user");
+                },
+                escape: true,
+                confirm_close: true
               }
             };
             
             var rzp = new Razorpay(options);
             rzp.on('payment.failed', function(response) {
-              alert("Payment failed: " + response.error.description);
+              console.error("Payment failed:", response.error);
+              alert("Oops! Something went wrong.\\n" + response.error.description);
             });
             rzp.open();
           };

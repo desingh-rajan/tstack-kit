@@ -6,8 +6,8 @@ import { z } from "zod";
  * Validation schemas for address CRUD operations
  */
 
-// Indian phone number regex (10 digits, optionally with +91)
-const phoneRegex = /^(\+91)?[6-9]\d{9}$/;
+// Indian phone number regex (10 digits, optionally with +91 or 0 prefix)
+const phoneRegex = /^(\+91|0)?[6-9]\d{9}$/;
 
 // Indian postal code regex (6 digits)
 const postalCodeRegex = /^\d{6}$/;
@@ -22,7 +22,10 @@ export const CreateAddressSchema = z.object({
   phone: z.string()
     .min(10, "Phone number is required")
     .max(15, "Phone number too long")
-    .regex(phoneRegex, "Invalid Indian phone number"),
+    .regex(
+      phoneRegex,
+      "Invalid Indian phone number (10 digits starting with 6-9, optionally with +91 or 0 prefix)",
+    ),
   addressLine1: z.string()
     .min(1, "Address line 1 is required")
     .max(255, "Address too long"),
@@ -46,7 +49,10 @@ export const UpdateAddressSchema = z.object({
   phone: z.string()
     .min(10)
     .max(15)
-    .regex(phoneRegex, "Invalid Indian phone number")
+    .regex(
+      phoneRegex,
+      "Invalid Indian phone number (10 digits starting with 6-9, optionally with +91 or 0 prefix)",
+    )
     .optional(),
   addressLine1: z.string().min(1).max(255).optional(),
   addressLine2: z.string().max(255).optional().nullable(),
