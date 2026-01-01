@@ -8,6 +8,7 @@ import { api } from "@/lib/api.ts";
 import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer.tsx";
 import AddToCart from "@/islands/AddToCart.tsx";
+import ProductGallery from "@/islands/ProductGallery.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -78,7 +79,6 @@ export default define.page<typeof handler>(
       );
     }
 
-    const mainImage = product.images?.[0];
     const hasDiscount = product.compareAtPrice &&
       parseFloat(product.compareAtPrice) > parseFloat(product.price);
     const discountPercent = hasDiscount
@@ -138,64 +138,11 @@ export default define.page<typeof handler>(
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 lg:p-8">
               {/* Image Gallery */}
-              <div class="space-y-4">
-                {/* Main Image */}
-                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
-                  {mainImage
-                    ? (
-                      <img
-                        src={mainImage.url}
-                        alt={mainImage.alt || product.name}
-                        class="w-full h-full object-cover"
-                      />
-                    )
-                    : (
-                      <div class="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg
-                          class="w-24 h-24"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  {hasDiscount && (
-                    <span class="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded">
-                      {discountPercent}% OFF
-                    </span>
-                  )}
-                </div>
-
-                {/* Thumbnail Gallery */}
-                {product.images && product.images.length > 1 && (
-                  <div class="flex gap-2 overflow-x-auto pb-2">
-                    {product.images.map((img, i) => (
-                      <button
-                        type="button"
-                        key={img.id}
-                        class={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                          i === 0
-                            ? "border-indigo-500"
-                            : "border-transparent hover:border-gray-300"
-                        }`}
-                      >
-                        <img
-                          src={img.url}
-                          alt={img.alt || `${product.name} ${i + 1}`}
-                          class="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ProductGallery
+                images={product.images || []}
+                productName={product.name}
+                discountPercent={hasDiscount ? discountPercent : undefined}
+              />
 
               {/* Product Info */}
               <div class="flex flex-col">

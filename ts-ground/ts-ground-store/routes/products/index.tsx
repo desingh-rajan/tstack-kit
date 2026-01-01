@@ -13,7 +13,7 @@ export const handler = define.handlers({
     const url = ctx.url;
     const page = parseInt(url.searchParams.get("page") || "1");
     const search = url.searchParams.get("search") || undefined;
-    const categoryId = url.searchParams.get("category") || undefined;
+    const category = url.searchParams.get("category") || undefined;
     const sortBy = url.searchParams.get("sort") || "createdAt";
     const sortOrder = (url.searchParams.get("order") || "desc") as
       | "asc"
@@ -24,7 +24,7 @@ export const handler = define.handlers({
         page,
         limit: 12,
         search,
-        categoryId,
+        category,
         sortBy,
         sortOrder,
       }),
@@ -42,7 +42,7 @@ export const handler = define.handlers({
         total,
         page,
         search: search || "",
-        categoryId: categoryId || "",
+        category: category || "",
         sortBy,
         sortOrder,
         user: ctx.state.user,
@@ -59,7 +59,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
     total,
     page,
     search,
-    categoryId,
+    category,
     sortBy,
     sortOrder,
     user,
@@ -105,7 +105,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
 
               {/* Search */}
               <form method="GET" class="mb-6">
-                <input type="hidden" name="category" value={categoryId} />
+                <input type="hidden" name="category" value={category} />
                 <input type="hidden" name="sort" value={sortBy} />
                 <input type="hidden" name="order" value={sortOrder} />
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -150,7 +150,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                     <a
                       href={`/products?search=${search}&sort=${sortBy}&order=${sortOrder}`}
                       class={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                        !categoryId
+                        !category
                           ? "bg-indigo-100 text-indigo-700 font-medium"
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
@@ -160,9 +160,9 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                     {categories.map((cat: Category) => (
                       <a
                         key={cat.id}
-                        href={`/products?category=${cat.id}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
+                        href={`/products?category=${cat.slug}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
                         class={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                          categoryId === cat.id
+                          category === cat.slug
                             ? "bg-indigo-100 text-indigo-700 font-medium"
                             : "text-gray-600 hover:bg-gray-100"
                         }`}
@@ -184,25 +184,25 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option
-                    value={`/products?category=${categoryId}&search=${search}&sort=createdAt&order=desc`}
+                    value={`/products?category=${category}&search=${search}&sort=createdAt&order=desc`}
                     selected={sortBy === "createdAt" && sortOrder === "desc"}
                   >
                     Newest First
                   </option>
                   <option
-                    value={`/products?category=${categoryId}&search=${search}&sort=price&order=asc`}
+                    value={`/products?category=${category}&search=${search}&sort=price&order=asc`}
                     selected={sortBy === "price" && sortOrder === "asc"}
                   >
                     Price: Low to High
                   </option>
                   <option
-                    value={`/products?category=${categoryId}&search=${search}&sort=price&order=desc`}
+                    value={`/products?category=${category}&search=${search}&sort=price&order=desc`}
                     selected={sortBy === "price" && sortOrder === "desc"}
                   >
                     Price: High to Low
                   </option>
                   <option
-                    value={`/products?category=${categoryId}&search=${search}&sort=name&order=asc`}
+                    value={`/products?category=${category}&search=${search}&sort=name&order=asc`}
                     selected={sortBy === "name" && sortOrder === "asc"}
                   >
                     Name: A to Z
@@ -211,7 +211,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
               </div>
 
               {/* Clear filters */}
-              {(search || categoryId) && (
+              {(search || category) && (
                 <a
                   href="/products"
                   class="mt-4 block text-center text-sm text-indigo-600 hover:text-indigo-500"

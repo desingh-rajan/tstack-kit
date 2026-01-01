@@ -250,12 +250,36 @@ export class ProductService extends BaseService<
 
     const total = countResult[0]?.count ?? 0;
 
+    // Fetch primary images for all products in result
+    const productIds = result.map((r) => r.id);
+    const primaryImages = productIds.length > 0
+      ? await db
+        .select({
+          productId: productImages.productId,
+          id: productImages.id,
+          url: productImages.url,
+          thumbnailUrl: productImages.thumbnailUrl,
+          alt: productImages.altText,
+        })
+        .from(productImages)
+        .where(
+          and(
+            inArray(productImages.productId, productIds),
+            eq(productImages.isPrimary, true),
+          ),
+        )
+      : [];
+
+    // Create a map of productId -> primary image
+    const imageMap = new Map(primaryImages.map((img) => [img.productId, img]));
+
     return {
       data: result.map((row) => ({
         ...row,
         specifications: row.specifications as Record<string, unknown>,
         brand: row.brand?.id ? row.brand : null,
         category: row.category?.id ? row.category : null,
+        images: imageMap.has(row.id) ? [imageMap.get(row.id)] : [],
       })),
       meta: {
         page,
@@ -421,7 +445,7 @@ export class ProductService extends BaseService<
   }
 
   /**
-   * Get product by slug with relations
+   * Get product by slug with relations and images
    */
   async getBySlug(slug: string): Promise<ProductWithRelations | null> {
     const result = await db
@@ -454,11 +478,27 @@ export class ProductService extends BaseService<
     }
 
     const row = result[0];
+
+    // Get all images for this product, ordered by primary first then displayOrder
+    const imagesResult = await db
+      .select({
+        id: productImages.id,
+        url: productImages.url,
+        thumbnailUrl: productImages.thumbnailUrl,
+        alt: productImages.altText,
+        isPrimary: productImages.isPrimary,
+        displayOrder: productImages.displayOrder,
+      })
+      .from(productImages)
+      .where(eq(productImages.productId, row.id))
+      .orderBy(desc(productImages.isPrimary), asc(productImages.displayOrder));
+
     return {
       ...row,
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
+      images: imagesResult,
     };
   }
 

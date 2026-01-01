@@ -482,8 +482,8 @@ export interface ProductQueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  categoryId?: string;
-  brandId?: string;
+  category?: string;
+  brand?: string;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
