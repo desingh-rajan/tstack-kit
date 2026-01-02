@@ -3,12 +3,21 @@
  *
  * Central export for all OAuth provider implementations.
  *
+ * Architecture:
+ * - IOAuthProvider: Interface all providers must implement
+ * - BaseOAuthProvider: Abstract class with common utilities
+ * - createOAuthProvider(): Factory for provider selection
+ * - getAvailableOAuthProviders(): List configured providers
+ *
  * @example
  * ```typescript
- * import { GoogleAuthProvider, createGoogleProviderFromEnv } from "@/shared/providers/auth";
+ * import { createOAuthProvider, getAvailableOAuthProviders } from "@/shared/providers/auth";
  *
- * const googleProvider = createGoogleProviderFromEnv();
- * const authUrl = googleProvider.getAuthorizationUrl(state);
+ * // Get specific provider
+ * const google = createOAuthProvider("google");
+ *
+ * // Get all available
+ * const providers = getAvailableOAuthProviders();
  * ```
  */
 
@@ -28,6 +37,15 @@ export {
   type GoogleAuthConfig,
   GoogleAuthProvider,
 } from "./google.provider.ts";
+
+// Factory and utilities
+export {
+  createOAuthProvider,
+  getAllOAuthProviders,
+  getAvailableOAuthProviders,
+  isOAuthProviderAvailable,
+  type OAuthProviderType,
+} from "./factory.ts";
 
 // Future providers (uncomment as implemented):
 // export { GitHubAuthProvider, createGitHubProviderFromEnv } from "./github.provider.ts";

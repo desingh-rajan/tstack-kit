@@ -4,6 +4,11 @@
  * Abstraction layer for payment gateways.
  * Currently implemented: Razorpay
  * Can be extended for: Stripe, PayU, etc.
+ *
+ * Architecture:
+ * - IPaymentProvider: Interface all providers must implement
+ * - BasePaymentProvider: Abstract class with common utilities
+ * - createPaymentProvider(): Factory function for provider selection
  */
 
 /**
@@ -202,4 +207,167 @@ export interface IPaymentProvider {
     payload: string,
     signature: string,
   ): Promise<WebhookEvent | null>;
+}
+
+/**
+ * Base Payment Provider
+ *
+ * Abstract class providing common utilities for payment providers.
+ * Extend this class when implementing a new payment provider.
+ */
+export abstract class BasePaymentProvider implements IPaymentProvider {
+  abstract readonly name: string;
+
+  abstract createOrder(options: CreateOrderOptions): Promise<PaymentOrder>;
+  abstract verifyPayment(options: VerifyPaymentOptions): Promise<boolean>;
+  abstract capturePayment(
+    paymentId: string,
+    amount: number,
+  ): Promise<PaymentResult>;
+  abstract refundPayment(
+    paymentId: string,
+    amount?: number,
+  ): Promise<RefundResult>;
+  abstract getPaymentDetails(paymentId: string): Promise<PaymentDetails>;
+  abstract verifyWebhook(
+    payload: string,
+    signature: string,
+  ): Promise<WebhookEvent | null>;
+
+  /**
+   * Convert amount to smallest currency unit (paise, cents, etc.)
+   * @param amount Amount in major currency unit
+   * @param currency Currency code
+   * @returns Amount in smallest unit
+   */
+  protected formatAmount(amount: number, currency: string = "INR"): number {
+    const noDecimalCurrencies = ["JPY", "KRW", "VND", "IDR"];
+    if (noDecimalCurrencies.includes(currency.toUpperCase())) {
+      return Math.round(amount);
+    }
+    return Math.round(amount * 100);
+  }
+
+  /**
+   * Convert amount from smallest currency unit to major unit
+   * @param amount Amount in smallest unit
+   * @param currency Currency code
+   * @returns Amount in major unit
+   */
+  protected parseAmount(amount: number, currency: string = "INR"): number {
+    const noDecimalCurrencies = ["JPY", "KRW", "VND", "IDR"];
+    if (noDecimalCurrencies.includes(currency.toUpperCase())) {
+      return amount;
+    }
+    return amount / 100;
+  }
+
+  /**
+   * Generate a unique receipt/reference number
+   * @returns Receipt string
+   */
+  protected generateReceipt(): string {
+    return `receipt_${Date.now()}_${
+      Math.random().toString(36).substring(2, 11)
+    }`;
+  }
+}
+
+/**
+ * No-Op Payment Provider
+ *
+ * Mock implementation for development and testing.
+ * Returns mock data without making actual API calls.
+ */
+export class NoOpPaymentProvider extends BasePaymentProvider {
+  readonly name = "noop";
+
+  constructor() {
+    super();
+    console.warn(
+      "[NoOpPaymentProvider] Using mock payment provider - no real payments will be processed",
+    );
+  }
+
+  createOrder(options: CreateOrderOptions): Promise<PaymentOrder> {
+    console.info("[NoOpPaymentProvider] createOrder called:", options);
+    return Promise.resolve({
+      id: `mock_order_${Date.now()}`,
+      amount: options.amount,
+      currency: options.currency || "INR",
+      receipt: options.receipt,
+      status: "created",
+    });
+  }
+
+  verifyPayment(_options: VerifyPaymentOptions): Promise<boolean> {
+    console.info("[NoOpPaymentProvider] verifyPayment called - returning true");
+    return Promise.resolve(true);
+  }
+
+  capturePayment(
+    paymentId: string,
+    amount: number,
+  ): Promise<PaymentResult> {
+    console.info(
+      "[NoOpPaymentProvider] capturePayment called:",
+      paymentId,
+      amount,
+    );
+    return Promise.resolve({
+      success: true,
+      paymentId,
+      status: "captured",
+      amount,
+      currency: "INR",
+    });
+  }
+
+  refundPayment(
+    paymentId: string,
+    amount?: number,
+  ): Promise<RefundResult> {
+    console.info(
+      "[NoOpPaymentProvider] refundPayment called:",
+      paymentId,
+      amount,
+    );
+    return Promise.resolve({
+      success: true,
+      refundId: `mock_refund_${Date.now()}`,
+      status: "processed",
+      amount: amount || 0,
+      currency: "INR",
+    });
+  }
+
+  getPaymentDetails(paymentId: string): Promise<PaymentDetails> {
+    console.info("[NoOpPaymentProvider] getPaymentDetails called:", paymentId);
+    return Promise.resolve({
+      id: paymentId,
+      orderId: `mock_order_${Date.now()}`,
+      amount: 10000,
+      currency: "INR",
+      status: "captured",
+      method: "mock",
+      createdAt: new Date(),
+    });
+  }
+
+  verifyWebhook(
+    payload: string,
+    _signature: string,
+  ): Promise<WebhookEvent | null> {
+    console.info("[NoOpPaymentProvider] verifyWebhook called");
+    try {
+      const parsed = JSON.parse(payload);
+      return Promise.resolve({
+        event: parsed.event || "payment.captured",
+        orderId: parsed.payload?.payment?.entity?.order_id,
+        raw: parsed,
+      });
+    } catch {
+      return Promise.resolve(null);
+    }
+  }
 }

@@ -6,7 +6,7 @@ import { users } from "../../auth/user.model.ts";
 import { addresses } from "../addresses/address.model.ts";
 import {
   type PaymentOrder,
-  razorpayProvider,
+  paymentProvider,
 } from "../../shared/providers/payment/index.ts";
 import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
 import {
@@ -51,8 +51,11 @@ import type {
 /**
  * Payment Service
  *
- * Handles payment operations:
- * - Create Razorpay orders
+ * Handles payment operations using the configured payment provider.
+ * Provider is auto-detected from environment variables via factory pattern.
+ *
+ * Operations:
+ * - Create payment orders
  * - Verify payment signatures
  * - Update order status on successful payment
  * - Process refunds
@@ -129,10 +132,10 @@ export class PaymentService {
     // Convert amount to paise (INR * 100)
     const amountInPaise = Math.round(parseFloat(orderRecord.totalAmount) * 100);
 
-    // Create Razorpay order
+    // Create payment order via provider
     let razorpayOrder: PaymentOrder;
     try {
-      razorpayOrder = await razorpayProvider.createOrder({
+      razorpayOrder = await paymentProvider.createOrder({
         amount: amountInPaise,
         currency: "INR",
         receipt: orderRecord.orderNumber,
@@ -184,9 +187,15 @@ export class PaymentService {
       })
       .where(eq(orders.id, orderId));
 
+    // Get provider-specific key for frontend (Razorpay-specific)
+    const providerKeyId =
+      (paymentProvider as unknown as { keyId?: string }).keyId ||
+      Deno.env.get("RAZORPAY_KEY_ID") ||
+      "";
+
     return {
       razorpayOrderId: razorpayOrder.id,
-      razorpayKeyId: razorpayProvider.keyId,
+      razorpayKeyId: providerKeyId,
       amount: amountInPaise,
       currency: "INR",
       orderId: orderId,
@@ -233,8 +242,8 @@ export class PaymentService {
       throw new BadRequestError("Invalid Razorpay order ID");
     }
 
-    // Verify signature
-    const isValid = await razorpayProvider.verifyPayment({
+    // Verify signature via provider
+    const isValid = await paymentProvider.verifyPayment({
       orderId: razorpayOrderId,
       paymentId: razorpayPaymentId,
       signature: razorpaySignature,
@@ -252,10 +261,10 @@ export class PaymentService {
       throw new BadRequestError("Payment verification failed");
     }
 
-    // Get payment details from Razorpay
+    // Get payment details from provider
     let paymentDetails;
     try {
-      paymentDetails = await razorpayProvider.getPaymentDetails(
+      paymentDetails = await paymentProvider.getPaymentDetails(
         razorpayPaymentId,
       );
     } catch (error) {
@@ -434,10 +443,10 @@ export class PaymentService {
       ? Math.round(amount * 100)
       : Math.round(parseFloat(paymentRecord.amount) * 100);
 
-    // Process refund via Razorpay
+    // Process refund via payment provider
     let refundResult;
     try {
-      refundResult = await razorpayProvider.refundPayment(
+      refundResult = await paymentProvider.refundPayment(
         razorpayPaymentId,
         refundAmountInPaise,
       );
@@ -481,8 +490,8 @@ export class PaymentService {
     payload: string,
     signature: string,
   ): Promise<{ handled: boolean; event?: string }> {
-    // Verify webhook
-    const webhookEvent = await razorpayProvider.verifyWebhook(
+    // Verify webhook via provider
+    const webhookEvent = await paymentProvider.verifyWebhook(
       payload,
       signature,
     );

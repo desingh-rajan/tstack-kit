@@ -1,7 +1,8 @@
 # TStack E-Commerce Feature Extraction Plan
 
-**Document Version**: 1.0\
+**Document Version**: 1.1\
 **Created**: January 2, 2026\
+**Updated**: January 2, 2026\
 **Branch**: `feature/epic-76-ecommerce-stack`\
 **Total Changes**: 385 files, ~68,000 lines of code
 
@@ -11,15 +12,16 @@
 
 1. [Executive Summary](#executive-summary)
 2. [Architecture Overview](#architecture-overview)
-3. [Component Breakdown](#component-breakdown)
-4. [Extraction Strategy](#extraction-strategy)
-5. [API Starter Extraction](#api-starter-extraction)
-6. [Admin UI Starter Extraction](#admin-ui-starter-extraction)
-7. [Storefront Starter Extraction](#storefront-starter-extraction)
-8. [Environment Variables Reference](#environment-variables-reference)
-9. [Customization Guide](#customization-guide)
-10. [Testing Strategy](#testing-strategy)
-11. [Migration Checklist](#migration-checklist)
+3. [Provider Architecture Improvements](#provider-architecture-improvements)
+4. [Component Breakdown](#component-breakdown)
+5. [Extraction Strategy](#extraction-strategy)
+6. [API Starter Extraction](#api-starter-extraction)
+7. [Admin UI Starter Extraction](#admin-ui-starter-extraction)
+8. [Storefront Starter Extraction](#storefront-starter-extraction)
+9. [Environment Variables Reference](#environment-variables-reference)
+10. [Customization Guide](#customization-guide)
+11. [Testing Strategy](#testing-strategy)
+12. [Migration Checklist](#migration-checklist)
 
 ---
 
@@ -81,6 +83,328 @@ Browse Products → Add to Cart → Login/Register → Checkout → Pay → Orde
 
 Admin Journey:
 Login → Dashboard → Manage Products → Process Orders → View Payments
+```
+
+---
+
+## Provider Architecture Improvements
+
+This section documents architectural analysis of the provider system and
+recommended improvements to ensure consistency, extensibility, and ease of
+configuration across all provider types.
+
+### Current State Analysis
+
+| Provider | Interface | Base Class | Factory | Status             |
+| -------- | --------- | ---------- | ------- | ------------------ |
+| Email    | Yes       | Yes        | Yes     | Complete           |
+| Payment  | Yes       | No         | No      | Needs improvement  |
+| OAuth    | Yes       | Yes        | No      | Partially complete |
+
+### Architecture Pattern
+
+All providers should follow this consistent pattern:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    IProvider (Interface)                         │
+│  - Defines contract all implementations must follow              │
+│  - Pure interface, no implementation                             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 BaseProvider (Abstract Class)                    │
+│  - Common utilities (logging, error handling, retries)           │
+│  - Template methods for hooks (beforeSend, afterSend)            │
+│  - Abstract methods implementations must provide                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│  Provider A     │  │  Provider B     │  │  NoOpProvider   │
+│  (e.g., SMTP)   │  │  (e.g., Resend) │  │  (Dev/Testing)  │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   createProvider() Factory                       │
+│  - Auto-detects provider from env vars                           │
+│  - Returns appropriate implementation                            │
+│  - Falls back to NoOp in development                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Email Provider (Reference Implementation)
+
+The email provider is the gold standard - all other providers should follow this
+pattern:
+
+**Interface** (`email-provider.interface.ts`):
+
+```typescript
+export interface IEmailProvider {
+  send(options: EmailOptions): Promise<EmailResult>;
+  sendBatch?(emails: EmailOptions[]): Promise<EmailResult[]>;
+}
+```
+
+**Base Class** (`email-provider.interface.ts`):
+
+```typescript
+export abstract class BaseEmailProvider implements IEmailProvider {
+  protected logger = console;
+
+  abstract send(options: EmailOptions): Promise<EmailResult>;
+
+  // Common utilities
+  protected formatEmail(name: string, email: string): string {
+    return name ? `${name} <${email}>` : email;
+  }
+
+  protected getDefaultFrom(): { name: string; email: string } {
+    return {
+      name: Deno.env.get("EMAIL_FROM_NAME") || "TStack App",
+      email: Deno.env.get("EMAIL_FROM_ADDRESS") || "noreply@example.com",
+    };
+  }
+
+  async sendBatch(emails: EmailOptions[]): Promise<EmailResult[]> {
+    return Promise.all(emails.map((e) => this.send(e)));
+  }
+}
+```
+
+**Factory** (`factory.ts`):
+
+```typescript
+export function createEmailProvider(): IEmailProvider {
+  const provider = Deno.env.get("EMAIL_PROVIDER")?.toLowerCase();
+
+  switch (provider) {
+    case "resend":
+      return new ResendProvider();
+    case "ses":
+      return new SESProvider();
+    case "smtp":
+      return new SMTPProvider();
+    default:
+      // Auto-detect based on available env vars
+      if (Deno.env.get("RESEND_API_KEY")) return new ResendProvider();
+      if (Deno.env.get("AWS_SES_REGION")) return new SESProvider();
+      if (Deno.env.get("SMTP_HOST")) return new SMTPProvider();
+      return new NoOpEmailProvider();
+  }
+}
+```
+
+### Payment Provider Improvements
+
+**Current Gap**: Payment provider has interface but no base class or factory.
+The service directly imports `razorpayProvider`.
+
+**Recommended Changes**:
+
+1. **Add BasePaymentProvider**:
+
+```typescript
+// src/shared/providers/payment/payment-provider.interface.ts
+
+export abstract class BasePaymentProvider implements IPaymentProvider {
+  protected logger = console;
+
+  abstract createOrder(options: CreateOrderOptions): Promise<PaymentOrder>;
+  abstract verifyPayment(
+    options: VerifyPaymentOptions,
+  ): Promise<PaymentVerification>;
+  abstract capturePayment(
+    paymentId: string,
+    amount: number,
+  ): Promise<CaptureResult>;
+  abstract refundPayment(
+    paymentId: string,
+    amount?: number,
+  ): Promise<RefundResult>;
+
+  // Common utilities
+  protected formatAmount(amount: number, currency: string): number {
+    // Convert to smallest unit (paise, cents, etc.)
+    const noDecimalCurrencies = ["JPY", "KRW", "VND"];
+    if (noDecimalCurrencies.includes(currency.toUpperCase())) {
+      return Math.round(amount);
+    }
+    return Math.round(amount * 100);
+  }
+
+  protected generateReceipt(): string {
+    return `receipt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+```
+
+1. **Add NoOpPaymentProvider** for development:
+
+```typescript
+// src/shared/providers/payment/noop.provider.ts
+
+export class NoOpPaymentProvider extends BasePaymentProvider {
+  async createOrder(options: CreateOrderOptions): Promise<PaymentOrder> {
+    this.logger.warn("[NoOpPayment] createOrder called - returning mock order");
+    return {
+      id: `mock_order_${Date.now()}`,
+      amount: options.amount,
+      currency: options.currency,
+      status: "created",
+    };
+  }
+
+  async verifyPayment(): Promise<PaymentVerification> {
+    return { verified: true, status: "captured" };
+  }
+
+  async capturePayment(): Promise<CaptureResult> {
+    return { success: true, capturedAmount: 0 };
+  }
+
+  async refundPayment(): Promise<RefundResult> {
+    return { success: true, refundId: `mock_refund_${Date.now()}` };
+  }
+}
+```
+
+1. **Add createPaymentProvider factory**:
+
+```typescript
+// src/shared/providers/payment/factory.ts
+
+export function createPaymentProvider(): IPaymentProvider {
+  const provider = Deno.env.get("PAYMENT_PROVIDER")?.toLowerCase();
+
+  switch (provider) {
+    case "razorpay":
+      return new RazorpayProvider();
+    case "stripe":
+      return new StripeProvider(); // Future
+    default:
+      // Auto-detect
+      if (Deno.env.get("RAZORPAY_KEY_ID")) return new RazorpayProvider();
+      if (Deno.env.get("STRIPE_SECRET_KEY")) return new StripeProvider();
+      return new NoOpPaymentProvider();
+  }
+}
+
+// Singleton instance
+export const paymentProvider = createPaymentProvider();
+```
+
+1. **Update payment.service.ts**:
+
+```typescript
+// Before
+import { razorpayProvider } from "../../shared/providers/payment/index.ts";
+
+// After
+import { paymentProvider } from "../../shared/providers/payment/factory.ts";
+```
+
+### OAuth Provider Improvements
+
+**Current Gap**: OAuth provider has interface and base class but no factory.
+
+**Recommended Changes**:
+
+1. **Add createOAuthProvider factory**:
+
+```typescript
+// src/shared/providers/auth/factory.ts
+
+export function createOAuthProvider(provider: string): IOAuthProvider | null {
+  switch (provider.toLowerCase()) {
+    case "google":
+      const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
+      const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+      const redirectUri = Deno.env.get("GOOGLE_REDIRECT_URI");
+      if (clientId && clientSecret && redirectUri) {
+        return new GoogleAuthProvider(clientId, clientSecret, redirectUri);
+      }
+      return null;
+
+    case "github":
+      // Future implementation
+      return null;
+
+    case "apple":
+      // Future implementation
+      return null;
+
+    default:
+      return null;
+  }
+}
+
+export function getAvailableOAuthProviders(): string[] {
+  const available: string[] = [];
+
+  if (Deno.env.get("GOOGLE_CLIENT_ID")) available.push("google");
+  if (Deno.env.get("GITHUB_CLIENT_ID")) available.push("github");
+  if (Deno.env.get("APPLE_CLIENT_ID")) available.push("apple");
+
+  return available;
+}
+```
+
+### What NOT to Abstract
+
+Some code is better copied as boilerplate rather than abstracted:
+
+| Code Type            | Recommendation | Reason                               |
+| -------------------- | -------------- | ------------------------------------ |
+| Entity models        | Copy           | Each project has unique schemas      |
+| Entity controllers   | Copy           | Business logic varies per project    |
+| Admin entity configs | Copy           | UI customization is project-specific |
+| Route definitions    | Copy           | Endpoints vary per project           |
+| Migration files      | Copy           | Database schema is project-specific  |
+| Environment config   | Copy           | Each deployment has unique config    |
+| S3 uploader          | Copy           | Simple utility, rarely needs changes |
+
+### Abstraction Decision Matrix
+
+Use this matrix to decide whether to abstract or copy:
+
+```
+                  Reuse Frequency
+                  Low         High
+              ┌───────────┬───────────┐
+   Low        │   COPY    │  UTILITY  │
+Variation     │           │  FUNCTION │
+              ├───────────┼───────────┤
+   High       │   COPY    │ INTERFACE │
+Variation     │  (custom) │ + FACTORY │
+              └───────────┴───────────┘
+```
+
+**Examples**:
+
+- **Email sending** (High reuse, High variation): Interface + Factory
+- **S3 upload** (High reuse, Low variation): Utility function
+- **Entity schema** (Low reuse, High variation): Copy as template
+- **JWT validation** (High reuse, Low variation): Utility function
+
+### Implementation Priority
+
+1. **High Priority** - Payment factory pattern (enables Stripe, PayPal, etc.)
+2. **Medium Priority** - OAuth factory pattern (enables GitHub, Apple, etc.)
+3. **Low Priority** - NoOpPaymentProvider (nice for development)
+
+### Environment Variable Additions
+
+Add to `.env.example`:
+
+```bash
+# Provider selection (optional - auto-detected if not set)
+EMAIL_PROVIDER=smtp        # smtp | resend | ses
+PAYMENT_PROVIDER=razorpay  # razorpay | stripe
 ```
 
 ---
@@ -582,11 +906,13 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 ### How to Add a New Email Provider
 
 1. **Create provider file**:
+
    ```
    src/shared/providers/email/mailgun.provider.ts
    ```
 
 2. **Implement interface**:
+
    ```typescript
    import {
      EmailOptions,
@@ -602,6 +928,7 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
    ```
 
 3. **Register in factory**:
+
    ```typescript
    // src/shared/providers/email/factory.ts
    case "mailgun":
@@ -609,6 +936,7 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
    ```
 
 4. **Add env variables**:
+
    ```bash
    EMAIL_PROVIDER=mailgun
    MAILGUN_API_KEY=...
@@ -618,11 +946,13 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 ### How to Add a New Payment Provider
 
 1. **Create provider file**:
+
    ```
    src/shared/providers/payment/stripe.provider.ts
    ```
 
 2. **Implement interface**:
+
    ```typescript
    import { IPaymentProvider } from "./payment-provider.interface.ts";
 
@@ -639,11 +969,13 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 ### How to Add a New OAuth Provider
 
 1. **Create provider file**:
+
    ```
    src/shared/providers/auth/github.provider.ts
    ```
 
 2. **Implement interface**:
+
    ```typescript
    import { IOAuthProvider } from "./auth-provider.interface.ts";
 
@@ -655,6 +987,7 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
    ```
 
 3. **Add routes**:
+
    ```
    src/auth/oauth.route.ts → Add /auth/github endpoints
    ```
@@ -662,6 +995,7 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 ### How to Add a New Entity
 
 1. **Create entity directory**:
+
    ```
    src/entities/reviews/
    ├── review.model.ts      # Drizzle schema
@@ -674,18 +1008,21 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
    ```
 
 2. **Register in main.ts**:
+
    ```typescript
    import reviewRoutes from "./entities/reviews/review.route.ts";
    app.route("/", reviewRoutes);
    ```
 
 3. **Run migration**:
+
    ```bash
    deno task db:generate
    deno task db:migrate
    ```
 
 4. **Add admin config** (if needed):
+
    ```
    config/entities/reviews.config.tsx
    ```
@@ -776,6 +1113,7 @@ deno task test:coverage
 ### Migration Steps
 
 1. **Database**
+
    ```bash
    # Generate migration
    deno task db:generate
@@ -793,12 +1131,14 @@ deno task test:coverage
    - Validate with `deno task validate:env`
 
 3. **Seed Data**
+
    ```bash
    deno task db:seed:superadmin
    deno task db:seed:settings
    ```
 
 4. **Verify**
+
    ```bash
    deno task dev
    # Check health endpoint: http://localhost:8000/health
