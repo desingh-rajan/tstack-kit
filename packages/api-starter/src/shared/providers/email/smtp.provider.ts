@@ -1,7 +1,7 @@
 /**
  * SMTP Email Provider
  *
- * Implementation of IEmailProvider using SMTP protocol.
+ * Implementation of IEmailProvider using SMTP protocol via nodemailer.
  * Works with any SMTP server (Resend, SendGrid, Gmail, Mailgun, etc.)
  *
  * @example
@@ -17,7 +17,8 @@
  * ```
  */
 
-import { SMTPClient } from "denomailer";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import {
   BaseEmailProvider,
   type EmailOptions,
@@ -41,7 +42,7 @@ export interface SmtpConfig extends EmailProviderConfig {
   /** SMTP password or API key */
   password: string;
 
-  /** Use TLS/SSL connection */
+  /** Use TLS/SSL connection (true for port 465, false for STARTTLS on 587) */
   secure?: boolean;
 
   /** Connection timeout in milliseconds */
@@ -49,27 +50,26 @@ export interface SmtpConfig extends EmailProviderConfig {
 }
 
 /**
- * SMTP Email Provider using denomailer
+ * SMTP Email Provider using nodemailer
  */
 export class SmtpProvider extends BaseEmailProvider {
   readonly name = "smtp";
-  private client: SMTPClient;
+  private transporter: Transporter;
   private smtpConfig: SmtpConfig;
 
   constructor(config: SmtpConfig) {
     super(config);
     this.smtpConfig = config;
 
-    this.client = new SMTPClient({
-      connection: {
-        hostname: config.host,
-        port: config.port,
-        tls: config.secure ?? config.port === 465,
-        auth: {
-          username: config.username,
-          password: config.password,
-        },
+    this.transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure ?? config.port === 465,
+      auth: {
+        user: config.username,
+        pass: config.password,
       },
+      connectionTimeout: config.timeout,
     });
   }
 
@@ -95,24 +95,26 @@ export class SmtpProvider extends BaseEmailProvider {
         };
       }
 
-      const result = await this.client.send({
+      const result = await this.transporter.sendMail({
         from: from,
-        to: to,
-        cc: this.normalizeAddresses(options.cc),
-        bcc: this.normalizeAddresses(options.bcc),
+        to: to.join(", "),
+        cc: this.normalizeAddresses(options.cc).join(", ") || undefined,
+        bcc: this.normalizeAddresses(options.bcc).join(", ") || undefined,
         replyTo: this.normalizeAddress(options.replyTo) ||
-          this.normalizeAddress(this.config.replyTo),
+          this.normalizeAddress(this.config.replyTo) || undefined,
         subject: options.subject,
-        content: options.text || this.htmlToText(options.html),
+        text: options.text || this.htmlToText(options.html),
         html: options.html,
-        // Note: attachments would need additional handling for denomailer format
+        attachments: options.attachments?.map((att) => ({
+          filename: att.filename,
+          content: att.content,
+          contentType: att.contentType,
+        })),
       });
 
       return {
         success: true,
-        messageId: typeof result === "object" && result !== null
-          ? String((result as { messageId?: string }).messageId || "sent")
-          : "sent",
+        messageId: result.messageId,
         raw: result,
       };
     } catch (error) {
@@ -134,22 +136,7 @@ export class SmtpProvider extends BaseEmailProvider {
    */
   async verify(): Promise<boolean> {
     try {
-      // denomailer doesn't have a direct verify method
-      // We'll attempt a connection test by creating a new client
-      const testClient = new SMTPClient({
-        connection: {
-          hostname: this.smtpConfig.host,
-          port: this.smtpConfig.port,
-          tls: this.smtpConfig.secure ?? this.smtpConfig.port === 465,
-          auth: {
-            username: this.smtpConfig.username,
-            password: this.smtpConfig.password,
-          },
-        },
-      });
-
-      // Close the test connection
-      await testClient.close();
+      await this.transporter.verify();
       return true;
     } catch (error) {
       console.error(
@@ -165,7 +152,8 @@ export class SmtpProvider extends BaseEmailProvider {
    * Close SMTP connection (call when shutting down)
    */
   async close(): Promise<void> {
-    await this.client.close();
+    this.transporter.close();
+    await Promise.resolve();
   }
 }
 
