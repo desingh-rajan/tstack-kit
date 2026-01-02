@@ -10,6 +10,7 @@ import {
   type WorkspaceMetadata,
 } from "../utils/workspaceStore.ts";
 import { getProject } from "../utils/projectStore.ts";
+import type { ProjectScope } from "./creators/base-creator.ts";
 import denoConfig from "../../deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -42,6 +43,12 @@ export interface WorkspaceOptions {
   githubOrg?: string; // If provided, remote setup is automatic unless skipRemote=true
   githubToken?: string;
   visibility?: "private" | "public";
+
+  // Entity scope (API only)
+  scope?: ProjectScope; // core | listing | commerce (default: commerce)
+  // Legacy flags (still supported)
+  skipListing?: boolean;
+  skipCommerce?: boolean;
 }
 
 // Reserved suffixes that cannot be used as workspace names
@@ -557,6 +564,10 @@ export async function createWorkspace(
           projectType: type as "api" | "admin-ui" | "store",
           targetDir: workspacePath,
           skipDbSetup: type === "admin-ui" || type === "store", // Only API needs database
+          // Entity scope only applies to API
+          scope: type === "api" ? options.scope : undefined,
+          skipListing: type === "api" ? options.skipListing : undefined,
+          skipCommerce: type === "api" ? options.skipCommerce : undefined,
         });
 
         const projectPath = join(workspacePath, projectName);

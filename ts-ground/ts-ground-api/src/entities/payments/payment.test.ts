@@ -30,11 +30,7 @@ let testAddressId: string;
 let testOrderId: string;
 
 // Helper to make authenticated requests
-function authenticatedRequest(
-  method: string,
-  path: string,
-  body?: unknown,
-) {
+function authenticatedRequest(method: string, path: string, body?: unknown) {
   const options: RequestInit = {
     method,
     headers: {
@@ -67,9 +63,9 @@ Deno.test({
       if (existingUser.length > 0) {
         await db.delete(carts).where(eq(carts.userId, existingUser[0].id));
         await db.delete(orders).where(eq(orders.userId, existingUser[0].id));
-        await db.delete(addresses).where(
-          eq(addresses.userId, existingUser[0].id),
-        );
+        await db
+          .delete(addresses)
+          .where(eq(addresses.userId, existingUser[0].id));
         await db.delete(users).where(eq(users.email, TEST_EMAIL));
       }
 
@@ -161,7 +157,7 @@ Deno.test({
           shippingAddressId: testAddressId,
           useSameAddress: true,
           paymentMethod: "razorpay",
-        },
+        }
       );
       assertEquals(orderResponse.status, 201);
 
@@ -191,7 +187,7 @@ Deno.test({
         "/payments/create-order",
         {
           orderId: "invalid-uuid",
-        },
+        }
       );
       assertEquals(response.status, 400);
     });
@@ -204,10 +200,10 @@ Deno.test({
           "/payments/create-order",
           {
             orderId: crypto.randomUUID(),
-          },
+          }
         );
         assertEquals(response.status, 404);
-      },
+      }
     );
 
     // ============================================
@@ -246,7 +242,7 @@ Deno.test({
     await t.step("GET /payments/:orderId/status - returns status", async () => {
       const response = await authenticatedRequest(
         "GET",
-        `/payments/${testOrderId}/status`,
+        `/payments/${testOrderId}/status`
       );
       assertEquals(response.status, 200);
 
@@ -260,10 +256,10 @@ Deno.test({
       async () => {
         const response = await authenticatedRequest(
           "GET",
-          `/payments/${crypto.randomUUID()}/status`,
+          `/payments/${crypto.randomUUID()}/status`
         );
         assertEquals(response.status, 404);
-      },
+      }
     );
 
     // ============================================
@@ -291,9 +287,9 @@ Deno.test({
         assertEquals(
           validStatuses.includes(response.status),
           true,
-          `Expected 200 or 400, got ${response.status}`,
+          `Expected 200 or 400, got ${response.status}`
         );
-      },
+      }
     );
 
     // ============================================

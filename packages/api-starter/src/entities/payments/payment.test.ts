@@ -30,11 +30,7 @@ let testAddressId: string;
 let testOrderId: string;
 
 // Helper to make authenticated requests
-function authenticatedRequest(
-  method: string,
-  path: string,
-  body?: unknown,
-) {
+function authenticatedRequest(method: string, path: string, body?: unknown) {
   const options: RequestInit = {
     method,
     headers: {
@@ -67,9 +63,9 @@ Deno.test({
       if (existingUser.length > 0) {
         await db.delete(carts).where(eq(carts.userId, existingUser[0].id));
         await db.delete(orders).where(eq(orders.userId, existingUser[0].id));
-        await db.delete(addresses).where(
-          eq(addresses.userId, existingUser[0].id),
-        );
+        await db
+          .delete(addresses)
+          .where(eq(addresses.userId, existingUser[0].id));
         await db.delete(users).where(eq(users.email, TEST_EMAIL));
       }
 

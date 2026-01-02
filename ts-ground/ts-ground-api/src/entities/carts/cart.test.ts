@@ -33,7 +33,7 @@ function authenticatedRequest(
   method: string,
   path: string,
   body?: unknown,
-  guestId?: string,
+  guestId?: string
 ) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -58,7 +58,7 @@ function guestRequest(
   method: string,
   path: string,
   body?: unknown,
-  guestId?: string,
+  guestId?: string
 ) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -191,7 +191,7 @@ Deno.test({
         "GET",
         "/cart",
         undefined,
-        testGuestId,
+        testGuestId
       );
       assertEquals(response.status, 200);
 
@@ -221,7 +221,7 @@ Deno.test({
           productId: testProductId,
           quantity: 2,
         },
-        testGuestId,
+        testGuestId
       );
 
       assertEquals(response.status, 201);
@@ -251,7 +251,7 @@ Deno.test({
           variantId: testVariantId,
           quantity: 1,
         },
-        testGuestId,
+        testGuestId
       );
 
       assertEquals(response.status, 201);
@@ -275,7 +275,7 @@ Deno.test({
           productId: testProductId,
           quantity: 100, // More than stock (10)
         },
-        testGuestId,
+        testGuestId
       );
 
       assertEquals(response.status, 400);
@@ -365,7 +365,7 @@ Deno.test({
       const response = await authenticatedRequest(
         "PUT",
         `/cart/items/${cartItemId}`,
-        { quantity: 5 },
+        { quantity: 5 }
       );
 
       assertEquals(response.status, 200);
@@ -377,7 +377,7 @@ Deno.test({
       const response = await authenticatedRequest(
         "PUT",
         `/cart/items/${cartItemId}`,
-        { quantity: 100 }, // More than stock (10)
+        { quantity: 100 } // More than stock (10)
       );
 
       assertEquals(response.status, 400);
@@ -398,12 +398,12 @@ Deno.test({
       const cartResponse = await authenticatedRequest("GET", "/cart");
       const cartData = await cartResponse.json();
       const itemToRemove = cartData.data.items.find(
-        (item: { productId: string }) => item.productId === testProductId2,
+        (item: { productId: string }) => item.productId === testProductId2
       );
 
       const response = await authenticatedRequest(
         "DELETE",
-        `/cart/items/${itemToRemove.id}`,
+        `/cart/items/${itemToRemove.id}`
       );
       assertEquals(response.status, 200);
 
@@ -440,7 +440,7 @@ Deno.test({
           productId: testProductId,
           quantity: 2,
         },
-        mergeGuestId,
+        mergeGuestId
       );
 
       // Verify guest cart has items
@@ -448,7 +448,7 @@ Deno.test({
         "GET",
         "/cart",
         undefined,
-        mergeGuestId,
+        mergeGuestId
       );
       const guestCartData = await guestCartResponse.json();
       assertEquals(guestCartData.data.itemCount, 2);
@@ -476,7 +476,7 @@ Deno.test({
           productId: testProductId2,
           quantity: 1,
         },
-        newGuestId,
+        newGuestId
       );
 
       // Merge
@@ -517,7 +517,7 @@ Deno.test({
       const response = await authenticatedRequest(
         "PUT",
         `/cart/items/${crypto.randomUUID()}`,
-        { quantity: 1 },
+        { quantity: 1 }
       );
 
       assertEquals(response.status, 404);
@@ -528,11 +528,11 @@ Deno.test({
       async () => {
         const response = await authenticatedRequest(
           "DELETE",
-          `/cart/items/${crypto.randomUUID()}`,
+          `/cart/items/${crypto.randomUUID()}`
         );
 
         assertEquals(response.status, 404);
-      },
+      }
     );
 
     // ============================================

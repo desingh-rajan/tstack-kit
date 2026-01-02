@@ -77,8 +77,25 @@ function showHelp() {
   Logger.code(
     "--only-admin-ui            Scaffold admin-UI files only (scaffold only)",
   );
+  Logger.newLine();
+  Logger.subtitle("Entity Scope Options (api/workspace):");
   Logger.code(
-    "--skip-listing             Skip product listing entities (create api only)",
+    "--scope=<level>            Set entity scope: core, listing, commerce",
+  );
+  Logger.code(
+    "                           core     = articles, site_settings only",
+  );
+  Logger.code(
+    "                           listing  = + products, brands, categories",
+  );
+  Logger.code(
+    "                           commerce = + carts, orders, payments (default)",
+  );
+  Logger.code(
+    "--skip-listing             Legacy: equivalent to --scope=core",
+  );
+  Logger.code(
+    "--skip-commerce            Legacy: equivalent to --scope=listing",
   );
   Logger.code(
     "--skip-db-setup            Skip database setup (create api only)",
@@ -152,6 +169,7 @@ async function main() {
       "only-api", // NEW: Only scaffold API
       "only-admin-ui", // NEW: Only scaffold admin-UI
       "skip-listing", // Skip product listing entities
+      "skip-commerce", // Skip e-commerce entities
       "skip-db-setup", // Skip database setup
       "with-api",
       "with-admin-ui",
@@ -168,7 +186,14 @@ async function main() {
       "skip-metrics",
       "skip-remote",
     ],
-    string: ["dir", "namespace", "github-org", "github-token", "visibility"],
+    string: [
+      "dir",
+      "namespace",
+      "github-org",
+      "github-token",
+      "visibility",
+      "scope",
+    ],
     alias: {
       h: "help",
       v: "version",
@@ -236,6 +261,9 @@ async function main() {
             githubOrg: args["github-org"],
             githubToken: args["github-token"],
             visibility: args.visibility as "private" | "public" | undefined,
+            scope: args.scope as "core" | "listing" | "commerce" | undefined,
+            skipListing: args["skip-listing"],
+            skipCommerce: args["skip-commerce"],
           });
         } else if (type === "api") {
           await createProject({
@@ -243,7 +271,9 @@ async function main() {
             projectType: "api",
             targetDir: args.dir,
             latest: args.latest,
+            scope: args.scope as "core" | "listing" | "commerce" | undefined,
             skipListing: args["skip-listing"],
+            skipCommerce: args["skip-commerce"],
             skipDbSetup: args["skip-db-setup"],
           });
         } else if (type === "admin-ui") {

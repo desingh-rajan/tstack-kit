@@ -5,24 +5,118 @@
 [![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 
-> **A growing SaaS toolkit that scales from day zero.** Ship products, not
-> boilerplate.
+> **Ship products, not boilerplate.** A battle-tested, CLI-powered SaaS starter
+> kit that scales from portfolio to platform.
 
-TStack Kit is a full-stack toolkit for building type-safe SaaS applications with
-Deno, Hono, Drizzle ORM, Fresh, and PostgreSQL. Create complete API, Admin UI,
-and Storefront workspaces in minutes.
+---
 
-**Documentation:** [docs/README.md](./docs/README.md) for quick navigation to
-getting started, CLI, scaffolding, admin, testing, and architecture guides.
+## Why TStack Kit?
 
-**What you can build:**
+### A CLI That Actually Does the Work
 
-- Internal tools and admin dashboards
-- SaaS MVPs with authentication out of the box
-- Portfolio sites that grow into full products
-- SSR e-commerce applications
-- Content management systems
-- Any CRUD-heavy application
+You know how most starter kits work—clone a repo, search-and-replace project
+names, update configs by hand, initialize git, create databases manually. That's
+not a starter kit. That's a chore list.
+
+**TStack CLI handles all of it:**
+
+- **Smart project creation** - Generates and customizes projects with your
+  names, not template placeholders
+- **Local + GitHub repos** - Creates repos locally AND on GitHub (with
+  `--github-org` flag)
+- **State-aware tracking** - Remembers every project you create (stored in local
+  Deno KV)
+- **Destroy command** - Deletes projects AND drops their databases (no orphaned
+  DBs cluttering your Postgres)
+- **Entity scaffolding** - Generates models, services, controllers, routes,
+  tests, and admin UI configs in one command
+- **Multi-project workspaces** - Creates API + Admin + Store and wires them
+  together automatically
+
+It's not a template cloner. It's a project generator that thinks.
+
+---
+
+### Stop Building the Same App Over and Over
+
+You've done this before. The auth system. The CRUD boilerplate. The admin panel.
+The Docker config. Every new project starts with the same week of setup,
+rebuilding what you just built last month.
+
+**Here's what actually happens with TStack:**
+
+| Timeline         | What You Get                                                                |
+| ---------------- | --------------------------------------------------------------------------- |
+| **⚡ 3 Minutes** | Database is up. Migrations run. Seed data loaded. You're writing features.  |
+| **⚡ 1 Hour**    | Your models are mapped. Relations hooked up. Stripe, S3, Resend configured. |
+| **⚡ 3 Hours**   | Models tested. Admin panel generated. API endpoints working. Ready to ship. |
+
+---
+
+### Tests That Actually Cover Your Ass
+
+You know what happens when you skip tests. You ship on Friday. Something breaks
+Saturday at 2 AM. You don't know why because you never had time to write tests.
+
+**TStack ships with tests built in:**
+
+- **255+ test suite** covering auth, CRUD, admin routes, payment flows
+- **70% code coverage** (show me another starter kit with this)
+- **Real integration tests** against PostgreSQL—not mocked nonsense (we only
+  mock external providers)
+- You can actually sleep through the night. We already debugged this stuff.
+
+---
+
+### 10 Years of Framework Experience, One Codebase
+
+This isn't some weekend experiment. TStack distills a decade of building
+production systems with Rails, Phoenix, Sinatra, Express, Hono, Node, Deno,
+Ruby, and Elixir.
+
+Every pattern here earned its place in production. We took the elegance of
+Rails, the resilience of Phoenix, the simplicity of Sinatra, and the raw speed
+of Hono—and made them work together in TypeScript.
+
+**Human-readable code. AI-ready architecture.** It's opinionated because
+indecision is expensive. It's structured so both you and AI agents can navigate
+it without guessing.
+
+---
+
+### Scales With You (Not Against You)
+
+| Your Stage                   | What You Get                                       |
+| ---------------------------- | -------------------------------------------------- |
+| **Portfolio site**           | Contact forms, content management—done             |
+| **Product catalog**          | Listings, categories, admin panel—built in         |
+| **E-commerce store**         | Cart, checkout, payments—ready to go               |
+| **MVP testing**              | Local Docker development—configured                |
+| **Scaling up**               | Architecture designed for microservices extraction |
+| **Enterprise multi-service** | Docker orchestration ready                         |
+
+---
+
+### Production Deployment Made Simple _(coming soon)_
+
+**Dockerfile and Kamal configs are in the pipeline.** When they land, you'll
+get:
+
+- One-command VPS deployment ($5 DigitalOcean droplets, any cloud provider)
+- Automated SSL certificates, traffic routing, rolling deployments
+- Zero-downtime updates out of the box
+- You write code. Kamal ships it.
+
+_(Currently in development—Docker configs ready, Kamal integration in progress)_
+
+---
+
+### Not Another Template. A Real Foundation
+
+Most starter kits are copy-pasted side projects. This one took 3 months to
+architect right. It's test-driven, production-hardened, and built to last.
+
+**This is the starter kit we wish we had 10 years ago.**
 
 ---
 
@@ -50,6 +144,9 @@ deno task dev
 
 Your API is running at `http://localhost:8000`
 
+**Documentation:** [docs/README.md](./docs/README.md) for CLI reference,
+scaffolding, admin panel, testing, and architecture guides.
+
 ---
 
 ## What You Get
@@ -70,7 +167,21 @@ Creates:
 - JWT authentication (included by default)
 - Role-based access control (user/admin/superadmin)
 - Built-in entities: Users, Articles, Site Settings
-- Product listing entities (brands, categories, products, variants)
+- E-commerce entities: Brands, Categories, Products, Variants, Addresses, Carts,
+  Orders, Payments
+
+**Control what you get with `--scope`:**
+
+```bash
+# Minimal: Just articles and site_settings
+tstack create workspace blog --scope=core
+
+# Add product catalog (brands, categories, products, variants)
+tstack create workspace shop --scope=listing
+
+# Full e-commerce (listing + cart, orders, payments) - DEFAULT
+tstack create workspace store --scope=commerce
+```
 
 ### Entity Scaffolding
 
@@ -95,17 +206,20 @@ Entity automatically appears in Admin UI sidebar.
 
 ## Features
 
-| Feature                  | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| **Workspace Management** | Create/destroy multi-project workspaces          |
-| **GitHub Integration**   | Auto-create repos with `--github-org` flag       |
-| **Base Abstractions**    | 70-80% less code with BaseService/BaseController |
-| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI          |
-| **Storefront**           | Public e-commerce site with Fresh + Tailwind     |
-| **Type-Safe**            | Full TypeScript from database to API             |
-| **JWT Auth**             | Optional authentication system included          |
-| **PostgreSQL**           | Three-database setup (dev/test/prod)             |
-| **Docker Ready**         | docker-compose included                          |
+| Feature                  | Description                                            |
+| ------------------------ | ------------------------------------------------------ |
+| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds |
+| **Workspace Management** | Create/destroy multi-project workspaces                |
+| **GitHub Integration**   | Auto-create repos with `--github-org` flag             |
+| **Base Abstractions**    | 70-80% less code with BaseService/BaseController       |
+| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                |
+| **Storefront**           | Public e-commerce site with Fresh + Tailwind           |
+| **Type-Safe**            | Full TypeScript from database to API                   |
+| **JWT Auth**             | Authentication system included (ready to use)          |
+| **RBAC**                 | Role-based access (user/admin/superadmin)              |
+| **PostgreSQL**           | Three-database setup (dev/test/prod)                   |
+| **255+ Tests**           | 70% coverage with real PostgreSQL integration tests    |
+| **Docker Ready**         | docker-compose included                                |
 
 ---
 
@@ -113,10 +227,13 @@ Entity automatically appears in Admin UI sidebar.
 
 ```bash
 # Create projects
-tstack create workspace my-app          # Full workspace (API + Admin UI)
+tstack create workspace my-app          # Full workspace (API + Admin UI + Store)
 tstack create workspace my-app --github-org=your-org  # With GitHub repos
-tstack create workspace my-app --skip-listing  # Skip product listing entities
+tstack create workspace my-app --scope=core  # Minimal (articles + site_settings)
+tstack create workspace my-app --scope=listing  # + product catalog
+tstack create workspace my-app --scope=commerce  # + cart & checkout (default)
 tstack create api my-api                # API only
+tstack create api my-api --scope=core   # Minimal API
 tstack create admin-ui my-admin         # Admin UI only
 tstack create store my-store            # Storefront only
 
@@ -158,15 +275,19 @@ my-project-api/
 │   ├── auth/                # JWT authentication (included)
 │   ├── config/              # Database & environment config
 │   ├── entities/            # Your domain entities
-│   │   ├── articles/        # Example entity
-│   │   ├── brands/          # Product brands
-│   │   ├── categories/      # Product categories
-│   │   ├── products/        # Products with variants
-│   │   ├── product_images/  # Product image gallery
-│   │   ├── product_variants/ # SKU variants (size, color)
-│   │   ├── variant_options/ # Variant option values
-│   │   ├── site_settings/   # Dynamic app configuration
-│   │   └── users/           # User management
+│   │   ├── articles/        # Blog/CMS content (core)
+│   │   ├── site_settings/   # Dynamic app configuration (core)
+│   │   ├── brands/          # Product brands (listing)
+│   │   ├── categories/      # Product categories (listing)
+│   │   ├── products/        # Products with variants (listing)
+│   │   ├── product_images/  # Product image gallery (listing)
+│   │   ├── product_variants/ # SKU variants (size, color) (listing)
+│   │   ├── variant_options/ # Variant option values (listing)
+│   │   ├── addresses/       # User shipping addresses (commerce)
+│   │   ├── carts/           # Shopping carts (commerce)
+│   │   ├── orders/          # Order management (commerce)
+│   │   ├── payments/        # Payment processing (commerce)
+│   │   └── users/           # User management (always included)
 │   └── shared/              # Middleware & utilities
 ├── migrations/              # Drizzle migrations
 ├── scripts/                 # Seeding scripts
@@ -293,55 +414,41 @@ export class ProductController extends BaseController<typeof productService> {
 ## Environment Setup
 
 ```bash
-# .env
+# .env.development.local
 ENVIRONMENT=development
 PORT=8000
 DATABASE_URL=postgresql://postgres:password@localhost:5432/my_app_dev
-JWT_SECRET=your-secret-key
+JWT_SECRET=your-64-char-hex-secret
 SUPERADMIN_EMAIL=admin@example.com
-SUPERADMIN_PASSWORD=your-password
+SUPERADMIN_PASSWORD=your-secure-password
+
+# Optional: Email (Resend for quick setup)
+RESEND_API_KEY=re_xxxxxxxxxxxx
+EMAIL_FROM=onboarding@resend.dev
+
+# Optional: Payments (Razorpay)
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxx
+
+# Optional: File Uploads (S3)
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+S3_BUCKET_NAME=your-bucket
 ```
+
+**See [docs/environment-variables.md](docs/environment-variables.md) for
+complete reference.**
 
 ---
 
-## Why TStack?
-
-**The Problem:** Every new backend project means hours spent on folder
-structure, CRUD boilerplate, database config, validation, error handling - the
-same patterns over and over.
-
-**The Solution:** TStack generates all of this in seconds. Focus on business
-logic, not plumbing.
-
-| Without TStack              | With TStack              |
-| --------------------------- | ------------------------ |
-| 2-4 hours setup per project | Minutes                  |
-| Copy-paste CRUD patterns    | `tstack scaffold entity` |
-| Manual route registration   | Auto-discovery           |
-| Repetitive admin panels     | Config-driven CRUD UI    |
-
-### AI Prompt Savings
-
-If you're using AI assistants to write boilerplate, TStack saves significant
-time and money:
-
-| Task                   | Manual AI Prompts | With TStack | Savings  |
-| ---------------------- | ----------------- | ----------- | -------- |
-| Project setup          | 50-100 prompts    | 1 command   | ~$5-15   |
-| Entity scaffold (each) | 15-30 prompts     | 1 command   | ~$2-5    |
-| 10-entity project      | 200-400 prompts   | 11 commands | ~$65-165 |
-
-_Estimates based on typical AI coding assistant usage at $0.10-0.25 per prompt
-cycle._
-
-### Good Fit
+## Good Fit
 
 - PostgreSQL-first, type-safe API development
 - Fast entity scaffolding with tests included
 - JWT auth included by default (ready to use, not forced)
 - Clean, modifiable generated code
 
-### Not Ideal For
+## Not Ideal For
 
 - GraphQL (REST only)
 - Non-Deno runtimes (Node.js coming in v2.0)
@@ -350,20 +457,22 @@ cycle._
 
 ## Roadmap
 
-### v1.2 (Current) - MVP Kit
+### v1.3 (Current) - Entity Scope Control
 
-- Workspace management (API + Admin UI)
-- GitHub integration
+- `--scope` flag for progressive entity inclusion (core/listing/commerce)
+- Workspace management (API + Admin UI + Store)
+- GitHub integration with `--github-org`
 - Base abstractions (70-80% less code)
-- Fresh Admin UI Kit
+- Fresh Admin UI Kit with config-driven CRUD
 - Project tracking with Deno KV
+- 255+ tests with 70% coverage
 
-### v1.3 (Q1 2026) - Infrastructure
+### v1.4 (Q1 2026) - Infrastructure
 
 - Docker multi-environment setup
 - Kamal deployment config
 - Interactive CLI prompts
-- Public UI starter (Next.js/React)
+- Storefront enhancements
 
 ### v2.0 (2026) - Expansion
 

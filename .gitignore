@@ -48,6 +48,12 @@ build/
 *.js.map
 
 # Temporary
+
+# Local test workspaces (for development/testing only)
+/ts-ground/
+/test-*/
+/sandbox/
+/examples/
 tmp/
 temp/
 *.tmp

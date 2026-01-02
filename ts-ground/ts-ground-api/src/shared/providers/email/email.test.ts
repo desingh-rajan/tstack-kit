@@ -161,7 +161,7 @@ describe("EmailService", () => {
       "user@example.com",
       "John",
       "https://test.example.com/verify?token=abc123",
-      24,
+      24
     );
 
     assertEquals(result.success, true);
@@ -182,7 +182,7 @@ describe("EmailService", () => {
       "user@example.com",
       "John",
       "https://test.example.com/reset?token=xyz789",
-      1,
+      1
     );
 
     assertEquals(result.success, true);
@@ -228,7 +228,7 @@ describe("EmailService", () => {
           postalCode: "400001",
           country: "India",
         },
-      },
+      }
     );
 
     assertEquals(result.success, true);
@@ -246,7 +246,7 @@ describe("EmailService", () => {
       "user@example.com",
       "Custom Subject",
       "<p>Custom HTML</p>",
-      "Custom text",
+      "Custom text"
     );
 
     assertEquals(result.success, true);
@@ -273,7 +273,7 @@ describe("Email Templates", () => {
       assertEquals(template.html.includes("John"), true);
       assertEquals(
         template.html.includes("https://example.com/verify?token=abc"),
-        true,
+        true
       );
       assertEquals(template.html.includes("24 hours"), true);
       assertEquals(template.text.includes("John"), true);
@@ -293,7 +293,7 @@ describe("Email Templates", () => {
       assertEquals(template.html.includes("John"), true);
       assertEquals(
         template.html.includes("https://example.com/reset?token=xyz"),
-        true,
+        true
       );
       assertEquals(template.html.includes("1 hour"), true);
     });

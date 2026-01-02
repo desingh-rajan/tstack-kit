@@ -1294,3 +1294,507 @@ Deno.test({
     }
   },
 });
+
+// --skip-commerce flag tests
+
+Deno.test({
+  name: "createProject - api: --skip-commerce excludes e-commerce entities",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-skip-commerce",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        skipCommerce: true,
+      });
+
+      const projectPath = join(tempDir, "test-skip-commerce-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should NOT have commerce entity directories
+      assertEquals(
+        await dirExists(join(entitiesPath, "addresses")),
+        false,
+        "Should not have addresses directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        false,
+        "Should not have carts directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        false,
+        "Should not have orders directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "payments")),
+        false,
+        "Should not have payments directory",
+      );
+
+      // Should still have listing entities (product catalog without checkout)
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        true,
+        "Should have products directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "categories")),
+        true,
+        "Should have categories directory",
+      );
+
+      // Should still have core entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "site_settings")),
+        true,
+        "Should have site_settings directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createProject - api: --skip-commerce filters commerce exports from index.ts",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-skip-commerce-index",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        skipCommerce: true,
+      });
+
+      const projectPath = join(tempDir, "test-skip-commerce-index-api");
+      const indexPath = join(projectPath, "src", "entities", "index.ts");
+      const indexContent = await Deno.readTextFile(indexPath);
+
+      // Should NOT export commerce entities
+      assertEquals(
+        indexContent.includes("from './addresses") ||
+          indexContent.includes('from "./addresses'),
+        false,
+        "Should not export addresses",
+      );
+      assertEquals(
+        indexContent.includes("from './carts") ||
+          indexContent.includes('from "./carts'),
+        false,
+        "Should not export carts",
+      );
+      assertEquals(
+        indexContent.includes("from './orders") ||
+          indexContent.includes('from "./orders'),
+        false,
+        "Should not export orders",
+      );
+      assertEquals(
+        indexContent.includes("from './payments") ||
+          indexContent.includes('from "./payments'),
+        false,
+        "Should not export payments",
+      );
+
+      // Should still export listing entities
+      assertEquals(
+        indexContent.includes("brands") || indexContent.includes("products"),
+        true,
+        "Should export listing entities",
+      );
+
+      // Should still export core entities
+      assertEquals(
+        indexContent.includes("articles") ||
+          indexContent.includes("site_settings"),
+        true,
+        "Should export core entities",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createProject - api: --skip-listing implicitly skips commerce (coupling)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-listing-commerce-coupling",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        skipListing: true,
+      });
+
+      const projectPath = join(tempDir, "test-listing-commerce-coupling-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should NOT have listing entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        false,
+        "Should not have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        false,
+        "Should not have products directory",
+      );
+
+      // Should NOT have commerce entities (implicitly skipped)
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        false,
+        "Should not have carts directory (commerce depends on listing)",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        false,
+        "Should not have orders directory (commerce depends on listing)",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "payments")),
+        false,
+        "Should not have payments directory (commerce depends on listing)",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "addresses")),
+        false,
+        "Should not have addresses directory (commerce depends on listing)",
+      );
+
+      // Should only have core entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "site_settings")),
+        true,
+        "Should have site_settings directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "createProject - api: without skip flags includes all entities",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-all-entities",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+      });
+
+      const projectPath = join(tempDir, "test-all-entities-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "site_settings")),
+        true,
+        "Should have site_settings directory",
+      );
+
+      // Should have listing entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        true,
+        "Should have products directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "categories")),
+        true,
+        "Should have categories directory",
+      );
+
+      // Should have commerce entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        true,
+        "Should have carts directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        true,
+        "Should have orders directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "payments")),
+        true,
+        "Should have payments directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "addresses")),
+        true,
+        "Should have addresses directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+// --scope flag tests (new recommended approach)
+
+Deno.test({
+  name: "createProject - api: --scope=core includes only core entities",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-scope-core",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        scope: "core",
+      });
+
+      const projectPath = join(tempDir, "test-scope-core-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "site_settings")),
+        true,
+        "Should have site_settings directory",
+      );
+
+      // Should NOT have listing entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        false,
+        "Should not have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        false,
+        "Should not have products directory",
+      );
+
+      // Should NOT have commerce entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        false,
+        "Should not have carts directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        false,
+        "Should not have orders directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "createProject - api: --scope=listing includes core + listing entities",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-scope-listing",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        scope: "listing",
+      });
+
+      const projectPath = join(tempDir, "test-scope-listing-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "site_settings")),
+        true,
+        "Should have site_settings directory",
+      );
+
+      // Should have listing entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        true,
+        "Should have products directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "categories")),
+        true,
+        "Should have categories directory",
+      );
+
+      // Should NOT have commerce entities
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        false,
+        "Should not have carts directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        false,
+        "Should not have orders directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "payments")),
+        false,
+        "Should not have payments directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "createProject - api: --scope=commerce includes all entities (default)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      await createProject({
+        projectName: "test-scope-commerce",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        scope: "commerce",
+      });
+
+      const projectPath = join(tempDir, "test-scope-commerce-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // Should have all entity types
+      assertEquals(
+        await dirExists(join(entitiesPath, "articles")),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        true,
+        "Should have products directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        true,
+        "Should have carts directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "orders")),
+        true,
+        "Should have orders directory",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "payments")),
+        true,
+        "Should have payments directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});
+
+Deno.test({
+  name: "createProject - api: scope flag takes precedence over legacy flags",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    try {
+      // scope=commerce should override skipListing=true
+      await createProject({
+        projectName: "test-scope-precedence",
+        projectType: "api",
+        targetDir: tempDir,
+        skipDbSetup: SKIP_DB_SETUP,
+        scope: "commerce",
+        skipListing: true, // This should be ignored
+      });
+
+      const projectPath = join(tempDir, "test-scope-precedence-api");
+      const entitiesPath = join(projectPath, "src", "entities");
+
+      // scope=commerce should include listing entities despite skipListing=true
+      assertEquals(
+        await dirExists(join(entitiesPath, "brands")),
+        true,
+        "Should have brands directory (scope takes precedence)",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "products")),
+        true,
+        "Should have products directory (scope takes precedence)",
+      );
+      assertEquals(
+        await dirExists(join(entitiesPath, "carts")),
+        true,
+        "Should have carts directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  },
+});

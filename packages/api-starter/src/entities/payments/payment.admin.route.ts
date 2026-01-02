@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { adminPaymentController } from "./payment.controller.ts";
 import { requireAuth } from "../../shared/middleware/requireAuth.ts";
-import { requireRole } from "../../shared/middleware/requireRole.ts";
+import { requireAdmin } from "../../shared/middleware/requireRole.ts";
 
 /**
  * Admin Payment Routes
@@ -14,7 +14,7 @@ const adminPaymentRoutes = new Hono();
 
 // Apply authentication and admin role to all routes
 adminPaymentRoutes.use("/ts-admin/payments/*", requireAuth);
-adminPaymentRoutes.use("/ts-admin/payments/*", requireRole("admin"));
+adminPaymentRoutes.use("/ts-admin/payments/*", requireAdmin);
 
 // Process refund
 adminPaymentRoutes.post(

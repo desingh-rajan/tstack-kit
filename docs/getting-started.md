@@ -26,10 +26,20 @@ This creates a workspace with:
 - **API** (Backend)
 - **Admin UI** (Dashboard)
 - **Storefront** (Public Site)
-- Product listing entities (brands, categories, products, variants).
+- Full e-commerce entities (brands, categories, products, variants, addresses,
+  carts, orders, payments)
+
+**Control what entities you get:**
 
 ```bash
-tstack create workspace my-blog --skip-listing
+# Minimal blog (just articles & site_settings)
+tstack create workspace my-blog --scope=core
+
+# Product catalog without checkout (brands, categories, products, variants)
+tstack create workspace my-catalog --scope=listing
+
+# Full e-commerce with cart & checkout (default)
+tstack create workspace my-shop --scope=commerce
 ```
 
 ## Setup Database

@@ -99,12 +99,34 @@ deno install -gArf --unstable-kv -n tstack jsr:@tonystack/cli
 # Create full-stack workspace (API + Admin UI + Store)
 tstack create workspace my-shop
 
-# Or create individual projects
-tstack create api my-backend
+# Create with specific entity scope
+tstack create workspace blog --scope=core         # Minimal: articles + settings
+tstack create workspace catalog --scope=listing   # + Product catalog
+tstack create workspace shop --scope=commerce     # + Shopping cart & checkout (default)
+
+# Create API backend only
+tstack create api my-api
+
+# Create Admin UI only
 tstack create admin-ui my-admin
-tstack create store my-store
 ```
 
+### 3. Entity Scope Control
+
+TStack Kit supports progressive entity inclusion via the `--scope` flag:
+
+- **core**: Articles, site settings, users (minimal CMS)
+- **listing**: core + brands, categories, products, variants (product catalog)
+- **commerce**: listing + addresses, carts, orders, payments (full e-commerce)
+
+This allows you to start minimal and scale up as needed.
+
+# Or create individual projects
+
+tstack create api my-backend tstack create admin-ui my-admin tstack create store
+my-store
+
+````
 ### 3. Set Up the API
 
 ```bash
@@ -119,7 +141,7 @@ deno task db:seed
 
 # Start development server
 deno task dev
-```
+````
 
 ### 4. Set Up the Admin UI
 
