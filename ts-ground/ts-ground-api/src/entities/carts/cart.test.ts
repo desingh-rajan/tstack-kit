@@ -204,7 +204,7 @@ Deno.test({
       assertEquals(data.data.itemCount, 0);
       assertEquals(data.data.subtotal, "0.00");
 
-      guestCartId = data.data.id;
+      _guestCartId = data.data.id;
     });
 
     await t.step("POST /cart/items - add item to guest cart", async () => {
@@ -298,7 +298,7 @@ Deno.test({
       assertEquals(data.data.guestId, null);
       assertEquals(data.data.items.length, 0);
 
-      userCartId = data.data.id;
+      _userCartId = data.data.id;
     });
 
     await t.step("POST /cart/items - add item to user cart", async () => {

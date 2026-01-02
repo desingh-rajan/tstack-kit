@@ -36,21 +36,21 @@ class MockEmailProvider extends BaseEmailProvider {
 
   send(options: EmailOptions): Promise<EmailResult> {
     if (this.shouldFail) {
-      return {
+      return Promise.resolve({
         success: false,
         error: this.failureMessage,
-      };
+      });
     }
 
     this.sentEmails.push(options);
-    return {
+    return Promise.resolve({
       success: true,
       messageId: `mock-${Date.now()}`,
-    };
+    });
   }
 
   verify(): Promise<boolean> {
-    return !this.shouldFail;
+    return Promise.resolve(!this.shouldFail);
   }
 
   reset(): void {

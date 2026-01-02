@@ -145,10 +145,14 @@ export class SesProvider extends BaseEmailProvider {
     message: string,
   ): Promise<ArrayBuffer> {
     const encoder = new TextEncoder();
-    const keyData = key instanceof Uint8Array ? key : new Uint8Array(key);
+    const keyData = key instanceof Uint8Array
+      ? new Uint8Array(
+        key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength),
+      )
+      : new Uint8Array(key);
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      keyData,
+      keyData.buffer as ArrayBuffer,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"],

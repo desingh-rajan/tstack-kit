@@ -26,7 +26,7 @@ class NoOpEmailProvider implements IEmailProvider {
         JSON.stringify(options.to)
       }, subject: ${options.subject}`,
     );
-    return { success: true, messageId: `noop-${Date.now()}` };
+    return Promise.resolve({ success: true, messageId: `noop-${Date.now()}` });
   }
 
   sendBatch(emails: EmailOptions[]): Promise<EmailResult[]> {
