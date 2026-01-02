@@ -8,7 +8,9 @@ import Contact from "../components/Contact.tsx";
 import Footer from "../components/Footer.tsx";
 
 export default define.page(function Home(ctx) {
-  console.log("Shared value " + ctx.state.shared);
+  const user = ctx.state.user;
+  const cart = ctx.state.cart;
+  const cartCount = cart?.items?.length || 0;
 
   return (
     <div class="min-h-screen bg-white">
@@ -20,7 +22,7 @@ export default define.page(function Home(ctx) {
         />
       </Head>
 
-      <Navbar />
+      <Navbar user={user} cartCount={cartCount} />
       <Hero />
       <Features />
       <About />
