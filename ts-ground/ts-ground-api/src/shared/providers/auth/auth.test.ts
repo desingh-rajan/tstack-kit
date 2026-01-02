@@ -7,6 +7,11 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { BaseOAuthProvider, GoogleAuthProvider } from "./google.provider.ts";
+import {
+  createOAuthProvider,
+  getAvailableOAuthProviders,
+  isOAuthProviderAvailable,
+} from "./factory.ts";
 
 describe("OAuth Provider", () => {
   describe("BaseOAuthProvider", () => {
@@ -93,6 +98,53 @@ describe("OAuth Provider", () => {
       const url = provider.getAuthorizationUrl("test-state");
 
       assertEquals(url.includes("prompt=select_account"), true);
+    });
+  });
+
+  describe("OAuth Provider Factory", () => {
+    it("should return null for unconfigured provider", () => {
+      // GitHub is not yet implemented
+      const provider = createOAuthProvider("github");
+      assertEquals(provider, null);
+    });
+
+    it("should return null for unknown provider", () => {
+      // @ts-ignore - testing invalid input
+      const provider = createOAuthProvider("unknown");
+      assertEquals(provider, null);
+    });
+
+    it("should return list of available providers", () => {
+      const available = getAvailableOAuthProviders();
+      assertExists(available);
+      assertEquals(Array.isArray(available), true);
+      // List should only contain configured providers
+    });
+
+    it("should check if provider is available", () => {
+      // GitHub is not implemented yet
+      const githubAvailable = isOAuthProviderAvailable("github");
+      assertEquals(githubAvailable, false);
+
+      // Google availability depends on env vars
+      const googleAvailable = isOAuthProviderAvailable("google");
+      assertEquals(typeof googleAvailable, "boolean");
+    });
+
+    it("should create Google provider if configured", () => {
+      // This test depends on whether GOOGLE_* env vars are set
+      const provider = createOAuthProvider("google");
+
+      if (
+        Deno.env.get("GOOGLE_CLIENT_ID") &&
+        Deno.env.get("GOOGLE_CLIENT_SECRET") &&
+        Deno.env.get("GOOGLE_REDIRECT_URI")
+      ) {
+        assertExists(provider);
+        assertEquals(provider?.name, "google");
+      } else {
+        assertEquals(provider, null);
+      }
     });
   });
 });
