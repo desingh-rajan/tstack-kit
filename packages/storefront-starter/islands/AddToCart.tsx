@@ -9,11 +9,10 @@ interface AddToCartProps {
   productId: string;
   productName: string;
   maxQuantity: number;
-  price: string;
 }
 
 export default function AddToCart(
-  { productId, productName, maxQuantity, price: _price }: AddToCartProps,
+  { productId, productName, maxQuantity }: AddToCartProps,
 ) {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);

@@ -267,7 +267,6 @@ export default define.page<typeof handler>(
                     productId={product.id}
                     productName={product.name}
                     maxQuantity={product.stockQuantity}
-                    price={product.price}
                   />
                 </div>
 

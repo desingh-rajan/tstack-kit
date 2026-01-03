@@ -72,23 +72,23 @@ deno.json                # Tasks & dependency mapping
 
 ## 6. Core Tasks (deno.json)
 
-| Task                       | Purpose                                         |
-| -------------------------- | ----------------------------------------------- |
-| `deno task dev`            | Run with watch & all permissions                |
-| `deno task start`          | Run once (no watch)                             |
-| `deno task routes`         | List all available routes                       |
-| `deno task setup`          | Run migrations + seed data                      |
-| `deno task db:create`      | Create database                                 |
-| `deno task db:migrate`     | Apply pending migrations                        |
-| `deno task db:generate`    | Create migration from current schema            |
-| `deno task db:seed`        | Seed users + site settings                      |
-| `deno task seed:ecommerce` | Seed e-commerce data (products, categories)     |
-| `deno task db:studio`      | Open Drizzle Studio (schema browser)            |
-| `deno task test`           | Run tests (setup + run + cleanup)               |
-| `deno task test:watch`     | Watch mode tests                                |
-| `deno task check`          | Format check + lint                             |
-| `deno task fmt`            | Format source                                   |
-| `deno task lint`           | Lint source                                     |
+| Task                       | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `deno task dev`            | Run with watch & all permissions            |
+| `deno task start`          | Run once (no watch)                         |
+| `deno task routes`         | List all available routes                   |
+| `deno task setup`          | Run migrations + seed data                  |
+| `deno task db:create`      | Create database                             |
+| `deno task db:migrate`     | Apply pending migrations                    |
+| `deno task db:generate`    | Create migration from current schema        |
+| `deno task db:seed`        | Seed users + site settings                  |
+| `deno task seed:ecommerce` | Seed e-commerce data (products, categories) |
+| `deno task db:studio`      | Open Drizzle Studio (schema browser)        |
+| `deno task test`           | Run tests (setup + run + cleanup)           |
+| `deno task test:watch`     | Watch mode tests                            |
+| `deno task check`          | Format check + lint                         |
+| `deno task fmt`            | Format source                               |
+| `deno task lint`           | Lint source                                 |
 
 **Aliases:**
 

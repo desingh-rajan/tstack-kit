@@ -276,7 +276,8 @@ export GITHUB_TOKEN=ghp_your_token_here
 echo 'export GITHUB_TOKEN=ghp_your_token_here' >> ~/.bashrc
 ```
 
-Create token at https://github.com/settings/tokens with `repo` and `delete_repo` scopes.
+Create token at https://github.com/settings/tokens with `repo` and `delete_repo`
+scopes.
 
 ---
 

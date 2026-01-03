@@ -150,7 +150,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "createWorkspace - throws error when --github-org used without GITHUB_TOKEN",
+  name:
+    "createWorkspace - throws error when --github-org used without GITHUB_TOKEN",
   sanitizeResources: false,
   async fn() {
     const tempDir = await createTempDir();
