@@ -12,12 +12,20 @@ Creates a full workspace with API + Admin UI projects.
 
 **Options:**
 
-| Option               | Description                          |
-| -------------------- | ------------------------------------ |
-| `--github-org=<org>` | Create GitHub repos in specified org |
-| `--skip-git`         | Skip git initialization              |
-| `--skip-listing`     | Skip product listing entities        |
-| `--skip-db-setup`    | Skip database creation               |
+| Option               | Description                                    |
+| -------------------- | ---------------------------------------------- |
+| `--github-org=<org>` | Create GitHub repos in specified org           |
+| `--skip-git`         | Skip git initialization                        |
+| `--scope=<level>`    | Entity scope: `core`, `listing`, or `commerce` |
+| `--skip-listing`     | Skip product listing entities (legacy)         |
+| `--skip-commerce`    | Skip e-commerce entities (legacy)              |
+| `--skip-db-setup`    | Skip database creation                         |
+
+**Entity Scopes:**
+
+- `core` - Articles and site_settings only
+- `listing` - Core + brands, categories, products, variants
+- `commerce` - Listing + addresses, carts, orders, payments (default)
 
 **Example:**
 
@@ -33,10 +41,20 @@ tstack create workspace my-shop --github-org=mycompany
 ### Create API Only
 
 ```bash
-tstack create api <name>
+tstack create api <name> [options]
 ```
 
 Creates just the API project without Admin UI.
+
+**Options:**
+
+| Option            | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `--skip-git`      | Skip git initialization                        |
+| `--scope=<level>` | Entity scope: `core`, `listing`, or `commerce` |
+| `--skip-listing`  | Skip product listing entities (legacy)         |
+| `--skip-commerce` | Skip e-commerce entities (legacy)              |
+| `--skip-db-setup` | Skip database creation                         |
 
 ### Destroy Workspace
 

@@ -20,6 +20,22 @@ export const users = pgTable("users", {
   isEmailVerified: boolean("is_email_verified").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   lastLoginAt: timestamp("last_login_at", { mode: "date" }),
+
+  // Email verification fields
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationExpiry: timestamp("email_verification_expiry", {
+    mode: "date",
+  }),
+
+  // Password reset fields
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpiry: timestamp("password_reset_expiry", { mode: "date" }),
+
+  // OAuth fields (for Google/GitHub login)
+  googleId: text("google_id").unique(),
+  avatarUrl: text("avatar_url"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
 });
 
 // Type inference from schema
@@ -27,4 +43,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
 // User without sensitive fields (for responses)
-export type SafeUser = Omit<User, "password">;
+export type SafeUser = Omit<
+  User,
+  "password" | "emailVerificationToken" | "passwordResetToken"
+>;

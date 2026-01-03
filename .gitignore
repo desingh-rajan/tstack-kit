@@ -48,12 +48,18 @@ build/
 *.js.map
 
 # Temporary
+
+# Local test workspaces (for development/testing only)
+/ts-ground/
+/test-*/
+/sandbox/
+/examples/
 tmp/
 temp/
 *.tmp
 
 # Testing workspace (for tstack CLI testing)
-ts-ground/
+# ts-ground/
 
 # Reference projects (temporary, will be removed after implementation)
 reference-kit/

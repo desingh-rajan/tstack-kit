@@ -8,6 +8,36 @@ and this project adheres to
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Entity Scope Control** - New `--scope` flag for granular project creation
+  - `--scope=core` - Articles and site_settings only (minimal blog/CMS)
+  - `--scope=listing` - Core + product catalog (brands, categories, products,
+    variants)
+  - `--scope=commerce` - Full e-commerce with cart and checkout (default)
+  - Works with both `tstack create api` and `tstack create workspace`
+  - Legacy `--skip-listing` and `--skip-commerce` flags still supported
+- Admin tests for commerce entities (addresses, orders, payments)
+
+### Changed
+
+- Refactored entity filtering logic to use progressive scope levels
+- Updated documentation with scope examples
+- CLI now defaults to `commerce` scope (was implicitly full featured)
+
+### Fixed
+
+- Payment admin route middleware bug - changed `requireRole("admin")` to
+  `requireAdmin`
+- Admin test response structure expectations for HonoAdminAdapter vs custom
+  controllers
+- Order admin tests to match actual controller response format
+  `{ success, data: { orders, pagination } }`
+
+---
+
 ## [1.2.1] - 2025-11-26
 
 ### Added

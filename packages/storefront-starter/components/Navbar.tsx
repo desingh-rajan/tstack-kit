@@ -1,4 +1,20 @@
-export default function Navbar() {
+import UserMenu from "../islands/UserMenu.tsx";
+
+interface User {
+  id: number;
+  email: string;
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  avatarUrl?: string | null;
+}
+
+interface NavbarProps {
+  user?: User | null;
+  cartCount?: number;
+}
+
+export default function Navbar({ user, cartCount = 0 }: NavbarProps) {
   return (
     <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -33,19 +49,19 @@ export default function Navbar() {
                 Home
               </a>
               <a
-                href="/"
+                href="/products"
                 class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
               >
                 Products
               </a>
               <a
-                href="/"
+                href="/#about"
                 class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
               >
                 About
               </a>
               <a
-                href="/"
+                href="/#contact"
                 class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
               >
                 Contact
@@ -56,26 +72,7 @@ export default function Navbar() {
           {/* Right side actions */}
           <div class="hidden md:flex items-center space-x-4">
             <a
-              href="/"
-              class="text-gray-700 hover:text-indigo-600 transition-colors"
-              aria-label="Search"
-            >
-              <svg
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </a>
-            <a
-              href="/"
+              href="/cart"
               class="text-gray-700 hover:text-indigo-600 transition-colors relative"
               aria-label="Shopping cart"
             >
@@ -92,20 +89,62 @@ export default function Navbar() {
                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                 />
               </svg>
-              <span class="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span class="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </a>
-            <a
-              href="/"
-              class="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-            >
-              Sign in
-            </a>
+
+            {/* User Menu or Sign In */}
+            {user ? <UserMenu user={user} /> : (
+              <a
+                href="/auth/login"
+                class="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+              >
+                Sign in
+              </a>
+            )}
           </div>
 
           {/* Mobile menu button */}
-          <div class="md:hidden">
+          <div class="md:hidden flex items-center space-x-3">
+            {/* Cart icon for mobile */}
+            <a
+              href="/cart"
+              class="text-gray-700 hover:text-indigo-600 transition-colors relative p-1"
+              aria-label="Shopping cart"
+            >
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                />
+              </svg>
+              {cartCount > 0 && (
+                <span class="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </a>
+
+            {/* User avatar or sign in for mobile */}
+            {user ? <UserMenu user={user} /> : (
+              <a
+                href="/auth/login"
+                class="text-indigo-600 font-medium text-sm"
+              >
+                Sign in
+              </a>
+            )}
+
             <button
               type="button"
               class="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
@@ -129,7 +168,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu - hidden by default, toggle with island for interactivity */}
+      {/* Mobile menu - hidden by default */}
       <div class="hidden md:hidden border-t border-gray-200">
         <div class="space-y-1 px-2 pb-3 pt-2">
           <a
@@ -139,28 +178,22 @@ export default function Navbar() {
             Home
           </a>
           <a
-            href="/"
+            href="/products"
             class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
           >
             Products
           </a>
           <a
-            href="/"
+            href="/#about"
             class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
           >
             About
           </a>
           <a
-            href="/"
+            href="/#contact"
             class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
           >
             Contact
-          </a>
-          <a
-            href="/"
-            class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-gray-100"
-          >
-            Sign in
           </a>
         </div>
       </div>

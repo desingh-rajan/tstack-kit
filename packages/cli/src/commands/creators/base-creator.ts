@@ -7,6 +7,14 @@ import {
 } from "../../utils/versionFetcher.ts";
 import { getProject, updateProject } from "../../utils/projectStore.ts";
 
+/**
+ * Project scope levels (progressive):
+ * - core: articles, site_settings only
+ * - listing: core + brands, categories, products, variants
+ * - commerce: listing + addresses, carts, orders, payments (default)
+ */
+export type ProjectScope = "core" | "listing" | "commerce";
+
 export interface BaseCreateOptions {
   projectName: string;
   projectType: "api" | "admin-ui" | "store" | "workspace";
@@ -14,7 +22,10 @@ export interface BaseCreateOptions {
   latest?: boolean;
   skipDbSetup?: boolean;
   forceOverwrite?: boolean;
-  skipListing?: boolean;
+  scope?: ProjectScope; // core | listing | commerce (default: commerce)
+  // Legacy flags (still supported, scope takes precedence)
+  skipListing?: boolean; // Equivalent to --scope=core
+  skipCommerce?: boolean; // Equivalent to --scope=listing
 }
 
 export interface ProjectCreatorResult {
@@ -227,6 +238,49 @@ export abstract class BaseProjectCreator {
   ];
 
   /**
+   * E-commerce entity directories to exclude when --skip-commerce is used
+   * These are the cart, order, payment entities for online stores
+   */
+  protected static readonly COMMERCE_ENTITIES = [
+    "addresses",
+    "carts",
+    "orders",
+    "payments",
+  ];
+
+  /**
+   * Resolve effective scope from options
+   * Priority: scope flag > legacy skip flags > default (commerce)
+   */
+  protected resolveScope(): ProjectScope {
+    if (this.options.scope) return this.options.scope;
+    if (this.options.skipListing) return "core";
+    if (this.options.skipCommerce) return "listing";
+    return "commerce";
+  }
+
+  /**
+   * Get list of entities to skip based on scope
+   * Scope levels are progressive: core -> listing -> commerce
+   */
+  protected getEntitiesToSkip(): string[] {
+    const scope = this.resolveScope();
+    const skip: string[] = [];
+
+    if (scope === "core") {
+      // Skip both listing and commerce
+      skip.push(...BaseProjectCreator.LISTING_ENTITIES);
+      skip.push(...BaseProjectCreator.COMMERCE_ENTITIES);
+    } else if (scope === "listing") {
+      // Skip only commerce, keep listing
+      skip.push(...BaseProjectCreator.COMMERCE_ENTITIES);
+    }
+    // scope === "commerce" - skip nothing (default)
+
+    return skip;
+  }
+
+  /**
    * Copy template files
    */
   protected async copyTemplate(starterPath: string): Promise<void> {
@@ -242,8 +296,8 @@ export abstract class BaseProjectCreator {
 
       Logger.info(`Cooking ${entry.name}...`);
 
-      if (this.options.skipListing && entry.name === "src") {
-        // Special handling for src directory to filter out listing entities
+      if (this.resolveScope() !== "commerce" && entry.name === "src") {
+        // Special handling for src directory to filter out listing/commerce entities
         await this.copyDirectoryWithFilter(sourcePath, destPath);
       } else {
         await copy(sourcePath, destPath, { overwrite: false });
@@ -252,7 +306,7 @@ export abstract class BaseProjectCreator {
   }
 
   /**
-   * Copy directory with filtering for listing entities
+   * Copy directory with filtering for listing/commerce entities
    */
   protected async copyDirectoryWithFilter(
     srcPath: string,
@@ -264,7 +318,7 @@ export abstract class BaseProjectCreator {
       const sourcePath = join(srcPath, entry.name);
       const targetPath = join(destPath, entry.name);
 
-      if (entry.name === "entities" && this.options.skipListing) {
+      if (entry.name === "entities" && this.resolveScope() !== "commerce") {
         // Filter entities directory
         await this.copyEntitiesWithFilter(sourcePath, targetPath);
       } else if (entry.isDirectory) {
@@ -276,28 +330,29 @@ export abstract class BaseProjectCreator {
   }
 
   /**
-   * Copy entities directory excluding listing entities
+   * Copy entities directory excluding listing/commerce entities based on options
    */
   protected async copyEntitiesWithFilter(
     srcPath: string,
     destPath: string,
   ): Promise<void> {
     await Deno.mkdir(destPath, { recursive: true });
+    const entitiesToSkip = this.getEntitiesToSkip();
 
     for await (const entry of Deno.readDir(srcPath)) {
       const sourcePath = join(srcPath, entry.name);
       const targetPath = join(destPath, entry.name);
 
-      // Skip listing entities
-      if (BaseProjectCreator.LISTING_ENTITIES.includes(entry.name)) {
-        Logger.info(`  Skipping listing entity: ${entry.name}`);
+      // Skip entities based on options
+      if (entitiesToSkip.includes(entry.name)) {
+        Logger.info(`  Skipping entity: ${entry.name}`);
         continue;
       }
 
       if (entry.isDirectory) {
         await copy(sourcePath, targetPath, { overwrite: false });
       } else {
-        // Handle index.ts - need to filter out listing entity exports
+        // Handle index.ts - need to filter out skipped entity exports
         if (entry.name === "index.ts") {
           await this.copyFilteredIndexFile(sourcePath, targetPath);
         } else {
@@ -308,7 +363,7 @@ export abstract class BaseProjectCreator {
   }
 
   /**
-   * Copy index.ts file with listing entity exports filtered out
+   * Copy index.ts file with skipped entity exports filtered out
    */
   protected async copyFilteredIndexFile(
     srcPath: string,
@@ -316,10 +371,11 @@ export abstract class BaseProjectCreator {
   ): Promise<void> {
     const content = await Deno.readTextFile(srcPath);
     const lines = content.split("\n");
+    const entitiesToSkip = this.getEntitiesToSkip();
 
     const filteredLines = lines.filter((line) => {
-      // Check if line exports a listing entity
-      for (const entity of BaseProjectCreator.LISTING_ENTITIES) {
+      // Check if line exports a skipped entity
+      for (const entity of entitiesToSkip) {
         if (
           line.includes(`from "./${entity}`) ||
           line.includes(`from './${entity}`)

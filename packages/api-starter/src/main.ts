@@ -12,6 +12,8 @@ import { ApiResponse } from "./shared/utils/response.ts";
 import { registerEntityRoutes } from "./entities/index.ts";
 import authRoutes from "./auth/auth.route.ts";
 import adminRoutes from "./auth/admin.route.ts";
+import oauthRoutes from "./auth/oauth.route.ts";
+import profileRoutes from "./auth/profile.route.ts";
 
 // Create Hono app
 const app = new Hono();
@@ -55,6 +57,8 @@ app.get("/health", async (c: Context) => {
 // Deployment path prefix (e.g., /company-be/api) is handled by reverse proxy
 app.route("/", authRoutes);
 app.route("/", adminRoutes);
+app.route("/", oauthRoutes);
+app.route("/", profileRoutes);
 
 // User admin routes (manually registered because user.model.ts is in auth/, not entities/)
 import userAdminRoutes from "./auth/user.admin.route.ts";
@@ -65,9 +69,9 @@ app.route("/", userAdminRoutes);
 // For manual route registration, see ./entities/index.ts for examples
 await registerEntityRoutes(app);
 
-// Manual route registration (if needed):
-// import customRoutes from "./custom/custom.route.ts";
-// app.route("/custom", customRoutes);
+// Webhook routes (manual registration - doesn't follow *.route.ts naming)
+import webhookRoutes from "./entities/payments/webhook.route.ts";
+app.route("/", webhookRoutes);
 
 // Root endpoint
 app.get("/", (c: Context) => {

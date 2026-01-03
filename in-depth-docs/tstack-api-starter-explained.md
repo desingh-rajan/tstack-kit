@@ -86,6 +86,36 @@ Where does the code live? TStack uses a "Feature-Based" structure. Everything
 related to a specific feature (like "Products") lives in one folder, rather than
 spreading files across `controllers/`, `models/`, and `services/` folders.
 
+### Entity Scope Levels
+
+Starting in v1.4.0, TStack organizes entities into three progressive scopes:
+
+**Core Entities** (always included):
+
+- `articles`: Blog posts, CMS content
+- `site_settings`: Dynamic configuration
+- `users`: Authentication/authorization
+
+**Listing Entities** (product catalog):
+
+- `brands`: Product brands
+- `categories`: Product taxonomy
+- `products`: Product entities
+- `product_images`: Product galleries
+- `product_variants`: SKU management
+- `variant_options`: Variant values
+
+**Commerce Entities** (shopping & checkout):
+
+- `addresses`: Shipping/billing addresses
+- `carts`: Shopping cart logic
+- `orders`: Order management
+- `payments`: Payment processing
+
+When you run `tstack create api my-api --scope=core`, you get only the Core
+entities. Use `--scope=listing` for product catalog support, or
+`--scope=commerce` (default) for full e-commerce.
+
 ### The Anatomy of a Feature
 
 If you look at `src/entities/products/`, you will see:

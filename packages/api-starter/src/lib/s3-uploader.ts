@@ -40,7 +40,7 @@ export interface UploadResult {
  *   secretAccessKey: Deno.env.get("AWS_SECRET_ACCESS_KEY"),
  *   region: "ap-south-1",
  *   bucket: "my-bucket",
- *   prefix: "suryas-cookware/production"
+ *   prefix: "ts-mart/production"
  * });
  *
  * const result = await uploader.uploadProductImage(

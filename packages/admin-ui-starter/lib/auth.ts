@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "./api.ts";
+import type { FreshContext } from "fresh";
 
 export interface LoginCredentials {
   email: string;
@@ -29,6 +30,19 @@ export interface User {
   email: string;
   role: string;
   name?: string;
+}
+
+/**
+ * Get session token from request cookies (server-side)
+ */
+export function getSessionToken(
+  ctx: FreshContext,
+): string | null {
+  const cookies = ctx.req.headers.get("cookie");
+  if (!cookies) return null;
+
+  const match = cookies.match(/auth_token=([^;]+)/);
+  return match ? match[1] : null;
 }
 
 /**

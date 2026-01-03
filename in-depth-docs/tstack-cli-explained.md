@@ -86,10 +86,66 @@ to make them talk to each other, `workspace` creates a monorepo setup locally.
 
 **Power User Flags:**
 
+- `--scope=<level>`: Control which entities are included (see below).
 - `--mobile`: Add a React Native mobile app to the workspace.
 - `--infra`: Add Terraform and Docker infrastructure files.
 - `--github-org <name>`: Automatically create private GitHub repositories for
   every component and push the code for you.
+
+### The `--scope` Flag: Progressive Entity Selection
+
+Starting in v1.4.0, TStack supports progressive entity inclusion. You can start
+with a minimal blog and scale up to full e-commerce.
+
+**Available Scopes:**
+
+1. **`core`** - Minimal content management:
+   - `articles`: Blog posts, pages, CMS content
+   - `site_settings`: Dynamic app configuration
+   - `users`: Authentication (always included)
+   - _Best for_: Blogs, simple CMS, internal tools
+
+2. **`listing`** - Everything in `core` + Product catalog:
+   - `brands`: Product brands/manufacturers
+   - `categories`: Product taxonomy
+   - `products`: Main product entities
+   - `product_images`: Image galleries
+   - `product_variants`: SKUs (size, color, etc.)
+   - `variant_options`: Variant option values
+   - _Best for_: Product catalogs, inventory systems, informational e-commerce
+
+3. **`commerce`** (default) - Everything in `listing` + Shopping & checkout:
+   - `addresses`: User shipping/billing addresses
+   - `carts`: Shopping cart management
+   - `orders`: Order processing
+   - `payments`: Payment integration (Razorpay)
+   - _Best for_: Full e-commerce stores, marketplaces
+
+**Examples:**
+
+```bash
+# Start minimal - blog/CMS only
+tstack create workspace blog --scope=core
+
+# Product catalog without checkout
+tstack create workspace catalog --scope=listing
+
+# Full e-commerce (default, explicit)
+tstack create workspace shop --scope=commerce
+
+# API only with minimal entities
+tstack create api backend --scope=core
+```
+
+**Why Use This?**
+
+- **Faster Development**: Start with what you need, add complexity later
+- **Lower Complexity**: Fewer entities = fewer files = easier to understand
+- **Progressive Growth**: Migrate from blog → catalog → shop as requirements
+  evolve
+- **Clear Architecture**: Each scope level has a clear purpose
+
+**Migration Path**: You can always add entities later using `tstack scaffold`.
 
 ---
 

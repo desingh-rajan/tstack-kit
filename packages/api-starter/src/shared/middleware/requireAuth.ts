@@ -40,3 +40,37 @@ export async function requireAuth(c: Context, next: Next) {
     throw new UnauthorizedError("Authentication failed");
   }
 }
+
+/**
+ * Middleware for optional authentication
+ * Validates JWT token if present, but allows unauthenticated requests
+ * Useful for endpoints that work for both guests and logged-in users (e.g., cart)
+ */
+export async function optionalAuth(c: Context, next: Next) {
+  try {
+    // Extract token from Authorization header
+    const authHeader = c.req.header("Authorization");
+    const token = extractTokenFromHeader(authHeader);
+
+    if (token) {
+      // Verify token signature and expiry
+      const payload = await verifyToken(token);
+
+      // Validate token in database (check if revoked)
+      const user = await AuthService.validateToken(token);
+
+      if (user) {
+        // Attach user info to context
+        c.set("userId", payload.userId);
+        c.set("userEmail", payload.email);
+        c.set("user", user);
+      }
+    }
+
+    // Continue regardless of authentication status
+    await next();
+  } catch (_error) {
+    // Silently continue for invalid tokens - treat as unauthenticated
+    await next();
+  }
+}

@@ -10,6 +10,7 @@ import {
   type WorkspaceMetadata,
 } from "../utils/workspaceStore.ts";
 import { getProject } from "../utils/projectStore.ts";
+import type { ProjectScope } from "./creators/base-creator.ts";
 import denoConfig from "../../deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -42,6 +43,12 @@ export interface WorkspaceOptions {
   githubOrg?: string; // If provided, remote setup is automatic unless skipRemote=true
   githubToken?: string;
   visibility?: "private" | "public";
+
+  // Entity scope (API only)
+  scope?: ProjectScope; // core | listing | commerce (default: commerce)
+  // Legacy flags (still supported)
+  skipListing?: boolean;
+  skipCommerce?: boolean;
 }
 
 // Reserved suffixes that cannot be used as workspace names
@@ -470,6 +477,19 @@ export async function createWorkspace(
   const shouldCreateRemote = !skipRemote && githubOrg ? true : false;
   const shouldPush = shouldCreateRemote; // Always push if creating remote
 
+  // Validate GitHub token is set when --github-org is used
+  if (shouldCreateRemote && !githubToken) {
+    throw new Error(
+      "GITHUB_TOKEN is required when using --github-org flag.\n" +
+        "  Set it in your shell:\n" +
+        "    export GITHUB_TOKEN=ghp_your_token_here\n" +
+        "  Or add to ~/.bashrc:\n" +
+        "    echo 'export GITHUB_TOKEN=ghp_your_token' >> ~/.bashrc\n" +
+        "  Create token at: https://github.com/settings/tokens\n" +
+        "  Required scopes: repo, delete_repo",
+    );
+  }
+
   // Show warning based on remote setup choice
   if (skipRemote && githubOrg) {
     Logger.warning(
@@ -557,6 +577,10 @@ export async function createWorkspace(
           projectType: type as "api" | "admin-ui" | "store",
           targetDir: workspacePath,
           skipDbSetup: type === "admin-ui" || type === "store", // Only API needs database
+          // Entity scope only applies to API
+          scope: type === "api" ? options.scope : undefined,
+          skipListing: type === "api" ? options.skipListing : undefined,
+          skipCommerce: type === "api" ? options.skipCommerce : undefined,
         });
 
         const projectPath = join(workspacePath, projectName);

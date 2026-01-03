@@ -19,6 +19,7 @@ export function AdminLayout({ children, currentPath }: AdminLayoutProps) {
   // TODO: When scaffolding a new entity, add it to this array
   // Example: { path: "/admin/products", label: "Products", icon: "📦" }
   const menuItems = [
+    { path: "/admin/orders", label: "Orders", icon: "🛒" },
     { path: "/admin/articles", label: "Articles", icon: "📄" },
     { path: "/admin/products", label: "Products", icon: "📦" },
     { path: "/admin/categories", label: "Categories", icon: "📁" },

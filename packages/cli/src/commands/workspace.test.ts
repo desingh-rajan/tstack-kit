@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { join } from "@std/path";
 import { createWorkspace, destroyWorkspace } from "./workspace.ts";
 import { closeKv, getWorkspace } from "../utils/workspaceStore.ts";
@@ -143,6 +143,46 @@ Deno.test({
         deleteRemote: false,
       });
     } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - throws error when --github-org used without GITHUB_TOKEN",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = "test-no-token";
+
+    // Temporarily unset GITHUB_TOKEN
+    const originalToken = Deno.env.get("GITHUB_TOKEN");
+    Deno.env.delete("GITHUB_TOKEN");
+
+    try {
+      await assertRejects(
+        async () => {
+          await createWorkspace({
+            name: workspaceName,
+            targetDir: tempDir,
+            githubOrg: "some-org",
+            // No githubToken provided, GITHUB_TOKEN env var deleted
+          });
+        },
+        Error,
+        "GITHUB_TOKEN is required when using --github-org flag",
+      );
+
+      // Verify workspace was NOT created
+      const workspace = await getWorkspace(workspaceName);
+      assertEquals(workspace, null);
+    } finally {
+      // Restore original token
+      if (originalToken) {
+        Deno.env.set("GITHUB_TOKEN", originalToken);
+      }
       await cleanupTempDir(tempDir);
       closeKv();
     }
@@ -601,8 +641,8 @@ Deno.test({
 
       // Verify both repos exist in metadata
       const apiRepo = workspace!.githubRepos.find((r) => r.type === "api");
-      const adminUiRepo = workspace!.githubRepos.find((r) =>
-        r.type === "admin-ui"
+      const adminUiRepo = workspace!.githubRepos.find(
+        (r) => r.type === "admin-ui",
       );
 
       assertExists(apiRepo);
@@ -641,7 +681,8 @@ Deno.test({
       });
       const adminResult = await adminRemoteCmd.output();
       assertEquals(adminResult.success, true);
-      const adminRemoteUrl = new TextDecoder().decode(adminResult.stdout)
+      const adminRemoteUrl = new TextDecoder()
+        .decode(adminResult.stdout)
         .trim();
       assertEquals(adminRemoteUrl.includes(GITHUB_ORG), true);
       assertEquals(adminRemoteUrl.includes(`${workspaceName}-admin-ui`), true);
@@ -993,6 +1034,246 @@ Deno.test({
       // Verify metadata removed
       const workspace = await getWorkspace(workspaceName);
       assertEquals(workspace, null);
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+// ============================================================================
+// Workspace Scope Tests
+// ============================================================================
+
+Deno.test({
+  name:
+    "createWorkspace - --scope=core creates workspace with core-only API entities",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        skipRemote: true,
+        scope: "core",
+      });
+
+      const workspacePath = join(tempDir, workspaceName);
+      const apiPath = join(workspacePath, `${workspaceName}-api`);
+      const entitiesPath = join(apiPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "articles"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have articles directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "site_settings"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have site_settings directory",
+      );
+
+      // Should NOT have listing entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "brands"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have brands directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "products"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have products directory",
+      );
+
+      // Should NOT have commerce entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "carts"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have carts directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "orders"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have orders directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - --scope=listing creates workspace with listing entities (no commerce)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        skipRemote: true,
+        scope: "listing",
+      });
+
+      const workspacePath = join(tempDir, workspaceName);
+      const apiPath = join(workspacePath, `${workspaceName}-api`);
+      const entitiesPath = join(apiPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "articles"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have articles directory",
+      );
+
+      // Should have listing entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "brands"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "products"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have products directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "categories"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have categories directory",
+      );
+
+      // Should NOT have commerce entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "carts"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have carts directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "orders"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have orders directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "payments"))
+          .then(() => true)
+          .catch(() => false),
+        false,
+        "Should not have payments directory",
+      );
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - --scope=commerce creates workspace with all entities (default)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        skipRemote: true,
+        scope: "commerce",
+      });
+
+      const workspacePath = join(tempDir, workspaceName);
+      const apiPath = join(workspacePath, `${workspaceName}-api`);
+      const entitiesPath = join(apiPath, "src", "entities");
+
+      // Should have core entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "articles"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have articles directory",
+      );
+
+      // Should have listing entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "brands"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have brands directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "products"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have products directory",
+      );
+
+      // Should have commerce entities
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "carts"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have carts directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "orders"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have orders directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "payments"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have payments directory",
+      );
+      assertEquals(
+        await Deno.stat(join(entitiesPath, "addresses"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        "Should have addresses directory",
+      );
     } finally {
       await cleanupTempDir(tempDir);
       closeKv();

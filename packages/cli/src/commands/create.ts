@@ -2,7 +2,10 @@ import { Logger } from "../utils/logger.ts";
 import { ApiProjectCreator } from "./creators/api-creator.ts";
 import { AdminUiProjectCreator } from "./creators/admin-ui-creator.ts";
 import { StoreProjectCreator } from "./creators/store-creator.ts";
-import type { BaseProjectCreator } from "./creators/base-creator.ts";
+import type {
+  BaseProjectCreator,
+  ProjectScope,
+} from "./creators/base-creator.ts";
 
 export interface CreateOptions {
   projectName: string;
@@ -11,7 +14,10 @@ export interface CreateOptions {
   latest?: boolean;
   skipDbSetup?: boolean;
   forceOverwrite?: boolean;
+  scope?: ProjectScope; // core | listing | commerce (default: commerce)
+  // Legacy flags (still supported)
   skipListing?: boolean;
+  skipCommerce?: boolean;
 }
 
 /**

@@ -86,6 +86,20 @@ If you need to change something later (e.g., "Let's hide the 'Created At' date
 from the form"), you just change `showInForm: false` in the config file. You
 don't have to dig through HTML.
 
+### Scope-Based Entity Availability
+
+Starting in v1.4.0, the Admin UI automatically adapts to the API's entity scope:
+
+- **`--scope=core`**: Admin only shows Articles and Site Settings
+- **`--scope=listing`**: Admin adds product catalog management (brands,
+  categories, products, variants)
+- **`--scope=commerce`**: Admin adds shopping features (addresses, carts,
+  orders, payments)
+
+The navigation menu, entity configs, and routes are generated based on the scope
+level specified during project creation. This ensures your admin interface only
+shows relevant management screens for the entities that exist in your API.
+
 ---
 
 ## Why this architecture?
@@ -131,7 +145,7 @@ uploads. It's used on product pages but can be added to any entity.
 }
 ```
 
-2. Use in your show/edit page:
+1. Use in your show/edit page:
 
 ```typescript
 import ImageUploadPane from "@/islands/ImageUploadPane.tsx";

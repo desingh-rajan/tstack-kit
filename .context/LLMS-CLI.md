@@ -99,6 +99,60 @@ tstack create <type> <name> [options]
 
 ### Project Types
 
+- `api` - API backend only
+- `admin-ui` - Admin dashboard only
+- `store` - Storefront only
+- `workspace` - Full stack (API + Admin UI + Store)
+
+### Common Options
+
+| Flag                 | Description                                                             |
+| -------------------- | ----------------------------------------------------------------------- |
+| `--scope=<level>`    | Entity scope level: `core`, `listing`, `commerce` (default: `commerce`) |
+| `--dir=<path>`       | Parent directory for project (default: current directory)               |
+| `--github-org=<org>` | Create GitHub repositories under organization                           |
+| `--skip-db-setup`    | Skip database creation and migrations                                   |
+| `--skip-git`         | Skip git initialization                                                 |
+| `--skip-seed`        | Skip database seeding                                                   |
+| `--skip-admin`       | (workspace only) Skip admin UI creation                                 |
+| `--skip-store`       | (workspace only) Skip storefront creation                               |
+
+### Entity Scope Levels
+
+The `--scope` flag controls which entities are included in the generated
+project:
+
+**core** - Minimal content management:
+
+- articles (blog/CMS)
+- site_settings (dynamic config)
+- users (authentication)
+
+**listing** - core + Product catalog:
+
+- brands
+- categories
+- products
+- product_images
+- product_variants
+- variant_options
+
+**commerce** (default) - listing + Shopping & checkout:
+
+- addresses (shipping addresses)
+- carts (shopping carts)
+- orders (order management)
+- payments (payment processing)
+
+Examples:
+
+```bash
+tstack create workspace blog --scope=core          # Minimal blog/CMS
+tstack create workspace catalog --scope=listing    # Product catalog only
+tstack create workspace shop --scope=commerce      # Full e-commerce (default)
+tstack create api backend-api --scope=core         # Minimal API
+```
+
 | Type        | Description                         | Template Source               |
 | ----------- | ----------------------------------- | ----------------------------- |
 | `api`       | Backend REST API                    | `packages/api-starter`        |
@@ -622,14 +676,14 @@ app.route("/blog-posts", blogPostRoutes);
 app.route("/ts-admin/blog-posts", blogPostAdminRoutes);
 ```
 
-2. **Generate migration**:
+1. **Generate migration**:
 
 ```bash
 deno task migrate:generate
 deno task migrate:run
 ```
 
-3. **Update sidebar** (Admin-UI) - This is done automatically by the scaffolder
+1. **Update sidebar** (Admin-UI) - This is done automatically by the scaffolder
    in `components/layout/Sidebar.tsx`
 
 ---

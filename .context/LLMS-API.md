@@ -77,7 +77,7 @@ api-starter/
     │   ├── user.admin.route.ts  # User admin routes
     │   └── auth.test.ts         # Auth tests
     ├── entities/
-    │   ├── articles/            # Example entity
+    │   ├── articles/            # Core: CMS/blog entity
     │   │   ├── article.model.ts
     │   │   ├── article.dto.ts
     │   │   ├── article.service.ts
@@ -85,8 +85,18 @@ api-starter/
     │   │   ├── article.route.ts
     │   │   ├── article.admin.route.ts
     │   │   └── article.test.ts
-    │   ├── site_settings/       # System settings entity
-    │   └── ... (other entities)
+    │   ├── site_settings/       # Core: System configuration
+    │   ├── brands/              # Listing: Product brands
+    │   ├── categories/          # Listing: Product categories
+    │   ├── products/            # Listing: Products with variants
+    │   ├── product_images/      # Listing: Product image gallery
+    │   ├── product_variants/    # Listing: SKU variants
+    │   ├── variant_options/     # Listing: Variant options
+    │   ├── addresses/           # Commerce: Shipping addresses
+    │   ├── carts/               # Commerce: Shopping carts
+    │   ├── orders/              # Commerce: Order management
+    │   ├── payments/            # Commerce: Payment processing
+    │   └── ... (scope-dependent)
     └── shared/
         ├── base/
         │   ├── base-service.ts
