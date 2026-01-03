@@ -399,6 +399,3 @@ interface RazorpayWebhookPayload {
   };
   created_at: number;
 }
-
-// Export singleton instance
-export const razorpayProvider = new RazorpayProvider();
