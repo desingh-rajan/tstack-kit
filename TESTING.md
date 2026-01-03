@@ -97,21 +97,20 @@ cd tonystack
 
 ### Running Tests By Package
 
-#### Starter Package (Full Application)
+#### API Starter Package (Full Application)
 
 ```bash
-cd packages/starter
+cd packages/api-starter
 
-# First time setup (creates DB, runs migrations, seeds data)
-deno task test:full
-
-# Daily development
+# Run tests (handles setup + run + cleanup automatically)
 deno task test
+
+# Watch mode for development
 deno task test:watch
 ```
 
 **See detailed setup:**
-[packages/starter/TESTING.md](./packages/starter/TESTING.md)
+[packages/api-starter/TESTING.md](./packages/api-starter/TESTING.md)
 
 #### CLI Package (Command-line Tool)
 

@@ -121,11 +121,11 @@ Authorization: Bearer <superadmin-token>
 
 ```bash
 # Run once during setup
-deno task db:seed:superadmin
+deno task db:seed
 
-# Creates:
-# Email: superadmin@tstack.in
-# Password: set via SUPERADMIN_PASSWORD environment variable
+# Creates superadmin with:
+# Email: from SUPERADMIN_EMAIL environment variable
+# Password: from SUPERADMIN_PASSWORD environment variable
 # Role: superadmin (system-defined, protected)
 ```
 

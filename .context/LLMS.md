@@ -316,9 +316,6 @@ deno test --allow-all src/entities/articles/article.test.ts
 
 # Watch mode
 deno task test:watch
-
-# Coverage report
-deno task test:coverage
 ```
 
 ### Test Databases

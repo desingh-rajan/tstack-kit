@@ -202,8 +202,8 @@ deno task dev
 # Start server without watch mode
 deno task start
 
-# Validate environment variables
-deno task env:validate
+# List all routes
+deno task routes
 ```
 
 ### Database
@@ -218,13 +218,13 @@ deno task migrate:run
 # Open Drizzle Studio (GUI)
 deno task db:studio
 
-# Seed all data (superadmin + demo data)
+# Seed database (superadmin + users + site settings)
 deno task db:seed
 
-# Seed only superadmin user
-deno task db:seed:superadmin
+# Seed e-commerce demo data
+deno task seed:ecommerce
 
-# Full setup (validate + migrate + seed)
+# Full setup (migrate + seed)
 deno task setup
 ```
 
@@ -236,12 +236,6 @@ deno task test
 
 # Run tests in watch mode
 deno task test:watch
-
-# Run tests with coverage report
-deno task test:coverage
-
-# Reset test database (recreate + migrate + seed)
-deno task test:reset
 ```
 
 ### Code Quality

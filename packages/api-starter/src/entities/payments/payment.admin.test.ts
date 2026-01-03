@@ -183,16 +183,14 @@ describe("Payment Admin Panel API", () => {
     testOrderId = order.id;
 
     // Create a test payment for the order
-    await db
-      .insert(payments)
-      .values({
-        orderId: testOrderId,
-        amount: "1230.00",
-        currency: "INR",
-        status: "captured",
-        razorpayOrderId: "order_test123",
-        razorpayPaymentId: "pay_test123",
-      });
+    await db.insert(payments).values({
+      orderId: testOrderId,
+      amount: "1230.00",
+      currency: "INR",
+      status: "captured",
+      razorpayOrderId: "order_test123",
+      razorpayPaymentId: "pay_test123",
+    });
   });
 
   afterAll(async () => {

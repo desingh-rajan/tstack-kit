@@ -38,20 +38,12 @@ deno task test
 
 # Run tests in watch mode
 deno task test:watch
-
-# Run with coverage
-deno task test:coverage
 ```
 
 ## Test Database
 
-Tests use a separate database (`_test` suffix). Setup:
-
-```bash
-deno task test:setup    # Create test database
-deno task test:migrate  # Run migrations
-deno task test:seed     # Seed test data
-```
+Tests use a separate database (`_test` suffix). The test task handles setup and
+cleanup automatically.
 
 ## Testing Authenticated Endpoints
 

@@ -149,23 +149,16 @@ deno task test:reset
 
 All test-related tasks from `deno.json`:
 
-| Task                      | Description                                               | Use Case                             |
-| ------------------------- | --------------------------------------------------------- | ------------------------------------ |
-| `deno task test:full`     | **Complete test workflow** (setup + migrate + seed + run) | First run, CI/CD, clean slate        |
-| `deno task test`          | Run tests only                                            | Quick testing during development     |
-| `deno task test:setup`    | Create test DB + run migrations                           | Initial setup or after DB changes    |
-| `deno task test:migrate`  | Run migrations on test database                           | After schema changes                 |
-| `deno task test:seed`     | Seed test data (users + site settings)                    | Populate test database with fixtures |
-| `deno task test:reset`    | Clean reset (drop + create + migrate + seed)              | Fix broken test state, start fresh   |
-| `deno task test:watch`    | Run tests in watch mode                                   | Development with auto-rerun          |
-| `deno task test:coverage` | Run tests with coverage report                            | Check test coverage                  |
-| `deno task test:check`    | Health check test environment                             | Validate setup before running tests  |
+| Task                   | Description                                        | Use Case                    |
+| ---------------------- | -------------------------------------------------- | --------------------------- |
+| `deno task test`       | **Complete test workflow** (setup + run + cleanup) | Standard test run           |
+| `deno task test:watch` | Run tests in watch mode                            | Development with auto-rerun |
 
 ## Database Setup & Seeding
 
 ### Test Database
 
-TonyStack automatically creates a separate test database:
+TStack automatically creates a separate test database:
 
 - **Development DB**: `your_project_dev`
 - **Test DB**: `your_project_test`
@@ -176,28 +169,18 @@ TonyStack automatically creates a separate test database:
 **For Development:**
 
 ```bash
-# Seed all: superadmin + alpha user + site settings
+# Seed all: superadmin + alpha user + regular user + site settings
 deno task db:seed
-
-# Or seed individually:
-deno task db:seed:superadmin   # Creates superadmin@tonystack.dev
-deno task db:seed:alpha        # Creates alpha@tonystack.dev (regular user)
-deno task db:seed:site         # Creates 6 default site settings
 ```
 
 **For Testing:**
 
-```bash
-# Seed test database (runs all 3 seed scripts with ENVIRONMENT=test)
-deno task test:seed
-
-# Full reset including seed
-deno task test:reset
-```
+The `deno task test` command handles test database setup and cleanup
+automatically.
 
 ### Seeded Test Users
 
-These users are automatically created when you run `test:seed` or `test:full`:
+These users are automatically created when you run `db:seed`:
 
 | User           | Email                      | Password                | Role       | Purpose                              |
 | -------------- | -------------------------- | ----------------------- | ---------- | ------------------------------------ |

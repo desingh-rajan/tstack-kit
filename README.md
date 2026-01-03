@@ -5,35 +5,61 @@
 [![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 
-> **Ship products, not boilerplate.** A battle-tested, CLI-powered SaaS starter
-> kit that scales from portfolio to platform.
+> **Ship products, not boilerplate.** Full-stack Deno starter kit with CLI that
+> actually does the work.
+
+## Try it now
+
+```bash
+# Install CLI (takes 10 seconds)
+curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
+
+# Create a full-stack workspace
+tstack create workspace my-shop
+cd my-shop/my-shop-api
+
+# Setup database (PostgreSQL must be running)
+deno task migrate:generate  # Generate migrations from schema
+deno task migrate:run       # Apply migrations
+deno task db:seed           # Seed superadmin + demo data
+deno task dev               # Start server at localhost:8000
+```
+
+**That's it.** API at `localhost:8000`, Admin at `localhost:5173`, Store at
+`localhost:5174`.
 
 ---
 
-## Why TStack Kit?
+## What just happened?
 
-### A CLI That Actually Does the Work
+```
+my-shop/
+├── my-shop-api/      # Hono + Drizzle + PostgreSQL
+├── my-shop-admin/    # Fresh + DaisyUI admin panel
+└── my-shop-store/    # Fresh + Tailwind storefront
+```
 
-You know how most starter kits work—clone a repo, search-and-replace project
-names, update configs by hand, initialize git, create databases manually. That's
-not a starter kit. That's a chore list.
+- Database created and migrated
+- JWT auth + OAuth (Google) ready
+- Admin panel with CRUD for all entities
+- E-commerce: Products, Cart, Orders, Payments
+- 255+ tests included (70% coverage)
 
-**TStack CLI handles all of it:**
+---
 
-- **Smart project creation** - Generates and customizes projects with your
-  names, not template placeholders
-- **Local + GitHub repos** - Creates repos locally AND on GitHub (with
-  `--github-org` flag)
-- **State-aware tracking** - Remembers every project you create (stored in local
-  Deno KV)
-- **Destroy command** - Deletes projects AND drops their databases (no orphaned
-  DBs cluttering your Postgres)
-- **Entity scaffolding** - Generates models, services, controllers, routes,
-  tests, and admin UI configs in one command
-- **Multi-project workspaces** - Creates API + Admin + Store and wires them
-  together automatically
+## Why TStack?
 
-It's not a template cloner. It's a project generator that thinks.
+**It's not a template you clone.** It's a CLI that generates projects.
+
+| Command                          | Result                                           |
+| -------------------------------- | ------------------------------------------------ |
+| `tstack create api my-app`       | API with your naming, database ready, git init   |
+| `tstack create workspace my-app` | API + Admin + Store, all wired together          |
+| `tstack scaffold product`        | Model, service, routes, tests, admin config—done |
+| `tstack destroy my-app`          | Project gone, database dropped. No orphans.      |
+
+The CLI tracks everything in Deno KV. Create 10 projects, destroy 5, it
+remembers.
 
 ---
 
@@ -45,42 +71,31 @@ rebuilding what you just built last month.
 
 **Here's what actually happens with TStack:**
 
-| Timeline         | What You Get                                                                |
-| ---------------- | --------------------------------------------------------------------------- |
-| **⚡ 3 Minutes** | Database is up. Migrations run. Seed data loaded. You're writing features.  |
-| **⚡ 1 Hour**    | Your models are mapped. Relations hooked up. Stripe, S3, Resend configured. |
-| **⚡ 3 Hours**   | Models tested. Admin panel generated. API endpoints working. Ready to ship. |
+| Timeline      | What You Get                                                                |
+| ------------- | --------------------------------------------------------------------------- |
+| **3 Minutes** | Database is up. Migrations run. Seed data loaded. You're writing features.  |
+| **1 Hour**    | Your models are mapped. Relations hooked up. Stripe, S3, Resend configured. |
+| **3 Hours**   | Models tested. Admin panel generated. API endpoints working. Ready to ship. |
 
 ---
 
-### Tests That Actually Cover Your Ass
+### Tests Included, Not Afterthoughts
 
-You know what happens when you skip tests. You ship on Friday. Something breaks
-Saturday at 2 AM. You don't know why because you never had time to write tests.
+Every generated entity comes with tests. You start with coverage, not technical
+debt.
 
-**TStack ships with tests built in:**
-
-- **255+ test suite** covering auth, CRUD, admin routes, payment flows
-- **70% code coverage** (show me another starter kit with this)
-- **Real integration tests** against PostgreSQL—not mocked nonsense (we only
-  mock external providers)
-- You can actually sleep through the night. We already debugged this stuff.
+- **255+ tests** covering auth, CRUD, admin routes, payment flows
+- **70% code coverage** out of the box
+- **Real PostgreSQL integration tests** (external providers mocked)
+- Tests run in CI—just push and ship with confidence
 
 ---
 
-### 10 Years of Framework Experience, One Codebase
+### Battle-Tested Patterns
 
-This isn't some weekend experiment. TStack distills a decade of building
-production systems with Rails, Phoenix, Sinatra, Express, Hono, Node, Deno,
-Ruby, and Elixir.
-
-Every pattern here earned its place in production. We took the elegance of
-Rails, the resilience of Phoenix, the simplicity of Sinatra, and the raw speed
-of Hono—and made them work together in TypeScript.
-
-**Human-readable code. AI-ready architecture.** It's opinionated because
-indecision is expensive. It's structured so both you and AI agents can navigate
-it without guessing.
+Built on proven patterns from Rails, Phoenix, and Hono—refined for TypeScript.
+Opinionated structure that both developers and AI agents can navigate
+predictably.
 
 ---
 
@@ -116,36 +131,10 @@ _(Currently in development—Docker configs ready, Kamal integration in progress
 Most starter kits are copy-pasted side projects. This one took 3 months to
 architect right. It's test-driven, production-hardened, and built to last.
 
-**This is the starter kit we wish we had 10 years ago.**
+**This is the starter kit we wish existed years ago.**
 
----
-
-## Quick Start
-
-```bash
-# Install TStack CLI
-curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
-
-# Verify installation (restart terminal if command not found)
-tstack --version
-
-# Create your first workspace
-tstack create workspace my-app
-cd my-app/my-app-api
-
-# Setup database
-deno task migrate:generate
-deno task migrate:run
-deno task db:seed
-
-# Start development
-deno task dev
-```
-
-Your API is running at `http://localhost:8000`
-
-**Documentation:** [docs/README.md](./docs/README.md) for CLI reference,
-scaffolding, admin panel, testing, and architecture guides.
+**Docs:** [docs/README.md](./docs/README.md) | **Issues:**
+[GitHub](https://github.com/desingh-rajan/tstack-kit/issues)
 
 ---
 
@@ -276,8 +265,8 @@ export GITHUB_TOKEN=ghp_your_token_here
 echo 'export GITHUB_TOKEN=ghp_your_token_here' >> ~/.bashrc
 ```
 
-Create token at https://github.com/settings/tokens with `repo` and `delete_repo`
-scopes.
+Create token at <https://github.com/settings/tokens> with `repo` and
+`delete_repo` scopes.
 
 ---
 
