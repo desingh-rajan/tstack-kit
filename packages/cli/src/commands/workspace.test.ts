@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { join } from "@std/path";
 import { createWorkspace, destroyWorkspace } from "./workspace.ts";
 import { closeKv, getWorkspace } from "../utils/workspaceStore.ts";
@@ -143,6 +143,45 @@ Deno.test({
         deleteRemote: false,
       });
     } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name: "createWorkspace - throws error when --github-org used without GITHUB_TOKEN",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = "test-no-token";
+
+    // Temporarily unset GITHUB_TOKEN
+    const originalToken = Deno.env.get("GITHUB_TOKEN");
+    Deno.env.delete("GITHUB_TOKEN");
+
+    try {
+      await assertRejects(
+        async () => {
+          await createWorkspace({
+            name: workspaceName,
+            targetDir: tempDir,
+            githubOrg: "some-org",
+            // No githubToken provided, GITHUB_TOKEN env var deleted
+          });
+        },
+        Error,
+        "GITHUB_TOKEN is required when using --github-org flag",
+      );
+
+      // Verify workspace was NOT created
+      const workspace = await getWorkspace(workspaceName);
+      assertEquals(workspace, null);
+    } finally {
+      // Restore original token
+      if (originalToken) {
+        Deno.env.set("GITHUB_TOKEN", originalToken);
+      }
       await cleanupTempDir(tempDir);
       closeKv();
     }

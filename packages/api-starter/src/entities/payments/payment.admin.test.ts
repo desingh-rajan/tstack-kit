@@ -38,7 +38,7 @@ let testAddressId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {},
+  options: RequestInit = {}
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -53,7 +53,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user",
+  role: "superadmin" | "admin" | "user" = "user"
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -113,7 +113,7 @@ describe("Payment Admin Panel API", () => {
       "superadmin@test.local",
       "Test Superadmin",
       "SuperSecure123!",
-      "superadmin",
+      "superadmin"
     );
     superadminToken = superadmin.token;
 
@@ -122,7 +122,7 @@ describe("Payment Admin Panel API", () => {
       "admin@test.local",
       "Test Admin",
       "AdminSecure123!",
-      "admin",
+      "admin"
     );
     adminToken = admin.token;
 
@@ -131,7 +131,7 @@ describe("Payment Admin Panel API", () => {
       "user@test.local",
       "Regular User",
       "UserSecure123!",
-      "user",
+      "user"
     );
     regularUserToken = regularUser.token;
     regularUserId = regularUser.userId;
@@ -230,7 +230,7 @@ describe("Payment Admin Panel API", () => {
             amount: 500.0,
             reason: "Customer requested partial refund",
           }),
-        },
+        }
       );
 
       // NoOp payment provider should return success
@@ -254,7 +254,7 @@ describe("Payment Admin Panel API", () => {
             amount: 100.0,
             reason: "Test refund",
           }),
-        },
+        }
       );
 
       // Should return 404 or 500 (depends on error handling)
@@ -282,7 +282,7 @@ describe("Payment Admin Panel API", () => {
             amount: 100.0,
             reason: "Admin test refund",
           }),
-        },
+        }
       );
 
       // Should be allowed (200 or error related to payment, not auth)
@@ -303,7 +303,7 @@ describe("Payment Admin Panel API", () => {
             amount: 100.0,
             reason: "Unauthorized refund attempt",
           }),
-        },
+        }
       );
 
       // requireAdmin middleware returns 403 for non-admin users
@@ -323,7 +323,7 @@ describe("Payment Admin Panel API", () => {
             amount: 100.0,
             reason: "No auth refund attempt",
           }),
-        },
+        }
       );
 
       assertEquals(response.status, 401);

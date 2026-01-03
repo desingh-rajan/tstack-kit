@@ -1,11 +1,13 @@
 {
-  "version": "1.3.3",
+  "version": "1.3.4",
   "tasks": {
     "bump": "deno run --allow-read --allow-write scripts/bump-version.ts"
   },
   "lint": {
     "rules": {
-      "exclude": ["no-explicit-any"]
+      "exclude": [
+        "no-explicit-any"
+      ]
     }
   }
 }

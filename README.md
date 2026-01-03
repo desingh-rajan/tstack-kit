@@ -264,6 +264,22 @@ deno task db:studio        # Open Drizzle Studio
 
 ---
 
+## GitHub Integration
+
+To use `--github-org` flag for automatic GitHub repository creation:
+
+```bash
+# Set your GitHub token (required)
+export GITHUB_TOKEN=ghp_your_token_here
+
+# Add to ~/.bashrc or ~/.zshrc to persist
+echo 'export GITHUB_TOKEN=ghp_your_token_here' >> ~/.bashrc
+```
+
+Create token at https://github.com/settings/tokens with `repo` and `delete_repo` scopes.
+
+---
+
 ## Project Structure
 
 ### API Backend

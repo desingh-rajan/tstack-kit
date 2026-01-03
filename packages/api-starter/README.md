@@ -72,32 +72,28 @@ deno.json                # Tasks & dependency mapping
 
 ## 6. Core Tasks (deno.json)
 
-| Task                           | Purpose                                  |
-| ------------------------------ | ---------------------------------------- |
-| `deno task dev`                | Run with watch & all permissions         |
-| `deno task start`              | Run once (no watch)                      |
-| `deno task env:validate`       | Check required env vars                  |
-| `deno task migrate:generate`   | Create migration from current schema     |
-| `deno task migrate:run`        | Apply pending migrations                 |
-| `deno task db:studio`          | Open Drizzle Studio (schema browser)     |
-| `deno task db:seed`            | Seed all default data (users + settings) |
-| `deno task db:seed:superadmin` | Seed only superadmin user                |
-| `deno task db:seed:alpha`      | Seed demo regular user                   |
-| `deno task db:seed:user`       | Seed generic regular user                |
-| `deno task db:seed:site`       | Seed system site settings                |
-| `deno task setup`              | Validate env → migrate → seed            |
-| `deno task test:full`          | Full test DB setup then run tests        |
-| `deno task test`               | Run tests + cleanup test DB              |
-| `deno task test:setup`         | Create test DB + apply migrations        |
-| `deno task test:migrate`       | Migrate test DB only                     |
-| `deno task test:seed`          | Seed test data                           |
-| `deno task test:reset`         | Recreate + migrate + seed test DB        |
-| `deno task test:watch`         | Watch mode tests                         |
-| `deno task test:coverage`      | Coverage report to `coverage/`           |
-| `deno task test:check`         | Health check (DB + basic readiness)      |
-| `deno task cleanup:test-db`    | Remove test database artifacts           |
-| `deno task fmt`                | Format source                            |
-| `deno task lint`               | Lint source                              |
+| Task                       | Purpose                                         |
+| -------------------------- | ----------------------------------------------- |
+| `deno task dev`            | Run with watch & all permissions                |
+| `deno task start`          | Run once (no watch)                             |
+| `deno task routes`         | List all available routes                       |
+| `deno task setup`          | Run migrations + seed data                      |
+| `deno task db:create`      | Create database                                 |
+| `deno task db:migrate`     | Apply pending migrations                        |
+| `deno task db:generate`    | Create migration from current schema            |
+| `deno task db:seed`        | Seed users + site settings                      |
+| `deno task seed:ecommerce` | Seed e-commerce data (products, categories)     |
+| `deno task db:studio`      | Open Drizzle Studio (schema browser)            |
+| `deno task test`           | Run tests (setup + run + cleanup)               |
+| `deno task test:watch`     | Watch mode tests                                |
+| `deno task check`          | Format check + lint                             |
+| `deno task fmt`            | Format source                                   |
+| `deno task lint`           | Lint source                                     |
+
+**Aliases:**
+
+- `deno task migrate:run` → `deno task db:migrate`
+- `deno task migrate:generate` → `deno task db:generate`
 
 ## 7. First Run
 
@@ -109,15 +105,14 @@ cp .env.example .env.development.local
 # 2. Start PostgreSQL (using Docker Compose)
 docker compose up -d postgres
 
-# 3. Validate environment configuration
-deno task env:validate
+# 3. Run migrations
+deno task db:migrate
 
-# 4. Run migrations (pre-existing migrations included)
-# Note: Only generate new migrations if you've modified entity models
-deno task migrate:run
-
-# 5. Seed core data (creates superadmin user & default site settings)
+# 4. Seed core data (users + site settings)
 deno task db:seed
+
+# 5. Seed e-commerce data (products, categories, brands)
+deno task seed:ecommerce
 
 # 6. Start development server
 deno task dev
@@ -1480,53 +1475,24 @@ describe("Article API", () => {
 
 ### Running Tests
 
-#### Full Test Cycle (Recommended for CI)
+#### Full Test Cycle
 
 ```bash
-deno task test:full        # Setup test DB + migrate + seed + run tests
+deno task test        # Setup test DB + run tests + cleanup
 ```
 
 This command:
 
 1. Creates/recreates test database
 2. Applies all migrations
-3. Seeds test data (superadmin, alpha user, etc.)
+3. Seeds test data
 4. Runs all tests
-5. Reports results
+5. Cleans up test database
 
-#### Fast Development Loop
-
-```bash
-# Watch mode - re-run tests on file changes
-deno task test:watch
-
-# Run tests only (assumes DB is already set up)
-deno task test
-```
-
-#### Test Database Management
+#### Watch Mode (Development)
 
 ```bash
-# Setup test database from scratch
-deno task test:setup        # Create DB + apply migrations
-
-# Reset test database
-deno task test:reset        # Drop, recreate, migrate, seed
-
-# Apply migrations to test DB
-deno task test:migrate
-
-# Seed test data
-deno task test:seed
-
-# Cleanup test database
-deno task cleanup:test-db
-```
-
-#### Coverage Report
-
-```bash
-deno task test:coverage     # Generate coverage report to coverage/
+deno task test:watch  # Re-run tests on file changes
 ```
 
 ### Best Practices

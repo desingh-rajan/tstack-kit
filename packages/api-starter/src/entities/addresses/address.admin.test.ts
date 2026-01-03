@@ -33,7 +33,7 @@ let testAddressId = "";
 async function adminRequest(
   endpoint: string,
   token: string,
-  options: RequestInit = {},
+  options: RequestInit = {}
 ): Promise<Response> {
   return await app.request(endpoint, {
     ...options,
@@ -48,7 +48,7 @@ async function createTestUser(
   email: string,
   name: string,
   password: string,
-  role: "superadmin" | "admin" | "user" = "user",
+  role: "superadmin" | "admin" | "user" = "user"
 ): Promise<{ token: string; userId: number }> {
   const { hashPassword } = await import("../../shared/utils/password.ts");
 
@@ -97,7 +97,7 @@ describe("Address Admin Panel API", () => {
       "superadmin@test.local",
       "Test Superadmin",
       "SuperSecure123!",
-      "superadmin",
+      "superadmin"
     );
     superadminToken = superadmin.token;
     superadminUserId = superadmin.userId;
@@ -107,7 +107,7 @@ describe("Address Admin Panel API", () => {
       "admin@test.local",
       "Test Admin",
       "AdminSecure123!",
-      "admin",
+      "admin"
     );
     adminToken = admin.token;
 
@@ -116,7 +116,7 @@ describe("Address Admin Panel API", () => {
       "user@test.local",
       "Regular User",
       "UserSecure123!",
-      "user",
+      "user"
     );
     regularUserToken = regularUser.token;
     regularUserId = regularUser.userId;
@@ -161,13 +161,13 @@ describe("Address Admin Panel API", () => {
     it("should return JSON list with pagination metadata", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses",
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 200);
       assertEquals(
         response.headers.get("content-type")?.split(";")[0],
-        "application/json",
+        "application/json"
       );
 
       const json = await response.json();
@@ -180,7 +180,7 @@ describe("Address Admin Panel API", () => {
     it("should return entity metadata for create form", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses/new",
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 200);
@@ -194,7 +194,7 @@ describe("Address Admin Panel API", () => {
     it("should support pagination parameters", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses?page=1&limit=10",
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 200);
@@ -207,7 +207,7 @@ describe("Address Admin Panel API", () => {
     it("should support search functionality", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses?search=Chennai",
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 200);
@@ -225,7 +225,7 @@ describe("Address Admin Panel API", () => {
     it("should return address details by ID", async () => {
       const response = await adminRequest(
         `/ts-admin/addresses/${testAddressId}`,
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 200);
@@ -240,7 +240,7 @@ describe("Address Admin Panel API", () => {
     it("should return 404 for non-existent address", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses/00000000-0000-0000-0000-000000000000",
-        superadminToken,
+        superadminToken
       );
 
       assertEquals(response.status, 404);
@@ -275,7 +275,7 @@ describe("Address Admin Panel API", () => {
             type: "billing",
             isDefault: false,
           }),
-        },
+        }
       );
 
       assertEquals(response.status, 201);
@@ -307,7 +307,7 @@ describe("Address Admin Panel API", () => {
             city: "Mumbai",
             state: "Maharashtra",
           }),
-        },
+        }
       );
 
       assertEquals(response.status, 200);
@@ -346,7 +346,7 @@ describe("Address Admin Panel API", () => {
       const response = await adminRequest(
         `/ts-admin/addresses/${addressToDelete.id}`,
         superadminToken,
-        { method: "DELETE" },
+        { method: "DELETE" }
       );
 
       assertEquals(response.status, 200);
@@ -354,7 +354,7 @@ describe("Address Admin Panel API", () => {
       // Verify deleted
       const verifyResponse = await adminRequest(
         `/ts-admin/addresses/${addressToDelete.id}`,
-        superadminToken,
+        superadminToken
       );
       assertEquals(verifyResponse.status, 404);
     });
@@ -374,7 +374,7 @@ describe("Address Admin Panel API", () => {
     it("should deny access to regular users", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses",
-        regularUserToken,
+        regularUserToken
       );
 
       // HonoAdminAdapter throws error (500) for unauthorized roles
