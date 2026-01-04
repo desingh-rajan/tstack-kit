@@ -5,8 +5,10 @@
 [![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License](https://img.shields.io/github/license/desingh-rajan/tstack-kit)](LICENSE)
 
-> **Ship products, not boilerplate.** Full-stack Deno starter kit with CLI that
-> actually does the work.
+> **A Production-Ready Deno Full-Stack Foundation.**
+>
+> A CLI-driven architecture for shipping products, not managing boilerplate.
+> Designed for velocity, correctness, and scale.
 
 ## Try it now
 
@@ -22,15 +24,16 @@ cd my-shop/my-shop-api
 deno task migrate:generate  # Generate migrations from schema
 deno task migrate:run       # Apply migrations
 deno task db:seed           # Seed superadmin + demo data
-deno task dev               # Start server at localhost:8000
-```
 
-**That's it.** API at `localhost:8000`, Admin at `localhost:5173`, Store at
-`localhost:5174`.
+# Start the stack (in separate terminals)
+deno task dev                         # API:   localhost:8000
+cd ../my-shop-admin && deno task dev  # Admin: localhost:5173
+cd ../my-shop-store && deno task dev  # Store: localhost:5174
+```
 
 ---
 
-## What just happened?
+## System Architecture
 
 ```
 my-shop/
@@ -47,47 +50,35 @@ my-shop/
 
 ---
 
-## Why TStack?
+## The TStack Philosophy
 
-**It's not a template you clone.** It's a CLI that generates projects.
+**TStack is not a static template.** It is a CLI-managed development lifecycle.
 
-| Command                          | Result                                           |
-| -------------------------------- | ------------------------------------------------ |
-| `tstack create api my-app`       | API with your naming, database ready, git init   |
-| `tstack create workspace my-app` | API + Admin + Store, all wired together          |
-| `tstack scaffold product`        | Model, service, routes, tests, admin config—done |
-| `tstack destroy my-app`          | Project gone, database dropped. No orphans.      |
+| Command                          | Outcome                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| `tstack create api my-app`       | **Zero-Config API**: Database ready, git initialized, secure defaults.  |
+| `tstack create workspace my-app` | **Integrated Monorepo**: API + Admin + Store, pre-wired.                |
+| `tstack scaffold product`        | **Vertical Slice**: Model, service, routes, tests, UI config—generated. |
+| `tstack destroy my-app`          | **Clean Teardown**: Project removed, database dropped. No orphans.      |
 
-The CLI tracks everything in Deno KV. Create 10 projects, destroy 5, it
-remembers.
-
----
-
-### Stop Building the Same App Over and Over
-
-You've done this before. The auth system. The CRUD boilerplate. The admin panel.
-The Docker config. Every new project starts with the same week of setup,
-rebuilding what you just built last month.
-
-**Here's what actually happens with TStack:**
-
-| Timeline      | What You Get                                                                |
-| ------------- | --------------------------------------------------------------------------- |
-| **3 Minutes** | Database is up. Migrations run. Seed data loaded. You're writing features.  |
-| **1 Hour**    | Your models are mapped. Relations hooked up. Stripe, S3, Resend configured. |
-| **3 Hours**   | Models tested. Admin panel generated. API endpoints working. Ready to ship. |
+The CLI maintains state via Deno KV, ensuring a deterministic project lifecycle.
+Create 10 projects, destroy 5—your system remains clean.
 
 ---
 
-### Tests Included, Not Afterthoughts
+### Eliminate Redundant Engineering
 
-Every generated entity comes with tests. You start with coverage, not technical
-debt.
+The authentication flow, the CRUD operations, the admin dashboard—these are
+solved problems. TStack standardizes the foundation so you can focus on your
+unique domain logic.
 
-- **255+ tests** covering auth, CRUD, admin routes, payment flows
-- **70% code coverage** out of the box
-- **Real PostgreSQL integration tests** (external providers mocked)
-- Tests run in CI—just push and ship with confidence
+**Development Velocity:**
+
+| Timeline      | Operational State                                                                    |
+| ------------- | ------------------------------------------------------------------------------------ |
+| **3 Minutes** | **Active Development**. Database up. Migrations run. Seed data loaded.               |
+| **1 Hour**    | **Business Logic**. Models mapped. Relations hooked up. Payments & Email configured. |
+| **3 Hours**   | **Production Candidate**. Full test coverage. Admin panel generated. API complete.   |
 
 ---
 
@@ -99,39 +90,38 @@ predictably.
 
 ---
 
-### Scales With You (Not Against You)
+### Scalable by Design
 
-| Your Stage                   | What You Get                                       |
-| ---------------------------- | -------------------------------------------------- |
-| **Portfolio site**           | Contact forms, content management—done             |
-| **Product catalog**          | Listings, categories, admin panel—built in         |
-| **E-commerce store**         | Cart, checkout, payments—ready to go               |
-| **MVP testing**              | Local Docker development—configured                |
-| **Scaling up**               | Architecture designed for microservices extraction |
-| **Enterprise multi-service** | Docker orchestration ready                         |
-
----
-
-### Production Deployment Made Simple _(coming soon)_
-
-**Dockerfile and Kamal configs are in the pipeline.** When they land, you'll
-get:
-
-- One-command VPS deployment ($5 DigitalOcean droplets, any cloud provider)
-- Automated SSL certificates, traffic routing, rolling deployments
-- Zero-downtime updates out of the box
-- You write code. Kamal ships it.
-
-_(Currently in development—Docker configs ready, Kamal integration in progress)_
+| Your Stage                   | Architectural Guarantee                                               |
+| ---------------------------- | --------------------------------------------------------------------- |
+| **Portfolio site**           | **Minimal Footprint**. Contact forms, content management included.    |
+| **Product catalog**          | **Structured Data**. Listings, categories, admin panel built-in.      |
+| **E-commerce store**         | **Transaction Ready**. Carts, checkout, payments pre-configured.      |
+| **MVP testing**              | **Containerized**. Local Docker development fully configured.         |
+| **Scaling up**               | **Modular**. Architecture designed for microservices extraction.      |
+| **Enterprise multi-service** | **Orchestration Ready**. Docker compose and future k8s paths aligned. |
 
 ---
 
-### Not Another Template. A Real Foundation
+### Production Deployment (In Development)
 
-Most starter kits are copy-pasted side projects. This one took 3 months to
-architect right. It's test-driven, production-hardened, and built to last.
+**Robust Infrastructure via Kamal.**
 
-**This is the starter kit we wish existed years ago.**
+- **One-Command Deploy**: Push to any VPS or Cloud Provider.
+- **Zero-Downtime**: Rolling updates and automated traffic routing.
+- **SSL Automation**: Managed certificate provisioning.
+
+_(Docker configurations ready; Kamal integration compliant with v1.4 roadmap)_
+
+---
+
+### Architectural Integrity
+
+Most starter kits are assemblies of disparate parts. TStack is an engineered
+system. It is test-driven, production-hardened, and designed to provide a
+cohesive developer experience from CLI to Cloud.
+
+**The foundation we wish we had.**
 
 **Docs:** [docs/README.md](./docs/README.md) | **Issues:**
 [GitHub](https://github.com/desingh-rajan/tstack-kit/issues)
@@ -447,31 +437,26 @@ complete reference.**
 
 ---
 
-## Good Fit
+## Built for Serious Founders
 
-- PostgreSQL-first, type-safe API development
-- Fast entity scaffolding with tests included
-- JWT auth included by default (ready to use, not forced)
-- Clean, modifiable generated code
+- **Production-Grade Architecture**: Layered architecture
+  (Controller-Service-Data) that scales.
+- **Full-Stack Type Safety**: Types flow from your database schema directly to
+  your API and frontend.
+- **Business-First**: Comes with real e-commerce primitives (Carts, Orders), not
+  just "Hello World".
+- **No Vendor Lock-in**: Deploy anywhere Deno runs (VPS, Edge, Docker).
 
-## Not Ideal For
+## When NOT to use TStack
 
-- GraphQL (REST only)
-- Non-Deno runtimes (Node.js coming in v2.0)
+- **NoSQL Requirements**: We firmly believe in relational data (PostgreSQL). No
+  Mongo/Firebase support.
+- **Single Page Applications (SPA)**: We use Fresh (Server-Side Rendering +
+  Islands) for better performance and SEO, not client-side heavy SPAs.
 
 ---
 
 ## Roadmap
-
-### v1.3 (Current) - Entity Scope Control
-
-- `--scope` flag for progressive entity inclusion (core/listing/commerce)
-- Workspace management (API + Admin UI + Store)
-- GitHub integration with `--github-org`
-- Base abstractions (70-80% less code)
-- Fresh Admin UI Kit with config-driven CRUD
-- Project tracking with Deno KV
-- 255+ tests with 70% coverage
 
 ### v1.4 (Q1 2026) - Infrastructure
 
