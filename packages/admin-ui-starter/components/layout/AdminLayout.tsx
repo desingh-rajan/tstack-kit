@@ -6,18 +6,10 @@ interface AdminLayoutProps {
   currentPath: string;
 }
 
-/**
- * TODO: Auto-generate sidebar menu from entity configs
- *
- * Currently, when you scaffold a new entity (e.g., `tstack scaffold products`),
- * you need to manually add it to the menuItems array below.
- *
- * Future improvement: Read from config/entities/*.config.tsx to auto-generate menu
- * or create a config/admin-menu.ts file that the scaffold command updates.
- */
+/** */
 export function AdminLayout({ children, currentPath }: AdminLayoutProps) {
-  // TODO: When scaffolding a new entity, add it to this array
-  // Example: { path: "/admin/products", label: "Products", icon: "📦" }
+  // Configured menu items
+  // Note: New entities are automatically added here by the scaffold command
   const menuItems = [
     { path: "/admin/orders", label: "Orders", icon: "🛒" },
     { path: "/admin/articles", label: "Articles", icon: "📄" },
