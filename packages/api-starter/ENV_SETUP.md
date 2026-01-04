@@ -5,235 +5,106 @@ between development, testing, and production environments.
 
 ## Quick Start
 
-## Security: User Credentials Setup
-
-### For Development (Default)
-
 ```bash
-# Option 1: Use the development env file (recommended)
-cp .env.development.local .env
+# 1. Copy the example file to your local dev config
+cp .env.example .env.development.local
 
-# Option 2: Copy from example
-cp .env.example .env
+# 2. Generate secure secrets
+openssl rand -hex 64  # for JWT_SECRET
+openssl rand -base64 32 # for passwords
 
-# Start development server
-deno task dev
+# 3. Edit .env.development.local with your keys
+nano .env.development.local
 ```
 
-### For Testing
-
-```bash
-# Setup test database
-deno task test:reset
-
-# Run tests
-deno task test
-```
-
-### For Production
-
-```bash
-# Copy and configure production env
-cp .env.production.local .env.production.local
-# Edit .env.production.local with real credentials
-
-# Set ENVIRONMENT and start
-ENVIRONMENT=production deno task start
-```
-
-## Environment Files
-
-### `.env.development.local`
-
-- Used automatically when `ENVIRONMENT=development` (default)
-- Contains development database and local service configs
-- Safe to commit (no real secrets)
-
-### `.env.test.local`
-
-- Used automatically when `ENVIRONMENT=test`
-- Separate test database (`*_test_db`)
-- Tests run on port 8001 to avoid conflicts
-- Isolated from development data
-
-### `.env.production.local`
-
-- Used when `ENVIRONMENT=production`
-- **NEVER commit this file** - contains real secrets
-- Must configure with actual production credentials
-
-### `.env.example`
-
-- Generic environment file
-- Loaded if no environment-specific file exists
-- Not committed to git
-
-## Configuration Priority
-
-Environment variables are loaded in this order (highest to lowest priority):
-
-1. **System environment variables** (e.g., set in shell or CI/CD)
-2. **`.env.{ENVIRONMENT}.local`** (environment-specific file)
-3. **`.env`** (fallback generic file)
-
-Example:
-
-```bash
-# This will use .env.test.local
-ENVIRONMENT=test deno task dev
-
-# This will use .env.production.local
-ENVIRONMENT=production deno task start
-```
-
-## Database Setup Per Environment
-
-### Development Database
-
-```bash
-# Database: project_name_dev
-# Created automatically by tstack create
-
-deno task migrate:run
-deno task db:seed  # If using --with-auth
-deno task dev
-```
-
-### Test Database
-
-```bash
-# Database: project_name_test
-# Separate from development to prevent data pollution
-
-deno task test:reset    # Creates db + runs migrations
-deno task test          # Runs tests
-```
-
-### Production Database
-
-```bash
-# Database: project_name_prod
-# Configure in .env.production.local
-# Use managed database service (not local PostgreSQL)
-
-ENVIRONMENT=production deno task migrate:run
-ENVIRONMENT=production deno task start
-```
-
-## Security Best Practices
-
-### Development
-
-- [SUCCESS] Use `.env.development.local` with safe defaults
-- [SUCCESS] Commit `.env.development.local` to git
-- [SUCCESS] Share same dev config across team
-
-### Test
-
-- [SUCCESS] Use `.env.test.local` with test-specific config
-- [SUCCESS] Commit `.env.test.local` to git
-- [SUCCESS] Separate test database from development
-
-### Production
-
-- [ERROR] **NEVER** commit `.env.production.local`
-- [SUCCESS] Use strong random secrets (e.g., `openssl rand -hex 64`)
-- [SUCCESS] Use environment variables in CI/CD instead of files
-- [SUCCESS] Rotate secrets regularly
-- [SUCCESS] Use different credentials for each environment
-- [SUCCESS] Use managed database services (not local PostgreSQL)
+---
 
 ## Environment Variables Reference
 
-### Required
+### 1. Core Configuration (Required)
 
-- `ENVIRONMENT` - Environment mode (development, test, production)
-- `PORT` - Server port (default: 8000)
-- `DATABASE_URL` - PostgreSQL connection string
-- `ALLOWED_ORIGINS` - CORS allowed origins (comma-separated)
+| Variable       | Description                                    | Example                                        |
+| :------------- | :--------------------------------------------- | :--------------------------------------------- |
+| `ENVIRONMENT`  | Run mode (`development`, `test`, `production`) | `development`                                  |
+| `PORT`         | Server port                                    | `8000`                                         |
+| `DATABASE_URL` | PostgreSQL connection string                   | `postgresql://postgres:pass@localhost:5432/db` |
+| `JWT_SECRET`   | Secret for signing tokens (HS256)              | `openssl rand -hex 64` output                  |
+| `APP_URL`      | Public URL of this API                         | `http://localhost:8000`                        |
 
-### Authentication (if using --with-auth)
+### 2. User Credentials (Required for Seeding)
 
-- `JWT_SECRET` - Secret key for JWT signing (must be strong in production)
-- `JWT_ISSUER` - JWT issuer claim (default: tonystack)
-- `JWT_EXPIRY` - Token expiration time (default: 7d)
+| Variable              | Description            |
+| :-------------------- | :--------------------- |
+| `SUPERADMIN_EMAIL`    | Initial admin email    |
+| `SUPERADMIN_PASSWORD` | Initial admin password |
+| `ALPHA_EMAIL`         | Test user email        |
+| `ALPHA_PASSWORD`      | Test user password     |
 
-### Optional
+### 3. Google OAuth 2.0 (Auth)
 
-- `LOG_LEVEL` - Logging level (debug, info, warn, error)
-- `EMAIL_SERVICE_API_KEY` - Email service credentials
-- `S3_BUCKET_NAME` - S3 bucket for file uploads
-- `S3_ACCESS_KEY` - S3 access credentials
-- `S3_SECRET_KEY` - S3 secret credentials
+Get credentials from [Google Cloud Console](https://console.cloud.google.com/).
 
-## Testing Workflow
+| Variable               | Description                                      |
+| :--------------------- | :----------------------------------------------- |
+| `GOOGLE_CLIENT_ID`     | OAuth Client ID                                  |
+| `GOOGLE_CLIENT_SECRET` | OAuth Client Secret                              |
+| `GOOGLE_CALLBACK_URL`  | `http://localhost:8000/api/auth/google/callback` |
 
-```bash
-# 1. Reset test database (drops + creates + migrates)
-deno task test:reset
+### 4. Razorpay (Payments)
 
-# 2. Run all tests
-deno task test
+Get keys from [Razorpay Dashboard](https://dashboard.razorpay.com/).
 
-# 3. Run specific test file
-ENVIRONMENT=test deno test --allow-all tests/articles.test.ts
+| Variable                  | Description                           | Note                                   |
+| :------------------------ | :------------------------------------ | :------------------------------------- |
+| `RAZORPAY_KEY_ID`         | API Key ID                            | Starts with `rzp_test_` or `rzp_live_` |
+| `RAZORPAY_KEY_SECRET`     | API Key Secret                        |                                        |
+| `RAZORPAY_WEBHOOK_SECRET` | Webhook signature verification secret | Required for payment confirmation      |
 
-# 4. Run tests with coverage
-ENVIRONMENT=test deno test --allow-all --coverage=coverage tests/
-deno coverage coverage/
-```
+### 5. Email Service (Transactional)
 
-## Common Issues
+The system supports **Resend** (recommended) or **AWS SES**.
 
-### "DATABASE_URL environment variable is required"
+**Option A: Resend (Simpler)**
 
-- Make sure you have created the appropriate `.env` file
-- Check that `ENVIRONMENT` matches your env file (e.g., `test` →
-  `.env.test.local`)
-- Verify the env file contains `DATABASE_URL`
+| Variable         | Description                                   |
+| :--------------- | :-------------------------------------------- |
+| `RESEND_API_KEY` | API Key starting with `re_`                   |
+| `EMAIL_FROM`     | Sender address (e.g. `onboarding@resend.dev`) |
 
-### Tests fail with "relation does not exist"
+**Option B: AWS SES (Scalable)**
 
-- Run migrations on test database: `deno task test:migrate`
-- Or reset test database: `deno task test:reset`
+| Variable                | Description                    |
+| :---------------------- | :----------------------------- |
+| `SES_ACCESS_KEY_ID`     | IAM User Access Key            |
+| `SES_SECRET_ACCESS_KEY` | IAM User Secret Key            |
+| `SES_REGION`            | AWS Region (e.g. `ap-south-1`) |
+| `EMAIL_FROM`            | Verified sender address        |
 
-### Port already in use
+### 6. AWS S3 (File Storage)
 
-- Development uses port 8000
-- Tests use port 8001
-- Make sure no other processes are using these ports
+Required for uploading product images and avatars.
 
-### Authentication not working
+| Variable                | Description                     |
+| :---------------------- | :------------------------------ |
+| `AWS_ACCESS_KEY_ID`     | Access Key (can share with SES) |
+| `AWS_SECRET_ACCESS_KEY` | Secret Key (can share with SES) |
+| `S3_BUCKET_NAME`        | Public-read enabled bucket name |
+| `AWS_REGION`            | Bucket region                   |
 
-- Check `JWT_SECRET` is set in your env file
-- Verify you ran `deno task db:seed` to create superadmin
-- Make sure `jose` is in `deno.json` imports
+---
 
-## CI/CD Integration
+## Environment Files
 
-### GitHub Actions Example
+| File                     | Use Case                    | Git Status                         |
+| :----------------------- | :-------------------------- | :--------------------------------- |
+| `.env.development.local` | Local development overrides | **Committed** (safe defaults only) |
+| `.env.test.local`        | Test runner config          | **Committed**                      |
+| `.env.production.local`  | Production secrets          | **NEVER COMMIT**                   |
+| `.env.example`           | Template for new devs       | **Committed**                      |
 
-```yaml
-env:
-  ENVIRONMENT: test
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-  JWT_SECRET: test-secret-for-ci
+## Loading Priority
 
-steps:
-  - name: Setup Test Database
-    run: deno task test:reset
-
-  - name: Run Tests
-    run: deno task test
-```
-
-### Using System Environment Variables
-
-```bash
-# Override any config with system env vars
-export DATABASE_URL="postgresql://user:pass@host:5432/db"
-export JWT_SECRET="my-secret-key"
-deno task dev
-```
-
-System environment variables take highest priority and override env files.
+1. **System ENV** (e.g. Kubernetes/Docker env vars) - _Highest_
+2. **.env.production.local** (if `ENVIRONMENT=production`)
+3. **.env.development.local** (if `ENVIRONMENT=development`)
+4. **.env** (Generic fallback) - _Lowest_

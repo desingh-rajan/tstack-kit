@@ -1,266 +1,136 @@
-# TonyStack Coding Standards
+# Coding Standards
 
-## Code Quality Rules
+**Philosophy:** Clarity, consistency, and professional rigor.
 
-### 1. NO Emojis or Emoticons in Code or Logs
+## 1. AI-Assisted Development Protocol
 
-**Rule**: Never use emojis or emoticons in:
+**Rule:** Treat AI output as a draft, not a final deliverable.
 
-- Console.log statements
-- Error messages
-- Comments
-- Variable names
-- Function names
-- Test output
+Since many developers use advanced models (Claude Opus, Gemini 3 Pro, etc.),
+strict discipline is required:
 
-**Why**:
+- **Iterative Refinement**: Initial AI code often lacks context. Revise
+  iteratively to align with existing architecture.
+- **Verification**: AI can hallucinate imports or use deprecated patterns.
+  Verify every line.
+- **Standard Enforcement**: explicitly instruct the AI to follow these Coding
+  Standards.
+- **No shortcuts**: Do not commit code you do not understand.
 
-- Not all terminals support emoji rendering properly
-- Creates inconsistent display across different environments
-- Professional code should use plain text
-- Better for CI/CD logs and log aggregation tools
-- Improves searchability and grep-ability
+## 2. Code Quality & Formatting
 
-**Bad**:
+**Rule:** TStack mandates a strictly professional, text-based log format.
 
-```typescript
-console.log("[SUCCESS] User created successfully");
-console.error("[ERROR] Database connection failed");
-Logger.info(" Server started!");
-```
+- **NO Emojis**: Do not use emojis in code, comments, logs, or commit messages.
+- **Log Prefixes**: Use standard text prefixes for grep-ability.
+  - `[INFO]`, `[WARN]`, `[ERROR]`, `[DEBUG]`, `[SUCCESS]`
+- **Formatting**: All code must pass `deno fmt`.
 
-**Good**:
+**Example:**
 
 ```typescript
-console.log("[SUCCESS] User created successfully");
-console.error("[ERROR] Database connection failed");
-Logger.info("[INFO] Server started");
+// BAD
+console.log("Server started! [emoji]");
+throw new Error("Failed [emoji]");
+
+// GOOD
+console.log("[INFO] Server started on port 8000");
+throw new Error("[ERROR] Database connection failed: Connection refused");
 ```
 
-**Prefixes to use**:
+## 3. Naming Conventions
 
-- `[SUCCESS]` or `[OK]` for successful operations
-- `[ERROR]` or `[FAIL]` for errors
-- `[WARNING]` or `[WARN]` for warnings
-- `[INFO]` for informational messages
-- `[DEBUG]` for debug output
+Follow these patterns strictly to maintain project consistency.
 
-### 2. Clean Console Output
+| Type                 | Convention         | Example                                 |
+| :------------------- | :----------------- | :-------------------------------------- |
+| **Files**            | `kebab-case`       | `user-service.ts`, `auth-middleware.ts` |
+| **Classes**          | `PascalCase`       | `UserService`, `AuthMiddleware`         |
+| **Functions**        | `camelCase`        | `createUser`, `validateToken`           |
+| **Variables**        | `camelCase`        | `userProfile`, `isValid`                |
+| **Constants**        | `UPPER_SNAKE_CASE` | `MAX_RETRIES`, `DEFAULT_PORT`           |
+| **Database Tables**  | `snake_case`       | `user_profiles`, `orders`               |
+| **Database Columns** | `snake_case`       | `user_id`, `created_at`                 |
 
-**Rule**: Console logs should be clear, parseable, and professional.
+## 4. TypeScript Guidelines
 
-**Good patterns**:
+- **Strict Mode**: Always enabled.
+- **Explicit Returns**: Public methods must have explicit return types.
+- **No Any**: Do not use `any`. Use `unknown` if necessary, or specific types.
+  - _Exception_: Controlled usage with `// deno-lint-ignore no-explicit-any`
+    where strictly required.
+- **Interfaces**: Prefer `interface` over `type` for object definitions.
 
-```typescript
-console.log("[INFO] Environment loaded from .env.development");
-console.log("[SUCCESS] Database migrated successfully");
-console.error("[ERROR] Failed to connect to database:", error.message);
-console.warn("[WARNING] Missing optional configuration: SMTP_HOST");
-```
+## 5. Architecture & Organization
 
-### 3. Comments
+TStack follows a rigorous MVC + Service layer architecture.
 
-**Rule**: Comments should explain WHY, not WHAT.
+- **Controllers**: Handle HTTP transport only (Requests, Responses, Status
+  Codes).
+- **Services**: Contain all business logic. No HTTP concerns.
+- **DTOs**: Define data shapes and validation schemas (Zod).
+- **Entities**: Database schemas (Drizzle).
 
-**Bad**:
-
-```typescript
-// Create user
-const user = await db.insert(users).values(data);
-```
-
-**Good**:
-
-```typescript
-// Password is already hashed by auth middleware
-const user = await db.insert(users).values(data);
-```
-
-**Remove**:
-
-- TODO comments that are never done
-- Commented-out code (use git history instead)
-- Redundant comments that repeat the code
-
-### 4. Error Handling
-
-**Rule**: Always provide context in error messages.
-
-**Bad**:
-
-```typescript
-throw new Error("Failed");
-```
-
-**Good**:
-
-```typescript
-throw new Error(`Failed to create user: ${email} already exists`);
-```
-
-### 5. Naming Conventions
-
-- **Files**: kebab-case (`user-service.ts`, `auth-middleware.ts`)
-- **Classes**: PascalCase (`UserService`, `AuthMiddleware`)
-- **Functions/Methods**: camelCase (`createUser`, `validateToken`)
-- **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`, `DEFAULT_PORT`)
-- **Interfaces/Types**: PascalCase (`User`, `AuthToken`)
-
-### 6. TypeScript
-
-- Always specify return types for public functions
-- Use strict mode
-- No `any` without `// deno-lint-ignore no-explicit-any` comment
-- Prefer interfaces over type aliases for object shapes
-- Use enums for fixed sets of values
-
-### 7. Testing
-
-- Test files next to code (colocated)
-- Clear test names describing behavior
-- NO console.log with emojis in tests
-- Use descriptive assertions
-
-**Good test**:
-
-```typescript
-await t.step("POST /users - creates user successfully", async () => {
-  const result = await apiRequest("/users", {
-    method: "POST",
-    body: JSON.stringify({ email: "test@example.com" }),
-  });
-
-  assertEquals(result.status, 201);
-  assertEquals(result.data.email, "test@example.com");
-});
-```
-
-### 8. API Responses
-
-- Consistent response structure
-- Use proper HTTP status codes
-- Include helpful error messages
-- NO emojis in API responses
-
-**Good**:
-
-```typescript
-return c.json({
-  status: "success",
-  data: user,
-  message: "User created successfully",
-}, 201);
-```
-
-### 9. File Organization
+**Directory Structure:**
 
 ```text
 src/
-├── auth/           # Auth feature
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   ├── auth.route.ts
-│   ├── auth.dto.ts
-│   ├── auth.model.ts
-│   └── auth.test.ts    # Colocated test
-├── entities/       # Business entities
+├── entities/
 │   └── users/
-│       ├── user.controller.ts
-│       ├── user.service.ts
-│       └── user.test.ts
-└── shared/         # Shared utilities
-    ├── middleware/
-    ├── utils/
-    └── types/
+│       ├── user.model.ts      # Drizzle Schema
+│       ├── user.dto.ts        # Zod Validation
+│       ├── user.service.ts    # Business Logic
+│       ├── user.controller.ts # HTTP Handler
+│       ├── user.route.ts      # Route Definition
+│       └── user.test.ts       # Integration Test
 ```
 
-### 10. Git Commits
+## 6. Error Handling
 
-**Format**: `<type>(<scope>): <subject>`
+- **Contextual**: Errors must explain _why_ something failed, not just _that_ it
+  failed.
+- **Typed**: Use custom error classes where possible.
+- **Propagation**: Let errors bubble up to the global error handler unless
+  specific recovery is needed.
 
-**Types**:
+```typescript
+// BAD
+throw new Error("Invalid input");
+
+// GOOD
+throw new Error(
+  `[ERROR] Invalid input: Email '${email}' is already registered`,
+);
+```
+
+## 7. Testing Standards
+
+- **Colocation**: Test files live next to the source (`user.service.ts` ->
+  `user.service.test.ts`).
+- **Isolation**: Tests must not depend on shared global state. Use
+  `beforeEach`/`afterEach` for cleanup.
+- **Directness**: Test specific behaviors, avoiding complex mocks where
+  integration tests suffice.
+
+## 8. Git Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+`type(scope): description`
+
+**Types:**
 
 - `feat`: New feature
 - `fix`: Bug fix
-- `docs`: Documentation
-- `refactor`: Code refactoring
-- `test`: Test additions/modifications
-- `chore`: Maintenance tasks
+- `docs`: Documentation changes
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding or correcting tests
+- `chore`: Changes to build process or auxiliary tools
 
-**Examples**:
-
-```bash
-feat(auth): add role-based access control
-fix(users): prevent duplicate email registration
-docs(readme): update installation instructions
-refactor(articles): remove emoji from logs
-test(auth): add tests for password change
-```
-
-### 11. Database
-
-- Use migrations for all schema changes
-- Never modify migrations after they're committed
-- Use meaningful constraint names
-- Add indexes for foreign keys
-- Use snake_case for column names in database
-
-### 12. Security
-
-- Never log sensitive data (passwords, tokens)
-- Validate all user input
-- Use parameterized queries (Drizzle handles this)
-- Hash passwords with bcrypt
-- Use environment variables for secrets
-- Implement rate limiting
-- Use HTTPS in production
-
-## Code Review Checklist
-
-Before committing:
-
-- [ ] NO emojis in code or logs
-- [ ] All functions have return types
-- [ ] Tests pass
-- [ ] No commented-out code
-- [ ] Error messages are descriptive
-- [ ] Console logs use proper prefixes (\[INFO\], \[ERROR\], etc.)
-- [ ] Files formatted with `deno fmt`
-- [ ] No `any` types without lint-ignore
-- [ ] Commit message follows format
-
-## Auto-fix Commands
+**Example:**
 
 ```bash
-# Format code
-deno fmt
-
-# Check types
-deno check src/main.ts
-
-# Run tests
-ENVIRONMENT=test deno test --allow-all src/
-
-# Search for emojis (to remove them)
-grep -r "[SUCCESS]\|[ERROR]\|\|[WARNING]\|\|\|🌱" src/
+feat(auth): implement google oauth provider
+fix(users): resolve unique constraint violation on email
+docs(readme): update critical configuration table
 ```
-
-## Why These Standards Matter
-
-1. **Consistency**: Code looks the same regardless of who wrote it
-2. **Maintainability**: Easy to understand and modify
-3. **Professionalism**: Production-ready code quality
-4. **Debuggability**: Clear logs make troubleshooting easier
-5. **Collaboration**: Standards make teamwork smoother
-6. **CI/CD**: Clean logs work better in automated pipelines
-
-## Enforcement
-
-These standards are enforced through:
-
-- Code reviews
-- Linting tools
-- Automated formatters
-- This documentation
-
-When in doubt, prioritize clarity and simplicity over cleverness.
