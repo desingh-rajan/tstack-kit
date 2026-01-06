@@ -121,7 +121,7 @@ export default define.page<typeof handler>(function Home({ data }) {
               Built on Modern Tech
             </h2>
             <div class="flex flex-wrap justify-center gap-3 md:gap-4 px-4">
-              <span class="badge badge-lg badge-primary">Deno 2.6+</span>
+              <span class="badge badge-lg badge-primary">Deno 2.6.4+</span>
               <span class="badge badge-lg badge-secondary">Hono</span>
               <span class="badge badge-lg badge-accent">Drizzle ORM</span>
               <span class="badge badge-lg badge-info">PostgreSQL</span>

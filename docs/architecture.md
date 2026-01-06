@@ -60,7 +60,7 @@ Each project:
 
 | Layer         | Technology                |
 | ------------- | ------------------------- |
-| Runtime       | Deno 2.6+                 |
+| Runtime       | Deno 2.6.4+               |
 | API Framework | Hono                      |
 | ORM           | Drizzle                   |
 | Database      | PostgreSQL 16+            |

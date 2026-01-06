@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Deno 2.6+ (`curl -fsSL https://deno.land/install.sh | sh`)
+- Deno 2.6.4+ (`curl -fsSL https://deno.land/install.sh | sh`)
 - PostgreSQL 16+ (or Docker)
 - Git
 
@@ -119,7 +119,7 @@ One command scaffolds a complete entity with tests.
 
 ### Why Deno Over Node.js
 
-We chose Deno 2.6+ for specific technical reasons:
+We chose Deno 2.6.4+ for specific technical reasons:
 
 1. **Built-in TypeScript** - No transpilation step, no tsconfig complexity. Your
    code runs as-is.

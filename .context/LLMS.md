@@ -33,7 +33,7 @@ with Deno.
 
 | Layer      | Technology             | Purpose                       |
 | ---------- | ---------------------- | ----------------------------- |
-| Runtime    | Deno 2.6+              | JavaScript/TypeScript runtime |
+| Runtime    | Deno 2.6.4+            | JavaScript/TypeScript runtime |
 | Backend    | Hono                   | Fast web framework            |
 | Database   | PostgreSQL 16+         | Relational database           |
 | ORM        | Drizzle ORM            | Type-safe database access     |

@@ -593,7 +593,7 @@ export async function requireAuth(c: Context, next: Next) {
 
 **Requirements:**
 
-- Deno 2.6+ or Node.js 18+
+- Deno 2.6.4+ or Node.js 18+
 - Hono 4.6+
 - Drizzle ORM 0.36+
 - PostgreSQL (MySQL/SQLite planned)

@@ -110,7 +110,7 @@
 
 **Name:** `@tstack/admin`\
 **Version:** 0.1.0\
-**Runtime:** Deno 2.6+\
+**Runtime:** Deno 2.6.4+\
 **Framework:** Hono 4.6+\
 **ORM:** Drizzle 0.36+
 
