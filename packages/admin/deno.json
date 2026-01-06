@@ -1,6 +1,6 @@
 {
   "name": "@tstack/admin",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "exports": "./mod.ts",
   "license": "MIT",
   "description": "Production-ready admin CRUD API for TStack Kit. Pure JSON API with pagination, search, sorting, and role-based access control. Framework-agnostic, ORM-agnostic architecture.",
