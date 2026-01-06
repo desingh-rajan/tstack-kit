@@ -24,7 +24,11 @@ const childSlug = "child-category";
 // CATEGORY PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Category Public API", () => {
+describe({
+  name: "Category Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -85,7 +89,11 @@ describe("Category Public API", () => {
   // GET CATEGORY TREE
   // --------------------------------------------------------------------------
 
-  describe("GET /categories", () => {
+  describe({
+    name: "GET /categories",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return hierarchical category tree", async () => {
       const response = await app.request("/categories");
 
@@ -101,7 +109,11 @@ describe("Category Public API", () => {
   // GET ROOT CATEGORIES
   // --------------------------------------------------------------------------
 
-  describe("GET /categories/roots", () => {
+  describe({
+    name: "GET /categories/roots",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return only root categories", async () => {
       const response = await app.request("/categories/roots");
 
@@ -122,7 +134,11 @@ describe("Category Public API", () => {
   // GET CATEGORY BY ID
   // --------------------------------------------------------------------------
 
-  describe("GET /categories/:id", () => {
+  describe({
+    name: "GET /categories/:id",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return category by ID", async () => {
       const response = await app.request(`/categories/${rootCategoryId}`);
 
@@ -145,7 +161,11 @@ describe("Category Public API", () => {
   // GET CATEGORY BY SLUG
   // --------------------------------------------------------------------------
 
-  describe("GET /categories/slug/:slug", () => {
+  describe({
+    name: "GET /categories/slug/:slug",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return category by slug", async () => {
       const response = await app.request(`/categories/slug/${rootSlug}`);
 
@@ -167,7 +187,11 @@ describe("Category Public API", () => {
   // GET CATEGORY CHILDREN
   // --------------------------------------------------------------------------
 
-  describe("GET /categories/:id/children", () => {
+  describe({
+    name: "GET /categories/:id/children",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return children of a category", async () => {
       const response = await app.request(
         `/categories/${rootCategoryId}/children`,

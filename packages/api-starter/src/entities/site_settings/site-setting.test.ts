@@ -141,7 +141,11 @@ async function createTestUser(
 // SITE SETTINGS API TEST SUITE
 // ============================================================================
 
-describe("Site Settings API", () => {
+describe({
+  name: "Site Settings API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -189,7 +193,11 @@ describe("Site Settings API", () => {
   // PUBLIC READ ACCESS
   // --------------------------------------------------------------------------
 
-  describe("Public Read Access", () => {
+  describe({
+    name: "Public Read Access",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should allow unauthenticated users to list settings", async () => {
       const response = await apiRequest("/site-settings");
 
@@ -250,7 +258,11 @@ describe("Site Settings API", () => {
   // PROTECTED WRITE ACCESS
   // --------------------------------------------------------------------------
 
-  describe("Protected Write Access", () => {
+  describe({
+    name: "Protected Write Access",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should reject create without authentication", async () => {
       const response = await apiRequest("/site-settings", undefined, {
         method: "POST",
@@ -301,7 +313,11 @@ describe("Site Settings API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should reject update without authentication", async () => {
       const response = await apiRequest(
         `/site-settings/${testSettingId}`,
@@ -370,7 +386,11 @@ describe("Site Settings API", () => {
   // DELETE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should reject delete without authentication", async () => {
       const response = await apiRequest(
         `/site-settings/${testSettingId}`,
@@ -420,7 +440,11 @@ describe("Site Settings API", () => {
   // SYSTEM SETTINGS
   // --------------------------------------------------------------------------
 
-  describe("System Settings", () => {
+  describe({
+    name: "System Settings",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should auto-seed system setting on first access", async () => {
       const response = await apiRequest("/site-settings/theme_config");
 

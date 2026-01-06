@@ -112,7 +112,11 @@ async function createTestUser(
 // SITE SETTINGS ADMIN API TEST SUITE
 // ============================================================================
 
-describe("Site Settings Admin Panel API", () => {
+describe({
+  name: "Site Settings Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   const BASE_URL = "/ts-admin/site_settings";
 
   // --------------------------------------------------------------------------
@@ -153,7 +157,11 @@ describe("Site Settings Admin Panel API", () => {
   // LIST & METADATA
   // --------------------------------------------------------------------------
 
-  describe("List and Metadata", () => {
+  describe({
+    name: "List and Metadata",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return JSON list of settings", async () => {
       const res = await adminRequest(BASE_URL, superadminToken);
 
@@ -217,7 +225,11 @@ describe("Site Settings Admin Panel API", () => {
   // CREATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Create Operations", () => {
+  describe({
+    name: "Create Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create setting via JSON API", async () => {
       const res = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -244,7 +256,11 @@ describe("Site Settings Admin Panel API", () => {
   // READ OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Read Operations", () => {
+  describe({
+    name: "Read Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return single setting as JSON", async () => {
       const res = await adminRequest(
         `${BASE_URL}/${testSettingId}`,
@@ -277,7 +293,11 @@ describe("Site Settings Admin Panel API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update setting description", async () => {
       const res = await adminRequest(
         `${BASE_URL}/${testSettingId}`,
@@ -337,7 +357,11 @@ describe("Site Settings Admin Panel API", () => {
   // DELETE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should delete single setting", async () => {
       const res = await adminRequest(
         `${BASE_URL}/${testSettingId}`,
@@ -401,7 +425,11 @@ describe("Site Settings Admin Panel API", () => {
   // SYSTEM SETTINGS
   // --------------------------------------------------------------------------
 
-  describe("System Settings Management", () => {
+  describe({
+    name: "System Settings Management",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should prevent deletion of system settings", async () => {
       // Get theme_config (system setting)
       const getRes = await app.request("/site-settings/theme_config");

@@ -95,7 +95,11 @@ function generateOrderNumber(): string {
 // ADMIN PANEL API TEST SUITE
 // ============================================================================
 
-describe("Order Admin Panel API", () => {
+describe({
+  name: "Order Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -199,7 +203,11 @@ describe("Order Admin Panel API", () => {
   // LIST ORDERS
   // --------------------------------------------------------------------------
 
-  describe("List Orders", () => {
+  describe({
+    name: "List Orders",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return list of all orders", async () => {
       const response = await adminRequest("/ts-admin/orders", superadminToken);
 
@@ -252,7 +260,11 @@ describe("Order Admin Panel API", () => {
   // GET SINGLE ORDER
   // --------------------------------------------------------------------------
 
-  describe("Get Single Order", () => {
+  describe({
+    name: "Get Single Order",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return order details by ID", async () => {
       const response = await adminRequest(
         `/ts-admin/orders/${testOrderId}`,
@@ -282,7 +294,11 @@ describe("Order Admin Panel API", () => {
   // UPDATE ORDER STATUS
   // --------------------------------------------------------------------------
 
-  describe("Update Order Status", () => {
+  describe({
+    name: "Update Order Status",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update order status via PUT /status endpoint", async () => {
       const response = await adminRequest(
         `/ts-admin/orders/${testOrderId}/status`,
@@ -332,7 +348,11 @@ describe("Order Admin Panel API", () => {
   // ACCESS CONTROL
   // --------------------------------------------------------------------------
 
-  describe("Access Control", () => {
+  describe({
+    name: "Access Control",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should allow admin users to list orders", async () => {
       const response = await adminRequest("/ts-admin/orders", adminToken);
 

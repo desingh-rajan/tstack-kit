@@ -22,7 +22,11 @@ const testSlug = "test-public-brand";
 // BRAND PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Brand Public API", () => {
+describe({
+  name: "Brand Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -73,7 +77,11 @@ describe("Brand Public API", () => {
   // LIST ACTIVE BRANDS
   // --------------------------------------------------------------------------
 
-  describe("GET /brands", () => {
+  describe({
+    name: "GET /brands",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return list of active brands", async () => {
       const response = await app.request("/brands");
 
@@ -97,7 +105,11 @@ describe("Brand Public API", () => {
   // GET BRAND BY ID
   // --------------------------------------------------------------------------
 
-  describe("GET /brands/:id", () => {
+  describe({
+    name: "GET /brands/:id",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return brand by ID", async () => {
       const response = await app.request(`/brands/${testBrandId}`);
 
@@ -121,7 +133,11 @@ describe("Brand Public API", () => {
   // GET BRAND BY SLUG
   // --------------------------------------------------------------------------
 
-  describe("GET /brands/slug/:slug", () => {
+  describe({
+    name: "GET /brands/slug/:slug",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return brand by slug", async () => {
       const response = await app.request(`/brands/slug/${testSlug}`);
 

@@ -140,7 +140,11 @@ async function createTestUser(
 // ADMIN PANEL API TEST SUITE
 // ============================================================================
 
-describe("Article Admin Panel API", () => {
+describe({
+  name: "Article Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -190,7 +194,11 @@ describe("Article Admin Panel API", () => {
   // LIST & METADATA ENDPOINTS
   // --------------------------------------------------------------------------
 
-  describe("List and Metadata", () => {
+  describe({
+    name: "List and Metadata",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return JSON list with pagination metadata", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
@@ -284,7 +292,11 @@ describe("Article Admin Panel API", () => {
   // CREATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Create Operations", () => {
+  describe({
+    name: "Create Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create article via JSON API", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",
@@ -318,7 +330,11 @@ describe("Article Admin Panel API", () => {
   // READ OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Read Operations", () => {
+  describe({
+    name: "Read Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return single article as JSON", async () => {
       const response = await adminRequest(
         `/ts-admin/articles/${testArticleId}`,
@@ -351,7 +367,11 @@ describe("Article Admin Panel API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update article via JSON API", async () => {
       const response = await adminRequest(
         `/ts-admin/articles/${testArticleId}`,
@@ -384,7 +404,11 @@ describe("Article Admin Panel API", () => {
   // DELETE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should delete single article", async () => {
       // Create article to delete
       const createRes = await adminRequest(
@@ -500,7 +524,11 @@ describe("Article Admin Panel API", () => {
   // ROLE-BASED ACCESS CONTROL
   // --------------------------------------------------------------------------
 
-  describe("Role-Based Access Control", () => {
+  describe({
+    name: "Role-Based Access Control",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should allow admin role to access admin panel", async () => {
       const response = await adminRequest(
         "/ts-admin/articles",

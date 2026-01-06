@@ -79,7 +79,11 @@ async function createTestUser(
 // CATEGORY ADMIN API TEST SUITE
 // ============================================================================
 
-describe("Category Admin Panel API", () => {
+describe({
+  name: "Category Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   const BASE_URL = "/ts-admin/categories";
 
   // --------------------------------------------------------------------------
@@ -136,7 +140,11 @@ describe("Category Admin Panel API", () => {
   // AUTHORIZATION TESTS
   // --------------------------------------------------------------------------
 
-  describe("Authorization", () => {
+  describe({
+    name: "Authorization",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should deny access without authentication", async () => {
       const response = await app.request(BASE_URL);
       assertEquals(response.status, 401);
@@ -163,7 +171,11 @@ describe("Category Admin Panel API", () => {
   // LIST & METADATA ENDPOINTS
   // --------------------------------------------------------------------------
 
-  describe("List and Metadata", () => {
+  describe({
+    name: "List and Metadata",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return JSON list with pagination metadata", async () => {
       const response = await adminRequest(BASE_URL, superadminToken);
 
@@ -209,7 +221,11 @@ describe("Category Admin Panel API", () => {
   // CREATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Create Operations", () => {
+  describe({
+    name: "Create Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create parent category via JSON API", async () => {
       const response = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -287,7 +303,11 @@ describe("Category Admin Panel API", () => {
   // READ OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Read Operations", () => {
+  describe({
+    name: "Read Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return single category as JSON", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testCategoryId}`,
@@ -320,7 +340,11 @@ describe("Category Admin Panel API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update category via JSON API", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testCategoryId}`,
@@ -353,7 +377,11 @@ describe("Category Admin Panel API", () => {
   // DELETE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should delete single category", async () => {
       // Create category to delete
       const createRes = await adminRequest(BASE_URL, superadminToken, {

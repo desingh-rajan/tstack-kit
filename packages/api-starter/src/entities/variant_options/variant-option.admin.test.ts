@@ -80,7 +80,11 @@ async function createTestUser(
 // VARIANT OPTION ADMIN API TEST SUITE
 // ============================================================================
 
-describe("Variant Option Admin Panel API", () => {
+describe({
+  name: "Variant Option Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   const BASE_URL = "/ts-admin/variant-options";
 
   // --------------------------------------------------------------------------
@@ -133,7 +137,11 @@ describe("Variant Option Admin Panel API", () => {
   // AUTHORIZATION TESTS
   // --------------------------------------------------------------------------
 
-  describe("Authorization", () => {
+  describe({
+    name: "Authorization",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should deny access without authentication", async () => {
       const response = await app.request(BASE_URL);
       assertEquals(response.status, 401);
@@ -173,7 +181,11 @@ describe("Variant Option Admin Panel API", () => {
   // CREATE OPERATIONS - POSITIVE CASES
   // --------------------------------------------------------------------------
 
-  describe("Create Operations - Positive Cases", () => {
+  describe({
+    name: "Create Operations - Positive Cases",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create Color type option", async () => {
       const response = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -266,7 +278,11 @@ describe("Variant Option Admin Panel API", () => {
   // CREATE OPERATIONS - NEGATIVE CASES
   // --------------------------------------------------------------------------
 
-  describe("Create Operations - Negative Cases", () => {
+  describe({
+    name: "Create Operations - Negative Cases",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should reject creation with missing required name field", async () => {
       const response = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -336,7 +352,11 @@ describe("Variant Option Admin Panel API", () => {
   // READ OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Read Operations", () => {
+  describe({
+    name: "Read Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return list with pagination metadata", async () => {
       const response = await adminRequest(BASE_URL, superadminToken);
 
@@ -414,7 +434,11 @@ describe("Variant Option Admin Panel API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update option name", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${colorOptionId}`,
@@ -508,7 +532,11 @@ describe("Variant Option Admin Panel API", () => {
   // DELETE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should delete single option", async () => {
       // Create option to delete
       const createRes = await adminRequest(BASE_URL, superadminToken, {

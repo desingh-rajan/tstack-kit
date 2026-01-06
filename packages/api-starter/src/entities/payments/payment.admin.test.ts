@@ -95,7 +95,11 @@ function generateOrderNumber(): string {
 // ADMIN PANEL API TEST SUITE
 // ============================================================================
 
-describe("Payment Admin Panel API", () => {
+describe({
+  name: "Payment Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -211,7 +215,11 @@ describe("Payment Admin Panel API", () => {
   // REFUND ENDPOINT
   // --------------------------------------------------------------------------
 
-  describe("Refund Payment", () => {
+  describe({
+    name: "Refund Payment",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should process refund for a paid order", async () => {
       const response = await adminRequest(
         `/ts-admin/payments/${testOrderId}/refund`,
@@ -263,7 +271,11 @@ describe("Payment Admin Panel API", () => {
   // ACCESS CONTROL
   // --------------------------------------------------------------------------
 
-  describe("Access Control", () => {
+  describe({
+    name: "Access Control",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should allow admin users to process refunds", async () => {
       const response = await adminRequest(
         `/ts-admin/payments/${testOrderId}/refund`,

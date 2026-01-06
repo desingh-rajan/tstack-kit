@@ -26,7 +26,11 @@ let testCategoryId = "";
 // PRODUCT PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Product Public API", () => {
+describe({
+  name: "Product Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -131,7 +135,11 @@ describe("Product Public API", () => {
   // LIST PRODUCTS
   // --------------------------------------------------------------------------
 
-  describe("GET /products", () => {
+  describe({
+    name: "GET /products",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return paginated list of products", async () => {
       const response = await app.request("/products");
 
@@ -240,7 +248,11 @@ describe("Product Public API", () => {
   // GET PRODUCT BY ID
   // --------------------------------------------------------------------------
 
-  describe("GET /products/:id", () => {
+  describe({
+    name: "GET /products/:id",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return product by ID", async () => {
       const response = await app.request(`/products/${activeProductId}`);
 
@@ -279,7 +291,11 @@ describe("Product Public API", () => {
   // GET PRODUCT BY SLUG
   // --------------------------------------------------------------------------
 
-  describe("GET /products/slug/:slug", () => {
+  describe({
+    name: "GET /products/slug/:slug",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return product by slug", async () => {
       const response = await app.request(`/products/slug/${activeProductSlug}`);
 
@@ -316,36 +332,39 @@ describe("Product Public API", () => {
   // EDGE CASES
   // --------------------------------------------------------------------------
 
-  describe("Edge Cases", () => {
-    it("should handle URL-encoded slug", async () => {
-      const response = await app.request(
-        `/products/slug/${encodeURIComponent(activeProductSlug)}`,
-      );
+  describe(
+    { name: "Edge Cases", sanitizeResources: false, sanitizeOps: false },
+    () => {
+      it("should handle URL-encoded slug", async () => {
+        const response = await app.request(
+          `/products/slug/${encodeURIComponent(activeProductSlug)}`,
+        );
 
-      assertEquals(response.status, 200);
-    });
+        assertEquals(response.status, 200);
+      });
 
-    it("should reject invalid query parameters gracefully", async () => {
-      const response = await app.request("/products?page=-1&limit=10000");
+      it("should reject invalid query parameters gracefully", async () => {
+        const response = await app.request("/products?page=-1&limit=10000");
 
-      // Should either return 400 or handle gracefully
-      assertExists(response.status);
-    });
+        // Should either return 400 or handle gracefully
+        assertExists(response.status);
+      });
 
-    it("should handle empty brandId filter", async () => {
-      const response = await app.request("/products?brandId=");
+      it("should handle empty brandId filter", async () => {
+        const response = await app.request("/products?brandId=");
 
-      // Should handle empty value gracefully
-      assertEquals(response.status, 200);
-    });
+        // Should handle empty value gracefully
+        assertEquals(response.status, 200);
+      });
 
-    it("should handle SQL injection attempts safely", async () => {
-      const response = await app.request(
-        "/products?search='; DROP TABLE products;--",
-      );
+      it("should handle SQL injection attempts safely", async () => {
+        const response = await app.request(
+          "/products?search='; DROP TABLE products;--",
+        );
 
-      // Should not crash, either 200 with empty or handled
-      assertExists(response.status);
-    });
-  });
+        // Should not crash, either 200 with empty or handled
+        assertExists(response.status);
+      });
+    },
+  );
 });

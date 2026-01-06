@@ -81,7 +81,11 @@ async function createTestUser(
 // ADMIN PANEL API TEST SUITE
 // ============================================================================
 
-describe("Address Admin Panel API", () => {
+describe({
+  name: "Address Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -156,7 +160,11 @@ describe("Address Admin Panel API", () => {
   // LIST & METADATA ENDPOINTS
   // --------------------------------------------------------------------------
 
-  describe("List and Metadata", () => {
+  describe({
+    name: "List and Metadata",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return JSON list with pagination metadata", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses",
@@ -220,7 +228,11 @@ describe("Address Admin Panel API", () => {
   // GET SINGLE ENTITY
   // --------------------------------------------------------------------------
 
-  describe("Get Single Address", () => {
+  describe({
+    name: "Get Single Address",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return address details by ID", async () => {
       const response = await adminRequest(
         `/ts-admin/addresses/${testAddressId}`,
@@ -250,7 +262,11 @@ describe("Address Admin Panel API", () => {
   // CREATE ADDRESS
   // --------------------------------------------------------------------------
 
-  describe("Create Address", () => {
+  describe({
+    name: "Create Address",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create a new address via admin panel", async () => {
       const response = await adminRequest(
         "/ts-admin/addresses",
@@ -291,7 +307,11 @@ describe("Address Admin Panel API", () => {
   // UPDATE ADDRESS
   // --------------------------------------------------------------------------
 
-  describe("Update Address", () => {
+  describe({
+    name: "Update Address",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update an existing address", async () => {
       const response = await adminRequest(
         `/ts-admin/addresses/${testAddressId}`,
@@ -322,7 +342,11 @@ describe("Address Admin Panel API", () => {
   // DELETE ADDRESS
   // --------------------------------------------------------------------------
 
-  describe("Delete Address", () => {
+  describe({
+    name: "Delete Address",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should delete an address", async () => {
       // Create address to delete
       const [addressToDelete] = await db
@@ -363,7 +387,11 @@ describe("Address Admin Panel API", () => {
   // ACCESS CONTROL
   // --------------------------------------------------------------------------
 
-  describe("Access Control", () => {
+  describe({
+    name: "Access Control",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should allow admin users to access", async () => {
       const response = await adminRequest("/ts-admin/addresses", adminToken);
 

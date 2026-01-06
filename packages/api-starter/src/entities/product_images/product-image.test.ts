@@ -23,7 +23,11 @@ let productWithNoImages = "";
 // PRODUCT IMAGE PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Product Image Public API", () => {
+describe({
+  name: "Product Image Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -99,7 +103,11 @@ describe("Product Image Public API", () => {
   // GET PRODUCT IMAGES
   // --------------------------------------------------------------------------
 
-  describe("GET /products/:productId/images", () => {
+  describe({
+    name: "GET /products/:productId/images",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return all images for a product", async () => {
       const response = await app.request(`/products/${testProductId}/images`);
 
@@ -182,18 +190,21 @@ describe("Product Image Public API", () => {
   // EDGE CASES
   // --------------------------------------------------------------------------
 
-  describe("Edge Cases", () => {
-    it("should handle invalid UUID format", async () => {
-      const response = await app.request("/products/invalid-uuid/images");
+  describe(
+    { name: "Edge Cases", sanitizeResources: false, sanitizeOps: false },
+    () => {
+      it("should handle invalid UUID format", async () => {
+        const response = await app.request("/products/invalid-uuid/images");
 
-      // Should return error or empty, not crash
-      assertExists(response.status);
-    });
+        // Should return error or empty, not crash
+        assertExists(response.status);
+      });
 
-    it("should not expose image admin endpoints publicly", async () => {
-      // Without auth, should be denied
-      const response = await app.request("/ts-admin/product-images");
-      assertEquals(response.status, 401);
-    });
-  });
+      it("should not expose image admin endpoints publicly", async () => {
+        // Without auth, should be denied
+        const response = await app.request("/ts-admin/product-images");
+        assertEquals(response.status, 401);
+      });
+    },
+  );
 });

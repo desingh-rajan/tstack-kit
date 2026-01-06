@@ -15,7 +15,11 @@ import { variantOptions } from "./variant-option.model.ts";
 // VARIANT OPTION PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Variant Option Public API", () => {
+describe({
+  name: "Variant Option Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -54,7 +58,11 @@ describe("Variant Option Public API", () => {
   // GET ALL OPTIONS GROUPED BY TYPE
   // --------------------------------------------------------------------------
 
-  describe("GET /variant-options", () => {
+  describe({
+    name: "GET /variant-options",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return options grouped by type", async () => {
       const response = await app.request("/variant-options");
 
@@ -80,7 +88,11 @@ describe("Variant Option Public API", () => {
   // GET ALL UNIQUE TYPES
   // --------------------------------------------------------------------------
 
-  describe("GET /variant-options/types", () => {
+  describe({
+    name: "GET /variant-options/types",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return all unique option types", async () => {
       const response = await app.request("/variant-options/types");
 
@@ -109,7 +121,11 @@ describe("Variant Option Public API", () => {
   // GET OPTIONS BY TYPE
   // --------------------------------------------------------------------------
 
-  describe("GET /variant-options/type/:type", () => {
+  describe({
+    name: "GET /variant-options/type/:type",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return all Color options", async () => {
       const response = await app.request("/variant-options/type/Color");
 
@@ -176,22 +192,25 @@ describe("Variant Option Public API", () => {
   // EDGE CASES
   // --------------------------------------------------------------------------
 
-  describe("Edge Cases", () => {
-    it("should handle URL-encoded type names", async () => {
-      // Type with space would be encoded
-      const response = await app.request("/variant-options/type/Color");
+  describe(
+    { name: "Edge Cases", sanitizeResources: false, sanitizeOps: false },
+    () => {
+      it("should handle URL-encoded type names", async () => {
+        // Type with space would be encoded
+        const response = await app.request("/variant-options/type/Color");
 
-      assertEquals(response.status, 200);
-    });
+        assertEquals(response.status, 200);
+      });
 
-    it("should handle type with special characters safely", async () => {
-      // Test SQL injection attempt is handled safely
-      const response = await app.request(
-        "/variant-options/type/Color'; DROP TABLE variant_options;--",
-      );
+      it("should handle type with special characters safely", async () => {
+        // Test SQL injection attempt is handled safely
+        const response = await app.request(
+          "/variant-options/type/Color'; DROP TABLE variant_options;--",
+        );
 
-      // Should not crash, either 200 with empty or handled error
-      assertExists(response.status);
-    });
-  });
+        // Should not crash, either 200 with empty or handled error
+        assertExists(response.status);
+      });
+    },
+  );
 });

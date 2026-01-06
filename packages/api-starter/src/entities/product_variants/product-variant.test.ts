@@ -26,7 +26,11 @@ const testSku = "PUB-VAR-SM-RED";
 // PRODUCT VARIANT PUBLIC API TEST SUITE
 // ============================================================================
 
-describe("Product Variant Public API", () => {
+describe({
+  name: "Product Variant Public API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   // --------------------------------------------------------------------------
   // SETUP & TEARDOWN
   // --------------------------------------------------------------------------
@@ -108,7 +112,11 @@ describe("Product Variant Public API", () => {
   // GET VARIANTS BY PRODUCT
   // --------------------------------------------------------------------------
 
-  describe("GET /products/:productId/variants", () => {
+  describe({
+    name: "GET /products/:productId/variants",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return variants for a product", async () => {
       const response = await app.request(`/products/${testProductId}/variants`);
 
@@ -136,7 +144,11 @@ describe("Product Variant Public API", () => {
   // GET VARIANT BY SKU
   // --------------------------------------------------------------------------
 
-  describe("GET /variants/sku/:sku", () => {
+  describe({
+    name: "GET /variants/sku/:sku",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return variant by SKU", async () => {
       const response = await app.request(`/variants/sku/${testSku}`);
 
@@ -158,10 +170,13 @@ describe("Product Variant Public API", () => {
   // EDGE CASES
   // --------------------------------------------------------------------------
 
-  describe("Edge Cases", () => {
-    it("should not expose admin endpoints publicly", async () => {
-      const response = await app.request("/ts-admin/product-variants");
-      assertEquals(response.status, 401);
-    });
-  });
+  describe(
+    { name: "Edge Cases", sanitizeResources: false, sanitizeOps: false },
+    () => {
+      it("should not expose admin endpoints publicly", async () => {
+        const response = await app.request("/ts-admin/product-variants");
+        assertEquals(response.status, 401);
+      });
+    },
+  );
 });

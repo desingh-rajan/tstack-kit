@@ -82,7 +82,11 @@ async function createTestUser(
 // PRODUCT ADMIN API TEST SUITE
 // ============================================================================
 
-describe("Product Admin Panel API", () => {
+describe({
+  name: "Product Admin Panel API",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, () => {
   const BASE_URL = "/ts-admin/products";
 
   // --------------------------------------------------------------------------
@@ -163,7 +167,11 @@ describe("Product Admin Panel API", () => {
   // AUTHORIZATION TESTS
   // --------------------------------------------------------------------------
 
-  describe("Authorization", () => {
+  describe({
+    name: "Authorization",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should deny access without authentication", async () => {
       const response = await app.request(BASE_URL);
       assertEquals(response.status, 401);
@@ -190,7 +198,11 @@ describe("Product Admin Panel API", () => {
   // CREATE OPERATIONS - POSITIVE CASES
   // --------------------------------------------------------------------------
 
-  describe("Create Operations - Positive Cases", () => {
+  describe({
+    name: "Create Operations - Positive Cases",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should create product with required fields only", async () => {
       const response = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -296,7 +308,11 @@ describe("Product Admin Panel API", () => {
   // CREATE OPERATIONS - NEGATIVE CASES
   // --------------------------------------------------------------------------
 
-  describe("Create Operations - Negative Cases", () => {
+  describe({
+    name: "Create Operations - Negative Cases",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should reject duplicate slug", async () => {
       const response = await adminRequest(BASE_URL, superadminToken, {
         method: "POST",
@@ -407,7 +423,11 @@ describe("Product Admin Panel API", () => {
   // READ OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Read Operations", () => {
+  describe({
+    name: "Read Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should return list with pagination", async () => {
       const response = await adminRequest(BASE_URL, superadminToken);
 
@@ -492,7 +512,11 @@ describe("Product Admin Panel API", () => {
   // UPDATE OPERATIONS
   // --------------------------------------------------------------------------
 
-  describe("Update Operations", () => {
+  describe({
+    name: "Update Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should update product name and price", async () => {
       const response = await adminRequest(
         `${BASE_URL}/${testProductId}`,
@@ -606,7 +630,11 @@ describe("Product Admin Panel API", () => {
   // SOFT DELETE & RESTORE
   // --------------------------------------------------------------------------
 
-  describe("Soft Delete & Restore", () => {
+  describe({
+    name: "Soft Delete & Restore",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     let softDeleteProductId = "";
 
     it("should soft delete a product", async () => {
@@ -668,7 +696,11 @@ describe("Product Admin Panel API", () => {
   // HARD DELETE & BULK DELETE
   // --------------------------------------------------------------------------
 
-  describe("Delete Operations", () => {
+  describe({
+    name: "Delete Operations",
+    sanitizeResources: false,
+    sanitizeOps: false,
+  }, () => {
     it("should hard delete a product", async () => {
       // Create product to delete
       const createRes = await adminRequest(BASE_URL, superadminToken, {
