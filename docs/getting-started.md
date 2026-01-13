@@ -32,7 +32,7 @@ This creates a workspace with:
 **Control what entities you get:**
 
 ```bash
-# Minimal blog (just articles & site_settings)
+# Minimal blog (articles, site_settings, enquiries)
 tstack create workspace my-blog --scope=core
 
 # Product catalog without checkout (brands, categories, products, variants)

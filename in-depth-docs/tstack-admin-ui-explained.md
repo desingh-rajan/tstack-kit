@@ -90,7 +90,7 @@ don't have to dig through HTML.
 
 Starting in v1.4.0, the Admin UI automatically adapts to the API's entity scope:
 
-- **`--scope=core`**: Admin only shows Articles and Site Settings
+- **`--scope=core`**: Admin only shows Articles, Site Settings, and Enquiries
 - **`--scope=listing`**: Admin adds product catalog management (brands,
   categories, products, variants)
 - **`--scope=commerce`**: Admin adds shopping features (addresses, carts,

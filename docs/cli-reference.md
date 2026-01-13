@@ -23,7 +23,7 @@ Creates a full workspace with API + Admin UI projects.
 
 **Entity Scopes:**
 
-- `core` - Articles and site_settings only
+- `core` - Articles, site_settings, and enquiries only
 - `listing` - Core + brands, categories, products, variants
 - `commerce` - Listing + addresses, carts, orders, payments (default)
 

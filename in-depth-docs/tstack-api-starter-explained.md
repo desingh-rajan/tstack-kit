@@ -94,6 +94,7 @@ Starting in v1.4.0, TStack organizes entities into three progressive scopes:
 
 - `articles`: Blog posts, CMS content
 - `site_settings`: Dynamic configuration
+- `enquiries`: Contact form submissions
 - `users`: Authentication/authorization
 
 **Listing Entities** (product catalog):

@@ -100,7 +100,7 @@ deno install -gArf --unstable-kv -n tstack jsr:@tonystack/cli
 tstack create workspace my-shop
 
 # Create with specific entity scope
-tstack create workspace blog --scope=core         # Minimal: articles + settings
+tstack create workspace blog --scope=core         # Minimal: articles, settings, enquiries
 tstack create workspace catalog --scope=listing   # + Product catalog
 tstack create workspace shop --scope=commerce     # + Shopping cart & checkout (default)
 
@@ -115,7 +115,7 @@ tstack create admin-ui my-admin
 
 TStack Kit supports progressive entity inclusion via the `--scope` flag:
 
-- **core**: Articles, site settings, users (minimal CMS)
+- **core**: Articles, site settings, enquiries, users (minimal CMS)
 - **listing**: core + brands, categories, products, variants (product catalog)
 - **commerce**: listing + addresses, carts, orders, payments (full e-commerce)
 

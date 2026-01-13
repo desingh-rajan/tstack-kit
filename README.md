@@ -152,7 +152,7 @@ Creates:
 **Control what you get with `--scope`:**
 
 ```bash
-# Minimal: Just articles and site_settings
+# Minimal: articles, site_settings, enquiries
 tstack create workspace blog --scope=core
 
 # Add product catalog (brands, categories, products, variants)
@@ -208,7 +208,7 @@ Entity automatically appears in Admin UI sidebar.
 # Create projects
 tstack create workspace my-app          # Full workspace (API + Admin UI + Store)
 tstack create workspace my-app --github-org=your-org  # With GitHub repos
-tstack create workspace my-app --scope=core  # Minimal (articles + site_settings)
+tstack create workspace my-app --scope=core  # Minimal (articles, site_settings, enquiries)
 tstack create workspace my-app --scope=listing  # + product catalog
 tstack create workspace my-app --scope=commerce  # + cart & checkout (default)
 tstack create api my-api                # API only

@@ -126,6 +126,7 @@ project:
 
 - articles (blog/CMS)
 - site_settings (dynamic config)
+- enquiries (contact form submissions)
 - users (authentication)
 
 **listing** - core + Product catalog:
