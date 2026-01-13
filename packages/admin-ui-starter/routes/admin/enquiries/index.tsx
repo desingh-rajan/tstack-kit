@@ -52,7 +52,9 @@ export default define.page<typeof handler>(
 
           {error && (
             <div class="alert alert-error">
-              <span>{error}</span>
+              <span>
+                {typeof error === "string" ? error : JSON.stringify(error)}
+              </span>
             </div>
           )}
 
