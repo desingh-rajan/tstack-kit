@@ -9,7 +9,7 @@ import { getProject, updateProject } from "../../utils/projectStore.ts";
 
 /**
  * Project scope levels (progressive):
- * - core: articles, site_settings only
+ * - core: articles, site_settings, enquiries only
  * - listing: core + brands, categories, products, variants
  * - commerce: listing + addresses, carts, orders, payments (default)
  */
