@@ -12,6 +12,7 @@ export function AdminLayout({ children, currentPath }: AdminLayoutProps) {
   // Note: New entities are automatically added here by the scaffold command
   const menuItems = [
     { path: "/admin/orders", label: "Orders", icon: "🛒" },
+    { path: "/admin/enquiries", label: "Enquiries", icon: "📬" },
     { path: "/admin/articles", label: "Articles", icon: "📄" },
     { path: "/admin/products", label: "Products", icon: "📦" },
     { path: "/admin/categories", label: "Categories", icon: "📁" },
