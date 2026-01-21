@@ -108,14 +108,16 @@ export interface ProductResponseDTO {
   // Populated from joins
   brand?: { id: string; name: string; slug: string } | null;
   category?: { id: string; name: string; slug: string } | null;
-  images?: Array<{
-    id: string;
-    url: string;
-    thumbnailUrl: string | null;
-    altText: string | null;
-    isPrimary: boolean;
-    displayOrder: number;
-  }> | null;
+  images?:
+    | Array<{
+      id: string;
+      url: string;
+      thumbnailUrl: string | null;
+      altText: string | null;
+      isPrimary: boolean;
+      displayOrder: number;
+    }>
+    | null;
 }
 
 // Product List Response (paginated)
