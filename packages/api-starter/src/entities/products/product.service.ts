@@ -43,7 +43,8 @@ export class ProductService extends BaseService<
   Product,
   CreateProductDTO,
   UpdateProductDTO,
-  ProductResponseDTO
+  ProductResponseDTO,
+  string
 > {
   constructor() {
     super(db, products);
@@ -250,13 +251,60 @@ export class ProductService extends BaseService<
 
     const total = countResult[0]?.count ?? 0;
 
+    // Get primary images for all products in result
+    const productIds = result.map((p) => p.id);
+    let imageMap = new Map<
+      string,
+      {
+        id: string;
+        url: string;
+        thumbnailUrl: string | null;
+        altText: string | null;
+        isPrimary: boolean;
+        displayOrder: number;
+      }
+    >();
+
+    if (productIds.length > 0) {
+      const primaryImages = await db
+        .select({
+          id: productImages.id,
+          productId: productImages.productId,
+          url: productImages.url,
+          thumbnailUrl: productImages.thumbnailUrl,
+          altText: productImages.altText,
+          isPrimary: productImages.isPrimary,
+          displayOrder: productImages.displayOrder,
+        })
+        .from(productImages)
+        .where(
+          and(
+            inArray(productImages.productId, productIds),
+            eq(productImages.isPrimary, true),
+          ),
+        );
+
+      imageMap = new Map(primaryImages.map((img) => [img.productId, {
+        id: img.id,
+        url: img.url,
+        thumbnailUrl: img.thumbnailUrl,
+        altText: img.altText,
+        isPrimary: img.isPrimary,
+        displayOrder: img.displayOrder,
+      }]));
+    }
+
     return {
-      data: result.map((row) => ({
-        ...row,
-        specifications: row.specifications as Record<string, unknown>,
-        brand: row.brand?.id ? row.brand : null,
-        category: row.category?.id ? row.category : null,
-      })),
+      data: result.map((row) => {
+        const primaryImage = imageMap.get(row.id);
+        return {
+          ...row,
+          specifications: row.specifications as Record<string, unknown>,
+          brand: row.brand?.id ? row.brand : null,
+          category: row.category?.id ? row.category : null,
+          images: primaryImage ? [primaryImage] : null,
+        };
+      }),
       meta: {
         page,
         limit,
@@ -280,16 +328,7 @@ export class ProductService extends BaseService<
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }): Promise<{
-    data: Array<
-      ProductWithRelations & {
-        primaryImage: {
-          id: string;
-          url: string;
-          thumbnailUrl: string | null;
-          altText: string | null;
-        } | null;
-      }
-    >;
+    data: Array<ProductWithRelations>;
     pagination: {
       page: number;
       pageSize: number;
@@ -375,6 +414,8 @@ export class ProductService extends BaseService<
         url: string;
         thumbnailUrl: string | null;
         altText: string | null;
+        isPrimary: boolean;
+        displayOrder: number;
       }
     >();
 
@@ -386,6 +427,8 @@ export class ProductService extends BaseService<
           url: productImages.url,
           thumbnailUrl: productImages.thumbnailUrl,
           altText: productImages.altText,
+          isPrimary: productImages.isPrimary,
+          displayOrder: productImages.displayOrder,
         })
         .from(productImages)
         .where(
@@ -400,17 +443,22 @@ export class ProductService extends BaseService<
         url: img.url,
         thumbnailUrl: img.thumbnailUrl,
         altText: img.altText,
+        isPrimary: img.isPrimary,
+        displayOrder: img.displayOrder,
       }]));
     }
 
     return {
-      data: result.map((row) => ({
-        ...row,
-        specifications: row.specifications as Record<string, unknown>,
-        brand: row.brand?.id ? row.brand : null,
-        category: row.category?.id ? row.category : null,
-        primaryImage: imageMap.get(row.id) || null,
-      })),
+      data: result.map((row) => {
+        const primaryImage = imageMap.get(row.id);
+        return {
+          ...row,
+          specifications: row.specifications as Record<string, unknown>,
+          brand: row.brand?.id ? row.brand : null,
+          category: row.category?.id ? row.category : null,
+          images: primaryImage ? [primaryImage] : undefined,
+        };
+      }),
       pagination: {
         page,
         pageSize,
@@ -454,11 +502,27 @@ export class ProductService extends BaseService<
     }
 
     const row = result[0];
+
+    // Get all images for this product
+    const images = await db
+      .select({
+        id: productImages.id,
+        url: productImages.url,
+        thumbnailUrl: productImages.thumbnailUrl,
+        altText: productImages.altText,
+        isPrimary: productImages.isPrimary,
+        displayOrder: productImages.displayOrder,
+      })
+      .from(productImages)
+      .where(eq(productImages.productId, row.id))
+      .orderBy(asc(productImages.displayOrder));
+
     return {
       ...row,
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
+      images: images.length > 0 ? images : undefined,
     };
   }
 
@@ -497,6 +561,8 @@ export class ProductService extends BaseService<
         url: productImages.url,
         thumbnailUrl: productImages.thumbnailUrl,
         altText: productImages.altText,
+        isPrimary: productImages.isPrimary,
+        displayOrder: productImages.displayOrder,
       })
       .from(productImages)
       .where(
@@ -508,12 +574,14 @@ export class ProductService extends BaseService<
       .limit(1);
 
     const row = result[0];
+    const primaryImage = primaryImageResult[0];
+
     return {
       ...row,
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
-      primaryImage: primaryImageResult[0] || null,
+      images: primaryImage ? [primaryImage] : undefined,
     };
   }
 

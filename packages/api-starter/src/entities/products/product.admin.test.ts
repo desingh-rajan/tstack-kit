@@ -12,6 +12,7 @@ import { db } from "../../config/database.ts";
 import { products } from "./product.model.ts";
 import { brands } from "../brands/brand.model.ts";
 import { categories } from "../categories/category.model.ts";
+import { productImages } from "../product_images/product-image.model.ts";
 import { authTokens } from "../../auth/auth-token.model.ts";
 import { users } from "../../auth/user.model.ts";
 import { like } from "drizzle-orm";
@@ -24,6 +25,7 @@ let superadminToken = "";
 let adminToken = "";
 let userToken = "";
 let testProductId = "";
+let imageProductId = "";
 let testBrandId = "";
 let testCategoryId = "";
 
@@ -122,6 +124,29 @@ describe({
       })
       .returning();
     testCategoryId = category.id;
+
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: "Admin List Product",
+        slug: "admin-list-product",
+        price: "199.99",
+        brandId: testBrandId,
+        categoryId: testCategoryId,
+        isActive: true,
+      })
+      .returning();
+    imageProductId = product.id;
+
+    // Create test image for admin product
+    await db.insert(productImages).values({
+      productId: imageProductId,
+      url: "https://example.com/admin-image.jpg",
+      thumbnailUrl: "https://example.com/admin-thumb.jpg",
+      altText: "Admin Image",
+      isPrimary: true,
+      displayOrder: 0,
+    });
 
     // Create users
     const superadmin = await createTestUser(
@@ -438,6 +463,18 @@ describe({
       assertExists(json.pagination);
       assertExists(json.pagination.page);
       assertExists(json.pagination.total);
+
+      // Verify images are returned in admin list
+      const product = json.data.find((p: any) => p.id === imageProductId);
+      if (product) {
+        assertExists(product.images);
+        assertEquals(Array.isArray(product.images), true);
+        assertEquals(product.images.length > 0, true);
+        assertEquals(
+          product.images[0].url,
+          "https://example.com/admin-image.jpg",
+        );
+      }
     });
 
     it("should return single product by ID", async () => {
@@ -450,6 +487,22 @@ describe({
       const json = await response.json();
       // Direct product object (not wrapped in ApiResponse)
       assertEquals(json.name, "Basic Product");
+    });
+
+    it("should return single product with images", async () => {
+      const response = await adminRequest(
+        `${BASE_URL}/${imageProductId}`,
+        superadminToken,
+      );
+
+      assertEquals(response.status, 200);
+      const json = await response.json();
+      assertEquals(json.name, "Admin List Product");
+
+      // Verify images
+      assertExists(json.images);
+      assertEquals(Array.isArray(json.images), true);
+      assertEquals(json.images[0].url, "https://example.com/admin-image.jpg");
     });
 
     it("should return 404 for non-existent product", async () => {

@@ -57,8 +57,15 @@ export interface QueryOptions {
  * @template CreateDTO - Data Transfer Object for creation
  * @template UpdateDTO - Data Transfer Object for updates
  * @template ResponseDTO - Response Data Transfer Object
+ * @template ID - Type of the ID field (defaults to number)
  */
-export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
+export abstract class BaseService<
+  T,
+  CreateDTO,
+  UpdateDTO,
+  ResponseDTO,
+  ID = number,
+> {
   constructor(
     protected db: PgDatabase<any>,
     // deno-lint-ignore no-explicit-any
@@ -174,7 +181,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
   /**
    * Get single record by ID
    */
-  async getById(id: number): Promise<ResponseDTO | null> {
+  async getById(id: ID): Promise<ResponseDTO | null> {
     const result = await this.db
       .select()
       .from(this.table)
@@ -187,7 +194,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
   /**
    * Get multiple records by IDs
    */
-  async getByIds(ids: number[]): Promise<ResponseDTO[]> {
+  async getByIds(ids: ID[]): Promise<ResponseDTO[]> {
     if (ids.length === 0) return [];
 
     const result = await this.db
@@ -245,7 +252,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
   /**
    * Update an existing record
    */
-  async update(id: number, data: UpdateDTO): Promise<ResponseDTO | null> {
+  async update(id: ID, data: UpdateDTO): Promise<ResponseDTO | null> {
     const processedData = this.beforeUpdate
       ? await this.beforeUpdate(id, data)
       : data;
@@ -277,7 +284,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
     data: UpdateDTO,
   ): Promise<number> {
     const processedData = this.beforeUpdate
-      ? await this.beforeUpdate(0, data) // id=0 for bulk updates
+      ? await this.beforeUpdate(0 as unknown as ID, data) // id=0 for bulk updates
       : data;
 
     const updated = await this.db
@@ -296,7 +303,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
    * Delete a record (hard delete by default)
    * Override for soft delete behavior
    */
-  async delete(id: number): Promise<boolean> {
+  async delete(id: ID): Promise<boolean> {
     if (this.beforeDelete) {
       await this.beforeDelete(id);
     }
@@ -331,7 +338,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
   /**
    * Check if record exists
    */
-  async exists(id: number): Promise<boolean> {
+  async exists(id: ID): Promise<boolean> {
     const result = await this.db
       .select({ id: this.table.id })
       .from(this.table)
@@ -380,7 +387,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
    * Override to add custom validation or data transformation
    *
    * @example
-   * protected async beforeUpdate(id: number, data: UpdateDTO) {
+   * protected async beforeUpdate(id: ID, data: UpdateDTO) {
    *   // Prevent changing published status without permission
    *   if (data.isPublished !== undefined) {
    *     const current = await this.getById(id);
@@ -392,7 +399,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
    * }
    */
   protected beforeUpdate?(
-    id: number,
+    id: ID,
     data: UpdateDTO,
   ): Promise<UpdateDTO> | UpdateDTO;
 
@@ -415,7 +422,7 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
    * Override to add custom validation or cleanup logic
    *
    * @example
-   * protected async beforeDelete(id: number) {
+   * protected async beforeDelete(id: ID) {
    *   // Check for related records
    *   const hasComments = await this.commentService.countByArticleId(id);
    *   if (hasComments > 0) {
@@ -423,17 +430,17 @@ export abstract class BaseService<T, CreateDTO, UpdateDTO, ResponseDTO> {
    *   }
    * }
    */
-  protected beforeDelete?(id: number): Promise<void> | void;
+  protected beforeDelete?(id: ID): Promise<void> | void;
 
   /**
    * Hook called after deleting a record
    * Override to add post-deletion cleanup
    *
    * @example
-   * protected async afterDelete(id: number) {
+   * protected async afterDelete(id: ID) {
    *   await this.storageService.deleteArticleImages(id);
    *   await this.searchService.removeFromIndex(id);
    * }
    */
-  protected afterDelete?(id: number): Promise<void> | void;
+  protected afterDelete?(id: ID): Promise<void> | void;
 }
