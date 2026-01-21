@@ -68,16 +68,18 @@ export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 
 // Product with relations (for API responses)
-export interface ProductWithRelations extends Product {
+export interface ProductWithRelations extends Omit<Product, "specifications"> {
+  specifications: Record<string, unknown>;
   brand?: { id: string; name: string; slug: string } | null;
   category?: { id: string; name: string; slug: string } | null;
   images?: Array<
     {
       id: string;
       url: string;
-      thumbnailUrl: string;
+      thumbnailUrl: string | null;
       altText: string | null;
       isPrimary: boolean;
+      displayOrder: number;
     }
   >;
   variants?: Array<

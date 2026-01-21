@@ -43,7 +43,8 @@ export class ProductService extends BaseService<
   Product,
   CreateProductDTO,
   UpdateProductDTO,
-  ProductResponseDTO
+  ProductResponseDTO,
+  string
 > {
   constructor() {
     super(db, products);
@@ -521,7 +522,7 @@ export class ProductService extends BaseService<
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
-      images: images.length > 0 ? images : null,
+      images: images.length > 0 ? images : undefined,
     };
   }
 
@@ -560,6 +561,8 @@ export class ProductService extends BaseService<
         url: productImages.url,
         thumbnailUrl: productImages.thumbnailUrl,
         altText: productImages.altText,
+        isPrimary: productImages.isPrimary,
+        displayOrder: productImages.displayOrder,
       })
       .from(productImages)
       .where(
@@ -571,12 +574,14 @@ export class ProductService extends BaseService<
       .limit(1);
 
     const row = result[0];
+    const primaryImage = primaryImageResult[0];
+
     return {
       ...row,
       specifications: row.specifications as Record<string, unknown>,
       brand: row.brand?.id ? row.brand : null,
       category: row.category?.id ? row.category : null,
-      primaryImage: primaryImageResult[0] || null,
+      images: primaryImage ? [primaryImage] : undefined,
     };
   }
 
