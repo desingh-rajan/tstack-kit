@@ -12,6 +12,7 @@ import { db } from "../../config/database.ts";
 import { products } from "./product.model.ts";
 import { brands } from "../brands/brand.model.ts";
 import { categories } from "../categories/category.model.ts";
+import { productImages } from "../product_images/product-image.model.ts";
 
 // ============================================================================
 // MODULE-LEVEL STATE
@@ -117,12 +118,23 @@ describe({
       .returning();
 
     activeProductId = activeProduct.id;
+
+    // Create test images
+    await db.insert(productImages).values({
+      productId: activeProductId,
+      url: "https://example.com/image.jpg",
+      thumbnailUrl: "https://example.com/thumb.jpg",
+      altText: "Test Image",
+      isPrimary: true,
+      displayOrder: 0,
+    });
   });
 
   afterAll(async () => {
     await db.delete(products);
     await db.delete(brands);
     await db.delete(categories);
+    // Images are deleted by cascade
 
     try {
       await db.$client.end();
@@ -149,6 +161,17 @@ describe({
       assertExists(json.data);
       assertEquals(Array.isArray(json.data), true);
       assertExists(json.meta);
+
+      // Verify images are returned
+      const activeProduct = json.data.find((p: any) =>
+        p.id === activeProductId
+      );
+      if (activeProduct) {
+        assertExists(activeProduct.images);
+        assertEquals(Array.isArray(activeProduct.images), true);
+        assertEquals(activeProduct.images.length > 0, true);
+        assertEquals(activeProduct.images[0].isPrimary, true);
+      }
     });
 
     it("should only return active products (not soft-deleted)", async () => {
@@ -305,6 +328,11 @@ describe({
       assertExists(json.data);
       assertEquals(json.data.name, "Active Test Product");
       assertEquals(json.data.price, "99.99");
+
+      // Verify images
+      assertExists(json.data.images);
+      assertEquals(Array.isArray(json.data.images), true);
+      assertEquals(json.data.images[0].url, "https://example.com/image.jpg");
     });
 
     it("should return full product details including sale price", async () => {
