@@ -222,11 +222,13 @@ export const productConfig: EntityConfig<Product> = {
         accept: "image/jpeg,image/png,image/webp,image/gif",
       },
       render: (value) => {
-        const images = value as Array<{
-          url?: string;
-          thumbnailUrl?: string | null;
-          altText?: string | null;
-        }> | null;
+        const images = value as
+          | Array<{
+            url?: string;
+            thumbnailUrl?: string | null;
+            altText?: string | null;
+          }>
+          | null;
         const img = images?.[0];
 
         if (!img?.url) {
