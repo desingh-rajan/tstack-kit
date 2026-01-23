@@ -15,7 +15,11 @@
       "small_model": "github-copilot/gpt-4o-mini",
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "task": {
+          "*": "deny",
+          "explore": "allow"
+        }
       }
     },
     "plan-codex": {
@@ -25,7 +29,11 @@
       "small_model": "github-copilot/gpt-4o-mini",
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "task": {
+          "*": "deny",
+          "explore": "allow"
+        }
       }
     },
     "general": {
