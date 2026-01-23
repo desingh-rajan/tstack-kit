@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/gpt-4o-mini",
+  "agent": {
+    "plan": {
+      "model": "github-copilot/claude-opus-4.5",
+      "small_model": "github-copilot/gpt-5.1-codex"
+    },
+    "plan-sonnet": {
+      "description": "Plan mode using Claude Sonnet 4.5",
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-4.5",
+      "small_model": "github-copilot/gpt-4o-mini",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "plan-codex": {
+      "description": "Plan mode using GPT 5.2 Codex",
+      "mode": "primary",
+      "model": "github-copilot/gpt-5.2-codex",
+      "small_model": "github-copilot/gpt-4o-mini",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "general": {
+      "model": "github-copilot/claude-opus-4.5",
+      "small_model": "github-copilot/claude-sonnet-4.5"
+    },
+    "code": {
+      "model": "github-copilot/claude-opus-4.5",
+      "small_model": "github-copilot/claude-sonnet-4.5"
+    },
+    "code-haiku-4.5": {
+      "description": "Code mode using Claude Haiku 4.5",
+      "mode": "primary",
+      "model": "github-copilot/claude-haiku-4.5",
+      "small_model": "github-copilot/gpt-4o-mini"
+    }
+  }
+}
