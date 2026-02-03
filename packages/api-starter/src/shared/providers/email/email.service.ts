@@ -21,8 +21,16 @@ import type {
   IEmailProvider,
 } from "./email-provider.interface.ts";
 import {
+  type OrderCancelledEmailData,
+  orderCancelledEmailTemplate,
   type OrderConfirmationEmailData,
   orderConfirmationEmailTemplate,
+  type OrderDeliveredEmailData,
+  orderDeliveredEmailTemplate,
+  type OrderProcessingEmailData,
+  orderProcessingEmailTemplate,
+  type OrderShippedEmailData,
+  orderShippedEmailTemplate,
   type PasswordResetEmailData,
   passwordResetEmailTemplate,
   type VerificationEmailData,
@@ -40,6 +48,9 @@ export interface EmailServiceConfig {
 
   /** Application URL for links in emails */
   appUrl: string;
+
+  /** Store URL for order emails (defaults to appUrl) */
+  storeUrl?: string;
 
   /** Support email address */
   supportEmail?: string;
@@ -160,6 +171,114 @@ export class EmailService {
   }
 
   /**
+   * Send an order processing email
+   */
+  sendOrderProcessingEmail(
+    to: string,
+    data: Omit<
+      OrderProcessingEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: OrderProcessingEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+      supportEmail: this.config.supportEmail,
+    };
+
+    const { subject, html, text } = orderProcessingEmailTemplate(fullData);
+
+    return this.provider.send({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  /**
+   * Send an order shipped email
+   */
+  sendOrderShippedEmail(
+    to: string,
+    data: Omit<
+      OrderShippedEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: OrderShippedEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+      supportEmail: this.config.supportEmail,
+    };
+
+    const { subject, html, text } = orderShippedEmailTemplate(fullData);
+
+    return this.provider.send({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  /**
+   * Send an order delivered email
+   */
+  sendOrderDeliveredEmail(
+    to: string,
+    data: Omit<
+      OrderDeliveredEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: OrderDeliveredEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+      supportEmail: this.config.supportEmail,
+    };
+
+    const { subject, html, text } = orderDeliveredEmailTemplate(fullData);
+
+    return this.provider.send({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  /**
+   * Send an order cancelled email
+   */
+  sendOrderCancelledEmail(
+    to: string,
+    data: Omit<
+      OrderCancelledEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: OrderCancelledEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+      supportEmail: this.config.supportEmail,
+    };
+
+    const { subject, html, text } = orderCancelledEmailTemplate(fullData);
+
+    return this.provider.send({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  /**
    * Send a raw email (for custom templates)
    */
   sendRaw(
@@ -192,11 +311,13 @@ export function createEmailServiceFromEnv(
 ): EmailService {
   const appName = Deno.env.get("APP_NAME") || "TStack App";
   const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
+  const storeUrl = Deno.env.get("STORE_URL") || appUrl;
   const supportEmail = Deno.env.get("SUPPORT_EMAIL");
 
   return new EmailService(provider, {
     appName,
     appUrl,
+    storeUrl,
     supportEmail,
   });
 }
