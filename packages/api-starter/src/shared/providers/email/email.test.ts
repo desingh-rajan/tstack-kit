@@ -15,7 +15,11 @@ import {
 } from "./email-provider.interface.ts";
 import { EmailService } from "./email.service.ts";
 import {
+  orderCancelledEmailTemplate,
   orderConfirmationEmailTemplate,
+  orderDeliveredEmailTemplate,
+  orderProcessingEmailTemplate,
+  orderShippedEmailTemplate,
   passwordResetEmailTemplate,
   verificationEmailTemplate,
   welcomeEmailTemplate,
@@ -372,5 +376,283 @@ describe("Email Templates", () => {
       assertEquals(template.html.includes("FREE"), true);
       assertEquals(template.text.includes("FREE"), true);
     });
+  });
+
+  describe("orderProcessingEmailTemplate", () => {
+    it("should generate order processing email", () => {
+      const template = orderProcessingEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-001",
+        shippingAddress: {
+          fullName: "John Doe",
+          addressLine1: "123 Main St",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(
+        template.subject,
+        "Your order ORD-001 is being prepared! | Test App",
+      );
+      assertEquals(template.html.includes("John"), true);
+      assertEquals(template.html.includes("ORD-001"), true);
+      assertEquals(template.html.includes("Preparing Your Order"), true);
+      assertEquals(template.text.includes("ORD-001"), true);
+    });
+
+    it("should include items and total when provided", () => {
+      const template = orderProcessingEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-002",
+        shippingAddress: {
+          fullName: "John Doe",
+          addressLine1: "123 Main St",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+        items: [{ name: "Widget", quantity: 2, price: 500 }],
+        total: 1000,
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(template.html.includes("Widget"), true);
+    });
+  });
+
+  describe("orderShippedEmailTemplate", () => {
+    it("should generate order shipped email", () => {
+      const template = orderShippedEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-001",
+        trackingNumber: "1Z999AA10123456784",
+        carrier: "UPS",
+        shippingAddress: {
+          fullName: "John Doe",
+          addressLine1: "123 Main St",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(
+        template.subject,
+        "Your order ORD-001 has been shipped! | Test App",
+      );
+      assertEquals(template.html.includes("On its way!"), true);
+      assertEquals(template.html.includes("UPS"), true);
+      assertEquals(template.html.includes("1Z999AA10123456784"), true);
+    });
+
+    it("should include tracking URL when provided", () => {
+      const template = orderShippedEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-002",
+        trackingNumber: "TRK123",
+        trackingUrl: "https://track.example.com/123",
+        shippingAddress: {
+          fullName: "John Doe",
+          addressLine1: "123 Main St",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(
+        template.html.includes("https://track.example.com/123"),
+        true,
+      );
+      assertEquals(template.html.includes("Track your package"), true);
+    });
+  });
+
+  describe("orderDeliveredEmailTemplate", () => {
+    it("should generate order delivered email", () => {
+      const template = orderDeliveredEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-001",
+        shippingAddress: {
+          fullName: "John Doe",
+          addressLine1: "123 Main St",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(
+        template.subject,
+        "Your order ORD-001 has been delivered! | Test App",
+      );
+      assertEquals(template.html.includes("Delivered!"), true);
+      assertEquals(template.html.includes("hope you enjoy"), true);
+    });
+  });
+
+  describe("orderCancelledEmailTemplate", () => {
+    it("should generate user-cancelled order email", () => {
+      const template = orderCancelledEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-001",
+        cancelledBy: "user",
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(template.subject, "Order Cancelled - ORD-001 | Test App");
+      assertEquals(template.html.includes("As requested"), true);
+      assertEquals(template.html.includes("ORD-001"), true);
+    });
+
+    it("should generate admin-cancelled order email with reason", () => {
+      const template = orderCancelledEmailTemplate({
+        userName: "John",
+        orderNumber: "ORD-002",
+        cancelledBy: "admin",
+        reason: "Out of stock",
+        refundStatus: "Refund will be processed in 3-5 business days",
+        appName: "Test App",
+        storeUrl: "https://store.example.com",
+      });
+
+      assertEquals(template.html.includes("Out of stock"), true);
+      assertEquals(template.html.includes("3-5 business days"), true);
+    });
+  });
+});
+
+describe("EmailService - Order Lifecycle Methods", () => {
+  const config = {
+    appName: "Test App",
+    appUrl: "https://test.example.com",
+    storeUrl: "https://store.example.com",
+    supportEmail: "support@example.com",
+  };
+
+  const testShippingAddress = {
+    fullName: "John Doe",
+    addressLine1: "123 Main St",
+    city: "Mumbai",
+    state: "Maharashtra",
+    postalCode: "400001",
+    country: "India",
+  };
+
+  it("should send order processing email", async () => {
+    const provider = new MockEmailProvider();
+    const service = new EmailService(provider, config);
+
+    const result = await service.sendOrderProcessingEmail("user@example.com", {
+      userName: "John",
+      orderNumber: "ORD-001",
+      shippingAddress: testShippingAddress,
+    });
+
+    assertEquals(result.success, true);
+    assertEquals(provider.sentEmails.length, 1);
+
+    const sent = provider.sentEmails[0];
+    assertEquals(
+      sent.subject,
+      "Your order ORD-001 is being prepared! | Test App",
+    );
+  });
+
+  it("should send order shipped email", async () => {
+    const provider = new MockEmailProvider();
+    const service = new EmailService(provider, config);
+
+    const result = await service.sendOrderShippedEmail("user@example.com", {
+      userName: "John",
+      orderNumber: "ORD-001",
+      trackingNumber: "1Z999AA1",
+      carrier: "UPS",
+      shippingAddress: testShippingAddress,
+    });
+
+    assertEquals(result.success, true);
+    assertEquals(provider.sentEmails.length, 1);
+
+    const sent = provider.sentEmails[0];
+    assertEquals(
+      sent.subject,
+      "Your order ORD-001 has been shipped! | Test App",
+    );
+  });
+
+  it("should send order delivered email", async () => {
+    const provider = new MockEmailProvider();
+    const service = new EmailService(provider, config);
+
+    const result = await service.sendOrderDeliveredEmail("user@example.com", {
+      userName: "John",
+      orderNumber: "ORD-001",
+      shippingAddress: testShippingAddress,
+    });
+
+    assertEquals(result.success, true);
+    assertEquals(provider.sentEmails.length, 1);
+
+    const sent = provider.sentEmails[0];
+    assertEquals(
+      sent.subject,
+      "Your order ORD-001 has been delivered! | Test App",
+    );
+  });
+
+  it("should send order cancelled email", async () => {
+    const provider = new MockEmailProvider();
+    const service = new EmailService(provider, config);
+
+    const result = await service.sendOrderCancelledEmail("user@example.com", {
+      userName: "John",
+      orderNumber: "ORD-001",
+      cancelledBy: "admin",
+      reason: "Item out of stock",
+    });
+
+    assertEquals(result.success, true);
+    assertEquals(provider.sentEmails.length, 1);
+
+    const sent = provider.sentEmails[0];
+    assertEquals(sent.subject, "Order Cancelled - ORD-001 | Test App");
+  });
+
+  it("should use storeUrl fallback when not configured", async () => {
+    const provider = new MockEmailProvider();
+    const configWithoutStore = {
+      appName: "Test App",
+      appUrl: "https://test.example.com",
+      // No storeUrl
+    };
+    const service = new EmailService(provider, configWithoutStore);
+
+    const result = await service.sendOrderProcessingEmail("user@example.com", {
+      userName: "John",
+      orderNumber: "ORD-001",
+      shippingAddress: testShippingAddress,
+    });
+
+    assertEquals(result.success, true);
+    // Template should use appUrl as fallback
+    assertExists(provider.sentEmails[0].html);
   });
 });
