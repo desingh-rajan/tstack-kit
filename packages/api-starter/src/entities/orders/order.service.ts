@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, sql } from "drizzle-orm";
 import { db } from "../../config/database.ts";
 import {
   type AddressSnapshot,
@@ -45,31 +45,30 @@ export class OrderService {
   /**
    * Generate unique order number
    * Format: SC-YYYYMMDD-XXXXX (e.g., SC-20260107-00001)
+   * Uses MAX(orderNumber) to prevent collision issues when orders are deleted
    */
   async generateOrderNumber(): Promise<string> {
     const now = new Date();
     const date = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const prefix = `SC-${date}-`;
 
-    // Get today's order count
-    const startOfDay = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-
-    const todayOrders = await db
-      .select({ count: sql<number>`count(*)` })
+    // Get the maximum order number for today using pattern matching
+    // This is more reliable than count() when orders might be deleted
+    const result = await db
+      .select({ maxOrder: sql<string>`MAX(order_number)` })
       .from(orders)
-      .where(
-        and(
-          gte(orders.createdAt, startOfDay),
-          lte(orders.createdAt, endOfDay),
-        ),
-      );
+      .where(ilike(orders.orderNumber, `${prefix}%`));
 
-    const sequence = String((todayOrders[0]?.count || 0) + 1).padStart(5, "0");
-    return `SC-${date}-${sequence}`;
+    let sequence = 1;
+    if (result[0]?.maxOrder) {
+      // Extract sequence number from existing order number (e.g., SC-20260107-00001 -> 1)
+      const match = result[0].maxOrder.match(/-(\d+)$/);
+      if (match) {
+        sequence = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    return `${prefix}${String(sequence).padStart(5, "0")}`;
   }
 
   /**
@@ -127,22 +126,42 @@ export class OrderService {
       billingAddress = shippingAddress;
     }
 
-    // Validate stock and calculate totals
+    // Validate stock and calculate totals using batched queries to avoid N+1
     const stockIssues: StockIssue[] = [];
     let subtotal = 0;
     let itemCount = 0;
 
-    for (const item of items) {
-      // Get product
-      const product = await db
+    // Batch fetch all products at once
+    const productIds = [...new Set(items.map((item) => item.productId))];
+    const productResults = productIds.length > 0
+      ? await db
         .select()
         .from(products)
-        .where(eq(products.id, item.productId))
-        .limit(1);
+        .where(inArray(products.id, productIds))
+      : [];
 
-      if (
-        product.length === 0 || !product[0].isActive || product[0].deletedAt
-      ) {
+    // Create a map for O(1) lookup
+    const productMap = new Map(productResults.map((p) => [p.id, p]));
+
+    // Batch fetch all variants at once
+    const variantIds = items
+      .filter((item) => item.variantId)
+      .map((item) => item.variantId as string);
+    const variantResults = variantIds.length > 0
+      ? await db
+        .select()
+        .from(productVariants)
+        .where(inArray(productVariants.id, variantIds))
+      : [];
+
+    // Create a map for O(1) lookup
+    const variantMap = new Map(variantResults.map((v) => [v.id, v]));
+
+    for (const item of items) {
+      // Get product from map (O(1) lookup)
+      const product = productMap.get(item.productId);
+
+      if (!product || !product.isActive || product.deletedAt) {
         stockIssues.push({
           itemId: item.id,
           productId: item.productId,
@@ -155,29 +174,22 @@ export class OrderService {
         continue;
       }
 
-      // Get variant if exists
-      let variant = null;
-      if (item.variantId) {
-        const variantResult = await db
-          .select()
-          .from(productVariants)
-          .where(eq(productVariants.id, item.variantId))
-          .limit(1);
+      // Get variant from map if exists (O(1) lookup)
+      const variant = item.variantId
+        ? variantMap.get(item.variantId)
+        : undefined;
+      const activeVariant = variant?.isActive ? variant : undefined;
 
-        if (variantResult.length > 0 && variantResult[0].isActive) {
-          variant = variantResult[0];
-        }
-      }
-
-      const availableStock = variant?.stockQuantity ?? product[0].stockQuantity;
-      const currentPrice = parseFloat(variant?.price ?? product[0].price);
+      const availableStock = activeVariant?.stockQuantity ??
+        product.stockQuantity;
+      const currentPrice = parseFloat(activeVariant?.price ?? product.price);
 
       if (availableStock === 0) {
         stockIssues.push({
           itemId: item.id,
           productId: item.productId,
           variantId: item.variantId,
-          productName: product[0].name,
+          productName: product.name,
           requested: item.quantity,
           available: 0,
           issue: "out_of_stock",
@@ -187,7 +199,7 @@ export class OrderService {
           itemId: item.id,
           productId: item.productId,
           variantId: item.variantId,
-          productName: product[0].name,
+          productName: product.name,
           requested: item.quantity,
           available: availableStock,
           issue: "insufficient_stock",
@@ -315,43 +327,58 @@ export class OrderService {
 
     const order = orderResult[0];
 
-    // Create order items with product snapshots
+    // Create order items with product snapshots using batched queries
     const orderItemsData: NewOrderItem[] = [];
 
-    for (const item of cartItemsList) {
-      // Get product details
-      const product = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, item.productId))
-        .limit(1);
+    // Batch fetch all products
+    const productIds = [
+      ...new Set(cartItemsList.map((item) => item.productId)),
+    ];
+    const productResults = productIds.length > 0
+      ? await db.select().from(products).where(inArray(products.id, productIds))
+      : [];
+    const productMap = new Map(productResults.map((p) => [p.id, p]));
 
-      // Get primary image
-      const image = await db
+    // Batch fetch all primary images
+    const imageResults = productIds.length > 0
+      ? await db
         .select()
         .from(productImages)
         .where(
           and(
-            eq(productImages.productId, item.productId),
+            inArray(productImages.productId, productIds),
             eq(productImages.isPrimary, true),
           ),
         )
-        .limit(1);
+      : [];
+    const imageMap = new Map(imageResults.map((i) => [i.productId, i]));
 
-      // Get variant if exists
-      let variant = null;
-      if (item.variantId) {
-        const variantResult = await db
-          .select()
-          .from(productVariants)
-          .where(eq(productVariants.id, item.variantId))
-          .limit(1);
-        if (variantResult.length > 0) {
-          variant = variantResult[0];
-        }
-      }
+    // Batch fetch all variants
+    const variantIds = cartItemsList
+      .filter((item) => item.variantId)
+      .map((item) => item.variantId as string);
+    const variantResults = variantIds.length > 0
+      ? await db
+        .select()
+        .from(productVariants)
+        .where(inArray(productVariants.id, variantIds))
+      : [];
+    const variantMap = new Map(variantResults.map((v) => [v.id, v]));
 
-      const price = variant?.price ?? product[0].price;
+    // Track stock updates to batch later
+    const variantStockUpdates: Array<{ id: string; quantity: number }> = [];
+    const productStockUpdates: Array<{ id: string; quantity: number }> = [];
+
+    for (const item of cartItemsList) {
+      const product = productMap.get(item.productId);
+      if (!product) continue;
+
+      const image = imageMap.get(item.productId);
+      const variant = item.variantId
+        ? variantMap.get(item.variantId)
+        : undefined;
+
+      const price = variant?.price ?? product.price;
       const totalPrice = (parseFloat(price) * item.quantity).toFixed(2);
 
       // Build variant name from options
@@ -367,34 +394,47 @@ export class OrderService {
         orderId: order.id,
         productId: item.productId,
         variantId: item.variantId,
-        productName: product[0].name,
+        productName: product.name,
         variantName,
-        sku: variant?.sku ?? product[0].sku,
-        productImage: image.length > 0 ? image[0].url : null,
+        sku: variant?.sku ?? product.sku,
+        productImage: image?.url ?? null,
         price,
         quantity: item.quantity,
         totalPrice,
       });
 
-      // Reduce stock
+      // Track stock reduction
       if (variant) {
-        await db
-          .update(productVariants)
-          .set({
-            stockQuantity:
-              sql`${productVariants.stockQuantity} - ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(productVariants.id, variant.id));
+        variantStockUpdates.push({ id: variant.id, quantity: item.quantity });
       } else {
-        await db
-          .update(products)
-          .set({
-            stockQuantity: sql`${products.stockQuantity} - ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(products.id, item.productId));
+        productStockUpdates.push({
+          id: item.productId,
+          quantity: item.quantity,
+        });
       }
+    }
+
+    // Reduce stock for variants (individual updates needed due to quantity differences)
+    for (const update of variantStockUpdates) {
+      await db
+        .update(productVariants)
+        .set({
+          stockQuantity:
+            sql`${productVariants.stockQuantity} - ${update.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(productVariants.id, update.id));
+    }
+
+    // Reduce stock for products without variants
+    for (const update of productStockUpdates) {
+      await db
+        .update(products)
+        .set({
+          stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, update.id));
     }
 
     // Insert order items

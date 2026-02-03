@@ -38,6 +38,13 @@ export {
   GoogleAuthProvider,
 } from "./google.provider.ts";
 
+// Facebook Provider
+export {
+  createFacebookProviderFromEnv,
+  type FacebookAuthConfig,
+  FacebookAuthProvider,
+} from "./facebook.provider.ts";
+
 // Factory and utilities
 export {
   createOAuthProvider,
@@ -48,5 +55,7 @@ export {
 } from "./factory.ts";
 
 // Future providers (uncomment as implemented):
+// export { GitHubAuthProvider } from "./github.provider.ts";
+// export { AppleAuthProvider } from "./apple.provider.ts";
 // export { GitHubAuthProvider, createGitHubProviderFromEnv } from "./github.provider.ts";
 // export { AppleAuthProvider, createAppleProviderFromEnv } from "./apple.provider.ts";

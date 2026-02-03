@@ -16,6 +16,12 @@ oauthRoutes.get("/auth/google/callback", OAuthController.googleCallback);
 oauthRoutes.post("/auth/google/token", OAuthController.googleToken);
 oauthRoutes.get("/auth/google/state", OAuthController.getGoogleState);
 
+// Facebook OAuth routes
+oauthRoutes.get("/auth/facebook", OAuthController.facebookAuth);
+oauthRoutes.get("/auth/facebook/callback", OAuthController.facebookCallback);
+oauthRoutes.post("/auth/facebook/token", OAuthController.facebookToken);
+oauthRoutes.get("/auth/facebook/state", OAuthController.getFacebookState);
+
 // Account linking (requires authentication)
 oauthRoutes.post("/auth/oauth/link", requireAuth, OAuthController.linkAccount);
 oauthRoutes.delete(

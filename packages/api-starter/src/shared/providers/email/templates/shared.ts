@@ -92,6 +92,27 @@ export function generateItemsTableHtml(
 ): string {
   if (!items || items.length === 0) return "";
 
+  const rows = items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+          <div style="font-weight: 500;">${item.name}</div>
+          ${
+        item.variant
+          ? `<div style="font-size: 12px; color: #666;">${item.variant}</div>`
+          : ""
+      }
+        </td>
+        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${item.quantity}</td>
+        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #eee;">${
+        formatCurrency(item.price, currency)
+      }</td>
+      </tr>
+    `,
+    )
+    .join("");
+
   return `
     <div style="margin: 20px 0; border: 1px solid #e0e0e0; border-radius: 5px; overflow: hidden;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -103,24 +124,7 @@ export function generateItemsTableHtml(
           </tr>
         </thead>
         <tbody>
-          ${
-    items.map((item) => `
-          <tr>
-            <td style="padding: 12px; border-bottom: 1px solid #eee;">
-              <div style="font-weight: 500;">${item.name}</div>
-              ${
-      item.variant
-        ? `<div style="font-size: 12px; color: #666;">${item.variant}</div>`
-        : ""
-    }
-            </td>
-            <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${item.quantity}</td>
-            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #eee;">${
-      formatCurrency(item.price, currency)
-    }</td>
-          </tr>
-          `).join("")
-  }
+          ${rows}
         </tbody>
       </table>
     </div>
@@ -136,16 +140,16 @@ export function generateItemsText(
 ): string {
   if (!items || items.length === 0) return "";
 
-  return `
-ORDER ITEMS:
-${
-    items.map((item) =>
-      `- ${item.name}${
-        item.variant ? ` (${item.variant})` : ""
-      } x ${item.quantity} - ${formatCurrency(item.price, currency)}`
-    ).join("\n")
-  }
-`.trim();
+  const itemLines = items
+    .map(
+      (item) =>
+        `- ${item.name}${
+          item.variant ? ` (${item.variant})` : ""
+        } x ${item.quantity} - ${formatCurrency(item.price, currency)}`,
+    )
+    .join("\n");
+
+  return `ORDER ITEMS:\n${itemLines}`;
 }
 
 /**

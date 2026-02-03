@@ -38,9 +38,7 @@ describe("NotificationService", () => {
 
     it("should export singleton instance", async () => {
       // Import the singleton
-      const { notificationService } = await import(
-        "./notification.service.ts"
-      );
+      const { notificationService } = await import("./notification.service.ts");
 
       assertEquals(typeof notificationService, "object");
       assertEquals(typeof notificationService.sendWelcomeEmail, "function");

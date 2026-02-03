@@ -146,6 +146,135 @@ export class OAuthController {
   }
 
   /**
+   * GET /auth/facebook
+   * Redirect to Facebook OAuth consent screen
+   */
+  static facebookAuth(c: Context) {
+    const redirectUrl = c.req.query("redirect") || c.req.query("redirect_url");
+
+    try {
+      const authUrl = OAuthService.getFacebookAuthUrl(redirectUrl);
+      return c.redirect(authUrl);
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "Facebook OAuth not configured";
+      return c.json(ApiResponse.error(message), 500);
+    }
+  }
+
+  /**
+   * GET /auth/facebook/callback
+   * Handle Facebook OAuth callback
+   */
+  static async facebookCallback(c: Context) {
+    const code = c.req.query("code");
+    const state = c.req.query("state");
+    const error = c.req.query("error");
+
+    // Handle OAuth errors from Facebook
+    if (error) {
+      const errorDescription = c.req.query("error_description") || error;
+      console.error(
+        "[OAuthController] Facebook OAuth error:",
+        errorDescription,
+      );
+
+      const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
+      return c.redirect(
+        `${appUrl}/auth/error?message=${encodeURIComponent(errorDescription)}`,
+      );
+    }
+
+    if (!code || !state) {
+      const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
+      return c.redirect(
+        `${appUrl}/auth/error?message=${
+          encodeURIComponent("Missing authorization code or state")
+        }`,
+      );
+    }
+
+    try {
+      const { user: _user, token, isNewUser, redirectUrl } = await OAuthService
+        .handleFacebookCallback(code, state);
+
+      const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
+      const storefrontUrl = Deno.env.get("STOREFRONT_URL") || appUrl;
+
+      let finalRedirectUrl = redirectUrl || storefrontUrl;
+      const separator = finalRedirectUrl.includes("?") ? "&" : "?";
+      finalRedirectUrl = `${finalRedirectUrl}${separator}token=${token}${
+        isNewUser ? "&new_user=true" : ""
+      }`;
+
+      return c.redirect(finalRedirectUrl);
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "OAuth authentication failed";
+      console.error("[OAuthController] Facebook callback error:", message);
+
+      const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
+      return c.redirect(
+        `${appUrl}/auth/error?message=${encodeURIComponent(message)}`,
+      );
+    }
+  }
+
+  /**
+   * POST /auth/facebook/token
+   * Exchange Facebook OAuth code for token (for mobile/SPA apps)
+   */
+  static async facebookToken(c: Context) {
+    const body = await c.req.json();
+    const { code, state } = body;
+
+    if (!code || !state) {
+      throw new BadRequestError("Missing authorization code or state");
+    }
+
+    const { user, token, isNewUser } = await OAuthService
+      .handleFacebookCallback(code, state);
+
+    return c.json(
+      ApiResponse.success(
+        { user, token, isNewUser },
+        isNewUser ? "Account created successfully" : "Login successful",
+      ),
+      200,
+    );
+  }
+
+  /**
+   * GET /auth/facebook/state
+   * Get a new OAuth state (for SPA apps that need to manage the flow)
+   */
+  static getFacebookState(c: Context) {
+    const redirectUrl = c.req.query("redirect") || c.req.query("redirect_url");
+
+    try {
+      const authUrl = OAuthService.getFacebookAuthUrl(redirectUrl);
+
+      const url = new URL(authUrl);
+      const state = url.searchParams.get("state");
+
+      return c.json(
+        ApiResponse.success(
+          { authUrl, state },
+          "OAuth state generated",
+        ),
+        200,
+      );
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "Facebook OAuth not configured";
+      return c.json(ApiResponse.error(message), 500);
+    }
+  }
+
+  /**
    * POST /auth/oauth/link
    * Link OAuth account to currently logged-in user
    */

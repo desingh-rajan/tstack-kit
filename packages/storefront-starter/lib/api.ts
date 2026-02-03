@@ -125,10 +125,9 @@ export class ApiClient {
   }
 
   verifyEmail(token: string) {
-    return this.request<{ message: string }>("/auth/verify-email", {
-      method: "POST",
-      body: { token },
-    });
+    return this.request<{ message: string }>(
+      `/auth/verify-email?token=${encodeURIComponent(token)}`,
+    );
   }
 
   forgotPassword(email: string) {
@@ -142,6 +141,12 @@ export class ApiClient {
     return this.request<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: { token, password },
+    });
+  }
+
+  resendVerification() {
+    return this.request<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
     });
   }
 

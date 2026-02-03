@@ -55,6 +55,38 @@ export function orderShippedEmailTemplate(
   const itemsHtml = items ? generateItemsTableHtml(items, currency) : "";
   const itemsText = items ? generateItemsText(items, currency) : "";
 
+  const trackingHtml = trackingNumber || carrier
+    ? `
+    <div style="background: #f8f9fa; border-radius: 5px; padding: 20px; margin: 20px 0;">
+      <h3 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Tracking Information</h3>
+      ${
+      carrier
+        ? `<p style="margin: 5px 0;"><strong>Carrier:</strong> ${carrier}</p>`
+        : ""
+    }
+      ${
+      trackingNumber
+        ? `<p style="margin: 5px 0;"><strong>Tracking Number:</strong> ${trackingNumber}</p>`
+        : ""
+    }
+      ${
+      trackingUrl
+        ? `<div style="margin-top: 15px;"><a href="${trackingUrl}" style="color: #667eea; text-decoration: underline;">Track your package</a></div>`
+        : ""
+    }
+    </div>
+    `
+    : "";
+
+  const trackingText = trackingNumber || carrier
+    ? `
+TRACKING INFORMATION
+${carrier ? `Carrier: ${carrier}` : ""}
+${trackingNumber ? `Tracking Number: ${trackingNumber}` : ""}
+${trackingUrl ? `Track package: ${trackingUrl}` : ""}
+`
+    : "";
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -80,33 +112,9 @@ export function orderShippedEmailTemplate(
 
     ${itemsHtml}
     
-    ${
-    (trackingNumber || carrier)
-      ? `
-    <div style="background: #f8f9fa; border-radius: 5px; padding: 20px; margin: 20px 0;">
-      <h3 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Tracking Information</h3>
-      ${
-        carrier
-          ? `<p style="margin: 5px 0;"><strong>Carrier:</strong> ${carrier}</p>`
-          : ""
-      }
-      ${
-        trackingNumber
-          ? `<p style="margin: 5px 0;"><strong>Tracking Number:</strong> ${trackingNumber}</p>`
-          : ""
-      }
-      ${
-        trackingUrl
-          ? `<div style="margin-top: 15px;"><a href="${trackingUrl}" style="color: #667eea; text-decoration: underline;">Track your package</a></div>`
-          : ""
-      }
-    </div>
-    `
-      : ""
-  }
+    ${trackingHtml}
 
     <h3 style="border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Shipping To</h3>
-    
     ${formatAddressHtml(shippingAddress)}
 
     ${
@@ -142,16 +150,7 @@ Great news! Your order ${orderNumber} has been shipped and is on its way to you.
 
 ${itemsText}
 
-${
-    (trackingNumber || carrier)
-      ? `
-TRACKING INFORMATION
-${carrier ? `Carrier: ${carrier}` : ""}
-${trackingNumber ? `Tracking Number: ${trackingNumber}` : ""}
-${trackingUrl ? `Track package: ${trackingUrl}` : ""}
-`
-      : ""
-  }
+${trackingText}
 
 SHIPPING TO
 ${formatAddressText(shippingAddress)}

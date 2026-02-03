@@ -4,8 +4,11 @@ import { ValidationUtil } from "../shared/utils/validation.ts";
 import { ApiResponse } from "../shared/utils/response.ts";
 import {
   ChangePasswordSchema,
+  ForgotPasswordSchema,
   LoginSchema,
   RegisterSchema,
+  ResetPasswordSchema,
+  VerifyEmailSchema,
 } from "./auth.dto.ts";
 import { extractTokenFromHeader } from "../shared/utils/jwt.ts";
 
@@ -79,6 +82,75 @@ export class AuthController {
 
     return c.json(
       ApiResponse.success(null, "Password changed successfully"),
+      200,
+    );
+  }
+
+  // POST /api/auth/forgot-password
+  static async forgotPassword(c: Context) {
+    const body = await c.req.json();
+    const validatedData = ValidationUtil.validateSync(
+      ForgotPasswordSchema,
+      body,
+    );
+
+    await AuthService.forgotPassword(validatedData.email);
+
+    // Always return success to prevent email enumeration
+    return c.json(
+      ApiResponse.success(
+        null,
+        "If an account exists with this email, you will receive a password reset link",
+      ),
+      200,
+    );
+  }
+
+  // POST /api/auth/reset-password
+  static async resetPassword(c: Context) {
+    const body = await c.req.json();
+    const validatedData = ValidationUtil.validateSync(
+      ResetPasswordSchema,
+      body,
+    );
+
+    await AuthService.resetPassword(
+      validatedData.token,
+      validatedData.password,
+    );
+
+    return c.json(
+      ApiResponse.success(null, "Password reset successfully"),
+      200,
+    );
+  }
+
+  // GET /api/auth/verify-email
+  static async verifyEmail(c: Context) {
+    const token = c.req.query("token");
+
+    if (!token) {
+      // Validate empty object to trigger proper validation error response
+      ValidationUtil.validateSync(VerifyEmailSchema, {});
+      return c.json(ApiResponse.error("Token is required"), 400);
+    }
+
+    const user = await AuthService.verifyEmail(token);
+
+    return c.json(
+      ApiResponse.success(user, "Email verified successfully"),
+      200,
+    );
+  }
+
+  // POST /api/auth/resend-verification
+  static async resendVerification(c: Context) {
+    const userId = c.get("userId") as number;
+
+    await AuthService.resendVerificationEmail(userId);
+
+    return c.json(
+      ApiResponse.success(null, "Verification email sent"),
       200,
     );
   }

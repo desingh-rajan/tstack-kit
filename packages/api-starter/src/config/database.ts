@@ -3,8 +3,12 @@ import postgres from "postgres";
 import { sql } from "drizzle-orm";
 import { config } from "./env.ts";
 
-// Initialize PostgreSQL connection
-const client = postgres(config.databaseUrl);
+// Initialize PostgreSQL connection with pool limits
+const client = postgres(config.databaseUrl, {
+  max: 20, // Maximum number of connections in pool
+  idle_timeout: 30, // Close idle connections after 30 seconds
+  connect_timeout: 10, // Connection timeout in seconds
+});
 
 // Create Drizzle instance with automatic camelCase to snake_case conversion
 // @ts-ignore - casing option exists but may not be in current type definitions
