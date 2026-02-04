@@ -397,96 +397,96 @@ Tracking backport tasks from sc-admin-ui/sc-api to tstack-kit starter templates.
 
 ---
 
-## Priority 8: Infrastructure (tstack create infra)
+## Priority 8: Infrastructure (tstack create infra) - COMPLETED
 
 > Premium feature command for production-ready deployment setup. Adds Kamal
 > configs, CI/CD, Docker registry support to existing projects.
 
 ### CLI Command Implementation
 
-- [ ] Create `packages/cli/src/commands/infra.ts`
-  - [ ] Detect project type (api/admin-ui/store)
-  - [ ] Interactive prompts for configuration
-  - [ ] Generate all infrastructure files
+- [x] Create `packages/cli/src/commands/infra.ts`
+  - [x] Detect project type (api/admin-ui/store)
+  - [x] Interactive prompts for configuration
+  - [x] Generate all infrastructure files
 
-- [ ] Prompts:
-  - [ ] Docker registry: GHCR (default), Docker Hub, ECR
-  - [ ] Domain name(s)
-  - [ ] SSH user for deployment
-  - [ ] Enable staging environment?
-  - [ ] Database type (Postgres accessory or external)
+- [x] Prompts:
+  - [x] Docker registry: GHCR (default), Docker Hub, ECR
+  - [x] Domain name(s)
+  - [x] SSH user for deployment
+  - [x] Enable staging environment?
+  - [x] Database type (Postgres accessory or external)
 
 ### Kamal Deploy Configs
 
-- [ ] Create `config/deploy.yml` template
-  - [ ] Service name from project
-  - [ ] Health check endpoints (`/health`)
-  - [ ] Environment variables mapping
-  - [ ] Proxy path prefix support (for API behind reverse proxy)
-  - [ ] Memory limits (400m/500m default)
-  - [ ] SSL via proxy or direct
+- [x] Create `config/deploy.yml` template
+  - [x] Service name from project
+  - [x] Health check endpoints (`/health`)
+  - [x] Environment variables mapping
+  - [x] Proxy path prefix support (for API behind reverse proxy)
+  - [x] Memory limits (400m/500m default)
+  - [x] SSL via proxy or direct
 
-- [ ] Create `config/deploy.staging.yml` template
-  - [ ] Staging-specific server
-  - [ ] Staging domain
-  - [ ] Lower resource limits
+- [x] Create `config/deploy.staging.yml` template
+  - [x] Staging-specific server
+  - [x] Staging domain
+  - [x] Lower resource limits
 
 ### Docker Registry Support
 
-- [ ] **GHCR** (default)
-  - [ ] `ghcr.io/<username>/<project>`
-  - [ ] Use `GITHUB_TOKEN` for auth
+- [x] **GHCR** (default)
+  - [x] `ghcr.io/<username>/<project>`
+  - [x] Use `GITHUB_TOKEN` for auth
 
-- [ ] **Docker Hub**
-  - [ ] `docker.io/<username>/<project>`
-  - [ ] `DOCKER_USERNAME`, `DOCKER_PASSWORD`
+- [x] **Docker Hub**
+  - [x] `docker.io/<username>/<project>`
+  - [x] `DOCKER_USERNAME`, `DOCKER_PASSWORD`
 
-- [ ] **AWS ECR**
-  - [ ] `<account>.dkr.ecr.<region>.amazonaws.com/<project>`
-  - [ ] AWS credentials for auth
+- [x] **AWS ECR**
+  - [x] `<account>.dkr.ecr.<region>.amazonaws.com/<project>`
+  - [x] AWS credentials for auth
 
 ### Secrets Management
 
-- [ ] Create `.kamal/secrets` template
-  - [ ] `DATABASE_URL`
-  - [ ] `JWT_SECRET`
-  - [ ] `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-  - [ ] `EMAIL_FROM`, `RESEND_API_KEY` or `SES_*`
-  - [ ] `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
-  - [ ] `KAMAL_REGISTRY_PASSWORD`
+- [x] Create `.kamal/secrets` template
+  - [x] `DATABASE_URL`
+  - [x] `JWT_SECRET`
+  - [x] `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+  - [x] `EMAIL_FROM`, `RESEND_API_KEY` or `SES_*`
+  - [x] `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+  - [x] `KAMAL_REGISTRY_PASSWORD`
 
-- [ ] Create `.kamal/secrets.staging` template
+- [x] Create `.kamal/secrets.staging` template
 
 ### GitHub Actions CI/CD
 
-- [ ] Create `.github/workflows/deploy.yml`
-  - [ ] Trigger: push to `main` (production), `staging` (staging)
-  - [ ] Ruby setup for Kamal
-  - [ ] SSH key from secrets
-  - [ ] Environment detection
-  - [ ] Build and deploy steps
+- [x] Create `.github/workflows/deploy.yml`
+  - [x] Trigger: push to `main` (production), `staging` (staging)
+  - [x] Ruby setup for Kamal
+  - [x] SSH key from secrets
+  - [x] Environment detection
+  - [x] Build and deploy steps
 
 ### Dockerfile Templates
 
-- [ ] API Dockerfile
-  - [ ] `denoland/deno:alpine-2.x` base
-  - [ ] Healthcheck fix for Deno 2.x (remove `--allow-net`)
-  - [ ] Cache dependencies layer
-  - [ ] `/health` endpoint
+- [x] API Dockerfile
+  - [x] `denoland/deno:alpine-2.x` base
+  - [x] Healthcheck fix for Deno 2.x (remove `--allow-net`)
+  - [x] Cache dependencies layer
+  - [x] `/health` endpoint
 
-- [ ] Admin UI / Store Dockerfile
-  - [ ] Multi-stage build (build + serve)
-  - [ ] Vite build step
-  - [ ] Serve `_fresh/server.js`
+- [x] Admin UI / Store Dockerfile
+  - [x] Multi-stage build (build + serve)
+  - [x] Vite build step
+  - [x] Serve `_fresh/server.js`
 
 ### Documentation
 
-- [ ] Create `docs/deployment.md`
-  - [ ] Kamal setup guide
-  - [ ] Server requirements
-  - [ ] CI/CD workflow explanation
-  - [ ] Secrets management
-  - [ ] Troubleshooting (proxy conflicts, SSH issues, health checks)
+- [x] Create `docs/deployment.md`
+  - [x] Kamal setup guide
+  - [x] Server requirements
+  - [x] CI/CD workflow explanation
+  - [x] Secrets management
+  - [x] Troubleshooting (proxy conflicts, SSH issues, health checks)
 
 ---
 
@@ -506,19 +506,19 @@ Tracking backport tasks from sc-admin-ui/sc-api to tstack-kit starter templates.
 
 ## First-Class Provider Summary
 
-| Provider       | Type            | Status     | Location                                            |
-| -------------- | --------------- | ---------- | --------------------------------------------------- |
-| AWS S3         | Storage         | Done       | `src/lib/s3-uploader.ts`                            |
-| AWS SES        | Email           | Done       | `src/shared/providers/email/ses.provider.ts`        |
-| AWS SNS        | SMS             | Skipped    | Future: `src/shared/providers/sms/sns.provider.ts`  |
-| Resend         | Email           | Done       | `src/shared/providers/email/resend.provider.ts`     |
-| SMTP           | Email           | Done       | `src/shared/providers/email/smtp.provider.ts`       |
-| Razorpay       | Payment         | Done       | `src/shared/providers/payment/razorpay.provider.ts` |
-| Google OAuth   | Auth            | Done       | `src/shared/providers/auth/google.provider.ts`      |
-| Facebook OAuth | Auth            | Done       | `src/shared/providers/auth/facebook.provider.ts`    |
-| GHCR           | Docker Registry | Priority 8 | CLI `tstack create infra`                           |
-| Docker Hub     | Docker Registry | Priority 8 | CLI `tstack create infra`                           |
-| AWS ECR        | Docker Registry | Priority 8 | CLI `tstack create infra`                           |
+| Provider       | Type            | Status | Location                                            |
+| -------------- | --------------- | ------ | --------------------------------------------------- |
+| AWS S3         | Storage         | Done   | `src/lib/s3-uploader.ts`                            |
+| AWS SES        | Email           | Done   | `src/shared/providers/email/ses.provider.ts`        |
+| AWS SNS        | SMS             | Future | `src/shared/providers/sms/sns.provider.ts`          |
+| Resend         | Email           | Done   | `src/shared/providers/email/resend.provider.ts`     |
+| SMTP           | Email           | Done   | `src/shared/providers/email/smtp.provider.ts`       |
+| Razorpay       | Payment         | Done   | `src/shared/providers/payment/razorpay.provider.ts` |
+| Google OAuth   | Auth            | Done   | `src/shared/providers/auth/google.provider.ts`      |
+| Facebook OAuth | Auth            | Done   | `src/shared/providers/auth/facebook.provider.ts`    |
+| GHCR           | Docker Registry | Done   | CLI `tstack infra`                                  |
+| Docker Hub     | Docker Registry | Done   | CLI `tstack infra`                                  |
+| AWS ECR        | Docker Registry | Done   | CLI `tstack infra`                                  |
 
 ## Reference: SC-Project Commit Analysis
 
