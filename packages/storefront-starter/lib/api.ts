@@ -5,6 +5,11 @@
 
 const API_BASE_URL = Deno.env.get("API_BASE_URL") || "http://localhost:8000";
 
+// For SSR, prefer internal Docker network to avoid public URL roundtrip
+// This prevents timeout issues when frontend containers call API via external URL
+const API_INTERNAL_URL = Deno.env.get("API_INTERNAL_URL");
+const SSR_API_URL = API_INTERNAL_URL || API_BASE_URL;
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -120,10 +125,9 @@ export class ApiClient {
   }
 
   verifyEmail(token: string) {
-    return this.request<{ message: string }>("/auth/verify-email", {
-      method: "POST",
-      body: { token },
-    });
+    return this.request<{ message: string }>(
+      `/auth/verify-email?token=${encodeURIComponent(token)}`,
+    );
   }
 
   forgotPassword(email: string) {
@@ -137,6 +141,12 @@ export class ApiClient {
     return this.request<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: { token, password },
+    });
+  }
+
+  resendVerification() {
+    return this.request<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
     });
   }
 
@@ -491,5 +501,8 @@ export interface ProductQueryParams {
   sortOrder?: "asc" | "desc";
 }
 
-// Singleton instance
-export const api = new ApiClient();
+// Singleton instance - uses SSR_API_URL for server-side rendering performance
+export const api = new ApiClient(SSR_API_URL);
+
+// Export URLs for use in other modules
+export { API_BASE_URL, SSR_API_URL };

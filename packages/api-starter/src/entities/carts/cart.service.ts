@@ -1,4 +1,4 @@
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "../../config/database.ts";
 import { type Cart, carts } from "./cart.model.ts";
 import { type CartItem, cartItems } from "./cart-item.model.ts";
@@ -189,6 +189,7 @@ export class CartService {
 
   /**
    * Get cart items with product details
+   * Uses batched queries to avoid N+1 problem
    */
   private async getCartItems(cartId: string) {
     // Get cart items
@@ -197,79 +198,101 @@ export class CartService {
       .from(cartItems)
       .where(eq(cartItems.cartId, cartId));
 
-    // Get product and variant details for each item
-    const itemsWithDetails = await Promise.all(
-      items.map(async (item) => {
-        // Get product
-        const productResult = await db
-          .select({
-            id: products.id,
-            name: products.name,
-            slug: products.slug,
-            price: products.price,
-            stockQuantity: products.stockQuantity,
-            isActive: products.isActive,
-          })
-          .from(products)
-          .where(eq(products.id, item.productId))
-          .limit(1);
+    if (items.length === 0) {
+      return [];
+    }
 
-        // Get primary image
-        const imageResult = await db
-          .select({
-            url: productImages.url,
-            thumbnailUrl: productImages.thumbnailUrl,
-          })
-          .from(productImages)
-          .where(
-            and(
-              eq(productImages.productId, item.productId),
-              eq(productImages.isPrimary, true),
-            ),
-          )
-          .limit(1);
+    // Batch fetch all products
+    const productIds = [...new Set(items.map((item) => item.productId))];
+    const productResults = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        price: products.price,
+        stockQuantity: products.stockQuantity,
+        isActive: products.isActive,
+      })
+      .from(products)
+      .where(inArray(products.id, productIds));
+    const productMap = new Map(productResults.map((p) => [p.id, p]));
 
-        // Get variant if exists
-        let variant = null;
-        if (item.variantId) {
-          const variantResult = await db
-            .select({
-              id: productVariants.id,
-              sku: productVariants.sku,
-              price: productVariants.price,
-              stockQuantity: productVariants.stockQuantity,
-              options: productVariants.options,
-              isActive: productVariants.isActive,
-            })
-            .from(productVariants)
-            .where(eq(productVariants.id, item.variantId))
-            .limit(1);
+    // Batch fetch all primary images
+    const imageResults = await db
+      .select({
+        productId: productImages.productId,
+        url: productImages.url,
+        thumbnailUrl: productImages.thumbnailUrl,
+      })
+      .from(productImages)
+      .where(
+        and(
+          inArray(productImages.productId, productIds),
+          eq(productImages.isPrimary, true),
+        ),
+      );
+    const imageMap = new Map(imageResults.map((i) => [i.productId, i]));
 
-          if (variantResult.length > 0) {
-            variant = {
-              ...variantResult[0],
-              options: variantResult[0].options as Record<string, string>,
-            };
-          }
+    // Batch fetch all variants
+    const variantIds = items
+      .filter((item) => item.variantId)
+      .map((item) => item.variantId as string);
+    const variantResults = variantIds.length > 0
+      ? await db
+        .select({
+          id: productVariants.id,
+          sku: productVariants.sku,
+          price: productVariants.price,
+          stockQuantity: productVariants.stockQuantity,
+          options: productVariants.options,
+          isActive: productVariants.isActive,
+        })
+        .from(productVariants)
+        .where(inArray(productVariants.id, variantIds))
+      : [];
+    const variantMap = new Map(variantResults.map((v) => [v.id, v]));
+
+    // Build items with details using maps (O(1) lookups)
+    const itemsWithDetails = items.map((item) => {
+      const product = productMap.get(item.productId);
+      const image = imageMap.get(item.productId);
+      const variantData = item.variantId
+        ? variantMap.get(item.variantId)
+        : null;
+
+      const variant = variantData
+        ? {
+          ...variantData,
+          options: variantData.options as Record<string, string>,
         }
+        : null;
 
-        return {
-          id: item.id,
-          cartId: item.cartId,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          priceAtAdd: item.priceAtAdd,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-          product: {
-            ...productResult[0],
-            primaryImage: imageResult.length > 0 ? imageResult[0] : null,
+      return {
+        id: item.id,
+        cartId: item.cartId,
+        productId: item.productId,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        priceAtAdd: item.priceAtAdd,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        product: product
+          ? {
+            ...product,
+            primaryImage: image ?? null,
+          }
+          : {
+            id: item.productId,
+            name: "Unknown product",
+            slug: "",
+            price: "0",
+            stockQuantity: 0,
+            isActive: false,
+            primaryImage: null,
           },
-          variant,
-        };
-      }),
-    );
+        variant,
+      };
+    });
 
     return itemsWithDetails;
   }

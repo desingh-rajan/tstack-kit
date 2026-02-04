@@ -155,26 +155,34 @@ export default function Footer() {
                 <ul role="list" class="mt-6 space-y-4">
                   <li>
                     <a
-                      href="#"
+                      href="/policies/privacy"
                       class="text-sm leading-6 text-gray-300 hover:text-white"
                     >
-                      Claim
+                      Privacy Policy
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="/policies/terms"
                       class="text-sm leading-6 text-gray-300 hover:text-white"
                     >
-                      Privacy
+                      Terms of Service
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="/policies/refund"
                       class="text-sm leading-6 text-gray-300 hover:text-white"
                     >
-                      Terms
+                      Refund Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/policies/shipping"
+                      class="text-sm leading-6 text-gray-300 hover:text-white"
+                    >
+                      Shipping Policy
                     </a>
                   </li>
                 </ul>

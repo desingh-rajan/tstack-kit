@@ -33,6 +33,7 @@ export const users = pgTable("users", {
 
   // OAuth fields (for Google/GitHub login)
   googleId: text("google_id").unique(),
+  facebookId: text("facebook_id").unique(),
   avatarUrl: text("avatar_url"),
   firstName: text("first_name"),
   lastName: text("last_name"),

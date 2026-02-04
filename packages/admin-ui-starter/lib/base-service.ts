@@ -60,15 +60,41 @@ export class BaseService<T> {
     const path = query ? `${this.basePath}?${query}` : this.basePath;
     const response = await this.client.get<ApiResponse<T[]>>(path);
 
-    // Unwrap API response format: { status, data, pagination }
+    // Handle multiple API response formats:
+    // 1. Nested: { status, data: [...], pagination: { page, pageSize, total, totalPages } }
+    // 2. Flat: { status, data: [...], page, pageSize, total, totalPages }
+    // 3. No pagination: { status, data: [...] } - calculate from data length
+    const dataArray = response.data || [];
+    const dataLength = Array.isArray(dataArray) ? dataArray.length : 0;
+    const requestedPageSize = (params?.pageSize as number) ||
+      (params?.limit as number) || 10;
+
+    // Extract pagination from nested or flat format
+    const paginationData = response.pagination || {
+      page: (response as unknown as Record<string, unknown>).page as number ||
+        1,
+      pageSize:
+        (response as unknown as Record<string, unknown>).pageSize as number ||
+        (response as unknown as Record<string, unknown>).limit as number ||
+        requestedPageSize,
+      total: (response as unknown as Record<string, unknown>).total as number ||
+        dataLength,
+      totalPages:
+        (response as unknown as Record<string, unknown>).totalPages as number ||
+        Math.ceil(dataLength / requestedPageSize) || 1,
+    };
+
     return {
-      success: response.status === "success",
-      data: response.data || [],
-      pagination: response.pagination || {
-        page: 1,
-        pageSize: 20,
-        total: 0,
-        totalPages: 0,
+      success: response.status === "success" || Array.isArray(response.data),
+      data: dataArray,
+      pagination: {
+        page: paginationData.page || 1,
+        pageSize: paginationData.pageSize ||
+          (paginationData as unknown as { limit?: number }).limit ||
+          requestedPageSize,
+        total: paginationData.total || dataLength,
+        totalPages: paginationData.totalPages ||
+          Math.ceil(dataLength / requestedPageSize) || 1,
       },
     };
   }

@@ -6,6 +6,7 @@
  *
  * Environment Variables:
  * - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI: Google OAuth
+ * - FACEBOOK_APP_ID, FACEBOOK_APP_SECRET: Facebook OAuth
  * - GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET: GitHub OAuth (future)
  *
  * Usage:
@@ -20,11 +21,12 @@
 
 import type { IOAuthProvider } from "./auth-provider.interface.ts";
 import { createGoogleProviderFromEnv } from "./google.provider.ts";
+import { createFacebookProviderFromEnv } from "./facebook.provider.ts";
 
 /**
  * Supported OAuth provider types
  */
-export type OAuthProviderType = "google" | "github" | "apple";
+export type OAuthProviderType = "google" | "facebook" | "github" | "apple";
 
 /**
  * Create an OAuth provider instance
@@ -45,6 +47,19 @@ export function createOAuthProvider(
       }
       console.warn(
         "[OAuthFactory] Google OAuth not configured - missing credentials",
+      );
+      return null;
+    }
+
+    case "facebook": {
+      const appId = Deno.env.get("FACEBOOK_APP_ID");
+      const appSecret = Deno.env.get("FACEBOOK_APP_SECRET");
+
+      if (appId && appSecret) {
+        return createFacebookProviderFromEnv();
+      }
+      console.warn(
+        "[OAuthFactory] Facebook OAuth not configured - missing credentials",
       );
       return null;
     }
@@ -86,6 +101,14 @@ export function getAvailableOAuthProviders(): OAuthProviderType[] {
     Deno.env.get("GOOGLE_REDIRECT_URI")
   ) {
     available.push("google");
+  }
+
+  // Check Facebook
+  if (
+    Deno.env.get("FACEBOOK_APP_ID") &&
+    Deno.env.get("FACEBOOK_APP_SECRET")
+  ) {
+    available.push("facebook");
   }
 
   // Future: Check GitHub

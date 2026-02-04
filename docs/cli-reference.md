@@ -103,6 +103,60 @@ Generates 8 files for a new entity:
 tstack scaffold products
 ```
 
+## Infrastructure Commands
+
+### Setup Deployment Infrastructure
+
+```bash
+tstack infra [options]
+```
+
+Generates production-ready deployment infrastructure for your project:
+
+- Kamal deploy configs (production + staging)
+- Secrets management templates (`.kamal/secrets`)
+- GitHub Actions CI/CD workflow
+- Dockerfile templates
+
+**Options:**
+
+| Option              | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| `--registry=<type>` | Docker registry: `ghcr` (default), `dockerhub`, `ecr` |
+| `--domain=<domain>` | Production domain name                                |
+| `--staging`         | Enable staging environment                            |
+| `--ssh-user=<user>` | SSH user for deployment (default: `deploy`)           |
+| `--db-accessory`    | Use Kamal Postgres accessory (vs external DB)         |
+
+**Supported Docker Registries:**
+
+- **GHCR** (GitHub Container Registry) - Default, free for public repos
+- **Docker Hub** - Requires Docker Hub account
+- **AWS ECR** - Requires AWS credentials
+
+**Example:**
+
+```bash
+# Basic setup with GHCR
+tstack infra --domain=myapp.com
+
+# With staging environment and Docker Hub
+tstack infra --domain=myapp.com --staging --registry=dockerhub
+
+# With AWS ECR
+tstack infra --domain=myapp.com --registry=ecr
+```
+
+**Generated Files:**
+
+- `config/deploy.yml` - Production Kamal configuration
+- `config/deploy.staging.yml` - Staging configuration (if --staging)
+- `.kamal/secrets` - Environment variables template
+- `.github/workflows/deploy.yml` - CI/CD pipeline
+- `Dockerfile` - Optimized for production
+
+See [Deployment Guide](./deployment.md) for complete deployment instructions.
+
 ## Info Commands
 
 ### List Projects

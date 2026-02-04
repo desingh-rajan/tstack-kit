@@ -15,6 +15,6 @@
 ## Resources
 
 - [Main README](../README.md)
-- [Changelog](../CHANGELOG.md)
+- [GitHub Releases](https://github.com/desingh-rajan/tstack-kit/releases)
 - [CLI on JSR](https://jsr.io/@tonystack/cli)
 - [Admin Package on JSR](https://jsr.io/@tstack/admin)

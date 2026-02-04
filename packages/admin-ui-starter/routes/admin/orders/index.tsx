@@ -4,7 +4,7 @@
 
 import { define } from "@/utils.ts";
 import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
-import { Pagination } from "@/components/admin/Pagination.tsx";
+import Pagination from "@/islands/Pagination.tsx";
 import { AccessDenied } from "@/components/admin/AccessDenied.tsx";
 import { getSessionToken } from "@/lib/auth.ts";
 import { orderService } from "@/entities/orders/order.service.ts";
@@ -53,7 +53,7 @@ export const handler = define.handlers({
     try {
       const response = await orderService.list({
         page,
-        limit: 20,
+        limit: 10,
         status,
         paymentStatus,
         search,
@@ -70,6 +70,7 @@ export const handler = define.handlers({
           filters: { status, paymentStatus, search },
           error: null,
           errorStatus: null,
+          url: url.toString(),
         },
       };
     } catch (error) {
@@ -82,6 +83,7 @@ export const handler = define.handlers({
           filters: { status, paymentStatus, search },
           error: err.message || "Failed to load orders",
           errorStatus: err.status || 500,
+          url: url.toString(),
         },
       };
     }
@@ -89,7 +91,8 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(function OrdersListPage({ data }) {
-  const { orders, pagination, filters, error, errorStatus } = data;
+  const { orders, pagination, filters, error, errorStatus, url } = data;
+  const currentParams = url ? new URL(url).search : undefined;
 
   if (errorStatus === 403) {
     return (
@@ -281,6 +284,7 @@ export default define.page<typeof handler>(function OrdersListPage({ data }) {
               <Pagination
                 pagination={pagination}
                 basePath="/admin/orders"
+                currentParams={currentParams}
               />
             )}
           </div>

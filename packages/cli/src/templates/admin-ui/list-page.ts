@@ -9,7 +9,7 @@ export function generateListPageTemplate(names: EntityNames): string {
 import { define } from "@/utils.ts";
 import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
 import { DataTable } from "@/components/admin/DataTable.tsx";
-import { Pagination } from "@/components/admin/Pagination.tsx";
+import Pagination from "@/islands/Pagination.tsx";
 import { AccessDenied } from "@/components/admin/AccessDenied.tsx";
 import { createCRUDHandlers } from "@/lib/admin/crud-handlers.ts";
 import { ${names.singular}Config } from "@/config/entities/${names.snakePlural}.config.tsx";
@@ -23,20 +23,16 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(function ${names.pascalPlural}ListPage({ data }) {
-  const { items, config, error, errorStatus } = data;
+  const { items, config, error, errorStatus, url } = data;
   const response = items as ListResponse<${names.pascalSingular}>;
-
-  // Safely convert error to string
-  const errorMessage = error
-    ? (typeof error === "string" ? error : (error as { message?: string })?.message || "An error occurred")
-    : null;
+  const currentParams = url ? new URL(url).search : undefined;
 
   // 403 Forbidden - Show access denied page
   if (errorStatus === 403) {
     return (
       <AdminLayout currentPath={\`/admin/\${config.name}\`}>
         <AccessDenied
-          message={errorMessage ||
+          message={error ||
             \`You don't have permission to view \${config.pluralName}\`}
           entityName={config.pluralName}
         />
@@ -64,12 +60,9 @@ export default define.page<typeof handler>(function ${names.pascalPlural}ListPag
           )}
         </div>
 
-        {errorMessage && (
+        {error && (
           <div class="alert alert-error">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{errorMessage}</span>
+            <span>{error}</span>
           </div>
         )}
 
@@ -84,6 +77,7 @@ export default define.page<typeof handler>(function ${names.pascalPlural}ListPag
               <Pagination
                 pagination={response.pagination}
                 basePath={\`/admin/\${config.name}\`}
+                currentParams={currentParams}
               />
             )}
           </div>

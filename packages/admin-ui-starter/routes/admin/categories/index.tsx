@@ -5,7 +5,7 @@
 import { define } from "@/utils.ts";
 import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
 import { DataTable } from "@/components/admin/DataTable.tsx";
-import { Pagination } from "@/components/admin/Pagination.tsx";
+import Pagination from "@/islands/Pagination.tsx";
 import { AccessDenied } from "@/components/admin/AccessDenied.tsx";
 import { createCRUDHandlers } from "@/lib/admin/crud-handlers.ts";
 import { categoryConfig } from "@/config/entities/categories.config.tsx";
@@ -21,8 +21,9 @@ export const handler = define.handlers({
 export default define.page<typeof handler>(function CategoriesListPage({
   data,
 }) {
-  const { items, config, error, errorStatus } = data;
+  const { items, config, error, errorStatus, url } = data;
   const response = items as ListResponse<Category>;
+  const currentParams = url ? new URL(url).search : undefined;
 
   if (errorStatus === 403) {
     return (
@@ -73,6 +74,7 @@ export default define.page<typeof handler>(function CategoriesListPage({
               <Pagination
                 pagination={response.pagination}
                 basePath={`/admin/${config.name}`}
+                currentParams={currentParams}
               />
             )}
           </div>

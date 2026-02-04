@@ -18,9 +18,9 @@ RUN deno cache src/main.ts
 # Expose port
 EXPOSE 8000
 
-# Add healthcheck
+# Add healthcheck (Deno 2.x doesn't require --allow-net for deno eval)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD deno eval --allow-net "try { const res = await fetch('http://localhost:8000/health'); Deno.exit(res.ok ? 0 : 1); } catch { Deno.exit(1); }"
+  CMD deno eval "try { const res = await fetch('http://localhost:8000/health'); Deno.exit(res.ok ? 0 : 1); } catch { Deno.exit(1); }"
 
 # Run the application
 CMD ["deno", "run", "--allow-all", "src/main.ts"]

@@ -1,10 +1,12 @@
 import { and, eq } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
 import { db } from "../config/database.ts";
 import { type SafeUser, users } from "./user.model.ts";
 import { authTokens } from "./auth-token.model.ts";
 import { hashPassword, verifyPassword } from "../shared/utils/password.ts";
 import { createToken } from "../shared/utils/jwt.ts";
 import { BadRequestError, UnauthorizedError } from "../shared/utils/errors.ts";
+import { notificationService } from "../shared/services/notification.service.ts";
 
 export class AuthService {
   /**
@@ -30,6 +32,11 @@ export class AuthService {
     // Hash password
     const hashedPassword = await hashPassword(data.password);
 
+    // Generate email verification token
+    const verificationToken = this.generateToken();
+    const verificationExpiry = new Date();
+    verificationExpiry.setHours(verificationExpiry.getHours() + 24); // 24 hour expiry
+
     // Create user (always with "user" role - cannot register as admin)
     const [newUser] = await db
       .insert(users)
@@ -39,6 +46,8 @@ export class AuthService {
         phone: data.phone,
         password: hashedPassword,
         role: "user", // Default role, cannot be changed via signup
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
       })
       .returning();
 
@@ -57,6 +66,19 @@ export class AuthService {
       token,
       expiresAt,
     });
+
+    // Send verification email (fire-and-forget)
+    const storefrontUrl = Deno.env.get("STOREFRONT_URL") ||
+      Deno.env.get("APP_URL") || "http://localhost:3000";
+    const verificationUrl =
+      `${storefrontUrl}/verify-email?token=${verificationToken}`;
+    const userName = newUser.username || newUser.firstName ||
+      newUser.email.split("@")[0];
+    notificationService.sendVerificationEmail(
+      newUser.email,
+      userName,
+      verificationUrl,
+    );
 
     // Return user without password
     const { password: _, ...safeUser } = newUser;
@@ -230,5 +252,195 @@ export class AuthService {
     await db
       .delete(authTokens)
       .where(eq(authTokens.userId, userId));
+  }
+
+  /**
+   * Generate a secure random token
+   */
+  private static generateToken(): string {
+    return randomBytes(32).toString("hex");
+  }
+
+  /**
+   * Request password reset - generates token and sends email
+   * Always returns success to prevent email enumeration
+   */
+  static async forgotPassword(email: string): Promise<void> {
+    // Find user by email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    // If user doesn't exist, silently return (prevent enumeration)
+    if (!user) {
+      return;
+    }
+
+    // Generate reset token
+    const resetToken = this.generateToken();
+    const resetExpiry = new Date();
+    resetExpiry.setHours(resetExpiry.getHours() + 1); // 1 hour expiry
+
+    // Store token in database
+    await db
+      .update(users)
+      .set({
+        passwordResetToken: resetToken,
+        passwordResetExpiry: resetExpiry,
+      })
+      .where(eq(users.id, user.id));
+
+    // Build reset URL
+    const storefrontUrl = Deno.env.get("STOREFRONT_URL") ||
+      Deno.env.get("APP_URL") || "http://localhost:3000";
+    const resetUrl = `${storefrontUrl}/auth/reset-password?token=${resetToken}`;
+
+    // Send email (fire-and-forget)
+    const userName = user.username || user.firstName ||
+      user.email.split("@")[0];
+    notificationService.sendPasswordResetEmail(user.email, userName, resetUrl);
+  }
+
+  /**
+   * Reset password using token
+   */
+  static async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<void> {
+    // Find user by reset token
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.passwordResetToken, token))
+      .limit(1);
+
+    if (!user) {
+      throw new BadRequestError("Invalid or expired reset token");
+    }
+
+    // Check if token is expired
+    if (!user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
+      throw new BadRequestError("Reset token has expired");
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password and clear reset token
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      })
+      .where(eq(users.id, user.id));
+
+    // Delete all existing auth tokens for security (force re-login)
+    await db
+      .delete(authTokens)
+      .where(eq(authTokens.userId, user.id));
+  }
+
+  /**
+   * Verify email address using token
+   */
+  static async verifyEmail(token: string): Promise<SafeUser> {
+    // Find user by verification token
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.emailVerificationToken, token))
+      .limit(1);
+
+    if (!user) {
+      throw new BadRequestError("Invalid or expired verification token");
+    }
+
+    // Check if token is expired
+    if (
+      !user.emailVerificationExpiry || user.emailVerificationExpiry < new Date()
+    ) {
+      throw new BadRequestError("Verification token has expired");
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      throw new BadRequestError("Email is already verified");
+    }
+
+    // Mark email as verified and clear token
+    await db
+      .update(users)
+      .set({
+        isEmailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiry: null,
+      })
+      .where(eq(users.id, user.id));
+
+    const { password: _, ...safeUser } = user;
+    return { ...safeUser, isEmailVerified: true };
+  }
+
+  /**
+   * Resend verification email
+   */
+  static async resendVerificationEmail(userId: number): Promise<void> {
+    // Get user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      throw new UnauthorizedError("User not found");
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      throw new BadRequestError("Email is already verified");
+    }
+
+    // Generate new verification token
+    const verificationToken = this.generateToken();
+    const verificationExpiry = new Date();
+    verificationExpiry.setHours(verificationExpiry.getHours() + 24); // 24 hour expiry
+
+    // Store token in database
+    await db
+      .update(users)
+      .set({
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
+      })
+      .where(eq(users.id, user.id));
+
+    // Build verification URL
+    const storefrontUrl = Deno.env.get("STOREFRONT_URL") ||
+      Deno.env.get("APP_URL") || "http://localhost:3000";
+    const verificationUrl =
+      `${storefrontUrl}/verify-email?token=${verificationToken}`;
+
+    // Send email (fire-and-forget)
+    const userName = user.username || user.firstName ||
+      user.email.split("@")[0];
+    notificationService.sendVerificationEmail(
+      user.email,
+      userName,
+      verificationUrl,
+    );
+  }
+
+  /**
+   * Send verification email during registration
+   * Called internally after user creation
+   */
+  static async sendVerificationEmailForNewUser(userId: number): Promise<void> {
+    await this.resendVerificationEmail(userId);
   }
 }

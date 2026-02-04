@@ -11,7 +11,9 @@ import { authTokens } from "./auth-token.model.ts";
 import { createToken } from "../shared/utils/jwt.ts";
 import { BadRequestError } from "../shared/utils/errors.ts";
 import {
+  createFacebookProviderFromEnv,
   createGoogleProviderFromEnv,
+  FacebookAuthProvider,
   GoogleAuthProvider,
   type OAuthUserProfile,
 } from "../shared/providers/auth/index.ts";
@@ -83,6 +85,17 @@ function getGoogleProvider(): GoogleAuthProvider {
   return googleProviderInstance;
 }
 
+/**
+ * Get Facebook provider instance (lazy initialization)
+ */
+let facebookProviderInstance: FacebookAuthProvider | null = null;
+function getFacebookProvider(): FacebookAuthProvider {
+  if (!facebookProviderInstance) {
+    facebookProviderInstance = createFacebookProviderFromEnv();
+  }
+  return facebookProviderInstance;
+}
+
 export class OAuthService {
   /**
    * Generate OAuth state and store it
@@ -126,6 +139,15 @@ export class OAuthService {
   }
 
   /**
+   * Get Facebook OAuth authorization URL
+   */
+  static getFacebookAuthUrl(redirectUrl?: string): string {
+    const provider = getFacebookProvider();
+    const state = OAuthService.generateState(redirectUrl);
+    return provider.getAuthorizationUrl(state);
+  }
+
+  /**
    * Handle Google OAuth callback
    */
   static async handleGoogleCallback(
@@ -142,6 +164,34 @@ export class OAuthService {
 
     // Exchange code for profile
     const provider = getGoogleProvider();
+    const { profile } = await provider.handleCallback(code);
+
+    // Find or create user
+    const result = await OAuthService.findOrCreateUser(profile);
+
+    return {
+      ...result,
+      redirectUrl: stateValidation.redirectUrl,
+    };
+  }
+
+  /**
+   * Handle Facebook OAuth callback
+   */
+  static async handleFacebookCallback(
+    code: string,
+    state: string,
+  ): Promise<
+    { user: SafeUser; token: string; isNewUser: boolean; redirectUrl?: string }
+  > {
+    // Validate state
+    const stateValidation = OAuthService.validateState(state);
+    if (!stateValidation.valid) {
+      throw new BadRequestError("Invalid or expired OAuth state");
+    }
+
+    // Exchange code for profile
+    const provider = getFacebookProvider();
     const { profile } = await provider.handleCallback(code);
 
     // Find or create user
@@ -209,6 +259,14 @@ export class OAuthService {
         .limit(1);
       return user || null;
     }
+    if (profile.provider === "facebook" && profile.providerId) {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.facebookId, profile.providerId))
+        .limit(1);
+      return user || null;
+    }
     // Add other providers here (github, apple, etc.)
     return null;
   }
@@ -238,6 +296,9 @@ export class OAuthService {
 
     if (profile.provider === "google") {
       updateData.googleId = profile.providerId;
+    }
+    if (profile.provider === "facebook") {
+      updateData.facebookId = profile.providerId;
     }
 
     // Update avatar if not set
@@ -290,6 +351,9 @@ export class OAuthService {
     // Set provider-specific ID
     if (profile.provider === "google") {
       userData.googleId = profile.providerId;
+    }
+    if (profile.provider === "facebook") {
+      userData.facebookId = profile.providerId;
     }
 
     const [newUser] = await db.insert(users).values(userData).returning();

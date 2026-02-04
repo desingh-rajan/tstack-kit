@@ -10,6 +10,10 @@ import { createWorkspace, destroyWorkspace } from "./src/commands/workspace.ts";
 import { listTrackedProjects } from "./src/commands/list.ts";
 import { listVersionsCommand, upgradeCommand } from "./src/commands/upgrade.ts";
 import { listTemplatesCommand } from "./src/commands/templates.ts";
+import {
+  createInfrastructure,
+  promptInfraOptions,
+} from "./src/commands/infra.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -23,6 +27,9 @@ function showHelp() {
   Logger.subtitle("Commands:");
   Logger.code(
     "create <type> <name>       Create a new project (types: api, admin-ui, store, workspace)",
+  );
+  Logger.code(
+    "infra                      Setup infrastructure (Kamal, Docker, CI/CD)",
   );
   Logger.code(
     "scaffold <entity-name>     Generate a new entity with all MVC files",
@@ -128,12 +135,31 @@ function showHelp() {
   );
   Logger.newLine();
 
+  Logger.subtitle("Infrastructure Options:");
+  Logger.code(
+    "--registry <type>          Docker registry: ghcr (default), dockerhub, ecr",
+  );
+  Logger.code(
+    "--domain <domain>          Production domain (e.g., vega-tools.com)",
+  );
+  Logger.code(
+    "--staging-domain <domain>  Staging domain (e.g., staging.vega-tools.com)",
+  );
+  Logger.code(
+    "--path-prefix <prefix>     API path prefix (default: ts-be/api)",
+  );
+  Logger.code(
+    "--staging                  Enable staging environment",
+  );
+  Logger.newLine();
+
   Logger.subtitle("Examples:");
   Logger.code("tstack create api my-backend");
   Logger.code("tstack create api my-api --latest");
   Logger.code("tstack create admin-ui my-admin");
   Logger.code("tstack create workspace vega-groups");
   Logger.code("tstack create store my-store");
+  Logger.code("tstack infra                  # Interactive setup");
   Logger.code("tstack scaffold products");
   Logger.code("tstack scaffold products --skip-admin-ui");
   Logger.code("tstack scaffold products --only-api");
@@ -185,6 +211,8 @@ async function main() {
       "skip-store",
       "skip-metrics",
       "skip-remote",
+      "staging", // Infra: Enable staging environment
+      "db-accessory", // Infra: Include Postgres accessory
     ],
     string: [
       "dir",
@@ -193,6 +221,16 @@ async function main() {
       "github-token",
       "visibility",
       "scope",
+      // Infra options
+      "registry",
+      "domain",
+      "staging-domain",
+      "path-prefix",
+      "ssh-user",
+      "github-username",
+      "docker-username",
+      "aws-account-id",
+      "aws-region",
     ],
     alias: {
       h: "help",
@@ -417,6 +455,43 @@ async function main() {
 
       case "templates": {
         listTemplatesCommand();
+        break;
+      }
+
+      case "infra": {
+        // Check for required args for non-interactive mode
+        if (args.registry && args.domain) {
+          // Non-interactive mode with CLI args
+          const { createInfrastructure } = await import(
+            "./src/commands/infra.ts"
+          );
+          await createInfrastructure({
+            projectDir: args.dir || Deno.cwd(),
+            projectName: args._[1]?.toString() || "my-app",
+            projectType:
+              (args._[2]?.toString() as "api" | "admin-ui" | "store") || "api",
+            registry: args.registry as "ghcr" | "dockerhub" | "ecr",
+            domain: args.domain,
+            stagingDomain: args["staging-domain"],
+            pathPrefix: args["path-prefix"],
+            sshUser: args["ssh-user"],
+            enableStaging: args.staging,
+            dbAccessory: args["db-accessory"],
+            githubUsername: args["github-username"],
+            dockerUsername: args["docker-username"],
+            awsAccountId: args["aws-account-id"],
+            awsRegion: args["aws-region"],
+          });
+        } else {
+          // Interactive mode
+          const infraOptions = await promptInfraOptions();
+          if (infraOptions) {
+            await createInfrastructure(infraOptions);
+          } else {
+            Logger.error("Infrastructure setup cancelled");
+            Deno.exit(1);
+          }
+        }
         break;
       }
 

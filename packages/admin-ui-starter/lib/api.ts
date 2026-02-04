@@ -14,6 +14,13 @@ const API_BASE_URL = typeof Deno !== "undefined"
   ? Deno.env.get("API_BASE_URL") || "http://localhost:8000"
   : "http://localhost:8000";
 
+// For SSR, prefer internal Docker network to avoid public URL roundtrip
+// This prevents timeout issues when frontend containers call API via external URL
+const API_INTERNAL_URL = typeof Deno !== "undefined"
+  ? Deno.env.get("API_INTERNAL_URL")
+  : undefined;
+const SSR_API_URL = API_INTERNAL_URL || API_BASE_URL;
+
 export class ApiClient implements Record<string, unknown> {
   private baseUrl: string;
   private token: string | null;
@@ -131,10 +138,12 @@ export const apiClient = new ApiClient();
 
 /**
  * Create API client with specific token (for server-side use)
+ * Uses SSR_API_URL for internal Docker networking performance
  */
 export function createApiClient(token: string | null): ApiClient {
-  return new ApiClient(API_BASE_URL, token);
+  return new ApiClient(SSR_API_URL, token);
 }
 
-// Export API_BASE_URL for use in other modules
-export { API_BASE_URL };
+// Export API_BASE_URL for use in other modules (client-side)
+// Export SSR_API_URL for server-side rendering
+export { API_BASE_URL, SSR_API_URL };

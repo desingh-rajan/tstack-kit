@@ -51,7 +51,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
       try {
         const url = new URL(ctx.req.url);
         const page = parseInt(url.searchParams.get("page") || "1");
-        const pageSize = parseInt(url.searchParams.get("pageSize") || "20");
+        const pageSize = parseInt(url.searchParams.get("pageSize") || "10");
 
         const apiClient = createApiClient(authToken);
         config.service.setClient(apiClient);
@@ -64,6 +64,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
             config,
             page,
             pageSize,
+            url: url.toString(),
           },
         };
       } catch (error) {
@@ -101,7 +102,7 @@ export function createCRUDHandlers<T = Record<string, unknown>>(
             items: {
               success: false,
               data: [],
-              pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+              pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
             },
             config,
             error: errorStatus === 403
