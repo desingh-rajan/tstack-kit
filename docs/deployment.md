@@ -104,7 +104,7 @@ Create environments for deployment protection:
 
 ---
 
-## Overview
+## Quick Start: Generate Infrastructure
 
 TStack provides a CLI command to generate all deployment infrastructure:
 
@@ -112,13 +112,58 @@ TStack provides a CLI command to generate all deployment infrastructure:
 tstack infra
 ```
 
-This creates:
+**Interactive prompts guide you through:**
 
-- `config/deploy.yml` - Kamal production configuration
-- `config/deploy.staging.yml` - Kamal staging configuration (optional)
-- `.kamal/secrets` - Secrets template
-- `.github/workflows/deploy.yml` - CI/CD workflow
+1. **Docker Registry** - GHCR (default), Docker Hub, or AWS ECR
+2. **Domain Name** - Your production domain (e.g., `myapp.com`)
+3. **SSH User** - Deployment user (default: `deploy`)
+4. **Staging Environment** - Enable staging configuration (y/n)
+5. **Database** - Use Kamal Postgres accessory or external DB
+
+**Generated Files:**
+
+- `config/deploy.yml` - Production Kamal configuration
+- `config/deploy.staging.yml` - Staging configuration (if enabled)
+- `.kamal/secrets` - Environment variables template
+- `.kamal/secrets.staging` - Staging secrets template
+- `.github/workflows/deploy.yml` - CI/CD pipeline
 - `Dockerfile` - Optimized for Deno applications
+
+**Example:**
+
+```bash
+$ tstack infra
+
+🚀 Infrastructure Setup
+━━━━━━━━━━━━━━━━━━━━━━
+
+Select Docker Registry:
+› GHCR (GitHub Container Registry)
+  Docker Hub
+  AWS ECR
+
+Enter domain name: myapp.com
+Enter SSH user [deploy]: deploy
+Enable staging environment? (y/n): y
+Use Kamal Postgres accessory? (y/n): n
+
+✅ Generated:
+   - config/deploy.yml
+   - config/deploy.staging.yml
+   - .kamal/secrets
+   - .kamal/secrets.staging
+   - .github/workflows/deploy.yml
+   - Dockerfile
+
+📝 Next Steps:
+   1. Fill in .kamal/secrets with your credentials
+   2. Update config/deploy.yml with server IPs
+   3. Commit and push to trigger CI/CD
+```
+
+See [CLI Reference](./cli-reference.md#infrastructure-commands) for all options.
+
+---
 
 ## Docker Registry Support
 

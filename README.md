@@ -194,9 +194,13 @@ Entity automatically appears in Admin UI sidebar.
 | **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                |
 | **Storefront**           | Public e-commerce site with Fresh + Tailwind           |
 | **Type-Safe**            | Full TypeScript from database to API                   |
-| **JWT Auth**             | Authentication system included (ready to use)          |
+| **JWT Auth**             | Authentication system + password reset flow            |
+| **OAuth Providers**      | Google & Facebook OAuth integration ready              |
 | **RBAC**                 | Role-based access (user/admin/superadmin)              |
 | **PostgreSQL**           | Three-database setup (dev/test/prod)                   |
+| **Advanced Pagination**  | Filterable tables with date pickers & search           |
+| **Email Templates**      | Order notifications (processing, shipped, delivered)   |
+| **Kamal Deployment**     | One-command production deployment via `tstack infra`   |
 | **255+ Tests**           | 70% coverage with real PostgreSQL integration tests    |
 | **Docker Ready**         | docker-compose included                                |
 
@@ -458,12 +462,22 @@ complete reference.**
 
 ## Roadmap
 
-### v1.4 (Q1 2026) - Infrastructure
+### v1.5 (February 2026) ✅ Shipped
 
-- Docker multi-environment setup
-- Kamal deployment config
-- Interactive CLI prompts
-- Storefront enhancements
+- ✅ Password reset & email verification
+- ✅ Facebook OAuth provider
+- ✅ Advanced pagination with filters
+- ✅ Order notification email templates
+- ✅ `tstack infra` command for Kamal deployment setup
+- ✅ Legal policy page templates
+- ✅ Performance optimizations (connection pooling, N+1 fixes)
+
+### v1.6 (Q2 2026) - Admin Enhancements
+
+- Interactive order status updates
+- Site settings integration with email templates
+- Enhanced product management UI
+- Payment method feature flags
 
 ### v2.0 (2026) - Expansion
 
@@ -472,7 +486,8 @@ complete reference.**
 - Multi-cloud deployment toolkit
 - Mobile admin app (Flutter)
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
+See [GitHub Releases](https://github.com/desingh-rajan/tstack-kit/releases) for
+detailed release notes.
 
 ---
 
@@ -503,6 +518,6 @@ MIT License - Free for personal and commercial use.
 
 **Links:** [GitHub](https://github.com/desingh-rajan/tstack-kit) |
 [Issues](https://github.com/desingh-rajan/tstack-kit/issues) |
-[Changelog](CHANGELOG.md)
+[Releases](https://github.com/desingh-rajan/tstack-kit/releases)
 
 Built by [Desingh Rajan](https://desinghrajan.in)

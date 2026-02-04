@@ -101,10 +101,191 @@ GET /ts-admin/products?page=1&limit=20&search=widget&sortBy=name&sortOrder=asc
 | Param       | Description                  |
 | ----------- | ---------------------------- |
 | `page`      | Page number (default: 1)     |
-| `limit`     | Items per page (default: 20) |
+| `pageSize`  | Items per page (default: 10) |
 | `search`    | Search term                  |
 | `sortBy`    | Column to sort by            |
 | `sortOrder` | `asc` or `desc`              |
+
+---
+
+## Interactive Islands
+
+### Pagination Island
+
+The admin UI uses a client-side Pagination island that preserves filters when
+navigating between pages.
+
+**Location:** `islands/Pagination.tsx`
+
+**Features:**
+
+- First/Previous/Next/Last page navigation
+- Page size selector (10, 20, 50, 100)
+- Preserves URL query params (filters, search)
+- Keyboard navigation support
+
+**Usage in list pages:**
+
+```tsx
+import Pagination from "@/islands/Pagination.tsx";
+
+export default function ProductsList({ products, pagination, url }: Props) {
+  const currentParams = url ? new URL(url).search : undefined;
+
+  return (
+    <div>
+      {/* Product list */}
+      {pagination && (
+        <Pagination
+          pagination={pagination}
+          basePath="/admin/products"
+          currentParams={currentParams}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+### FilterableDataTable Island
+
+Advanced table with integrated filtering, sorting, and pagination.
+
+**Location:** `islands/FilterableDataTable.tsx`
+
+**Features:**
+
+- Text search with debouncing (300ms)
+- Select dropdowns for categorical filters
+- Date range filters with calendar picker
+- Client-side data fetching with loading states
+- Clear all filters button
+- Sortable columns
+
+**Filter Types:**
+
+```typescript
+type FilterDef = {
+  key: string;
+  label: string;
+  type: "text" | "select" | "date" | "daterange";
+  options?: Array<{ value: string; label: string }>; // For select
+  placeholder?: string;
+};
+```
+
+**Column Types:**
+
+```typescript
+type ColumnType = "string" | "number" | "date" | "currency" | "badge" | "link";
+```
+
+**Usage:**
+
+```tsx
+import FilterableDataTable from "@/islands/FilterableDataTable.tsx";
+
+const tableConfig = {
+  entityName: "orders",
+  apiEndpoint: "/ts-admin/orders",
+  columns: [
+    { key: "orderNumber", label: "Order #", type: "link" as const },
+    { key: "total", label: "Total", type: "currency" as const },
+    { key: "status", label: "Status", type: "badge" as const },
+    { key: "createdAt", label: "Date", type: "date" as const },
+  ],
+  filters: [
+    { key: "search", label: "Search", type: "text" as const },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "pending", label: "Pending" },
+        { value: "processing", label: "Processing" },
+        { value: "shipped", label: "Shipped" },
+      ],
+    },
+    { key: "createdAt", label: "Date Range", type: "daterange" as const },
+  ],
+};
+
+<FilterableDataTable config={tableConfig} />;
+```
+
+### DatePicker Island
+
+Calendar-based date picker with optional time selection.
+
+**Location:** `islands/DatePicker.tsx`
+
+**Features:**
+
+- Calendar modal with month/year navigation
+- DD/MM/YYYY text input parsing
+- Optional time picker (`includeTime` prop)
+- Size variants: `sm` (filters), `md` (forms)
+- Keyboard navigation
+
+**Usage:**
+
+```tsx
+import DatePicker from "@/islands/DatePicker.tsx";
+
+<DatePicker
+  value={selectedDate}
+  onChange={(date) => setSelectedDate(date)}
+  label="Order Date"
+  size="md"
+  includeTime={false}
+/>;
+```
+
+---
+
+## Utility Libraries
+
+### Date Formatting
+
+**Location:** `lib/date.ts`
+
+```typescript
+import { formatDate, formatDateTime } from "@/lib/date.ts";
+
+formatDate(new Date()); // "04 Feb 2026"
+formatDateTime(new Date()); // "04 Feb 2026, 10:30 AM"
+```
+
+**Timezone support via `APP_TIMEZONE` env var:**
+
+```bash
+# .env
+APP_TIMEZONE=Asia/Kolkata  # Uses IST
+APP_TIMEZONE=America/New_York  # Uses EST/EDT
+```
+
+### Currency Formatting
+
+**Location:** `lib/currency.ts`
+
+```typescript
+import { formatCurrency } from "@/lib/currency.ts";
+
+formatCurrency(1499.99); // "₹1,499.99" (with Indian locale)
+formatCurrency(1499.99); // "$1,499.99" (with US locale)
+```
+
+**Configuration via env vars:**
+
+```bash
+# .env
+CURRENCY_CODE=INR  # ₹ symbol
+CURRENCY_LOCALE=en-IN  # Indian number formatting
+
+# OR
+CURRENCY_CODE=USD  # $ symbol
+CURRENCY_LOCALE=en-US  # US number formatting
+```
 
 ---
 
