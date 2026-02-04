@@ -252,7 +252,7 @@ Tracking backport tasks from sc-admin-ui/sc-api to tstack-kit starter templates.
 
 ---
 
-## Priority 4: Critical Bug Fixes from Production - COMPLETED
+## Priority 4: Critical Bug Fixes from Production - PARTIAL
 
 ### N+1 Query Fixes
 
@@ -287,19 +287,29 @@ Tracking backport tasks from sc-admin-ui/sc-api to tstack-kit starter templates.
 
 ### 504 Timeout Fixes (Internal Docker URLs)
 
-- [ ] Admin UI proxy routes (`18a0220`, `2c5d35f`, `56f31a4`)
-  - [x] crud-handlers.ts (completed)
-  - [ ] product-images routes
-  - [ ] order service
-  - [ ] payment service
+> Note: `API_INTERNAL_URL` support exists in both admin-ui and storefront
+> `lib/api.ts`. Most routes use the API client which handles internal URLs.
+> Explicit timeout handling with AbortController is NOT implemented.
 
-- [ ] Store proxy routes (`ea4cae0`)
-  - [ ] cart API proxy
-  - [ ] checkout API proxy
+- [x] Admin UI proxy routes
+  - [x] crud-handlers.ts uses SSR_API_URL (internal URL)
+  - [x] lib/api.ts has API_INTERNAL_URL support
+  - [ ] Add explicit timeout handling with AbortController (future enhancement)
+
+- [x] Store proxy routes
+  - [x] lib/api.ts has API_INTERNAL_URL support for SSR
+  - [ ] cart/add.ts uses public API_URL (should use internal for SSR)
+  - [ ] Add explicit timeout handling with AbortController (future enhancement)
 
 ### Double-Submit Protection (Store)
 
-- [ ] Add to checkout (`2bbf8ff`)
+> Note: AddToCart and ContactForm islands have submit protection. Checkout uses
+> server-side form POST (no client-side AJAX), so double-submit is less of an
+> issue but could be improved.
+
+- [x] AddToCart island has `isLoading` state and disabled button
+- [x] ContactForm island has `isSubmitting` state and disabled button
+- [ ] Add checkout island with client-side protection (future enhancement)
   - [ ] Increase API timeout to 30s
   - [ ] Disable submit button during API call
   - [ ] Show "Processing..." loading state
@@ -487,6 +497,39 @@ Tracking backport tasks from sc-admin-ui/sc-api to tstack-kit starter templates.
   - [x] CI/CD workflow explanation
   - [x] Secrets management
   - [x] Troubleshooting (proxy conflicts, SSH issues, health checks)
+
+---
+
+## Priority 9: Missing Test Coverage
+
+> Tests exist for basic auth flows, but new auth endpoints and Facebook OAuth
+> need coverage.
+
+### Auth Endpoint Tests (api-starter)
+
+- [ ] Add to `tests/auth.test.ts`:
+  - [ ] `POST /auth/forgot-password` - Valid email, invalid email, rate limiting
+  - [ ] `POST /auth/reset-password` - Valid token, expired token, invalid token
+  - [ ] `GET /auth/verify-email` - Valid token, expired token, already verified
+  - [ ] `POST /auth/resend-verification` - Authenticated, already verified
+
+### Facebook OAuth Tests (api-starter)
+
+- [ ] Create `tests/oauth-facebook.test.ts`:
+  - [ ] `GET /auth/facebook` - Returns redirect URL
+  - [ ] `GET /auth/facebook/callback` - Valid code exchange
+  - [ ] `POST /auth/facebook/token` - Token exchange for SPA
+  - [ ] Account linking scenarios
+
+### Infra Command Tests (cli) - COMPLETED
+
+- [x] `packages/cli/src/commands/infra.test.ts` (29 tests)
+  - [x] File generation (deploy.yml, secrets, workflow, Dockerfile)
+  - [x] Registry configurations (GHCR, Docker Hub, ECR)
+  - [x] Project type variations (API, Admin-UI, Store)
+  - [x] Staging environment support
+  - [x] Path prefix configuration
+  - [x] Content validation
 
 ---
 
