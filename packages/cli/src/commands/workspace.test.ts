@@ -756,6 +756,219 @@ Deno.test({
 });
 
 // ============================================================================
+// Branch Creation Tests
+// ============================================================================
+
+Deno.test({
+  name:
+    "createWorkspace - initializes git with main, staging, and dev branches (local)",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        withApi: true,
+        skipRemote: true,
+      });
+
+      const projectPath = join(
+        tempDir,
+        workspaceName,
+        `${workspaceName}-api`,
+      );
+
+      // Verify .git directory was created
+      assertEquals(
+        await Deno.stat(join(projectPath, ".git"))
+          .then(() => true)
+          .catch(() => false),
+        true,
+        ".git directory should exist",
+      );
+
+      // List all local branches
+      const branchCmd = new Deno.Command("git", {
+        args: ["branch", "--list"],
+        cwd: projectPath,
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const branchResult = await branchCmd.output();
+      assertEquals(branchResult.success, true, "git branch --list should succeed");
+
+      const branches = new TextDecoder().decode(branchResult.stdout);
+
+      assertEquals(
+        branches.includes("main"),
+        true,
+        "main branch should exist",
+      );
+      assertEquals(
+        branches.includes("staging"),
+        true,
+        "staging branch should exist",
+      );
+      assertEquals(
+        branches.includes("dev"),
+        true,
+        "dev branch should exist",
+      );
+
+      // Verify HEAD is on main (default working branch)
+      const headCmd = new Deno.Command("git", {
+        args: ["rev-parse", "--abbrev-ref", "HEAD"],
+        cwd: projectPath,
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const headResult = await headCmd.output();
+      const currentBranch = new TextDecoder().decode(headResult.stdout).trim();
+      assertEquals(currentBranch, "main", "HEAD should be on main after creation");
+
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - initializes git with main, staging, and dev branches for all components",
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        skipRemote: true, // api + admin-ui + store
+      });
+
+      const workspacePath = join(tempDir, workspaceName);
+      const projectDirs = [
+        `${workspaceName}-api`,
+        `${workspaceName}-admin-ui`,
+        `${workspaceName}-store`,
+      ];
+
+      for (const dir of projectDirs) {
+        const projectPath = join(workspacePath, dir);
+
+        const branchCmd = new Deno.Command("git", {
+          args: ["branch", "--list"],
+          cwd: projectPath,
+          stdout: "piped",
+          stderr: "piped",
+        });
+        const branchResult = await branchCmd.output();
+        assertEquals(
+          branchResult.success,
+          true,
+          `git branch --list should succeed in ${dir}`,
+        );
+
+        const branches = new TextDecoder().decode(branchResult.stdout);
+
+        assertEquals(
+          branches.includes("main"),
+          true,
+          `main branch should exist in ${dir}`,
+        );
+        assertEquals(
+          branches.includes("staging"),
+          true,
+          `staging branch should exist in ${dir}`,
+        );
+        assertEquals(
+          branches.includes("dev"),
+          true,
+          `dev branch should exist in ${dir}`,
+        );
+      }
+
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: false,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "createWorkspace - pushes main, staging, and dev branches to remote",
+  ignore: SKIP_GITHUB,
+  sanitizeResources: false,
+  async fn() {
+    const tempDir = await createTempDir();
+    const workspaceName = generateWorkspaceName();
+
+    try {
+      await createWorkspace({
+        name: workspaceName,
+        targetDir: tempDir,
+        withApi: true,
+        githubOrg: GITHUB_ORG,
+      });
+
+      const repoName = `${workspaceName}-api`;
+
+      // Check all three branches exist on the remote
+      for (const branch of ["main", "staging", "dev"]) {
+        const checkCmd = new Deno.Command("gh", {
+          args: [
+            "api",
+            `repos/${GITHUB_ORG}/${repoName}/branches/${branch}`,
+            "--jq",
+            ".name",
+          ],
+          stdout: "piped",
+          stderr: "piped",
+        });
+        const checkResult = await checkCmd.output();
+        assertEquals(
+          checkResult.success,
+          true,
+          `Branch "${branch}" should exist on remote repo ${repoName}`,
+        );
+        const branchName = new TextDecoder().decode(checkResult.stdout).trim();
+        assertEquals(
+          branchName,
+          branch,
+          `Remote branch name should be "${branch}"`,
+        );
+      }
+
+      await destroyWorkspace({
+        name: workspaceName,
+        force: true,
+        deleteRemote: true,
+      });
+    } finally {
+      await cleanupTempDir(tempDir);
+      closeKv();
+      await deleteGitHubRepo(`${workspaceName}-api`);
+    }
+  },
+});
+
+// ============================================================================
 // Workspace Destroy Tests
 // ============================================================================
 

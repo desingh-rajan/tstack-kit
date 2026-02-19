@@ -142,7 +142,7 @@ Creates:
 - **my-shop-admin-ui/** - Admin dashboard (Fresh + Preact + DaisyUI)
 - **my-shop-store/** - Storefront (Fresh + Preact + Tailwind CSS)
 - 3 databases per project (dev/test/prod)
-- Git initialized with initial commit
+- Git initialized with `main`, `staging`, and `dev` branches
 - JWT authentication (included by default)
 - Role-based access control (user/admin/superadmin)
 - Built-in entities: Users, Articles, Site Settings
@@ -189,7 +189,7 @@ Entity automatically appears in Admin UI sidebar.
 | ------------------------ | ------------------------------------------------------ |
 | **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds |
 | **Workspace Management** | Create/destroy multi-project workspaces                |
-| **GitHub Integration**   | Auto-create repos with `--github-org` flag             |
+| **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev` |
 | **Base Abstractions**    | 70-80% less code with BaseService/BaseController       |
 | **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                |
 | **Storefront**           | Public e-commerce site with Fresh + Tailwind           |
@@ -261,6 +261,10 @@ echo 'export GITHUB_TOKEN=ghp_your_token_here' >> ~/.bashrc
 
 Create token at <https://github.com/settings/tokens> with `repo` and
 `delete_repo` scopes.
+
+When using `--github-org`, TStack automatically creates and pushes three
+branches (`main`, `staging`, `dev`) to each remote repository — ready for
+a standard branching workflow out of the box.
 
 ---
 

@@ -252,9 +252,58 @@ async function initializeGit(
     });
     const commitResult = await commitCmd.output();
 
-    if (commitResult.success) {
-      Logger.success(`  ✅ Git initialized with initial commit`);
+    if (!commitResult.success) {
+      throw new Error(
+        `Git commit failed: ${new TextDecoder().decode(commitResult.stderr)}`,
+      );
     }
+
+    // Create staging branch from main
+    const stagingCmd = new Deno.Command("git", {
+      args: ["checkout", "-b", "staging"],
+      cwd: projectPath,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const stagingResult = await stagingCmd.output();
+
+    if (!stagingResult.success) {
+      throw new Error(
+        `Failed to create staging branch: ${
+          new TextDecoder().decode(stagingResult.stderr)
+        }`,
+      );
+    }
+
+    // Create dev branch from staging
+    const devCmd = new Deno.Command("git", {
+      args: ["checkout", "-b", "dev"],
+      cwd: projectPath,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const devResult = await devCmd.output();
+
+    if (!devResult.success) {
+      throw new Error(
+        `Failed to create dev branch: ${
+          new TextDecoder().decode(devResult.stderr)
+        }`,
+      );
+    }
+
+    // Switch back to main as the default working branch
+    const checkoutMainCmd = new Deno.Command("git", {
+      args: ["checkout", "main"],
+      cwd: projectPath,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    await checkoutMainCmd.output();
+
+    Logger.success(
+      `  ✅ Git initialized with branches: main, staging, dev`,
+    );
   } catch (error) {
     Logger.warning(
       `  ⚠️  Failed to initialize Git: ${
@@ -338,23 +387,28 @@ async function createRemoteRepo(
 
     Logger.success(`  ✅ Remote repository created: ${repoUrl}`);
 
-    // Push if requested
+    // Push all branches if requested
     if (push) {
-      Logger.info(`  📤 Pushing to remote...`);
-      const pushCmd = new Deno.Command("git", {
-        args: ["push", "-u", "origin", "main"],
-        cwd: projectPath,
-        stdout: "piped",
-        stderr: "piped",
-      });
-      const pushResult = await pushCmd.output();
+      Logger.info(`  📤 Pushing branches to remote...`);
 
-      if (pushResult.success) {
-        Logger.success(`  ✅ Pushed to remote successfully`);
-      } else {
-        Logger.warning(
-          `  ⚠️  Push failed: ${new TextDecoder().decode(pushResult.stderr)}`,
-        );
+      for (const branch of ["main", "staging", "dev"]) {
+        const pushCmd = new Deno.Command("git", {
+          args: ["push", "-u", "origin", branch],
+          cwd: projectPath,
+          stdout: "piped",
+          stderr: "piped",
+        });
+        const pushResult = await pushCmd.output();
+
+        if (pushResult.success) {
+          Logger.success(`  ✅ Pushed ${branch} to remote`);
+        } else {
+          Logger.warning(
+            `  ⚠️  Push failed for ${branch}: ${
+              new TextDecoder().decode(pushResult.stderr)
+            }`,
+          );
+        }
       }
     }
 
