@@ -4,6 +4,7 @@
 
 import { define } from "@/utils.ts";
 import { requireAuth } from "@/lib/auth.ts";
+import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -92,30 +93,8 @@ export default define.page<typeof handler>(function AccountPage({ data }) {
 
   return (
     <div class="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div class="flex items-center justify-between">
-            <a href="/" class="text-xl font-bold text-indigo-600">
-              Store
-            </a>
-            <nav class="flex items-center space-x-4">
-              <a href="/products" class="text-gray-600 hover:text-indigo-600">
-                Products
-              </a>
-              <a href="/cart" class="text-gray-600 hover:text-indigo-600">
-                Cart
-              </a>
-              <a
-                href="/auth/logout"
-                class="text-gray-600 hover:text-indigo-600"
-              >
-                Logout
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar user={user} />
+      <div class="h-16"></div>
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-8">

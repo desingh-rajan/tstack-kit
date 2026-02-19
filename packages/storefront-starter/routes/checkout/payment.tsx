@@ -6,6 +6,7 @@
 import { define } from "@/utils.ts";
 import { api } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
+import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -114,17 +115,11 @@ export default define.page<typeof handler>(function PaymentPage({
 
   return (
     <div class="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div class="flex items-center justify-between">
-            <a href="/" class="text-xl font-bold text-indigo-600">
-              Store
-            </a>
-            <span class="text-gray-600">Secure Checkout</span>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        minimal
+        rightAction={<span class="text-gray-600">Secure Checkout</span>}
+      />
+      <div class="h-16"></div>
 
       <main class="max-w-lg mx-auto px-4 py-16">
         <div class="bg-white shadow-sm rounded-lg p-8">

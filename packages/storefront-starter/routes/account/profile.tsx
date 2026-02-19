@@ -480,22 +480,6 @@ export default define.page<typeof handler>(function ProfilePage({ data }) {
                 </a>
               </nav>
             </div>
-
-            {/* Danger Zone */}
-            <div class="bg-white shadow-sm rounded-xl p-6 border border-red-100">
-              <h3 class="text-sm font-semibold text-red-600 uppercase tracking-wide mb-4">
-                Danger Zone
-              </h3>
-              <p class="text-xs text-gray-500 mb-4">
-                Once you delete your account, there is no going back.
-              </p>
-              <button
-                type="button"
-                class="w-full px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-              >
-                Delete Account
-              </button>
-            </div>
           </div>
         </div>
       </main>

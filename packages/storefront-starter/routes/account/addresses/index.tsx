@@ -5,6 +5,7 @@
 import { define } from "@/utils.ts";
 import { type Address, api } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
+import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -73,33 +74,15 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(
-  function AddressesPage({ data, url }) {
+  function AddressesPage({ data, url, state }) {
     const { addresses, error, success } = data;
     const redirect = url.searchParams.get("redirect");
+    const user = state.user;
 
     return (
       <div class="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header class="bg-white shadow-sm">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-              <a href="/" class="text-xl font-bold text-indigo-600">
-                Store
-              </a>
-              <nav class="flex items-center space-x-4">
-                <a href="/account" class="text-gray-600 hover:text-indigo-600">
-                  Account
-                </a>
-                <a
-                  href="/auth/logout"
-                  class="text-gray-600 hover:text-indigo-600"
-                >
-                  Logout
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
+        <Navbar user={user} />
+        <div class="h-16"></div>
 
         <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div class="mb-6">

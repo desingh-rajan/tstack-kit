@@ -5,6 +5,7 @@
 import { define } from "@/utils.ts";
 import { type Address, api, type Cart } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
+import Navbar from "@/components/Navbar.tsx";
 
 interface CheckoutData {
   cart: Cart | null;
@@ -190,19 +191,15 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
 
   return (
     <div class="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div class="flex items-center justify-between">
-            <a href="/" class="text-xl font-bold text-indigo-600">
-              Store
-            </a>
-            <a href="/cart" class="text-gray-600 hover:text-indigo-600">
-              Back to Cart
-            </a>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        minimal
+        rightAction={
+          <a href="/cart" class="text-gray-600 hover:text-indigo-600">
+            Back to Cart
+          </a>
+        }
+      />
+      <div class="h-16"></div>
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
