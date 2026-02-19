@@ -37,7 +37,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.6.4"
+          deno-version: "2.6.10"
 
       - name: Cache Deno dependencies
         uses: actions/cache@v4
@@ -97,7 +97,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.6.4"
+          deno-version: "2.6.10"
 
       - name: Cache Deno dependencies
         uses: actions/cache@v4
@@ -160,7 +160,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.6.4"
+          deno-version: "2.6.10"
 
       - name: Cache Deno dependencies
         uses: actions/cache@v4
@@ -204,7 +204,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.6.4"
+          deno-version: "2.6.10"
 
       - name: Check formatting
         run: deno fmt --check
