@@ -166,6 +166,7 @@ export default define.page<typeof handler>(function PaymentPage({
       {/* Razorpay Script */}
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       <script
+        // deno-lint-ignore react-no-danger
         dangerouslySetInnerHTML={{
           __html: `
           document.getElementById('pay-button').onclick = function(e) {
