@@ -2,53 +2,20 @@
 
 ## Pre-push Checklist (MANDATORY — every single time, no exceptions)
 
-Before committing or pushing **any** change, run the checks for every package
-you touched:
-
-### storefront-starter
+Before committing or pushing **any** change, run from the **repo root**:
 
 ```bash
-cd packages/storefront-starter
-deno fmt --check . && deno lint .
+deno fmt --check && deno lint
 ```
 
-### admin-ui-starter
-
-```bash
-cd packages/admin-ui-starter
-deno fmt --check . && deno lint .
-```
+This matches exactly what CI runs and covers all packages and root-level files
+in one go. If `deno fmt --check` fails, run `deno fmt` to auto-fix, then
+re-verify. Fix all lint errors before pushing. Never push with failing fmt or
+lint.
 
 > `deno check` (TypeScript type checking) currently has pre-existing failures in
 > both `storefront-starter` and `admin-ui-starter` that predate this project's
-> history. Do **not** run `deno task check` (which includes `deno check`) as a
-> gate — run fmt+lint only.
-
-### cli
-
-```bash
-cd packages/cli
-deno fmt --check && deno lint
-```
-
-### admin
-
-```bash
-cd packages/admin
-deno task fmt     # deno fmt
-deno task lint    # deno lint
-```
-
-### api-starter
-
-```bash
-cd packages/api-starter
-deno fmt --check && deno lint
-```
-
-If `deno fmt --check` fails, run `deno fmt` to fix formatting, then re-verify
-with `--check`. Fix all lint errors before pushing. Never push with failing fmt
-or lint.
+> history. Do **not** use `deno check` as a gate — fmt+lint only.
 
 ---
 
