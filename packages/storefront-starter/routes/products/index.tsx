@@ -352,7 +352,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                           <a
                             href={`/products?page=${
                               page - 1
-                            }&category=${categoryId}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
+                            }&category=${category}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                           >
                             Previous
@@ -371,7 +371,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                               )}
                               <a
                                 key={p}
-                                href={`/products?page=${p}&category=${categoryId}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
+                                href={`/products?page=${p}&category=${category}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
                                 class={`px-4 py-2 text-sm font-medium rounded-lg ${
                                   p === page
                                     ? "bg-indigo-600 text-white"
@@ -387,7 +387,7 @@ export default define.page<typeof handler>(function ProductsPage({ data }) {
                           <a
                             href={`/products?page=${
                               page + 1
-                            }&category=${categoryId}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
+                            }&category=${category}&search=${search}&sort=${sortBy}&order=${sortOrder}`}
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                           >
                             Next
