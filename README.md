@@ -185,24 +185,24 @@ Entity automatically appears in Admin UI sidebar.
 
 ## Features
 
-| Feature                  | Description                                            |
-| ------------------------ | ------------------------------------------------------ |
-| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds |
-| **Workspace Management** | Create/destroy multi-project workspaces                |
+| Feature                  | Description                                                            |
+| ------------------------ | ---------------------------------------------------------------------- |
+| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds                 |
+| **Workspace Management** | Create/destroy multi-project workspaces                                |
 | **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev` |
-| **Base Abstractions**    | 70-80% less code with BaseService/BaseController       |
-| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                |
-| **Storefront**           | Public e-commerce site with Fresh + Tailwind           |
-| **Type-Safe**            | Full TypeScript from database to API                   |
-| **JWT Auth**             | Authentication system + password reset flow            |
-| **OAuth Providers**      | Google & Facebook OAuth integration ready              |
-| **RBAC**                 | Role-based access (user/admin/superadmin)              |
-| **PostgreSQL**           | Three-database setup (dev/test/prod)                   |
-| **Advanced Pagination**  | Filterable tables with date pickers & search           |
-| **Email Templates**      | Order notifications (processing, shipped, delivered)   |
-| **Kamal Deployment**     | One-command production deployment via `tstack infra`   |
-| **255+ Tests**           | 70% coverage with real PostgreSQL integration tests    |
-| **Docker Ready**         | docker-compose included                                |
+| **Base Abstractions**    | 70-80% less code with BaseService/BaseController                       |
+| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                |
+| **Storefront**           | Public e-commerce site with Fresh + Tailwind                           |
+| **Type-Safe**            | Full TypeScript from database to API                                   |
+| **JWT Auth**             | Authentication system + password reset flow                            |
+| **OAuth Providers**      | Google & Facebook OAuth integration ready                              |
+| **RBAC**                 | Role-based access (user/admin/superadmin)                              |
+| **PostgreSQL**           | Three-database setup (dev/test/prod)                                   |
+| **Advanced Pagination**  | Filterable tables with date pickers & search                           |
+| **Email Templates**      | Order notifications (processing, shipped, delivered)                   |
+| **Kamal Deployment**     | One-command production deployment via `tstack infra`                   |
+| **255+ Tests**           | 70% coverage with real PostgreSQL integration tests                    |
+| **Docker Ready**         | docker-compose included                                                |
 
 ---
 
@@ -263,8 +263,8 @@ Create token at <https://github.com/settings/tokens> with `repo` and
 `delete_repo` scopes.
 
 When using `--github-org`, TStack automatically creates and pushes three
-branches (`main`, `staging`, `dev`) to each remote repository — ready for
-a standard branching workflow out of the box.
+branches (`main`, `staging`, `dev`) to each remote repository — ready for a
+standard branching workflow out of the box.
 
 ---
 

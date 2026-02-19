@@ -798,7 +798,11 @@ Deno.test({
         stderr: "piped",
       });
       const branchResult = await branchCmd.output();
-      assertEquals(branchResult.success, true, "git branch --list should succeed");
+      assertEquals(
+        branchResult.success,
+        true,
+        "git branch --list should succeed",
+      );
 
       const branches = new TextDecoder().decode(branchResult.stdout);
 
@@ -827,7 +831,11 @@ Deno.test({
       });
       const headResult = await headCmd.output();
       const currentBranch = new TextDecoder().decode(headResult.stdout).trim();
-      assertEquals(currentBranch, "main", "HEAD should be on main after creation");
+      assertEquals(
+        currentBranch,
+        "main",
+        "HEAD should be on main after creation",
+      );
 
       await destroyWorkspace({
         name: workspaceName,
@@ -911,8 +919,7 @@ Deno.test({
 });
 
 Deno.test({
-  name:
-    "createWorkspace - pushes main, staging, and dev branches to remote",
+  name: "createWorkspace - pushes main, staging, and dev branches to remote",
   ignore: SKIP_GITHUB,
   sanitizeResources: false,
   async fn() {
