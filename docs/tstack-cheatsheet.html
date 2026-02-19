@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TStack Kit Cheatsheet</title>
+<style>
+@page { size: A4 landscape; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Fira Code", "Consolas", "SF Mono", monospace;
+  font-size: 7.2pt;
+  line-height: 1.3;
+  color: #1a1a2e;
+  background: #fff;
+}
+
+/* Each page is exactly A4 landscape: 297mm x 210mm */
+.page {
+  width: 297mm;
+  height: 210mm;
+  padding: 5mm;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+  overflow: hidden;
+}
+.page:last-child { page-break-after: auto; }
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 2px solid #0f3460;
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+}
+.page-header h1 { font-size: 10pt; color: #0f3460; letter-spacing: 0.5px; }
+.page-header .version {
+  background: #0f3460; color: #fff;
+  padding: 0px 5px; border-radius: 2px; font-size: 6pt;
+  margin-left: 4px;
+}
+.page-header .subtitle { font-size: 5.8pt; color: #777; }
+.page-header .pgnum { font-size: 6pt; color: #999; }
+
+.cols {
+  display: flex;
+  flex: 1;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.col { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.col2 { flex: 2; }
+
+.section {
+  border: 1px solid #d0d5dd;
+  border-radius: 3px;
+  padding: 3px 5px;
+  flex-shrink: 0;
+}
+.section.grow { flex: 1; }
+
+.section h2 {
+  font-size: 7.5pt; color: #fff; background: #0f3460;
+  padding: 1.5px 4px; border-radius: 2px; margin-bottom: 3px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.section h3 {
+  font-size: 6.8pt; color: #0f3460;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 1px; margin: 3px 0 2px;
+}
+.section p { font-size: 6.5pt; margin: 1px 0; }
+
+code {
+  font-family: inherit;
+  background: #eef1fb; padding: 0 2px;
+  border-radius: 1px; font-size: 6.6pt;
+}
+
+/* Terminal block — content is a single text node, no child elements to indent */
+.term {
+  background: #0d1117;
+  color: #c9d1d9;
+  border-radius: 2px;
+  padding: 3px 5px;
+  font-size: 6.6pt;
+  line-height: 1.45;
+  white-space: pre;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.term.grow { flex: 1; overflow: hidden; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 6.5pt;
+  margin: 1px 0;
+}
+th {
+  background: #e8edf5; text-align: left;
+  padding: 1px 3px; font-size: 6.2pt; color: #0f3460;
+  border-bottom: 1px solid #c0c8d8;
+}
+td {
+  padding: 1px 3px;
+  border-bottom: 1px solid #f2f2f2;
+  vertical-align: top;
+}
+td:first-child { white-space: nowrap; }
+
+.note {
+  background: #fffbeb; border-left: 2px solid #f59e0b;
+  padding: 1px 4px; font-size: 6pt; margin: 2px 0;
+}
+
+ul { padding-left: 10px; margin: 1px 0; }
+li { font-size: 6.4pt; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ PAGE 1 -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span style="font-size:10pt;color:#0f3460;font-weight:bold;letter-spacing:.5px">TSTACK KIT CHEATSHEET</span>
+      <span class="version">v1.5.0</span>
+    </div>
+    <div class="subtitle">CLI-driven Deno full-stack &mdash; Hono + Drizzle + PostgreSQL + Fresh + Preact</div>
+    <div class="pgnum">Page 1 / 4 &mdash; CLI Commands</div>
+  </div>
+  <div class="cols">
+
+    <!-- COL 1 -->
+    <div class="col">
+      <div class="section">
+        <h2>Install &amp; Upgrade</h2>
+        <div class="term"># One-liner install
+$ curl -fsSL https://raw.githubusercontent.com/\
+  desingh-rajan/tstack-kit/main/install.sh | sh
+
+# From source
+$ git clone https://github.com/desingh-rajan/tstack-kit
+$ cd tstack-kit/packages/cli
+$ deno task install
+
+# Upgrade
+$ tstack upgrade          # latest
+$ tstack upgrade 1.4.0    # specific version</div>
+        <div class="note">Requires: Deno 2.6.4+ &nbsp;|&nbsp; PostgreSQL 16+ &nbsp;|&nbsp; Git</div>
+      </div>
+
+      <div class="section">
+        <h2>Global Flags</h2>
+        <table>
+          <tr><td><code>--help, -h</code></td><td>Show help</td></tr>
+          <tr><td><code>--version, -v</code></td><td>Show version</td></tr>
+          <tr><td><code>--force, -f</code></td><td>Overwrite / skip confirmation</td></tr>
+          <tr><td><code>--dir, -d &lt;path&gt;</code></td><td>Target directory</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Utility Commands</h2>
+        <table>
+          <tr><td><code>tstack list</code></td><td>List tracked projects</td></tr>
+          <tr><td><code>tstack list --status all</code></td><td>Include destroyed</td></tr>
+          <tr><td><code>tstack versions</code></td><td>Latest 10 CLI versions</td></tr>
+          <tr><td><code>tstack templates</code></td><td>List starter templates</td></tr>
+          <tr><td><code>tstack upgrade [ver]</code></td><td>Upgrade CLI</td></tr>
+        </table>
+        <div class="note">--status: created | creating | destroyed | destroying | all</div>
+      </div>
+    </div>
+
+    <!-- COL 2 -->
+    <div class="col">
+      <div class="section">
+        <h2>tstack create workspace &lt;name&gt;</h2>
+        <div class="term">$ tstack create workspace my-shop
+$ tstack create workspace my-shop --with-api --with-admin-ui
+$ tstack create workspace my-shop --skip-store
+$ tstack create workspace my-shop --scope=core
+$ tstack create workspace my-shop \
+    --github-org my-org --visibility private</div>
+        <h3>Component Flags</h3>
+        <table>
+          <tr><td><code>--with-api</code></td><td>Include API starter</td></tr>
+          <tr><td><code>--with-admin-ui</code></td><td>Include Admin UI starter</td></tr>
+          <tr><td><code>--with-store</code></td><td>Include storefront starter</td></tr>
+          <tr><td><code>--skip-api</code></td><td>Exclude API</td></tr>
+          <tr><td><code>--skip-admin-ui</code></td><td>Exclude Admin UI</td></tr>
+          <tr><td><code>--skip-store</code></td><td>Exclude storefront</td></tr>
+        </table>
+        <div class="note">Cannot mix --with-* and --skip-*. No flags = all 3 components.</div>
+        <h3>Workspace Options</h3>
+        <table>
+          <tr><td><code>--namespace &lt;n&gt;</code></td><td>Custom namespace (default: ws name)</td></tr>
+          <tr><td><code>--scope=&lt;s&gt;</code></td><td>core | listing | commerce (default)</td></tr>
+          <tr><td><code>--no-git</code></td><td>Skip Git initialisation</td></tr>
+        </table>
+        <h3>GitHub Integration</h3>
+        <table>
+          <tr><td><code>--github-org &lt;org&gt;</code></td><td>Create repos under org</td></tr>
+          <tr><td><code>--github-token &lt;t&gt;</code></td><td>PAT (or $GITHUB_TOKEN env)</td></tr>
+          <tr><td><code>--visibility &lt;v&gt;</code></td><td>private | public (default)</td></tr>
+          <tr><td><code>--skip-remote</code></td><td>Skip GitHub remote setup</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 3 -->
+    <div class="col">
+      <div class="section">
+        <h2>tstack create &lt;type&gt; &lt;name&gt;</h2>
+        <p>Types: <code>api</code> | <code>admin-ui</code> | <code>store</code></p>
+        <div class="term" style="margin-top:3px">$ tstack create api my-shop-api
+$ tstack create admin-ui my-shop-admin
+$ tstack create store my-shop-store
+$ tstack create api my-api --scope=core
+$ tstack create api my-api --skip-db-setup
+$ tstack create api my-api --dir ~/projects -f --latest</div>
+        <h3>Common Flags</h3>
+        <table>
+          <tr><td><code>--latest</code></td><td>Fetch latest dep versions</td></tr>
+          <tr><td><code>--force, -f</code></td><td>Overwrite existing</td></tr>
+          <tr><td><code>--dir &lt;path&gt;</code></td><td>Target directory</td></tr>
+          <tr><td><code>--skip-db-setup</code></td><td>Skip database creation</td></tr>
+        </table>
+        <h3>Scope Flags (api &amp; workspace)</h3>
+        <table>
+          <tr><th>Flag</th><th>Entities Included</th></tr>
+          <tr><td><code>--scope=core</code></td><td>users, articles, site_settings, enquiries</td></tr>
+          <tr><td><code>--scope=listing</code></td><td>core + brands, categories, products, variants</td></tr>
+          <tr><td><code>--scope=commerce</code></td><td>listing + addresses, carts, orders, payments &#x2605;</td></tr>
+        </table>
+        <div class="note">&#x2605; default scope. Legacy: --skip-listing = core, --skip-commerce = listing</div>
+      </div>
+
+      <div class="section">
+        <h2>CLI Data &amp; Paths</h2>
+        <table>
+          <tr><td><code>~/.tstack/</code></td><td>CLI install directory</td></tr>
+          <tr><td><code>~/.tstack/projects.db</code></td><td>Deno KV project store</td></tr>
+          <tr><td><code>~/.tonystack/config.json</code></td><td>Sudo pw, DB defaults</td></tr>
+          <tr><td><code>&lt;proj&gt;_dev</code></td><td>Development database</td></tr>
+          <tr><td><code>&lt;proj&gt;_test</code></td><td>Test DB (auto-cleaned)</td></tr>
+          <tr><td><code>&lt;proj&gt;_prod</code></td><td>Production database</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ PAGE 2 -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span style="font-size:10pt;color:#0f3460;font-weight:bold;letter-spacing:.5px">TSTACK KIT CHEATSHEET</span>
+      <span class="version">v1.5.0</span>
+    </div>
+    <div class="subtitle">CLI-driven Deno full-stack &mdash; Hono + Drizzle + PostgreSQL + Fresh + Preact</div>
+    <div class="pgnum">Page 2 / 4 &mdash; Scaffold, Destroy, Infra &amp; Deno Tasks</div>
+  </div>
+  <div class="cols">
+
+    <!-- COL 1 -->
+    <div class="col">
+      <div class="section">
+        <h2>tstack scaffold &lt;EntityName&gt;</h2>
+        <p>Generates a complete MVC entity (up to 8 files).</p>
+        <div class="term" style="margin-top:3px">$ tstack scaffold BlogPost
+$ tstack scaffold BlogPost --only-api
+$ tstack scaffold BlogPost --only-admin-ui
+$ tstack scaffold BlogPost --skip-tests --skip-auth
+$ tstack scaffold BlogPost --dir ./my-shop-api -f</div>
+        <h3>Flags</h3>
+        <table>
+          <tr><td><code>--force, -f</code></td><td>Overwrite existing files</td></tr>
+          <tr><td><code>--dir &lt;path&gt;</code></td><td>Target directory</td></tr>
+          <tr><td><code>--skip-admin</code></td><td>No admin routes / tests</td></tr>
+          <tr><td><code>--skip-tests</code></td><td>No test files</td></tr>
+          <tr><td><code>--skip-auth</code></td><td>No auth middleware</td></tr>
+          <tr><td><code>--skip-validation</code></td><td>No Zod schemas</td></tr>
+          <tr><td><code>--skip-admin-ui</code></td><td>Skip Admin UI scaffold</td></tr>
+          <tr><td><code>--only-api</code></td><td>API files only</td></tr>
+          <tr><td><code>--only-admin-ui</code></td><td>Admin UI files only</td></tr>
+        </table>
+        <h3>Generated Files (8 per entity)</h3>
+        <table>
+          <tr><td><code>&lt;e&gt;.model.ts</code></td><td>Drizzle schema</td></tr>
+          <tr><td><code>&lt;e&gt;.dto.ts</code></td><td>Zod validation</td></tr>
+          <tr><td><code>&lt;e&gt;.service.ts</code></td><td>Business logic (BaseService)</td></tr>
+          <tr><td><code>&lt;e&gt;.controller.ts</code></td><td>HTTP handlers (BaseController)</td></tr>
+          <tr><td><code>&lt;e&gt;.route.ts</code></td><td>Public API routes</td></tr>
+          <tr><td><code>&lt;e&gt;.admin.route.ts</code></td><td>Admin panel routes</td></tr>
+          <tr><td><code>&lt;e&gt;.test.ts</code></td><td>API tests</td></tr>
+          <tr><td><code>&lt;e&gt;.admin.test.ts</code></td><td>Admin route tests</td></tr>
+        </table>
+        <h3>Naming Convention</h3>
+        <table>
+          <tr><th>Input</th><th>Folder</th><th>Route</th><th>Table</th></tr>
+          <tr><td>BlogPost</td><td>blog_posts/</td><td>/blog-posts</td><td>blog_posts</td></tr>
+          <tr><td>blog_post</td><td>blog_posts/</td><td>/blog-posts</td><td>blog_posts</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 2 -->
+    <div class="col">
+      <div class="section">
+        <h2>tstack destroy [type] &lt;name&gt;</h2>
+        <div class="term">$ tstack destroy workspace my-shop
+$ tstack destroy workspace my-shop --delete-remote
+$ tstack destroy api my-shop-api
+$ tstack destroy my-shop-api      # auto-detect type
+$ tstack destroy my-shop -f       # skip confirmation</div>
+        <table style="margin-top:3px">
+          <tr><td><code>--force, -f</code></td><td>Skip confirmation prompt</td></tr>
+          <tr><td><code>--delete-remote</code></td><td>Also delete GitHub repos</td></tr>
+          <tr><td><code>--skip-remote</code></td><td>Skip remote deletion</td></tr>
+        </table>
+        <div class="note">Lifecycle: KV lookup &rarr; Confirm &rarr; Delete dir &rarr; Drop 3 DBs (_dev/_test/_prod) &rarr; Remove from KV</div>
+      </div>
+
+      <div class="section">
+        <h2>tstack infra</h2>
+        <p>Generates Kamal deploy configs. Interactive by default; non-interactive when --registry + --domain are set.</p>
+        <div class="term" style="margin-top:3px">$ tstack infra
+$ tstack infra --registry ghcr \
+    --domain myapp.com --staging \
+    --github-username myuser
+$ tstack infra --registry dockerhub \
+    --docker-username me --domain myapp.com
+$ tstack infra --registry ecr \
+    --aws-account-id 123456789 --domain myapp.com</div>
+        <h3>Flags</h3>
+        <table>
+          <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>--registry</code></td><td>ghcr</td><td>ghcr | dockerhub | ecr</td></tr>
+          <tr><td><code>--domain</code></td><td>yourdomain.com</td><td>Production domain</td></tr>
+          <tr><td><code>--staging-domain</code></td><td>staging.&lt;d&gt;</td><td>Staging domain override</td></tr>
+          <tr><td><code>--staging</code></td><td>false</td><td>Enable staging env</td></tr>
+          <tr><td><code>--path-prefix</code></td><td>ts-be/api</td><td>API URL path prefix</td></tr>
+          <tr><td><code>--ssh-user</code></td><td>root</td><td>Deploy server SSH user</td></tr>
+          <tr><td><code>--db-accessory</code></td><td>false</td><td>Add Postgres as accessory</td></tr>
+          <tr><td><code>--github-username</code></td><td>--</td><td>Required for GHCR</td></tr>
+          <tr><td><code>--docker-username</code></td><td>--</td><td>Required for Docker Hub</td></tr>
+          <tr><td><code>--aws-account-id</code></td><td>--</td><td>Required for ECR</td></tr>
+          <tr><td><code>--aws-region</code></td><td>us-east-1</td><td>AWS region for ECR</td></tr>
+        </table>
+        <h3>Generated Files</h3>
+        <table>
+          <tr><td><code>config/deploy.yml</code></td><td>Production Kamal config</td></tr>
+          <tr><td><code>config/deploy.staging.yml</code></td><td>Staging config (if --staging)</td></tr>
+          <tr><td><code>.kamal/secrets</code></td><td>Env vars template</td></tr>
+          <tr><td><code>.github/workflows/deploy.yml</code></td><td>CI/CD pipeline</td></tr>
+          <tr><td><code>Dockerfile</code></td><td>Production Dockerfile</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 3 -->
+    <div class="col">
+      <div class="section">
+        <h2>Deno Tasks: API Starter</h2>
+        <table>
+          <tr><td><code>deno task dev</code></td><td>Start with --watch (port 8000)</td></tr>
+          <tr><td><code>deno task start</code></td><td>Production start</td></tr>
+          <tr><td><code>deno task routes</code></td><td>Print all registered routes</td></tr>
+          <tr><td><code>deno task setup</code></td><td>migrate + seed (first run)</td></tr>
+          <tr><td><code>deno task test</code></td><td>Full test suite</td></tr>
+          <tr><td><code>deno task test:watch</code></td><td>Tests in watch mode</td></tr>
+          <tr><td><code>deno task db:create</code></td><td>Create databases</td></tr>
+          <tr><td><code>deno task db:migrate</code></td><td>Run Drizzle migrations</td></tr>
+          <tr><td><code>deno task db:generate</code></td><td>Generate migration from schema</td></tr>
+          <tr><td><code>deno task db:seed</code></td><td>Seed superadmin + users + settings</td></tr>
+          <tr><td><code>deno task seed:ecommerce</code></td><td>Seed sample ecommerce data</td></tr>
+          <tr><td><code>deno task db:studio</code></td><td>Open Drizzle Studio (:4983)</td></tr>
+          <tr><td><code>deno task check</code></td><td>fmt --check + lint</td></tr>
+          <tr><td><code>deno task fmt</code></td><td>Auto-format source</td></tr>
+          <tr><td><code>deno task lint</code></td><td>Run linter</td></tr>
+        </table>
+        <div class="note">Aliases: migrate:run = db:migrate &nbsp;|&nbsp; migrate:generate = db:generate</div>
+      </div>
+
+      <div class="section">
+        <h2>Deno Tasks: CLI</h2>
+        <table>
+          <tr><td><code>deno task dev</code></td><td>Run CLI in dev mode</td></tr>
+          <tr><td><code>deno task test</code></td><td>Tests + auto cleanup</td></tr>
+          <tr><td><code>deno task test:watch</code></td><td>Watch mode</td></tr>
+          <tr><td><code>deno task test:coverage</code></td><td>With coverage report</td></tr>
+          <tr><td><code>deno task test:db</code></td><td>With real DB</td></tr>
+          <tr><td><code>deno task install</code></td><td>Install CLI globally</td></tr>
+          <tr><td><code>deno task cleanup:test-dbs</code></td><td>Clean all test DBs</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Deno Tasks: Admin Lib / UI / Store</h2>
+        <table>
+          <tr><th>Task</th><th>Admin Lib</th><th>UI + Store</th></tr>
+          <tr><td><code>deno task dev</code></td><td>--</td><td>Vite dev server</td></tr>
+          <tr><td><code>deno task build</code></td><td>--</td><td>Production build</td></tr>
+          <tr><td><code>deno task start</code></td><td>--</td><td>Serve built app</td></tr>
+          <tr><td><code>deno task test</code></td><td>Run tests</td><td>--</td></tr>
+          <tr><td><code>deno task test:watch</code></td><td>Watch mode</td><td>--</td></tr>
+          <tr><td><code>deno task test:coverage</code></td><td>Coverage</td><td>--</td></tr>
+          <tr><td><code>deno task update</code></td><td>--</td><td>Update Fresh</td></tr>
+          <tr><td><code>deno task check</code></td><td>--</td><td>fmt + lint + types</td></tr>
+          <tr><td><code>deno task cleanup:test-db</code></td><td>Clean test DB</td><td>--</td></tr>
+        </table>
+        <div class="note">Root: <code>deno task bump</code> &mdash; bump kit version across all packages</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ PAGE 3 -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span style="font-size:10pt;color:#0f3460;font-weight:bold;letter-spacing:.5px">TSTACK KIT CHEATSHEET</span>
+      <span class="version">v1.5.0</span>
+    </div>
+    <div class="subtitle">CLI-driven Deno full-stack &mdash; Hono + Drizzle + PostgreSQL + Fresh + Preact</div>
+    <div class="pgnum">Page 3 / 4 &mdash; Architecture, Routes, Testing &amp; Deployment</div>
+  </div>
+  <div class="cols">
+
+    <!-- COL 1 -->
+    <div class="col">
+      <div class="section">
+        <h2>Workspace Structure</h2>
+        <div class="term">my-shop/
+  my-shop-api/          # Hono API     :8000
+    src/
+      entities/         # model/dto/svc/ctrl/route
+      middleware/       # auth, error, cors, timing
+      config/           # db, env, app config
+    migrations/         # Drizzle SQL files
+    scripts/            # db:create, seed, migrate
+    tests/              # integration tests
+  my-shop-admin-ui/     # Fresh admin  :5173
+    routes/  islands/  entities/
+    config/entities/  components/  lib/
+  my-shop-store/        # Fresh store  :5174
+    routes/  islands/  components/  lib/</div>
+        <h3>Entity Scopes</h3>
+        <table>
+          <tr><th>Scope</th><th>Entities</th></tr>
+          <tr><td><code>core</code></td><td>users, articles, site_settings, enquiries</td></tr>
+          <tr><td><code>listing</code></td><td>core + brands, categories, products, product_images, product_variants, variant_options</td></tr>
+          <tr><td><code>commerce</code></td><td>listing + addresses, carts, orders, payments</td></tr>
+        </table>
+        <h3>Default Ports</h3>
+        <table>
+          <tr><td>API</td><td><code>:8000</code></td><td>Admin UI</td><td><code>:5173</code></td></tr>
+          <tr><td>Storefront</td><td><code>:5174</code></td><td>Drizzle Studio</td><td><code>:4983</code></td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Quick Start (5 min)</h2>
+        <div class="term">$ curl -fsSL .../install.sh | sh   # install
+$ tstack create workspace my-shop
+
+$ cd my-shop/my-shop-api
+$ cp .env.example .env    # set DB + JWT
+$ deno task db:migrate && deno task db:seed
+
+# 3 terminals:
+$ deno task dev            # API   :8000
+$ cd ../my-shop-admin-ui
+$ deno task dev            # Admin :5173
+$ cd ../my-shop-store
+$ deno task dev            # Store :5174
+
+# Add entity:
+$ cd ../my-shop-api
+$ tstack scaffold BlogPost
+$ deno task db:generate && deno task db:migrate</div>
+      </div>
+    </div>
+
+    <!-- COL 2 -->
+    <div class="col">
+      <div class="section">
+        <h2>Auth Routes</h2>
+        <table>
+          <tr><td>POST</td><td><code>/auth/login</code></td><td>Login &rarr; JWT pair</td></tr>
+          <tr><td>POST</td><td><code>/auth/register</code></td><td>Register new user</td></tr>
+          <tr><td>POST</td><td><code>/auth/refresh</code></td><td>Refresh access token</td></tr>
+          <tr><td>POST</td><td><code>/auth/forgot-password</code></td><td>Request password reset</td></tr>
+          <tr><td>POST</td><td><code>/auth/reset-password</code></td><td>Reset with token</td></tr>
+          <tr><td>GET</td><td><code>/auth/google/callback</code></td><td>Google OAuth callback</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Entity Routes (per entity)</h2>
+        <table>
+          <tr><th colspan="3">Public API &mdash; /api/&lt;entity&gt;</th></tr>
+          <tr><td>GET</td><td><code>/api/&lt;e&gt;</code></td><td>List (paginated)</td></tr>
+          <tr><td>GET</td><td><code>/api/&lt;e&gt;/:id</code></td><td>Get by ID</td></tr>
+          <tr><td>POST</td><td><code>/api/&lt;e&gt;</code></td><td>Create record</td></tr>
+          <tr><td>PUT</td><td><code>/api/&lt;e&gt;/:id</code></td><td>Update record</td></tr>
+          <tr><td>DELETE</td><td><code>/api/&lt;e&gt;/:id</code></td><td>Delete record</td></tr>
+          <tr><th colspan="3">Admin API &mdash; /ts-admin/&lt;entity&gt;</th></tr>
+          <tr><td>GET</td><td><code>/ts-admin/&lt;e&gt;</code></td><td>List (admin view)</td></tr>
+          <tr><td>GET</td><td><code>/ts-admin/&lt;e&gt;/:id</code></td><td>Get by ID (admin)</td></tr>
+          <tr><td>POST</td><td><code>/ts-admin/&lt;e&gt;</code></td><td>Create (admin)</td></tr>
+          <tr><td>POST</td><td><code>/ts-admin/&lt;e&gt;/bulk-delete</code></td><td>Bulk delete</td></tr>
+          <tr><td>PUT</td><td><code>/ts-admin/&lt;e&gt;/:id</code></td><td>Update (admin)</td></tr>
+          <tr><td>DELETE</td><td><code>/ts-admin/&lt;e&gt;/:id</code></td><td>Delete (admin)</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>BaseService &amp; BaseController</h2>
+        <h3>Lifecycle Hooks</h3>
+        <table>
+          <tr><td><code>beforeCreate</code></td><td>Before insert</td></tr>
+          <tr><td><code>afterCreate</code></td><td>After insert</td></tr>
+          <tr><td><code>beforeUpdate</code></td><td>Before update</td></tr>
+          <tr><td><code>afterUpdate</code></td><td>After update</td></tr>
+          <tr><td><code>beforeDelete</code></td><td>Before delete</td></tr>
+          <tr><td><code>afterDelete</code></td><td>After delete</td></tr>
+        </table>
+        <h3>Auth Options</h3>
+        <table>
+          <tr><td><code>requireAuth: true</code></td><td>Require valid JWT</td></tr>
+          <tr><td><code>ownershipCheck</code></td><td><code>(record, userId) =&gt; boolean</code></td></tr>
+          <tr><td><code>roles</code></td><td><code>["admin", "superadmin"]</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 3 -->
+    <div class="col">
+      <div class="section">
+        <h2>Testing</h2>
+        <p>BDD-style (describe/it), real PostgreSQL, no mocks. Separate _dev / _test / _prod databases.</p>
+        <div class="term" style="margin-top:3px">$ cd my-shop-api
+$ deno task test           # full suite
+$ deno task test:watch     # watch mode
+
+$ cd packages/cli
+$ deno task test           # CLI tests
+$ deno task test:coverage  # with coverage
+
+$ cd packages/admin
+$ deno task test           # admin lib tests</div>
+        <ul style="margin-top:3px">
+          <li>Uses <code>app.request()</code> &mdash; no HTTP server needed</li>
+          <li>Auth helper: <code>createTestUser("admin")</code></li>
+          <li><code>ENVIRONMENT=test</code> auto-set during test runs</li>
+        </ul>
+        <h3>Test Env Vars</h3>
+        <table>
+          <tr><td><code>TSTACK_CLI_TEST=true</code></td><td>Enable destructive CLI tests</td></tr>
+          <tr><td><code>TSTACK_TEST_DB=true</code></td><td>Enable real DB test suite</td></tr>
+          <tr><td><code>TSTACK_TEST_GITHUB=true</code></td><td>Enable GitHub API tests</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Deployment (Kamal)</h2>
+        <div class="term">$ cd my-shop-api
+$ tstack infra          # generate deploy configs
+$ kamal setup           # first-time server setup
+$ kamal deploy          # deploy to production
+$ kamal deploy -d staging   # deploy to staging
+$ kamal app logs        # view logs
+$ kamal app logs -f     # tail logs
+$ kamal app exec -i bash    # SSH into container
+$ kamal rollback        # rollback last deploy
+$ kamal app exec "deno task db:migrate"</div>
+        <h3>Production URLs</h3>
+        <table>
+          <tr><td>Storefront</td><td><code>https://yourdomain.com</code></td></tr>
+          <tr><td>API</td><td><code>https://yourdomain.com/ts-be/api/*</code></td></tr>
+          <tr><td>Admin UI</td><td><code>https://admin.yourdomain.com</code></td></tr>
+        </table>
+        <div class="note">CI/CD: push to <code>main</code> = production &nbsp;|&nbsp; push to <code>staging</code> branch = staging</div>
+      </div>
+
+      <div class="section">
+        <h2>Pre-Push Checklist</h2>
+        <div class="term">$ deno fmt --check && deno lint   # MANDATORY
+$ cd packages/cli   && deno task test
+$ cd packages/admin && deno task test
+$ cd packages/api-starter && deno task test</div>
+        <div class="note">deno check has pre-existing failures in storefront-starter and admin-ui-starter &mdash; use fmt+lint only as gate.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ PAGE 4 -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span style="font-size:10pt;color:#0f3460;font-weight:bold;letter-spacing:.5px">TSTACK KIT CHEATSHEET</span>
+      <span class="version">v1.5.0</span>
+    </div>
+    <div class="subtitle">CLI-driven Deno full-stack &mdash; Hono + Drizzle + PostgreSQL + Fresh + Preact</div>
+    <div class="pgnum">Page 4 / 4 &mdash; Environment Variables &amp; Reference</div>
+  </div>
+  <div class="cols">
+
+    <!-- COL 1 -->
+    <div class="col">
+      <div class="section">
+        <h2>Core Env Vars</h2>
+        <table>
+          <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>ENVIRONMENT</code></td><td>development</td><td>development | test | production</td></tr>
+          <tr><td><code>PORT</code></td><td>8000</td><td>API server port</td></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>--</td><td>PostgreSQL URL (required)</td></tr>
+          <tr><td><code>ALLOWED_ORIGINS</code></td><td>localhost:3000</td><td>CORS origins (comma-sep)</td></tr>
+          <tr><td><code>LOG_LEVEL</code></td><td>info</td><td>debug | info | warn | error</td></tr>
+        </table>
+        <h3>Service URLs</h3>
+        <table>
+          <tr><td><code>APP_URL</code></td><td>http://localhost:8000</td><td>Backend API</td></tr>
+          <tr><td><code>STOREFRONT_URL</code></td><td>http://localhost:5174</td><td>Storefront</td></tr>
+          <tr><td><code>ADMIN_URL</code></td><td>http://localhost:5173</td><td>Admin UI</td></tr>
+        </table>
+        <h3>JWT</h3>
+        <table>
+          <tr><td><code>JWT_SECRET</code></td><td>Signing secret (required)</td></tr>
+          <tr><td><code>JWT_ISSUER</code></td><td>tonystack (default)</td></tr>
+          <tr><td><code>JWT_EXPIRY</code></td><td>7d &mdash; values: 1h, 7d, 30d</td></tr>
+        </table>
+        <h3>Seed Credentials</h3>
+        <table>
+          <tr><td><code>SUPERADMIN_EMAIL</code></td><td>Admin email (required)</td></tr>
+          <tr><td><code>SUPERADMIN_PASSWORD</code></td><td>Admin password (required)</td></tr>
+          <tr><td><code>ALPHA_EMAIL</code></td><td>Test user email</td></tr>
+          <tr><td><code>ALPHA_PASSWORD</code></td><td>Test user password</td></tr>
+        </table>
+        <div class="note">Priority: System env &gt; .env.{ENVIRONMENT}.local &gt; .env</div>
+      </div>
+
+      <div class="section">
+        <h2>Google OAuth</h2>
+        <table>
+          <tr><td><code>GOOGLE_CLIENT_ID</code></td><td>OAuth Client ID</td></tr>
+          <tr><td><code>GOOGLE_CLIENT_SECRET</code></td><td>OAuth Client Secret</td></tr>
+          <tr><td><code>GOOGLE_CALLBACK_URL</code></td><td>{APP_URL}/auth/google/callback</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 2 -->
+    <div class="col">
+      <div class="section">
+        <h2>Email Env Vars</h2>
+        <table>
+          <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>EMAIL_PROVIDER</code></td><td>auto</td><td>resend | ses | smtp | auto</td></tr>
+          <tr><td><code>EMAIL_FROM</code></td><td>--</td><td>Sender email address</td></tr>
+          <tr><td><code>RESEND_API_KEY</code></td><td>--</td><td>Resend key (re_xxx)</td></tr>
+          <tr><td><code>SMTP_HOST</code></td><td>--</td><td>SMTP server hostname</td></tr>
+          <tr><td><code>SMTP_PORT</code></td><td>--</td><td>SMTP port (usually 587)</td></tr>
+          <tr><td><code>SMTP_USER</code></td><td>--</td><td>SMTP username</td></tr>
+          <tr><td><code>SMTP_PASS</code></td><td>--</td><td>SMTP password</td></tr>
+          <tr><td><code>SES_ACCESS_KEY_ID</code></td><td>--</td><td>AWS SES access key</td></tr>
+          <tr><td><code>SES_SECRET_ACCESS_KEY</code></td><td>--</td><td>AWS SES secret key</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Payments (Razorpay)</h2>
+        <table>
+          <tr><td><code>RAZORPAY_KEY_ID</code></td><td>rzp_test_* or rzp_live_*</td></tr>
+          <tr><td><code>RAZORPAY_KEY_SECRET</code></td><td>API Key Secret</td></tr>
+          <tr><td><code>RAZORPAY_WEBHOOK_SECRET</code></td><td>Webhook validation secret</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>AWS S3 (File Uploads)</h2>
+        <table>
+          <tr><td><code>AWS_ACCESS_KEY_ID</code></td><td>Access key ID</td></tr>
+          <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td>Secret access key</td></tr>
+          <tr><td><code>AWS_REGION</code></td><td>ap-south-1 (default)</td></tr>
+          <tr><td><code>S3_BUCKET_NAME</code></td><td>Target bucket name</td></tr>
+          <tr><td><code>S3_PREFIX</code></td><td>Key prefix for uploads</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Kamal Deploy Secrets</h2>
+        <table>
+          <tr><td><code>KAMAL_REGISTRY_USERNAME</code></td><td>Container registry user</td></tr>
+          <tr><td><code>KAMAL_REGISTRY_PASSWORD</code></td><td>Registry password / token</td></tr>
+          <tr><td><code>DEPLOY_SSH_KEY</code></td><td>SSH private key (base64)</td></tr>
+          <tr><td><code>GITHUB_TOKEN</code></td><td>PAT: repo + delete_repo scopes</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>CLI Debug Flags</h2>
+        <table>
+          <tr><td><code>DEBUG=true</code></td><td>Full stack traces</td></tr>
+          <tr><td><code>TSTACK_CLI_TEST=true</code></td><td>Destructive CLI tests</td></tr>
+          <tr><td><code>TSTACK_TEST_DB=true</code></td><td>Real DB test suite</td></tr>
+          <tr><td><code>TSTACK_TEST_GITHUB=true</code></td><td>GitHub API tests</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 3 -->
+    <div class="col">
+      <div class="section">
+        <h2>Tech Stack</h2>
+        <table>
+          <tr><th>Layer</th><th>Technology</th></tr>
+          <tr><td>Runtime</td><td>Deno 2.6.4+</td></tr>
+          <tr><td>API Framework</td><td>Hono</td></tr>
+          <tr><td>ORM</td><td>Drizzle ORM</td></tr>
+          <tr><td>Database</td><td>PostgreSQL 16+</td></tr>
+          <tr><td>Frontend</td><td>Fresh 2 + Preact</td></tr>
+          <tr><td>Styling</td><td>Tailwind CSS</td></tr>
+          <tr><td>Validation</td><td>Zod</td></tr>
+          <tr><td>Auth</td><td>JWT (access + refresh tokens)</td></tr>
+          <tr><td>Payments</td><td>Razorpay</td></tr>
+          <tr><td>Storage</td><td>AWS S3</td></tr>
+          <tr><td>Email</td><td>Resend | SES | SMTP</td></tr>
+          <tr><td>Deploy</td><td>Kamal + Docker</td></tr>
+          <tr><td>CI/CD</td><td>GitHub Actions</td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Common Workflows</h2>
+        <div class="term"># New project
+$ tstack create workspace my-app
+$ cd my-app/my-app-api
+$ cp .env.example .env
+$ deno task setup && deno task dev
+
+# Add an entity
+$ tstack scaffold BlogPost
+$ deno task db:generate
+$ deno task db:migrate
+
+# Destroy a project
+$ tstack destroy workspace my-app \
+    --delete-remote -f
+
+# First-time deploy
+$ tstack infra
+$ kamal setup
+$ git push origin main
+
+# View versions &amp; upgrade CLI
+$ tstack versions
+$ tstack upgrade</div>
+      </div>
+
+      <div class="section">
+        <h2>Packages Published to JSR</h2>
+        <table>
+          <tr><td><code>@tstack/admin</code></td><td>Admin framework / ORM helpers</td></tr>
+          <tr><td><code>@tonystack/cli</code></td><td>CLI tool (future JSR publish)</td></tr>
+        </table>
+        <div class="note">github.com/desingh-rajan/tstack-kit &nbsp;|&nbsp; install.sh for one-liner setup</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

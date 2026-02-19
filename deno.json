@@ -3,6 +3,12 @@
   "tasks": {
     "bump": "deno run --allow-read --allow-write scripts/bump-version.ts"
   },
+  "fmt": {
+    "exclude": [
+      "docs/tstack-cheatsheet.html",
+      "docs/tstack-cheatsheet-portrait.html"
+    ]
+  },
   "lint": {
     "rules": {
       "exclude": [

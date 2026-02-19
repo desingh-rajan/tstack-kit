@@ -495,6 +495,18 @@ detailed release notes.
 
 ---
 
+## Cheatsheet
+
+Quick-reference PDFs covering all CLI commands, flags, Deno tasks, routes, env
+vars and deployment — no need to re-read the docs.
+
+| Format                       | Download                                                              |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Landscape (3-column, A4)     | [tstack-cheatsheet.pdf](docs/tstack-cheatsheet.pdf)                   |
+| Portrait (single-column, A4) | [tstack-cheatsheet-portrait.pdf](docs/tstack-cheatsheet-portrait.pdf) |
+
+---
+
 ## Contributing
 
 1. Fork the repo
