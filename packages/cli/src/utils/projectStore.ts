@@ -150,7 +150,8 @@ export async function deleteProject(
 }
 
 /**
- * Update project metadata
+ * Update project metadata using atomic transactions to prevent race conditions.
+ * Uses optimistic concurrency — retries until the check passes.
  */
 export async function updateProject(
   folderName: string,
@@ -158,19 +159,27 @@ export async function updateProject(
   kvPath?: string,
 ): Promise<void> {
   const db = await getKv(kvPath);
-  const existing = await getProject(folderName, kvPath);
+  const key = ["projects", folderName];
 
-  if (!existing) {
-    throw new Error(`Project ${folderName} not found`);
+  let res = { ok: false };
+  while (!res.ok) {
+    const entry = await db.get<ProjectMetadata>(key);
+
+    if (!entry.value) {
+      throw new Error(`Project ${folderName} not found`);
+    }
+
+    const updated: ProjectMetadata = {
+      ...entry.value,
+      ...updates,
+      updatedAt: Date.now(),
+    };
+
+    res = await db.atomic()
+      .check(entry) // Only commit if entry hasn't changed since we read it
+      .set(key, updated)
+      .commit();
   }
-
-  const updated: ProjectMetadata = {
-    ...existing,
-    ...updates,
-    updatedAt: Date.now(),
-  };
-
-  await db.set(["projects", folderName], updated);
 }
 
 /**

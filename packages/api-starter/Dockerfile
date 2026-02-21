@@ -1,26 +1,31 @@
-FROM denoland/deno:alpine-2.6.4
+# Stage 1: Cache dependencies and compile
+FROM denoland/deno:alpine-2.6.4 AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy dependency files first for better caching
 COPY deno.json deno.lock* ./
-
-# Cache dependencies 
 RUN deno cache --lock=deno.lock deno.json
 
-# Copy source code
-COPY . .
-
-# Cache the main application
+COPY src/ ./src/
 RUN deno cache src/main.ts
 
-# Expose port
+# Stage 2: Minimal runtime image
+FROM denoland/deno:alpine-2.6.4
+
+WORKDIR /app
+
+# Copy only what the runtime needs
+COPY --from=builder /app/deno.json ./
+COPY --from=builder /app/deno.lock* ./
+COPY --from=builder /app/src/ ./src/
+# Copy the Deno module cache from builder
+COPY --from=builder /root/.cache/deno /root/.cache/deno
+
 EXPOSE 8000
 
-# Add healthcheck (Deno 2.x doesn't require --allow-net for deno eval)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD deno eval "try { const res = await fetch('http://localhost:8000/health'); Deno.exit(res.ok ? 0 : 1); } catch { Deno.exit(1); }"
 
-# Run the application
-CMD ["deno", "run", "--allow-all", "src/main.ts"]
+USER deno
+
+CMD ["run", "--allow-all", "src/main.ts"]

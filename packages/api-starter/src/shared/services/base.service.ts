@@ -1,4 +1,4 @@
-import { eq, SQL } from "drizzle-orm";
+import { count as drizzleCount, eq, inArray, SQL } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
 /**
@@ -67,6 +67,7 @@ export abstract class BaseService<
   ID = number,
 > {
   constructor(
+    // deno-lint-ignore no-explicit-any
     protected db: PgDatabase<any>,
     // deno-lint-ignore no-explicit-any
     protected table: any,
@@ -97,10 +98,12 @@ export abstract class BaseService<
     let query = this.db.select().from(this.table);
 
     if (options?.where) {
+      // deno-lint-ignore no-explicit-any
       query = query.where(options.where) as any;
     }
 
     if (options?.orderBy) {
+      // deno-lint-ignore no-explicit-any
       query = query.orderBy(options.orderBy) as any;
     }
 
@@ -108,13 +111,16 @@ export abstract class BaseService<
       const { limit, offset, page } = options.pagination;
 
       if (limit) {
+        // deno-lint-ignore no-explicit-any
         query = query.limit(limit) as any;
       }
 
       if (offset !== undefined) {
+        // deno-lint-ignore no-explicit-any
         query = query.offset(offset) as any;
       } else if (page && limit) {
         // Convert page to offset (1-indexed)
+        // deno-lint-ignore no-explicit-any
         query = query.offset((page - 1) * limit) as any;
       }
     }
@@ -138,18 +144,36 @@ export abstract class BaseService<
     const { page, limit } = pagination;
     const offset = (page - 1) * limit;
 
-    // Get total count
-    const totalResult = await this.db
-      .select({ count: this.table.id })
-      .from(this.table);
-    const total = totalResult.length;
-    const totalPages = Math.ceil(total / limit);
+    // Run count and data queries in a transaction for consistent reads
+    const [total, data] = await this.db.transaction(async (tx) => {
+      // Use SQL COUNT(*) for accurate row count without loading all rows
+      let countQuery = tx
+        .select({ count: drizzleCount() })
+        .from(this.table);
 
-    // Get paginated data
-    const data = await this.getAll({
-      ...options,
-      pagination: { limit, offset },
+      if (options?.where) {
+        countQuery = countQuery.where(options.where) as typeof countQuery;
+      }
+
+      const [{ count: rawCount }] = await countQuery;
+
+      let dataQuery = tx.select().from(this.table);
+
+      if (options?.where) {
+        dataQuery = dataQuery.where(options.where) as typeof dataQuery;
+      }
+      if (options?.orderBy) {
+        dataQuery = dataQuery.orderBy(options.orderBy) as typeof dataQuery;
+      }
+
+      const rows = await (dataQuery.limit(limit).offset(
+        offset,
+      ) as typeof dataQuery);
+
+      return [Number(rawCount), rows as ResponseDTO[]];
     });
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       data,
@@ -168,14 +192,14 @@ export abstract class BaseService<
    * Count total records with optional filtering
    */
   async count(where?: SQL): Promise<number> {
-    let query = this.db.select({ count: this.table.id }).from(this.table);
+    let query = this.db.select({ count: drizzleCount() }).from(this.table);
 
     if (where) {
-      query = query.where(where) as any;
+      query = query.where(where) as typeof query;
     }
 
-    const result = await query;
-    return result.length;
+    const [{ count: result }] = await query;
+    return Number(result);
   }
 
   /**
@@ -200,7 +224,7 @@ export abstract class BaseService<
     const result = await this.db
       .select()
       .from(this.table)
-      .where(eq(this.table.id, ids[0])); // Note: You'd use inArray() in real impl
+      .where(inArray(this.table.id, ids));
 
     return result as ResponseDTO[];
   }

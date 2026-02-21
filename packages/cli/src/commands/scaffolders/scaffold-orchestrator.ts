@@ -213,26 +213,51 @@ export class ScaffoldOrchestrator {
   }
 
   /**
-   * Generate files from all active scaffolders
+   * Generate files from all active scaffolders.
+   * If any step fails, previously written files are deleted in reverse order (compensation).
    */
   private async generateAndWriteFiles(): Promise<void> {
     Logger.step("Generating files...");
     Logger.newLine();
 
-    for (const scaffolder of this.scaffolders) {
-      const typeName = scaffolder.getTypeName();
-      const targetDir = scaffolder.getTargetDir();
-      const files = await scaffolder.generateFiles();
+    const writtenPaths: string[] = [];
 
-      Logger.info(`${typeName} files (${files.length} files):`);
-      await writeFiles(targetDir, files);
+    try {
+      for (const scaffolder of this.scaffolders) {
+        const typeName = scaffolder.getTypeName();
+        const targetDir = scaffolder.getTargetDir();
+        const files = await scaffolder.generateFiles();
 
-      // Call post-process hook if available (e.g., update sidebar menu)
-      if (scaffolder.postProcess) {
-        await scaffolder.postProcess();
+        Logger.info(`${typeName} files (${files.length} files):`);
+        await writeFiles(targetDir, files);
+
+        // Record written paths for rollback if a later step fails
+        for (const file of files) {
+          writtenPaths.push(join(targetDir, file.path));
+        }
+
+        // Call post-process hook if available (e.g., update sidebar menu)
+        if (scaffolder.postProcess) {
+          await scaffolder.postProcess();
+        }
+
+        Logger.newLine();
       }
-
-      Logger.newLine();
+    } catch (error) {
+      // Roll back by deleting files written so far, in reverse order
+      if (writtenPaths.length > 0) {
+        Logger.warning(
+          `Scaffolding failed — rolling back ${writtenPaths.length} written file(s)...`,
+        );
+        for (const filePath of writtenPaths.reverse()) {
+          try {
+            await Deno.remove(filePath);
+          } catch {
+            // Best-effort; file may not exist if the write itself failed
+          }
+        }
+      }
+      throw error;
     }
   }
 
