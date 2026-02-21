@@ -631,10 +631,16 @@ export async function createWorkspace(
           projectType: type as "api" | "admin-ui" | "store",
           targetDir: workspacePath,
           skipDbSetup: type === "admin-ui" || type === "store", // Only API needs database
-          // Entity scope only applies to API
-          scope: type === "api" ? options.scope : undefined,
-          skipListing: type === "api" ? options.skipListing : undefined,
-          skipCommerce: type === "api" ? options.skipCommerce : undefined,
+          // Pass scope to both API and admin-ui so the sidebar is filtered correctly
+          scope: type === "api" || type === "admin-ui"
+            ? options.scope
+            : undefined,
+          skipListing: type === "api" || type === "admin-ui"
+            ? options.skipListing
+            : undefined,
+          skipCommerce: type === "api" || type === "admin-ui"
+            ? options.skipCommerce
+            : undefined,
         });
 
         const projectPath = join(workspacePath, projectName);

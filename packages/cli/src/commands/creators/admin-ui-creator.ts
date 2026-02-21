@@ -72,12 +72,85 @@ export class AdminUiProjectCreator extends BaseProjectCreator {
     }
   }
 
+  /**
+   * Admin paths that are only available in listing scope and above
+   */
+  private static readonly LISTING_MENU_PATHS = [
+    "/admin/products",
+    "/admin/categories",
+    "/admin/brands",
+    "/admin/variant-options",
+    "/admin/product-images",
+    "/admin/product-variants",
+  ];
+
+  /**
+   * Admin paths that are only available in commerce scope
+   */
+  private static readonly COMMERCE_MENU_PATHS = [
+    "/admin/orders",
+  ];
+
+  /**
+   * Remove out-of-scope menu items from AdminLayout.tsx after template copy.
+   * core     → removes listing + commerce items
+   * listing  → removes commerce items only
+   * commerce → no changes (default template keeps all items)
+   */
+  private async patchAdminLayoutScope(): Promise<void> {
+    const scope = this.resolveScope();
+    if (scope === "commerce") return; // Default template already has everything
+
+    const layoutPath = join(
+      this.projectPath,
+      "components",
+      "layout",
+      "AdminLayout.tsx",
+    );
+
+    try {
+      await Deno.stat(layoutPath);
+    } catch {
+      Logger.warning(
+        "AdminLayout.tsx not found — skipping sidebar scope patch",
+      );
+      return;
+    }
+
+    const pathsToRemove: string[] = [
+      ...AdminUiProjectCreator.COMMERCE_MENU_PATHS,
+    ];
+    if (scope === "core") {
+      pathsToRemove.push(...AdminUiProjectCreator.LISTING_MENU_PATHS);
+    }
+
+    let content = await Deno.readTextFile(layoutPath);
+
+    // Remove each out-of-scope menu item line (matches the { path: "...", ... } pattern)
+    for (const adminPath of pathsToRemove) {
+      // Match the whole object literal line for this path, including trailing comma
+      const linePattern = new RegExp(
+        `\\s*\\{\\s*path:\\s*"${adminPath.replace(/\//g, "\\/")}",.*?\\},?\\n`,
+        "g",
+      );
+      content = content.replace(linePattern, "\n");
+    }
+
+    await Deno.writeTextFile(layoutPath, content);
+    Logger.info(
+      `Sidebar filtered for scope "${scope}" (removed ${pathsToRemove.length} menu item(s))`,
+    );
+  }
+
   protected async postCreationSetup(): Promise<void> {
     Logger.newLine();
     Logger.success("Admin UI project created successfully!");
     Logger.newLine();
 
     Logger.step("Setting up admin UI environment...");
+
+    // Patch AdminLayout.tsx sidebar to match the requested scope
+    await this.patchAdminLayoutScope();
 
     // Copy .env.example to .env
     const envExamplePath = join(this.projectPath, ".env.example");
