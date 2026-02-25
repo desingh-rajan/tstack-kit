@@ -24,7 +24,9 @@ import {
   ContactInfoSchema,
   DEFAULT_API_CONFIG,
   DEFAULT_CONTACT_INFO,
+  DEFAULT_ORDER_NOTIFICATIONS,
   DEFAULT_SITE_INFO,
+  OrderNotificationsSchema,
   SiteInfoSchema,
 } from "./general.schemas.ts";
 import {
@@ -50,6 +52,7 @@ export const SITE_SETTING_SCHEMAS = {
   theme_config: ThemeConfigSchema,
   feature_flags: FeatureFlagsSchema,
   email_settings: EmailSettingsSchema,
+  order_notifications: OrderNotificationsSchema,
 } as const;
 
 /**
@@ -62,6 +65,7 @@ export const DEFAULT_SETTINGS = {
   theme_config: DEFAULT_THEME_CONFIG,
   feature_flags: DEFAULT_FEATURE_FLAGS,
   email_settings: DEFAULT_EMAIL_SETTINGS,
+  order_notifications: DEFAULT_ORDER_NOTIFICATIONS,
 } as const;
 
 /**
@@ -83,6 +87,7 @@ export const CATEGORY_MAP: Record<SystemSettingKey, string> = {
   theme_config: "appearance",
   feature_flags: "features",
   email_settings: "email",
+  order_notifications: "general",
 };
 
 /**

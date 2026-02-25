@@ -58,4 +58,14 @@ export {
   orderCancelledEmailTemplate,
 } from "./order-cancelled.ts";
 
+export {
+  type OrderRefundedEmailData,
+  orderRefundedEmailTemplate,
+} from "./order-refunded.ts";
+
+export {
+  type AdminOrderNotificationEmailData,
+  adminOrderNotificationEmailTemplate,
+} from "./admin-order-notification.ts";
+
 export type { EmailTemplate } from "./shared.ts";

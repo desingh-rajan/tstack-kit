@@ -24,6 +24,7 @@ export type FieldType =
   | "date"
   | "datetime"
   | "text"
+  | "textarea"
   | "email"
   | "password"
   | "select"
@@ -31,7 +32,8 @@ export type FieldType =
   | "status"
   | "badge"
   | "relationship"
-  | "image";
+  | "image"
+  | "custom";
 
 /**
  * Relationship configuration for entity references
@@ -136,7 +138,9 @@ export interface EntityConfig<T = Record<string, unknown>> {
 
   // Service instance
   service: {
-    list: (params: { page: number; pageSize?: number }) => Promise<unknown>;
+    list: (
+      params: { page: number; pageSize?: number; limit?: number },
+    ) => Promise<unknown>;
     getById?: (id: number | string) => Promise<T>;
     getByKey?: (key: string) => Promise<T>;
     create: (data: Partial<T>) => Promise<T>;
@@ -163,6 +167,7 @@ export interface EntityConfig<T = Record<string, unknown>> {
 
   // Custom logic
   isSystemRecord?: (record: T) => boolean; // Prevent deletion of system records
+  canEditRecord?: (record: T) => boolean; // Per-record edit permission control
   getRouteParam?: (record: T) => string | number; // Custom route param extraction
 }
 

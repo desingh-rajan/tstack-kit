@@ -3,11 +3,16 @@
  * Handles all API communication with the backend
  */
 
-const API_BASE_URL = Deno.env.get("API_BASE_URL") || "http://localhost:8000";
+// Guard against browser-side access (islands run in client where Deno is unavailable)
+const isDeno = typeof Deno !== "undefined";
+
+const API_BASE_URL = isDeno
+  ? Deno.env.get("API_BASE_URL") || "http://localhost:8000"
+  : "http://localhost:8000";
 
 // For SSR, prefer internal Docker network to avoid public URL roundtrip
 // This prevents timeout issues when frontend containers call API via external URL
-const API_INTERNAL_URL = Deno.env.get("API_INTERNAL_URL");
+const API_INTERNAL_URL = isDeno ? Deno.env.get("API_INTERNAL_URL") : undefined;
 const SSR_API_URL = API_INTERNAL_URL || API_BASE_URL;
 
 interface ApiResponse<T> {
@@ -28,9 +33,10 @@ interface RequestOptions {
 export class ApiClient {
   private baseUrl: string;
   private token?: string;
+  private guestId?: string;
 
   constructor(baseUrl?: string, token?: string) {
-    this.baseUrl = baseUrl || API_BASE_URL;
+    this.baseUrl = baseUrl || SSR_API_URL;
     this.token = token;
   }
 
@@ -40,6 +46,14 @@ export class ApiClient {
 
   clearToken() {
     this.token = undefined;
+  }
+
+  setGuestId(id: string) {
+    this.guestId = id;
+  }
+
+  clearGuestId() {
+    this.guestId = undefined;
   }
 
   /**
@@ -60,6 +74,10 @@ export class ApiClient {
       headers["Authorization"] = `Bearer ${authToken}`;
     }
 
+    if (this.guestId) {
+      headers["X-Guest-Id"] = this.guestId;
+    }
+
     if (body && method !== "GET") {
       headers["Content-Type"] = "application/json";
     }
@@ -69,6 +87,7 @@ export class ApiClient {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(30_000),
       });
 
       const data = await response.json();
@@ -102,6 +121,13 @@ export class ApiClient {
         message: data.message,
       };
     } catch (error) {
+      if (error instanceof DOMException && error.name === "TimeoutError") {
+        return {
+          success: false,
+          error:
+            "Request timed out. The server may be busy -- please try again.",
+        };
+      }
       return {
         success: false,
         error: error instanceof Error ? error.message : "Network error",
@@ -243,6 +269,52 @@ export class ApiClient {
     return this.request<Order>(`/orders/${id}/cancel`, {
       method: "POST",
     });
+  }
+
+  // Guest checkout
+  validateGuestCheckout(data: { guestEmail: string }) {
+    return this.request<{ valid: boolean }>("/checkout/guest/validate", {
+      method: "POST",
+      body: data,
+    });
+  }
+
+  createGuestOrder(data: CreateGuestOrderData) {
+    return this.request<Order>("/checkout/guest/create", {
+      method: "POST",
+      body: data,
+    });
+  }
+
+  trackOrder(orderNumber: string, email: string) {
+    return this.request<TrackOrderResponse>("/orders/track", {
+      method: "POST",
+      body: { orderNumber, email },
+    });
+  }
+
+  getGuestOrderForPayment(orderId: string, email: string) {
+    return this.request<Order>(
+      `/checkout/guest/order/${orderId}?email=${encodeURIComponent(email)}`,
+    );
+  }
+
+  // Guest payments
+  createGuestPaymentOrder(orderId: string, email: string) {
+    return this.request<PaymentOrderResponse>("/payments/guest/create-order", {
+      method: "POST",
+      body: { orderId, email },
+    });
+  }
+
+  verifyGuestPayment(data: VerifyPaymentData & { email: string }) {
+    return this.request<{ success: boolean; message: string }>(
+      "/payments/guest/verify",
+      {
+        method: "POST",
+        body: data,
+      },
+    );
   }
 
   // Payments
@@ -390,6 +462,26 @@ export interface CreateOrderData {
   customerNotes?: string;
 }
 
+export interface GuestAddress {
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+}
+
+export interface CreateGuestOrderData {
+  guestEmail: string;
+  shippingAddress: GuestAddress;
+  billingAddress?: GuestAddress;
+  useSameAddress?: boolean;
+  paymentMethod: "razorpay" | "cod";
+  customerNotes?: string;
+}
+
 export type OrderStatus =
   | "pending"
   | "confirmed"
@@ -416,8 +508,11 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  userId: string;
+  userId: string | null;
   orderNumber: string;
+  isGuest?: boolean;
+  guestEmail?: string | null;
+  guestPhone?: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: string;
@@ -432,6 +527,28 @@ export interface Order {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   customerNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrackOrderResponse {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  totalAmount: string;
+  paymentMethod: string | null;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    phone: string;
+  } | null;
+  items: OrderItem[];
   createdAt: string;
   updatedAt: string;
 }

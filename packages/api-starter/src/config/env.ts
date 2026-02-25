@@ -46,6 +46,9 @@ export interface Config {
   port: number;
   databaseUrl: string;
   allowedOrigins: string[];
+  appUrl: string;
+  storefrontUrl: string;
+  currency: string;
 }
 
 function loadConfig(): Config {
@@ -69,6 +72,9 @@ function loadConfig(): Config {
     allowedOrigins: (Deno.env.get("ALLOWED_ORIGINS") || "http://localhost:3000")
       .split(",")
       .map((origin) => origin.trim()),
+    appUrl: Deno.env.get("APP_URL") || "http://localhost:8000",
+    storefrontUrl: Deno.env.get("STOREFRONT_URL") || "http://localhost:5173",
+    currency: Deno.env.get("APP_CURRENCY") || "INR",
   };
 }
 

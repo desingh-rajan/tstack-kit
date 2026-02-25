@@ -5,6 +5,7 @@
 
 import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
 import DataTableActions from "@/islands/DataTableActions.tsx";
+import { formatDate, formatDateTime } from "@/lib/date.ts";
 
 interface DataTableProps<T = Record<string, unknown>> {
   config: EntityConfig<T>;
@@ -49,10 +50,10 @@ export function DataTable<T = Record<string, unknown>>(
           : <span class="badge badge-ghost badge-sm">No</span>;
 
       case "date":
-        return new Date(value as string).toLocaleDateString();
+        return formatDate(value as string);
 
       case "datetime":
-        return new Date(value as string).toLocaleString();
+        return formatDateTime(value as string);
 
       case "status":
       case "badge":
@@ -129,7 +130,9 @@ export function DataTable<T = Record<string, unknown>>(
                   entityName={config.name}
                   identifier={getIdentifier(record)}
                   canView={config.canView !== false}
-                  canEdit={config.canEdit !== false}
+                  canEdit={config.canEdit !== false &&
+                    !(config.canEditRecord &&
+                      !config.canEditRecord(record))}
                   canDelete={config.canDelete !== false &&
                     !(config.isSystemRecord && config.isSystemRecord(record))}
                   singularName={config.singularName}

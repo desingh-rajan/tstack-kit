@@ -1,14 +1,18 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../../config/database.ts";
 import { type NewPayment, payments } from "./payment.model.ts";
 import { orders } from "../orders/order.model.ts";
 import { users } from "../../auth/user.model.ts";
 import { addresses } from "../addresses/address.model.ts";
+import { products } from "../products/product.model.ts";
+import { productVariants } from "../product_variants/product-variant.model.ts";
 import {
+  type PaymentDetails,
   type PaymentOrder,
   paymentProvider,
 } from "../../shared/providers/payment/index.ts";
 import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
+import { config } from "../../config/env.ts";
 import {
   type EmailOptions,
   type EmailResult,
@@ -129,15 +133,17 @@ export class PaymentService {
       }
     }
 
-    // Convert amount to paise (INR * 100)
-    const amountInPaise = Math.round(parseFloat(orderRecord.totalAmount) * 100);
+    // Convert amount to smallest unit (e.g. cents for USD, paise for INR)
+    const amountInSmallestUnit = Math.round(
+      parseFloat(orderRecord.totalAmount) * 100,
+    );
 
     // Create payment order via provider
     let razorpayOrder: PaymentOrder;
     try {
       razorpayOrder = await paymentProvider.createOrder({
-        amount: amountInPaise,
-        currency: "INR",
+        amount: amountInSmallestUnit,
+        currency: config.currency,
         receipt: orderRecord.orderNumber,
         notes: {
           orderId: orderId,
@@ -155,7 +161,7 @@ export class PaymentService {
       orderId: orderId,
       razorpayOrderId: razorpayOrder.id,
       amount: orderRecord.totalAmount,
-      currency: "INR",
+      currency: config.currency,
       status: "created",
     };
 
@@ -196,8 +202,8 @@ export class PaymentService {
     return {
       razorpayOrderId: razorpayOrder.id,
       razorpayKeyId: providerKeyId,
-      amount: amountInPaise,
-      currency: "INR",
+      amount: amountInSmallestUnit,
+      currency: config.currency,
       orderId: orderId,
       orderNumber: orderRecord.orderNumber,
       prefill: {
@@ -617,6 +623,362 @@ export class PaymentService {
     return { handled: true, event: webhookEvent.event };
   }
 
+  // ==================== GUEST PAYMENT METHODS ====================
+
+  /**
+   * Create a Razorpay order for a guest order
+   * Validates guest ownership via email
+   */
+  async createGuestPaymentOrder(
+    orderId: string,
+    email: string,
+  ): Promise<PaymentOrderResponse> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const order = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (order.length === 0) {
+      throw new NotFoundError("Order not found");
+    }
+
+    const orderRecord = order[0];
+
+    if (!orderRecord.isGuest) {
+      throw new NotFoundError("Order not found");
+    }
+
+    if (orderRecord.guestEmail?.toLowerCase().trim() !== normalizedEmail) {
+      throw new NotFoundError("Order not found");
+    }
+
+    if (orderRecord.status !== "pending") {
+      throw new BadRequestError(
+        `Cannot create payment for order with status "${orderRecord.status}"`,
+      );
+    }
+
+    const existingPayment = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.orderId, orderId))
+      .limit(1);
+
+    if (
+      existingPayment.length > 0 && existingPayment[0].status === "captured"
+    ) {
+      throw new BadRequestError("Order already paid");
+    }
+
+    // Use guest phone as contact
+    const contact = orderRecord.guestPhone ?? undefined;
+
+    const amountInSmallestUnit = Math.round(
+      parseFloat(orderRecord.totalAmount) * 100,
+    );
+
+    let razorpayOrder: PaymentOrder;
+    try {
+      razorpayOrder = await paymentProvider.createOrder({
+        amount: amountInSmallestUnit,
+        currency: config.currency,
+        receipt: orderRecord.orderNumber,
+        notes: {
+          orderId: orderId,
+          orderNumber: orderRecord.orderNumber,
+          guestEmail: normalizedEmail,
+        },
+      });
+    } catch (error) {
+      console.error("[PaymentService] Failed to create Razorpay order:", error);
+      throw new BadRequestError("Failed to create payment order");
+    }
+
+    const paymentData: NewPayment = {
+      orderId: orderId,
+      razorpayOrderId: razorpayOrder.id,
+      amount: orderRecord.totalAmount,
+      currency: config.currency,
+      status: "created",
+    };
+
+    if (existingPayment.length > 0) {
+      await db
+        .update(payments)
+        .set({
+          razorpayOrderId: razorpayOrder.id,
+          status: "created",
+          razorpayPaymentId: null,
+          razorpaySignature: null,
+          errorCode: null,
+          errorDescription: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.id, existingPayment[0].id));
+    } else {
+      await db.insert(payments).values(paymentData);
+    }
+
+    await db
+      .update(orders)
+      .set({
+        razorpayOrderId: razorpayOrder.id,
+        paymentMethod: "razorpay",
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, orderId));
+
+    const providerKeyId =
+      (paymentProvider as unknown as { keyId?: string }).keyId ||
+      Deno.env.get("RAZORPAY_KEY_ID") ||
+      "";
+
+    return {
+      razorpayOrderId: razorpayOrder.id,
+      razorpayKeyId: providerKeyId,
+      amount: amountInSmallestUnit,
+      currency: config.currency,
+      orderId: orderId,
+      orderNumber: orderRecord.orderNumber,
+      prefill: {
+        email: normalizedEmail,
+        contact: contact,
+      },
+    };
+  }
+
+  /**
+   * Verify payment for a guest order
+   * Uses email instead of userId for ownership verification
+   */
+  async verifyGuestPayment(
+    orderId: string,
+    email: string,
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+  ): Promise<PaymentVerifyResponse> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const order = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (order.length === 0) {
+      throw new NotFoundError("Order not found");
+    }
+
+    const orderRecord = order[0];
+
+    if (!orderRecord.isGuest) {
+      throw new NotFoundError("Order not found");
+    }
+
+    if (orderRecord.guestEmail?.toLowerCase().trim() !== normalizedEmail) {
+      throw new NotFoundError("Order not found");
+    }
+
+    if (orderRecord.razorpayOrderId !== razorpayOrderId) {
+      throw new BadRequestError("Invalid Razorpay order ID");
+    }
+
+    const isValid = await paymentProvider.verifyPayment({
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      signature: razorpaySignature,
+    });
+
+    if (!isValid) {
+      await this.updatePaymentFailed(
+        orderId,
+        razorpayOrderId,
+        "invalid_signature",
+        "Signature verification failed",
+      );
+
+      throw new BadRequestError("Payment verification failed");
+    }
+
+    let paymentDetails: PaymentDetails | undefined;
+    try {
+      paymentDetails = await paymentProvider.getPaymentDetails(
+        razorpayPaymentId,
+      );
+    } catch (error) {
+      console.error("[PaymentService] Failed to get payment details:", error);
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(payments)
+        .set({
+          razorpayPaymentId: razorpayPaymentId,
+          razorpaySignature: razorpaySignature,
+          status: "captured",
+          method: paymentDetails?.method,
+          bank: paymentDetails?.bank,
+          wallet: paymentDetails?.wallet,
+          vpa: paymentDetails?.vpa,
+          cardLast4: paymentDetails?.card?.last4,
+          cardNetwork: paymentDetails?.card?.network,
+          cardType: paymentDetails?.card?.type,
+          email: paymentDetails?.email,
+          contact: paymentDetails?.contact,
+          paidAt: new Date(),
+          razorpayResponse: paymentDetails?.raw as Record<string, unknown>,
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.razorpayOrderId, razorpayOrderId));
+
+      await tx
+        .update(orders)
+        .set({
+          razorpayPaymentId: razorpayPaymentId,
+          paymentStatus: "paid",
+          status: "confirmed",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
+
+    // Send confirmation email (non-blocking)
+    this.sendOrderConfirmationEmail(orderId).catch((err) => {
+      console.error(
+        "[PaymentService] Failed to send guest confirmation email:",
+        err,
+      );
+    });
+
+    return {
+      success: true,
+      orderId: orderId,
+      orderNumber: orderRecord.orderNumber,
+      paymentId: razorpayPaymentId,
+      status: "captured",
+      message: "Payment successful",
+    };
+  }
+
+  /**
+   * Manual refund for non-Razorpay orders (COD, UPI, etc.)
+   * Admin only - restores stock atomically
+   */
+  async manualRefund(
+    orderId: string,
+    data: { reason?: string; transactionRef: string; refundDate: string },
+  ): Promise<RefundResponse> {
+    const order = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (order.length === 0) {
+      throw new NotFoundError("Order not found");
+    }
+
+    const orderRecord = order[0];
+
+    if (orderRecord.paymentStatus !== "paid") {
+      throw new BadRequestError("Order has not been paid");
+    }
+
+    if (orderRecord.status === "refunded") {
+      throw new BadRequestError("Order has already been refunded");
+    }
+
+    if (
+      orderRecord.paymentMethod === "razorpay" && orderRecord.razorpayPaymentId
+    ) {
+      throw new BadRequestError(
+        "This is a Razorpay order. Use the standard refund option instead.",
+      );
+    }
+
+    const refundAmount = parseFloat(orderRecord.totalAmount);
+
+    const items = await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    const refundNote = [
+      `[Manual Refund - ${
+        data.refundDate || new Date().toISOString().split("T")[0]
+      }]`,
+      `Reason: ${data.reason || "Admin initiated manual refund"}`,
+      `Amount: ${refundAmount.toFixed(2)}`,
+      `Txn Ref: ${data.transactionRef}`,
+      `Method: ${orderRecord.paymentMethod || "Manual"}`,
+    ].join(" | ");
+
+    const updatedNotes = orderRecord.adminNotes
+      ? `${orderRecord.adminNotes}\n${refundNote}`
+      : refundNote;
+
+    await db.transaction(async (tx) => {
+      const payment = await tx
+        .select()
+        .from(payments)
+        .where(eq(payments.orderId, orderId))
+        .limit(1);
+
+      if (payment.length > 0) {
+        await tx
+          .update(payments)
+          .set({
+            status: "refunded",
+            refundedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(payments.id, payment[0].id));
+      }
+
+      await tx
+        .update(orders)
+        .set({
+          paymentStatus: "refunded",
+          status: "refunded",
+          adminNotes: updatedNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+
+      for (const item of items) {
+        if (item.variantId) {
+          await tx
+            .update(productVariants)
+            .set({
+              stockQuantity:
+                sql`${productVariants.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(productVariants.id, item.variantId));
+        } else {
+          await tx
+            .update(products)
+            .set({
+              stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(products.id, item.productId));
+        }
+      }
+    });
+
+    return {
+      success: true,
+      refundId: `manual-${data.transactionRef}`,
+      amount: refundAmount,
+      status: "processed",
+    };
+  }
+
   /**
    * Send order confirmation email
    */
@@ -633,14 +995,20 @@ export class PaymentService {
 
       const orderRecord = order[0];
 
-      // Get user
-      const user = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, orderRecord.userId))
-        .limit(1);
+      // Get recipient email - from user or guest email
+      let recipientEmail: string | null = null;
+      if (orderRecord.isGuest) {
+        recipientEmail = orderRecord.guestEmail;
+      } else if (orderRecord.userId) {
+        const user = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, orderRecord.userId))
+          .limit(1);
+        recipientEmail = user[0]?.email ?? null;
+      }
 
-      if (user.length === 0) return;
+      if (!recipientEmail) return;
 
       // Get order items
       const items = await db
@@ -675,8 +1043,8 @@ export class PaymentService {
       }
 
       // Send email
-      await emailService.sendOrderConfirmationEmail(user[0].email, {
-        userName: shippingAddress.fullName || user[0].email,
+      await emailService.sendOrderConfirmationEmail(recipientEmail, {
+        userName: shippingAddress.fullName || recipientEmail,
         orderNumber: orderRecord.orderNumber,
         orderDate: orderRecord.createdAt.toLocaleDateString("en-IN", {
           year: "numeric",

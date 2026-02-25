@@ -8,6 +8,7 @@ import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
 import { AdminLayout } from "@/components/layout/AdminLayout.tsx";
 import { AccessDenied } from "@/components/admin/AccessDenied.tsx";
 import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
+import { formatDate, formatDateTime } from "@/lib/date.ts";
 
 interface ShowPageProps<T = Record<string, unknown>> {
   config: EntityConfig<T>;
@@ -146,10 +147,10 @@ export function ShowPage<T = Record<string, unknown>>(
           : <span class="badge badge-ghost">No</span>;
 
       case "date":
-        return new Date(value as string).toLocaleDateString();
+        return formatDate(value as string);
 
       case "datetime":
-        return new Date(value as string).toLocaleString();
+        return formatDateTime(value as string);
 
       case "status":
         return <span class="badge badge-primary badge-lg">{String(value)}

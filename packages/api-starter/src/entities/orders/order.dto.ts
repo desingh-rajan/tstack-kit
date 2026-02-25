@@ -7,7 +7,34 @@ import type {
 } from "./order.model.ts";
 
 /**
- * Checkout Validation Schema
+ * Guest Address Schema
+ * Inline address for guest checkout (not saved to addresses table).
+ * Uses relaxed validation -- customize regex patterns for your locale.
+ */
+export const GuestAddressSchema = z.object({
+  fullName: z.string().min(1, "Full name is required").max(
+    100,
+    "Name too long",
+  ),
+  phone: z.string()
+    .min(7, "Phone number is required")
+    .max(20, "Phone number too long"),
+  addressLine1: z.string()
+    .min(1, "Address line 1 is required")
+    .max(255, "Address too long"),
+  addressLine2: z.string().max(255, "Address too long").optional().nullable(),
+  city: z.string().min(1, "City is required").max(100, "City name too long"),
+  state: z.string().min(1, "State is required").max(100, "State name too long"),
+  postalCode: z.string()
+    .min(1, "Postal code is required")
+    .max(20, "Postal code too long"),
+  country: z.string().max(100).optional().default("US"),
+});
+
+export type GuestAddressDTO = z.infer<typeof GuestAddressSchema>;
+
+/**
+ * Checkout Validation Schema (Authenticated Users)
  * Validates cart before creating order
  */
 export const CheckoutValidateSchema = z.object({
@@ -19,7 +46,22 @@ export const CheckoutValidateSchema = z.object({
 export type CheckoutValidateDTO = z.infer<typeof CheckoutValidateSchema>;
 
 /**
- * Create Order Schema
+ * Guest Checkout Validation Schema
+ * Validates cart with inline addresses for guest users
+ */
+export const GuestCheckoutValidateSchema = z.object({
+  guestEmail: z.string().email("Valid email is required"),
+  shippingAddress: GuestAddressSchema,
+  billingAddress: GuestAddressSchema.optional(),
+  useSameAddress: z.boolean().default(true),
+});
+
+export type GuestCheckoutValidateDTO = z.infer<
+  typeof GuestCheckoutValidateSchema
+>;
+
+/**
+ * Create Order Schema (Authenticated Users)
  * Creates order from validated cart
  */
 export const CreateOrderSchema = z.object({
@@ -31,6 +73,32 @@ export const CreateOrderSchema = z.object({
 });
 
 export type CreateOrderDTO = z.infer<typeof CreateOrderSchema>;
+
+/**
+ * Guest Create Order Schema
+ * Creates order for guest users with inline addresses
+ */
+export const GuestCreateOrderSchema = z.object({
+  guestEmail: z.string().email("Valid email is required"),
+  shippingAddress: GuestAddressSchema,
+  billingAddress: GuestAddressSchema.optional(),
+  useSameAddress: z.boolean().default(true),
+  paymentMethod: z.enum(["razorpay", "cod"]).default("razorpay"),
+  customerNotes: z.string().max(500, "Notes too long").optional(),
+});
+
+export type GuestCreateOrderDTO = z.infer<typeof GuestCreateOrderSchema>;
+
+/**
+ * Track Order Schema
+ * Allows guests to track orders by order number and email
+ */
+export const TrackOrderSchema = z.object({
+  orderNumber: z.string().min(1, "Order number is required"),
+  email: z.string().email("Valid email is required"),
+});
+
+export type TrackOrderDTO = z.infer<typeof TrackOrderSchema>;
 
 /**
  * Update Order Status Schema (Admin)
@@ -56,6 +124,7 @@ export type UpdateOrderStatusDTO = z.infer<typeof UpdateOrderStatusSchema>;
 export const OrderListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
+  pageSize: z.coerce.number().int().positive().max(100).optional(),
   status: z.enum([
     "pending",
     "confirmed",
@@ -125,7 +194,10 @@ export interface StockIssue {
 export interface OrderResponseDTO {
   id: string;
   orderNumber: string;
-  userId: number;
+  userId: number | null;
+  isGuest: boolean;
+  guestEmail: string | null;
+  guestPhone: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   subtotal: string;
@@ -141,6 +213,12 @@ export interface OrderResponseDTO {
   items: OrderItemResponse[];
   createdAt: Date;
   updatedAt: Date;
+  user?: {
+    id: number;
+    email: string;
+    phone?: string;
+    username?: string;
+  };
 }
 
 /**
@@ -150,6 +228,7 @@ export interface OrderListResponseDTO {
   orders: OrderSummaryDTO[];
   pagination: {
     page: number;
+    pageSize: number;
     limit: number;
     total: number;
     totalPages: number;
@@ -166,7 +245,16 @@ export interface OrderSummaryDTO {
   paymentStatus: PaymentStatus;
   totalAmount: string;
   itemCount: number;
+  isGuest: boolean;
+  guestEmail: string | null;
+  guestPhone: string | null;
   createdAt: Date;
+  user?: {
+    id: number;
+    email: string;
+    phone?: string;
+    username?: string;
+  };
 }
 
 /**
@@ -175,8 +263,25 @@ export interface OrderSummaryDTO {
 export interface CreateOrderResponseDTO extends OrderResponseDTO {
   razorpay?: {
     orderId: string;
-    amount: number; // In paise
+    amount: number; // In smallest currency unit (e.g. paise for INR, cents for USD)
     currency: string;
     key: string; // Public key for frontend
   };
+}
+
+/**
+ * Track Order Response DTO
+ * Sanitized order data for guest order tracking
+ */
+export interface TrackOrderResponseDTO {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  totalAmount: string;
+  paymentMethod: string | null;
+  shippingAddress: AddressSnapshot | null;
+  items: OrderItemResponse[];
+  createdAt: Date;
+  updatedAt: Date;
 }

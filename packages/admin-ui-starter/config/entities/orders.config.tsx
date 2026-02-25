@@ -9,6 +9,8 @@ import type {
   PaymentStatus,
 } from "@/entities/orders/order.types.ts";
 import { orderService } from "@/entities/orders/order.service.ts";
+import { formatCurrency } from "@/lib/currency.ts";
+import { formatDateTime } from "@/lib/date.ts";
 
 // Status badge colors
 const statusColors: Record<OrderStatus, string> = {
@@ -62,11 +64,48 @@ export const orderConfig: EntityConfig<Order> = {
       showInForm: false,
       sortable: true,
       searchable: true,
-      render: (value) => (
-        <span class="font-mono font-semibold text-primary">
+      render: (value, record) => (
+        <a
+          href={`/admin/orders/${(record as unknown as Order).id}`}
+          class="font-mono font-semibold text-primary hover:underline"
+        >
           {value as string}
-        </span>
+        </a>
       ),
+    },
+    {
+      name: "isGuest",
+      label: "Customer",
+      type: "custom",
+      showInList: true,
+      showInShow: true,
+      showInForm: false,
+      render: (_value, record) => {
+        const order = record as unknown as Order;
+        if (order.isGuest) {
+          return (
+            <div class="flex items-center gap-2">
+              <span class="badge badge-ghost badge-sm">Guest</span>
+              <div class="text-sm">
+                <div class="font-medium">{order.guestEmail}</div>
+                {order.guestPhone && (
+                  <div class="text-xs text-base-content/60">
+                    {order.guestPhone}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        if (order.user) {
+          return (
+            <div class="text-sm">
+              <div class="font-medium">{order.user.email}</div>
+            </div>
+          );
+        }
+        return <span class="text-base-content/50">N/A</span>;
+      },
     },
     {
       name: "status",
@@ -110,10 +149,7 @@ export const orderConfig: EntityConfig<Order> = {
       sortable: true,
       render: (value) => (
         <span class="font-semibold">
-          {new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency: "INR",
-          }).format(parseFloat(value as string))}
+          {formatCurrency(value as string)}
         </span>
       ),
     },
@@ -137,14 +173,14 @@ export const orderConfig: EntityConfig<Order> = {
       ),
     },
     {
-      name: "shippingAddressSnapshot",
+      name: "shippingAddress",
       label: "Shipping Address",
       type: "custom",
       showInList: false,
       showInShow: true,
       showInForm: false,
       render: (value) => {
-        const addr = value as Order["shippingAddressSnapshot"];
+        const addr = value as Order["shippingAddress"];
         if (!addr) return <span class="text-base-content/50">No address</span>;
         return (
           <div class="text-sm">
@@ -167,11 +203,7 @@ export const orderConfig: EntityConfig<Order> = {
       showInList: false,
       showInShow: true,
       showInForm: false,
-      render: (value) =>
-        new Intl.NumberFormat("en-IN", {
-          style: "currency",
-          currency: "INR",
-        }).format(parseFloat(value as string)),
+      render: (value) => formatCurrency(value as string),
     },
     {
       name: "taxAmount",
@@ -180,11 +212,7 @@ export const orderConfig: EntityConfig<Order> = {
       showInList: false,
       showInShow: true,
       showInForm: false,
-      render: (value) =>
-        new Intl.NumberFormat("en-IN", {
-          style: "currency",
-          currency: "INR",
-        }).format(parseFloat(value as string)),
+      render: (value) => formatCurrency(value as string),
     },
     {
       name: "shippingAmount",
@@ -198,10 +226,7 @@ export const orderConfig: EntityConfig<Order> = {
         if (amount === 0) {
           return <span class="text-success font-semibold">FREE</span>;
         }
-        return new Intl.NumberFormat("en-IN", {
-          style: "currency",
-          currency: "INR",
-        }).format(amount);
+        return formatCurrency(amount);
       },
     },
     {
@@ -229,13 +254,11 @@ export const orderConfig: EntityConfig<Order> = {
       showInForm: false,
       sortable: true,
       render: (value) => {
-        const date = new Date(value as string);
         return (
           <span>
-            {date.toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
+            {formatDateTime(value as string, {
+              hour: undefined,
+              minute: undefined,
             })}
           </span>
         );
@@ -273,6 +296,16 @@ export const orderConfig: EntityConfig<Order> = {
         { value: "paid", label: "Paid" },
         { value: "failed", label: "Failed" },
         { value: "refunded", label: "Refunded" },
+      ],
+    },
+    {
+      name: "isGuest",
+      label: "Customer Type",
+      type: "select",
+      options: [
+        { value: "", label: "All Customers" },
+        { value: "true", label: "Guest Orders" },
+        { value: "false", label: "Registered Users" },
       ],
     },
   ],

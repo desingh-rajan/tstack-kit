@@ -21,6 +21,8 @@ import type {
   IEmailProvider,
 } from "./email-provider.interface.ts";
 import {
+  type AdminOrderNotificationEmailData,
+  adminOrderNotificationEmailTemplate,
   type OrderCancelledEmailData,
   orderCancelledEmailTemplate,
   type OrderConfirmationEmailData,
@@ -29,6 +31,8 @@ import {
   orderDeliveredEmailTemplate,
   type OrderProcessingEmailData,
   orderProcessingEmailTemplate,
+  type OrderRefundedEmailData,
+  orderRefundedEmailTemplate,
   type OrderShippedEmailData,
   orderShippedEmailTemplate,
   type PasswordResetEmailData,
@@ -293,6 +297,72 @@ export class EmailService {
       html,
       text,
     });
+  }
+
+  /**
+   * Send an order refunded email
+   */
+  sendOrderRefundedEmail(
+    to: string,
+    data: Omit<
+      OrderRefundedEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: OrderRefundedEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+      supportEmail: this.config.supportEmail,
+    };
+
+    const { subject, html, text } = orderRefundedEmailTemplate(fullData);
+
+    return this.provider.send({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  /**
+   * Send an admin order notification email
+   * Supports sending to multiple admin emails (comma-separated or array)
+   */
+  async sendAdminOrderNotificationEmail(
+    to: string | string[],
+    data: Omit<
+      AdminOrderNotificationEmailData,
+      "appName" | "storeUrl"
+    >,
+  ): Promise<EmailResult> {
+    const fullData: AdminOrderNotificationEmailData = {
+      ...data,
+      appName: this.config.appName,
+      storeUrl: this.config.storeUrl || this.config.appUrl,
+    };
+
+    const { subject, html, text } = adminOrderNotificationEmailTemplate(
+      fullData,
+    );
+
+    // Support comma-separated email string or array
+    const recipients = Array.isArray(to)
+      ? to
+      : to.split(",").map((e) => e.trim()).filter(Boolean);
+
+    let lastResult: EmailResult = { success: false };
+    for (const recipient of recipients) {
+      lastResult = await this.provider.send({
+        to: recipient,
+        subject,
+        html,
+        text,
+      });
+    }
+
+    return lastResult;
   }
 
   /**

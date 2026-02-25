@@ -1,7 +1,5 @@
 import { useSignal } from "@preact/signals";
 
-const API_URL = "http://localhost:8000";
-
 interface FormData {
   name: string;
   email: string;
@@ -42,7 +40,7 @@ export default function ContactForm() {
     error.value = null;
 
     try {
-      const response = await fetch(`${API_URL}/contact`, {
+      const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

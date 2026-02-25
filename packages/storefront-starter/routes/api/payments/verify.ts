@@ -1,35 +1,58 @@
 /**
  * Payment Verification API Route
  * Proxies payment verification to the backend
+ * Supports both authenticated and guest payment flows
  */
 
 import { define } from "@/utils.ts";
 import { api } from "@/lib/api.ts";
-import { getSessionToken } from "@/lib/auth.ts";
+import { getGuestId, getSessionToken } from "@/lib/auth.ts";
 
 export const handler = define.handlers({
   async POST(ctx) {
     const token = getSessionToken(ctx);
-    if (!token) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Unauthorized" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
+    const guestId = getGuestId(ctx);
 
     try {
       const body = await ctx.req.json();
-      api.setToken(token);
 
-      const response = await api.verifyPayment({
-        orderId: body.orderId,
-        razorpayOrderId: body.razorpayOrderId,
-        razorpayPaymentId: body.razorpayPaymentId,
-        razorpaySignature: body.razorpaySignature,
-      });
+      // Determine if this is a guest payment (has email field, no auth token)
+      const isGuestPayment = !token && body.email;
+
+      if (!token && !isGuestPayment) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Unauthorized" }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      let response;
+
+      if (isGuestPayment) {
+        // Guest payment verification
+        if (guestId) {
+          api.setGuestId(guestId);
+        }
+        response = await api.verifyGuestPayment({
+          orderId: body.orderId,
+          razorpayOrderId: body.razorpayOrderId,
+          razorpayPaymentId: body.razorpayPaymentId,
+          razorpaySignature: body.razorpaySignature,
+          email: body.email,
+        });
+      } else {
+        // Authenticated payment verification
+        api.setToken(token!);
+        response = await api.verifyPayment({
+          orderId: body.orderId,
+          razorpayOrderId: body.razorpayOrderId,
+          razorpayPaymentId: body.razorpayPaymentId,
+          razorpaySignature: body.razorpaySignature,
+        });
+      }
 
       return new Response(JSON.stringify(response), {
         status: response.success ? 200 : 400,

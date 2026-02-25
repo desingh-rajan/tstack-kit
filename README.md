@@ -46,6 +46,7 @@ my-shop/
 - JWT auth + OAuth (Google) ready
 - Admin panel with CRUD for all entities
 - E-commerce: Products, Cart, Orders, Payments
+- Guest checkout with order tracking
 - 255+ tests included (70% coverage)
 
 ---
@@ -92,14 +93,14 @@ predictably.
 
 ### Scalable by Design
 
-| Your Stage                   | Architectural Guarantee                                               |
-| ---------------------------- | --------------------------------------------------------------------- |
-| **Portfolio site**           | **Minimal Footprint**. Contact forms, content management included.    |
-| **Product catalog**          | **Structured Data**. Listings, categories, admin panel built-in.      |
-| **E-commerce store**         | **Transaction Ready**. Carts, checkout, payments pre-configured.      |
-| **MVP testing**              | **Containerized**. Local Docker development fully configured.         |
-| **Scaling up**               | **Modular**. Architecture designed for microservices extraction.      |
-| **Enterprise multi-service** | **Orchestration Ready**. Docker compose and future k8s paths aligned. |
+| Your Stage                   | Architectural Guarantee                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| **Portfolio site**           | **Minimal Footprint**. Contact forms, content management included.                    |
+| **Product catalog**          | **Structured Data**. Listings, categories, admin panel built-in.                      |
+| **E-commerce store**         | **Transaction Ready**. Carts, checkout (guest + registered), payments pre-configured. |
+| **MVP testing**              | **Containerized**. Local Docker development fully configured.                         |
+| **Scaling up**               | **Modular**. Architecture designed for microservices extraction.                      |
+| **Enterprise multi-service** | **Orchestration Ready**. Docker compose and future k8s paths aligned.                 |
 
 ---
 
@@ -193,16 +194,19 @@ Entity automatically appears in Admin UI sidebar.
 | **Base Abstractions**    | 70-80% less code with BaseService/BaseController                       |
 | **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                |
 | **Storefront**           | Public e-commerce site with Fresh + Tailwind                           |
+| **Guest Checkout**       | Full purchase flow without account creation (guest orders + payments)  |
+| **Order Tracking**       | Public order lookup by email + order number                            |
 | **Type-Safe**            | Full TypeScript from database to API                                   |
 | **JWT Auth**             | Authentication system + password reset flow                            |
 | **OAuth Providers**      | Google & Facebook OAuth integration ready                              |
 | **RBAC**                 | Role-based access (user/admin/superadmin)                              |
 | **PostgreSQL**           | Three-database setup (dev/test/prod)                                   |
 | **Advanced Pagination**  | Filterable tables with date pickers & search                           |
-| **Email Templates**      | Order notifications (processing, shipped, delivered)                   |
+| **Email Templates**      | Order notifications (confirmation, processing, shipped, delivered)     |
 | **Kamal Deployment**     | One-command production deployment via `tstack infra`                   |
 | **255+ Tests**           | 70% coverage with real PostgreSQL integration tests                    |
-| **Docker Ready**         | docker-compose included                                                |
+| **Docker Ready**         | docker-compose included with internal networking support               |
+| **Health Checks**        | `/health` endpoint on all services for container orchestration         |
 
 ---
 
@@ -320,11 +324,18 @@ my-project-admin-ui/
 
 ```text
 my-project-store/
-├── components/              # Reusable UI components (Hero, Features, etc.)
+├── components/              # Reusable UI components (Navbar, Hero, Footer)
 ├── islands/                 # Interactive Preact islands
+├── lib/
+│   ├── api.ts               # API client (SSR_API_URL, guest methods)
+│   └── auth.ts              # Auth helpers (requireAuth, optionalAuth, guest ID)
 ├── routes/                  # Fresh file-based routing
+│   ├── _middleware.ts        # Session + cart resolution
+│   ├── track-order.tsx       # Public order tracking
+│   ├── checkout/             # Guest + authenticated checkout
+│   └── api/                  # Server-side proxy routes
 ├── static/                  # Static assets
-├── main.ts                  # Fresh entry point
+├── main.ts                  # Fresh entry + /health endpoint
 ├── deno.json                # Tasks & config
 └── vite.config.ts           # Vite + Tailwind
 ````

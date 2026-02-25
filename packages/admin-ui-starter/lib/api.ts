@@ -27,7 +27,7 @@ export class ApiClient implements Record<string, unknown> {
   [key: string]: unknown;
 
   constructor(
-    baseUrl: string = API_BASE_URL,
+    baseUrl: string = SSR_API_URL,
     token: string | null = null,
   ) {
     this.baseUrl = baseUrl;

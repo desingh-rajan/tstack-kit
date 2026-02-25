@@ -29,10 +29,12 @@ import {
   EmailService,
 } from "../providers/email/index.ts";
 import type {
+  AdminOrderNotificationEmailData,
   OrderCancelledEmailData,
   OrderConfirmationEmailData,
   OrderDeliveredEmailData,
   OrderProcessingEmailData,
+  OrderRefundedEmailData,
   OrderShippedEmailData,
 } from "../providers/email/templates/index.ts";
 
@@ -211,6 +213,38 @@ export class NotificationService {
     await this.safeRun(
       `order cancelled email (${data.orderNumber})`,
       (service) => service.sendOrderCancelledEmail(to, data),
+    );
+  }
+
+  /**
+   * Send order refunded email
+   */
+  async sendOrderRefundedEmail(
+    to: string,
+    data: Omit<
+      OrderRefundedEmailData,
+      "appName" | "storeUrl" | "supportEmail"
+    >,
+  ): Promise<void> {
+    await this.safeRun(
+      `order refunded email (${data.orderNumber})`,
+      (service) => service.sendOrderRefundedEmail(to, data),
+    );
+  }
+
+  /**
+   * Send admin order notification email
+   */
+  async sendAdminOrderNotificationEmail(
+    to: string | string[],
+    data: Omit<
+      AdminOrderNotificationEmailData,
+      "appName" | "storeUrl"
+    >,
+  ): Promise<void> {
+    await this.safeRun(
+      `admin order notification (${data.eventType} - ${data.orderNumber})`,
+      (service) => service.sendAdminOrderNotificationEmail(to, data),
     );
   }
 }

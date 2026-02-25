@@ -10,16 +10,21 @@ import type {
   UpdateOrderStatusRequest,
 } from "./order.types.ts";
 
+// Use internal Docker URL for SSR to avoid public URL roundtrip
+const API_INTERNAL_URL = typeof Deno !== "undefined"
+  ? Deno.env.get("API_INTERNAL_URL")
+  : undefined;
 const API_BASE_URL = typeof Deno !== "undefined"
   ? Deno.env.get("API_BASE_URL") || "http://localhost:8000"
   : "http://localhost:8000";
+const SSR_API_URL = API_INTERNAL_URL || API_BASE_URL;
 
 export class OrderService {
   private client: ApiClient;
   private basePath = "/ts-admin/orders";
 
   constructor(token?: string) {
-    this.client = new ApiClient(API_BASE_URL, token || null);
+    this.client = new ApiClient(SSR_API_URL, token || null);
   }
 
   setToken(token: string | null): void {
@@ -31,6 +36,7 @@ export class OrderService {
    */
   list(params?: {
     page?: number;
+    pageSize?: number;
     limit?: number;
     status?: string;
     paymentStatus?: string;
@@ -40,7 +46,10 @@ export class OrderService {
   }): Promise<OrderListResponse> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", String(params.page));
-    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const effectivePageSize = params?.pageSize ?? params?.limit;
+    if (effectivePageSize) {
+      searchParams.set("pageSize", String(effectivePageSize));
+    }
     if (params?.status) searchParams.set("status", params.status);
     if (params?.paymentStatus) {
       searchParams.set("paymentStatus", params.paymentStatus);

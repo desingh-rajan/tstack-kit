@@ -105,11 +105,37 @@ Manage your catalog complexity with ease.
 
 Transactional integrity for serious business.
 
-- **Shopping Cart**: Persistent cart logic with guest support.
-- **Order Lifecycle**: State machine for order status (Pending → Paid →
-  Shipped).
-- **Payments**: Abstracted payment processing layer.
+- **Shopping Cart**: Persistent cart logic with guest identity support
+  (`X-Guest-Id` header).
+- **Guest Checkout**: Full purchase flow without account creation. Orders store
+  `guestEmail`, `guestPhone`, and `isGuest` flag. Guest routes are placed before
+  the auth middleware.
+- **Order Lifecycle**: State machine for order status (Pending -> Paid ->
+  Shipped -> Delivered). Includes `insertOrderWithRetry` for order number
+  collision handling.
+- **Order Tracking**: Public endpoint (`POST /orders/track`) to look up orders
+  by email + order number without authentication.
+- **Payments**: Razorpay integration with separate guest and authenticated
+  flows. Includes manual refund support for admin.
 - **Address Book**: User shipping/billing address management.
+
+### 4. Email & Notification System
+
+Transactional email support via Resend or AWS SES.
+
+- **Email Templates**: Order confirmation, processing, shipped, delivered, and
+  refunded notifications.
+- **Admin Notifications**: Automatic email to admin on new order placement.
+- **Notification Service**: Centralized service for dispatching order lifecycle
+  emails.
+
+### 5. Site Settings & Feature Flags
+
+Runtime configuration via `site_settings` table:
+
+- **Payment Method Flags**: `enableRazorpay`, `enableCOD`, `enableSelfPickup`
+- **Notification Flags**: `OrderNotifications` to toggle order emails
+- **Dynamic Config**: Update settings without redeployment
 
 ---
 
@@ -241,6 +267,10 @@ export const publicRoutes = BaseRouteFactory.createCrudRoutes({ ... });
 | `DATABASE_URL`            | **Critical** | PostgreSQL connection string.                        |
 | `JWT_SECRET`              | **Critical** | 64-char hex string for signing tokens.               |
 | `ENVIRONMENT`             | High         | `development`, `test`, or `production`.              |
+| `APP_URL`                 | High         | API base URL (e.g., `https://api.example.com`).      |
+| `STOREFRONT_URL`          | High         | Storefront URL for email links.                      |
+| `APP_CURRENCY`            | Optional     | Currency code for formatting (default: `INR`).       |
+| `DB_POOL_SIZE`            | Optional     | Database connection pool size.                       |
 | `GOOGLE_CLIENT_ID`        | Auth         | Google OAuth Client ID.                              |
 | `GOOGLE_CLIENT_SECRET`    | Auth         | Google OAuth Client Secret.                          |
 | `RAZORPAY_KEY_ID`         | Payments     | Razorpay API Key ID.                                 |

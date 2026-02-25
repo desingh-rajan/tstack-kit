@@ -1,18 +1,23 @@
 /**
  * Cart Page
+ * Supports both authenticated users and guest users
  */
 
 import { define } from "@/utils.ts";
 import { api } from "@/lib/api.ts";
-import { requireAuth } from "@/lib/auth.ts";
+import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const token = requireAuth(ctx, "/cart");
-    if (token instanceof Response) return token;
+    const { token, guestId } = optionalAuth(ctx);
 
-    api.setToken(token);
+    if (token) {
+      api.setToken(token);
+    } else if (guestId) {
+      api.setGuestId(guestId);
+    }
+
     const cartResponse = await api.getCart();
 
     return {
@@ -20,15 +25,20 @@ export const handler = define.handlers({
         cart: cartResponse.data || null,
         error: cartResponse.success ? null : cartResponse.error,
         user: ctx.state.user,
+        isGuest: !token,
       },
     };
   },
 
   async POST(ctx) {
-    const token = requireAuth(ctx, "/cart");
-    if (token instanceof Response) return token;
+    const { token, guestId } = optionalAuth(ctx);
 
-    api.setToken(token);
+    if (token) {
+      api.setToken(token);
+    } else if (guestId) {
+      api.setGuestId(guestId);
+    }
+
     const formData = await ctx.req.formData();
     const action = formData.get("action") as string;
 
@@ -71,6 +81,7 @@ export const handler = define.handlers({
         cart: cartResponse.data || null,
         error: error || (cartResponse.success ? null : cartResponse.error),
         user: ctx.state.user,
+        isGuest: !token,
       },
     };
   },

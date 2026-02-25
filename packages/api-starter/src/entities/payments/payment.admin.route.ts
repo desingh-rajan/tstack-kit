@@ -22,4 +22,10 @@ adminPaymentRoutes.post(
   (c) => adminPaymentController.refund(c),
 );
 
+// Record manual refund (for COD/UPI orders)
+adminPaymentRoutes.post(
+  "/ts-admin/payments/:orderId/manual-refund",
+  (c) => adminPaymentController.manualRefund(c),
+);
+
 export default adminPaymentRoutes;
