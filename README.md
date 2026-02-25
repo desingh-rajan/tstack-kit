@@ -251,6 +251,82 @@ deno task db:studio        # Open Drizzle Studio
 
 ---
 
+## Running Tests
+
+Three packages have test suites: `cli`, `admin`, and `api-starter`.
+
+### CLI (no database required)
+
+```bash
+cd packages/cli && deno task test
+```
+
+The default CLI test suite mocks all database operations. To run the full
+integration suite that actually creates/destroys real databases:
+
+```bash
+cd packages/cli
+TSTACK_TEST_DB=true PGUSER=your_user PGPASSWORD=your_password deno task test:db
+```
+
+#### Leftover test databases
+
+If a test run is interrupted, test databases may be left behind. Clean them up
+with:
+
+```bash
+cd packages/cli
+PGUSER=your_user PGPASSWORD=your_password deno task cleanup:test-dbs
+```
+
+### Admin
+
+Requires a local PostgreSQL server. Tests default to user `postgres` with
+password `password`. If your local PostgreSQL uses a different user:
+
+```bash
+cd packages/admin
+PGUSER=your_user PGPASSWORD=your_password deno task test
+```
+
+### API Starter
+
+Requires a local PostgreSQL server. Before running tests, create a
+`.env.test.local` file (gitignored) with your database credentials:
+
+```bash
+cd packages/api-starter
+cp .env.example .env.test.local
+```
+
+Edit `.env.test.local`:
+
+```dotenv
+ENVIRONMENT=test
+DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/tstack_starter_test
+```
+
+Then run:
+
+```bash
+deno task test
+```
+
+> **Common pitfalls**:
+>
+> - Tests fail with "password authentication failed" → wrong PostgreSQL
+>   credentials. Update `PGUSER`/`PGPASSWORD` (CLI, admin) or `DATABASE_URL` in
+>   `.env.test.local` (api-starter).
+> - Tests fail with `role "postgres" does not exist` → your system's default
+>   PostgreSQL user is not `postgres`. Pass your actual username via `PGUSER`.
+> - `api-starter` tests fail with "no such file or directory" for
+>   `.env.test.local` → run `cp .env.example .env.test.local` and set your
+>   credentials.
+> - The test runner creates and destroys test databases automatically. You only
+>   need a PostgreSQL user with `CREATEDB` privileges.
+
+---
+
 ## GitHub Integration
 
 To use `--github-org` flag for automatic GitHub repository creation:

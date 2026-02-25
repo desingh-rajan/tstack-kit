@@ -491,7 +491,7 @@ describe({
       assertEquals(res.status, 200);
 
       const data = await res.json();
-      assertEquals(data.data.count, 6);
+      assertEquals(data.data.count, 7);
     });
   });
 });

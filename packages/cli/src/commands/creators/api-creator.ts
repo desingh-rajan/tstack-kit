@@ -35,8 +35,8 @@ export class ApiProjectCreator extends BaseProjectCreator {
       // In test mode, still set credentials for metadata but don't prompt
       this.credentials = {
         dbName: this.folderName.replace(/-/g, "_") + "_dev",
-        dbUser: "postgres",
-        dbPassword: "password",
+        dbUser: Deno.env.get("PGUSER") || "postgres",
+        dbPassword: Deno.env.get("PGPASSWORD") || "password",
       };
     }
 

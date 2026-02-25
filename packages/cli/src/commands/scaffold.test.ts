@@ -27,6 +27,8 @@ async function dropWorkspaceDatabases(workspaceName: string): Promise<void> {
   // Convert workspace name to database prefix: test-workspace-123 -> test_workspace_123_api
   const dbPrefix = workspaceName.replace(/-/g, "_") + "_api";
   const envs = ["dev", "test", "prod"];
+  const pgUser = Deno.env.get("PGUSER") || "postgres";
+  const pgPassword = Deno.env.get("PGPASSWORD") || "password";
 
   for (const env of envs) {
     const dbName = `${dbPrefix}_${env}`;
@@ -34,13 +36,15 @@ async function dropWorkspaceDatabases(workspaceName: string): Promise<void> {
       const cmd = new Deno.Command("psql", {
         args: [
           "-U",
+          pgUser,
+          "-d",
           "postgres",
           "-h",
           "localhost",
           "-c",
           `DROP DATABASE IF EXISTS ${dbName}`,
         ],
-        env: { PGPASSWORD: "password" },
+        env: { PGPASSWORD: pgPassword },
         stdout: "piped",
         stderr: "piped",
       });

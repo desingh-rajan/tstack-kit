@@ -28,6 +28,8 @@ async function dropDatabaseWithPassword(
       args: [
         "-U",
         dbUser,
+        "-d",
+        "postgres",
         "-h",
         "localhost",
         "-c",
@@ -132,8 +134,8 @@ async function dropDatabases(
     { name: prodDbName, label: "Production database" },
   ];
 
-  const dbUser = "postgres";
-  const dbPassword = "password";
+  const dbUser = Deno.env.get("PGUSER") || "postgres";
+  const dbPassword = Deno.env.get("PGPASSWORD") || "password";
 
   for (const { name, label } of databases) {
     let dropped = false;

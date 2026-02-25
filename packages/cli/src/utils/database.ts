@@ -19,18 +19,20 @@ export function promptForCredentials(
   // Convert project name to database name: blog-api -> blog_api_dev
   const defaultDbName = projectName.replace(/-/g, "_") + "_dev";
 
+  const dbUser = Deno.env.get("PGUSER") || "postgres";
+  const dbPassword = Deno.env.get("PGPASSWORD") || "password";
+
   Logger.subtitle("Database Configuration:");
   Logger.newLine();
   Logger.info(`Development: ${defaultDbName}`);
   Logger.info(`Test: ${projectName.replace(/-/g, "_")}_test`);
-  Logger.info(`User: postgres (shared for all projects)`);
-  Logger.info(`Password: password (default for local dev)`);
+  Logger.info(`User: ${dbUser}`);
   Logger.newLine();
 
   return {
     dbName: defaultDbName,
-    dbUser: "postgres",
-    dbPassword: "password",
+    dbUser,
+    dbPassword,
   };
 }
 
@@ -47,6 +49,8 @@ async function createDatabaseWithPassword(
       args: [
         "-U",
         dbUser,
+        "-d",
+        "postgres",
         "-h",
         "localhost",
         "-c",

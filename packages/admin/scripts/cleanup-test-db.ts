@@ -5,18 +5,22 @@
 
 // Admin package uses its own test database
 const dbName = "tstack_admin_test";
+const dbUser = Deno.env.get("PGUSER") || "postgres";
+const dbPassword = Deno.env.get("PGPASSWORD") || "password";
 
 try {
   const cmd = new Deno.Command("psql", {
     args: [
       "-U",
-      "postgres",
+      dbUser,
       "-h",
       "localhost",
+      "-d",
+      "postgres",
       "-c",
       `DROP DATABASE IF EXISTS ${dbName}`,
     ],
-    env: { PGPASSWORD: "password" },
+    env: { PGPASSWORD: dbPassword },
     stdout: "piped",
     stderr: "piped",
   });
