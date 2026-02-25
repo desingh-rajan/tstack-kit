@@ -271,7 +271,7 @@ export class PaymentService {
     }
 
     // Get payment details from provider
-    let paymentDetails;
+    let paymentDetails: PaymentDetails | undefined;
     try {
       paymentDetails = await paymentProvider.getPaymentDetails(
         razorpayPaymentId,
@@ -519,11 +519,13 @@ export class PaymentService {
     switch (webhookEvent.event) {
       case "payment.captured": {
         // Payment successful - update order if not already updated
-        if (webhookEvent.orderId && webhookEvent.payment) {
+        const capturedOrderId = webhookEvent.orderId;
+        const capturedPayment = webhookEvent.payment;
+        if (capturedOrderId && capturedPayment) {
           const order = await db
             .select()
             .from(orders)
-            .where(eq(orders.razorpayOrderId, webhookEvent.orderId))
+            .where(eq(orders.razorpayOrderId, capturedOrderId))
             .limit(1);
 
           if (order.length > 0 && order[0].paymentStatus !== "paid") {
@@ -531,22 +533,22 @@ export class PaymentService {
               await tx
                 .update(payments)
                 .set({
-                  razorpayPaymentId: webhookEvent.payment.id,
+                  razorpayPaymentId: capturedPayment.id,
                   status: "captured",
-                  method: webhookEvent.payment.method,
-                  bank: webhookEvent.payment.bank,
-                  wallet: webhookEvent.payment.wallet,
-                  vpa: webhookEvent.payment.vpa,
+                  method: capturedPayment.method,
+                  bank: capturedPayment.bank,
+                  wallet: capturedPayment.wallet,
+                  vpa: capturedPayment.vpa,
                   paidAt: new Date(),
                   razorpayResponse: webhookEvent.raw as Record<string, unknown>,
                   updatedAt: new Date(),
                 })
-                .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+                .where(eq(payments.razorpayOrderId, capturedOrderId));
 
               await tx
                 .update(orders)
                 .set({
-                  razorpayPaymentId: webhookEvent.payment.id,
+                  razorpayPaymentId: capturedPayment.id,
                   paymentStatus: "paid",
                   status: "confirmed",
                   updatedAt: new Date(),
@@ -563,11 +565,12 @@ export class PaymentService {
 
       case "payment.failed": {
         // Payment failed
-        if (webhookEvent.orderId) {
+        const failedOrderId = webhookEvent.orderId;
+        if (failedOrderId) {
           const order = await db
             .select()
             .from(orders)
-            .where(eq(orders.razorpayOrderId, webhookEvent.orderId))
+            .where(eq(orders.razorpayOrderId, failedOrderId))
             .limit(1);
 
           await db.transaction(async (tx) => {
@@ -579,7 +582,7 @@ export class PaymentService {
                 razorpayResponse: webhookEvent.raw as Record<string, unknown>,
                 updatedAt: new Date(),
               })
-              .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+              .where(eq(payments.razorpayOrderId, failedOrderId));
 
             if (order.length > 0) {
               await tx
@@ -598,11 +601,12 @@ export class PaymentService {
       case "refund.created":
       case "refund.processed": {
         // Refund processed
-        if (webhookEvent.orderId) {
+        const refundOrderId = webhookEvent.orderId;
+        if (refundOrderId) {
           const order = await db
             .select()
             .from(orders)
-            .where(eq(orders.razorpayOrderId, webhookEvent.orderId))
+            .where(eq(orders.razorpayOrderId, refundOrderId))
             .limit(1);
 
           await db.transaction(async (tx) => {
@@ -614,7 +618,7 @@ export class PaymentService {
                 razorpayResponse: webhookEvent.raw as Record<string, unknown>,
                 updatedAt: new Date(),
               })
-              .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+              .where(eq(payments.razorpayOrderId, refundOrderId));
 
             if (order.length > 0) {
               await tx
