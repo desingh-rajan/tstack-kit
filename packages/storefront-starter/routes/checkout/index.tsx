@@ -4,7 +4,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { type Address, api, type Cart, type GuestAddress } from "@/lib/api.ts";
+import type { Address, Cart, GuestAddress } from "@/lib/api.ts";
 import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
@@ -24,6 +24,7 @@ export const handler = define.handlers({
   async GET(ctx) {
     const { token, guestId } = optionalAuth(ctx);
     const isGuest = !token;
+    const api = ctx.state.api;
 
     if (token) {
       api.setToken(token);
@@ -62,6 +63,7 @@ export const handler = define.handlers({
   async POST(ctx) {
     const { token, guestId } = optionalAuth(ctx);
     const isGuest = !token;
+    const api = ctx.state.api;
 
     if (token) {
       api.setToken(token);

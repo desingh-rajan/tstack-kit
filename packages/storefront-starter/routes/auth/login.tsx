@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 import { setSessionCookie } from "@/lib/auth.ts";
 
 export const handler = define.handlers({
@@ -40,7 +40,7 @@ export const handler = define.handlers({
       };
     }
 
-    const response = await api.login(email, password);
+    const response = await ctx.state.api.login(email, password);
 
     if (!response.success || !response.data) {
       return {
@@ -102,13 +102,18 @@ export default define.page<typeof handler>(function LoginPage({ data, url }) {
                 </svg>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-red-800">{error}</p>
+                <p
+                  class="text-sm font-medium text-red-800"
+                  data-testid="login-error"
+                >
+                  {error}
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        <form class="mt-8 space-y-6" method="POST">
+        <form class="mt-8 space-y-6" method="POST" data-testid="login-form">
           <input type="hidden" name="redirect" value={redirect} />
 
           <div class="rounded-md shadow-sm -space-y-px">
@@ -123,6 +128,7 @@ export default define.page<typeof handler>(function LoginPage({ data, url }) {
                 autocomplete="email"
                 required
                 value={email}
+                data-testid="login-email"
                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
@@ -137,6 +143,7 @@ export default define.page<typeof handler>(function LoginPage({ data, url }) {
                 type="password"
                 autocomplete="current-password"
                 required
+                data-testid="login-password"
                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
@@ -157,6 +164,7 @@ export default define.page<typeof handler>(function LoginPage({ data, url }) {
           <div>
             <button
               type="submit"
+              data-testid="login-submit"
               class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Sign in

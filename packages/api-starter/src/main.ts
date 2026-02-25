@@ -105,7 +105,9 @@ async function startServer() {
     // Start server
     console.log(` Server running on http://localhost:${config.port}`);
     console.log(` Environment: ${config.environment}`);
-    console.log(` Database: ${config.databaseUrl}`);
+    console.log(
+      ` Database: ${config.databaseUrl.replace(/\/\/[^@]+@/, "//***:***@")}`,
+    );
 
     if (isDevelopment) {
       console.log("\n Available endpoints:");

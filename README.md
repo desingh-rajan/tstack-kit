@@ -47,7 +47,7 @@ my-shop/
 - Admin panel with CRUD for all entities
 - E-commerce: Products, Cart, Orders, Payments
 - Guest checkout with order tracking
-- 255+ tests included (70% coverage)
+- 360+ tests included (70% coverage)
 
 ---
 
@@ -186,27 +186,28 @@ Entity automatically appears in Admin UI sidebar.
 
 ## Features
 
-| Feature                  | Description                                                            |
-| ------------------------ | ---------------------------------------------------------------------- |
-| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds                 |
-| **Workspace Management** | Create/destroy multi-project workspaces                                |
-| **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev` |
-| **Base Abstractions**    | 70-80% less code with BaseService/BaseController                       |
-| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                |
-| **Storefront**           | Public e-commerce site with Fresh + Tailwind                           |
-| **Guest Checkout**       | Full purchase flow without account creation (guest orders + payments)  |
-| **Order Tracking**       | Public order lookup by email + order number                            |
-| **Type-Safe**            | Full TypeScript from database to API                                   |
-| **JWT Auth**             | Authentication system + password reset flow                            |
-| **OAuth Providers**      | Google & Facebook OAuth integration ready                              |
-| **RBAC**                 | Role-based access (user/admin/superadmin)                              |
-| **PostgreSQL**           | Three-database setup (dev/test/prod)                                   |
-| **Advanced Pagination**  | Filterable tables with date pickers & search                           |
-| **Email Templates**      | Order notifications (confirmation, processing, shipped, delivered)     |
-| **Kamal Deployment**     | One-command production deployment via `tstack infra`                   |
-| **255+ Tests**           | 70% coverage with real PostgreSQL integration tests                    |
-| **Docker Ready**         | docker-compose included with internal networking support               |
-| **Health Checks**        | `/health` endpoint on all services for container orchestration         |
+| Feature                  | Description                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds                                |
+| **Workspace Management** | Create/destroy multi-project workspaces                                               |
+| **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev`                |
+| **Base Abstractions**    | 70-80% less code with BaseService/BaseController                                      |
+| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                               |
+| **Storefront**           | Public e-commerce site with Fresh + Tailwind                                          |
+| **Guest Checkout**       | Full purchase flow without account creation (guest orders + payments)                 |
+| **Order Tracking**       | Public order lookup by email + order number                                           |
+| **Type-Safe**            | Full TypeScript from database to API                                                  |
+| **JWT Auth**             | Authentication system + password reset flow                                           |
+| **OAuth Providers**      | Google & Facebook OAuth integration ready                                             |
+| **Security Hardened**    | Rate limiting, validated redirects, request IDs, pinned deps, scoped Dockerfile perms |
+| **RBAC**                 | Role-based access (user/admin/superadmin)                                             |
+| **PostgreSQL**           | Three-database setup (dev/test/prod)                                                  |
+| **Advanced Pagination**  | Filterable tables with date pickers & search                                          |
+| **Email Templates**      | Order notifications (confirmation, processing, shipped, delivered)                    |
+| **Kamal Deployment**     | One-command production deployment via `tstack infra`                                  |
+| **360+ Tests**           | 70% coverage with real PostgreSQL integration tests                                   |
+| **Docker Ready**         | docker-compose included with internal networking support                              |
+| **Health Checks**        | `/health` endpoint on all services for container orchestration                        |
 
 ---
 

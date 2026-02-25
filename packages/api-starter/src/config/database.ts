@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { config } from "./env.ts";
 
 // Initialize PostgreSQL connection with pool limits
-const poolSize = parseInt(Deno.env.get("DB_POOL_SIZE") || "20", 10);
+const poolSize = parseInt(Deno.env.get("DB_POOL_SIZE") || "20", 10) || 20;
 const client = postgres(config.databaseUrl, {
   max: poolSize, // Maximum number of connections in pool
   idle_timeout: 20, // Close idle connections after 20 seconds

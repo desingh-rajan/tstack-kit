@@ -1,4 +1,3 @@
-import { Logger } from "../utils/logger.ts";
 import { ApiProjectCreator } from "./creators/api-creator.ts";
 import { AdminUiProjectCreator } from "./creators/admin-ui-creator.ts";
 import { StoreProjectCreator } from "./creators/store-creator.ts";
@@ -29,10 +28,9 @@ export async function createProject(options: CreateOptions): Promise<void> {
 
   // Validate project type
   if (projectType === "workspace") {
-    Logger.error(
-      'Project type "workspace" should use workspace.ts command instead',
+    throw new Error(
+      'Project type "workspace" should use the workspace command instead',
     );
-    Deno.exit(1);
   }
 
   // Create options with required projectType
@@ -56,8 +54,7 @@ export async function createProject(options: CreateOptions): Promise<void> {
 
     default: {
       const _exhaustive: never = projectType;
-      Logger.error(`Unknown project type: ${_exhaustive}`);
-      Deno.exit(1);
+      throw new Error(`Unknown project type: ${_exhaustive}`);
     }
   }
 

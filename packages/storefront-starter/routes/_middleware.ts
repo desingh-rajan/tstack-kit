@@ -1,18 +1,23 @@
 /**
  * Root middleware - loads user session and cart
+ *
+ * Creates a per-request API client to prevent auth token leakage
+ * between concurrent SSR requests.
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+import { createApiClient } from "@/lib/api.ts";
 import { getGuestId, getSessionToken } from "@/lib/auth.ts";
 
 export const handler = define.middleware(async (ctx) => {
   const token = getSessionToken(ctx);
   const guestId = getGuestId(ctx);
 
+  // Create a per-request API client (prevents auth leaking across SSR requests)
+  const api = createApiClient(token || undefined, guestId || undefined);
+  ctx.state.api = api;
+
   if (token) {
-    api.setToken(token);
-    api.clearGuestId();
     ctx.state.token = token;
 
     // Load user profile and cart in parallel with error resilience
@@ -52,7 +57,7 @@ export const handler = define.middleware(async (ctx) => {
     }
   } else if (guestId) {
     // No auth token but guest ID exists - load guest cart
-    api.setGuestId(guestId);
+    // (guestId already set via createApiClient above)
 
     try {
       const cartResponse = await api.getCart();

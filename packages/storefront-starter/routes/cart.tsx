@@ -4,13 +4,13 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
 import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
     const { token, guestId } = optionalAuth(ctx);
+    const api = ctx.state.api;
 
     if (token) {
       api.setToken(token);
@@ -32,6 +32,7 @@ export const handler = define.handlers({
 
   async POST(ctx) {
     const { token, guestId } = optionalAuth(ctx);
+    const api = ctx.state.api;
 
     if (token) {
       api.setToken(token);

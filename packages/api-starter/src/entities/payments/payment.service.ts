@@ -165,33 +165,36 @@ export class PaymentService {
       status: "created",
     };
 
-    // Upsert payment record (in case of retry)
-    if (existingPayment.length > 0) {
-      await db
-        .update(payments)
+    // Store payment record and update order atomically
+    await db.transaction(async (tx) => {
+      // Upsert payment record (in case of retry)
+      if (existingPayment.length > 0) {
+        await tx
+          .update(payments)
+          .set({
+            razorpayOrderId: razorpayOrder.id,
+            status: "created",
+            razorpayPaymentId: null,
+            razorpaySignature: null,
+            errorCode: null,
+            errorDescription: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(payments.id, existingPayment[0].id));
+      } else {
+        await tx.insert(payments).values(paymentData);
+      }
+
+      // Update order with Razorpay order ID
+      await tx
+        .update(orders)
         .set({
           razorpayOrderId: razorpayOrder.id,
-          status: "created",
-          razorpayPaymentId: null,
-          razorpaySignature: null,
-          errorCode: null,
-          errorDescription: null,
+          paymentMethod: "razorpay",
           updatedAt: new Date(),
         })
-        .where(eq(payments.id, existingPayment[0].id));
-    } else {
-      await db.insert(payments).values(paymentData);
-    }
-
-    // Update order with Razorpay order ID
-    await db
-      .update(orders)
-      .set({
-        razorpayOrderId: razorpayOrder.id,
-        paymentMethod: "razorpay",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+        .where(eq(orders.id, orderId));
+    });
 
     // Get provider-specific key for frontend (Razorpay-specific)
     const providerKeyId =
@@ -277,38 +280,40 @@ export class PaymentService {
       console.error("[PaymentService] Failed to get payment details:", error);
     }
 
-    // Update payment record
-    await db
-      .update(payments)
-      .set({
-        razorpayPaymentId: razorpayPaymentId,
-        razorpaySignature: razorpaySignature,
-        status: "captured",
-        method: paymentDetails?.method,
-        bank: paymentDetails?.bank,
-        wallet: paymentDetails?.wallet,
-        vpa: paymentDetails?.vpa,
-        cardLast4: paymentDetails?.card?.last4,
-        cardNetwork: paymentDetails?.card?.network,
-        cardType: paymentDetails?.card?.type,
-        email: paymentDetails?.email,
-        contact: paymentDetails?.contact,
-        paidAt: new Date(),
-        razorpayResponse: paymentDetails?.raw as Record<string, unknown>,
-        updatedAt: new Date(),
-      })
-      .where(eq(payments.razorpayOrderId, razorpayOrderId));
+    // Update payment and order atomically
+    await db.transaction(async (tx) => {
+      await tx
+        .update(payments)
+        .set({
+          razorpayPaymentId: razorpayPaymentId,
+          razorpaySignature: razorpaySignature,
+          status: "captured",
+          method: paymentDetails?.method,
+          bank: paymentDetails?.bank,
+          wallet: paymentDetails?.wallet,
+          vpa: paymentDetails?.vpa,
+          cardLast4: paymentDetails?.card?.last4,
+          cardNetwork: paymentDetails?.card?.network,
+          cardType: paymentDetails?.card?.type,
+          email: paymentDetails?.email,
+          contact: paymentDetails?.contact,
+          paidAt: new Date(),
+          razorpayResponse: paymentDetails?.raw as Record<string, unknown>,
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.razorpayOrderId, razorpayOrderId));
 
-    // Update order status
-    await db
-      .update(orders)
-      .set({
-        razorpayPaymentId: razorpayPaymentId,
-        paymentStatus: "paid",
-        status: "confirmed",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+      // Update order status
+      await tx
+        .update(orders)
+        .set({
+          razorpayPaymentId: razorpayPaymentId,
+          paymentStatus: "paid",
+          status: "confirmed",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
 
     // Send order confirmation email
     await this.sendOrderConfirmationEmail(orderId);
@@ -332,24 +337,26 @@ export class PaymentService {
     errorCode: string,
     errorDescription: string,
   ): Promise<void> {
-    await db
-      .update(payments)
-      .set({
-        status: "failed",
-        errorCode: errorCode,
-        errorDescription: errorDescription,
-        failedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(payments.razorpayOrderId, razorpayOrderId));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(payments)
+        .set({
+          status: "failed",
+          errorCode: errorCode,
+          errorDescription: errorDescription,
+          failedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.razorpayOrderId, razorpayOrderId));
 
-    await db
-      .update(orders)
-      .set({
-        paymentStatus: "failed",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+      await tx
+        .update(orders)
+        .set({
+          paymentStatus: "failed",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
   }
 
   /**
@@ -461,25 +468,26 @@ export class PaymentService {
       throw new BadRequestError("Refund failed");
     }
 
-    // Update payment record
-    await db
-      .update(payments)
-      .set({
-        status: "refunded",
-        refundedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(payments.id, paymentRecord.id));
+    // Update payment and order atomically
+    await db.transaction(async (tx) => {
+      await tx
+        .update(payments)
+        .set({
+          status: "refunded",
+          refundedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.id, paymentRecord.id));
 
-    // Update order status
-    await db
-      .update(orders)
-      .set({
-        paymentStatus: "refunded",
-        status: "refunded",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+      await tx
+        .update(orders)
+        .set({
+          paymentStatus: "refunded",
+          status: "refunded",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
 
     return {
       success: refundResult.success,
@@ -519,32 +527,32 @@ export class PaymentService {
             .limit(1);
 
           if (order.length > 0 && order[0].paymentStatus !== "paid") {
-            // Update payment record
-            await db
-              .update(payments)
-              .set({
-                razorpayPaymentId: webhookEvent.payment.id,
-                status: "captured",
-                method: webhookEvent.payment.method,
-                bank: webhookEvent.payment.bank,
-                wallet: webhookEvent.payment.wallet,
-                vpa: webhookEvent.payment.vpa,
-                paidAt: new Date(),
-                razorpayResponse: webhookEvent.raw as Record<string, unknown>,
-                updatedAt: new Date(),
-              })
-              .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+            await db.transaction(async (tx) => {
+              await tx
+                .update(payments)
+                .set({
+                  razorpayPaymentId: webhookEvent.payment.id,
+                  status: "captured",
+                  method: webhookEvent.payment.method,
+                  bank: webhookEvent.payment.bank,
+                  wallet: webhookEvent.payment.wallet,
+                  vpa: webhookEvent.payment.vpa,
+                  paidAt: new Date(),
+                  razorpayResponse: webhookEvent.raw as Record<string, unknown>,
+                  updatedAt: new Date(),
+                })
+                .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
 
-            // Update order
-            await db
-              .update(orders)
-              .set({
-                razorpayPaymentId: webhookEvent.payment.id,
-                paymentStatus: "paid",
-                status: "confirmed",
-                updatedAt: new Date(),
-              })
-              .where(eq(orders.id, order[0].id));
+              await tx
+                .update(orders)
+                .set({
+                  razorpayPaymentId: webhookEvent.payment.id,
+                  paymentStatus: "paid",
+                  status: "confirmed",
+                  updatedAt: new Date(),
+                })
+                .where(eq(orders.id, order[0].id));
+            });
 
             // Send confirmation email
             await this.sendOrderConfirmationEmail(order[0].id);
@@ -556,31 +564,33 @@ export class PaymentService {
       case "payment.failed": {
         // Payment failed
         if (webhookEvent.orderId) {
-          await db
-            .update(payments)
-            .set({
-              status: "failed",
-              failedAt: new Date(),
-              razorpayResponse: webhookEvent.raw as Record<string, unknown>,
-              updatedAt: new Date(),
-            })
-            .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
-
           const order = await db
             .select()
             .from(orders)
             .where(eq(orders.razorpayOrderId, webhookEvent.orderId))
             .limit(1);
 
-          if (order.length > 0) {
-            await db
-              .update(orders)
+          await db.transaction(async (tx) => {
+            await tx
+              .update(payments)
               .set({
-                paymentStatus: "failed",
+                status: "failed",
+                failedAt: new Date(),
+                razorpayResponse: webhookEvent.raw as Record<string, unknown>,
                 updatedAt: new Date(),
               })
-              .where(eq(orders.id, order[0].id));
-          }
+              .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+
+            if (order.length > 0) {
+              await tx
+                .update(orders)
+                .set({
+                  paymentStatus: "failed",
+                  updatedAt: new Date(),
+                })
+                .where(eq(orders.id, order[0].id));
+            }
+          });
         }
         break;
       }
@@ -589,32 +599,34 @@ export class PaymentService {
       case "refund.processed": {
         // Refund processed
         if (webhookEvent.orderId) {
-          await db
-            .update(payments)
-            .set({
-              status: "refunded",
-              refundedAt: new Date(),
-              razorpayResponse: webhookEvent.raw as Record<string, unknown>,
-              updatedAt: new Date(),
-            })
-            .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
-
           const order = await db
             .select()
             .from(orders)
             .where(eq(orders.razorpayOrderId, webhookEvent.orderId))
             .limit(1);
 
-          if (order.length > 0) {
-            await db
-              .update(orders)
+          await db.transaction(async (tx) => {
+            await tx
+              .update(payments)
               .set({
-                paymentStatus: "refunded",
                 status: "refunded",
+                refundedAt: new Date(),
+                razorpayResponse: webhookEvent.raw as Record<string, unknown>,
                 updatedAt: new Date(),
               })
-              .where(eq(orders.id, order[0].id));
-          }
+              .where(eq(payments.razorpayOrderId, webhookEvent.orderId));
+
+            if (order.length > 0) {
+              await tx
+                .update(orders)
+                .set({
+                  paymentStatus: "refunded",
+                  status: "refunded",
+                  updatedAt: new Date(),
+                })
+                .where(eq(orders.id, order[0].id));
+            }
+          });
         }
         break;
       }
@@ -705,31 +717,34 @@ export class PaymentService {
       status: "created",
     };
 
-    if (existingPayment.length > 0) {
-      await db
-        .update(payments)
+    // Store payment record and update order atomically
+    await db.transaction(async (tx) => {
+      if (existingPayment.length > 0) {
+        await tx
+          .update(payments)
+          .set({
+            razorpayOrderId: razorpayOrder.id,
+            status: "created",
+            razorpayPaymentId: null,
+            razorpaySignature: null,
+            errorCode: null,
+            errorDescription: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(payments.id, existingPayment[0].id));
+      } else {
+        await tx.insert(payments).values(paymentData);
+      }
+
+      await tx
+        .update(orders)
         .set({
           razorpayOrderId: razorpayOrder.id,
-          status: "created",
-          razorpayPaymentId: null,
-          razorpaySignature: null,
-          errorCode: null,
-          errorDescription: null,
+          paymentMethod: "razorpay",
           updatedAt: new Date(),
         })
-        .where(eq(payments.id, existingPayment[0].id));
-    } else {
-      await db.insert(payments).values(paymentData);
-    }
-
-    await db
-      .update(orders)
-      .set({
-        razorpayOrderId: razorpayOrder.id,
-        paymentMethod: "razorpay",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+        .where(eq(orders.id, orderId));
+    });
 
     const providerKeyId =
       (paymentProvider as unknown as { keyId?: string }).keyId ||

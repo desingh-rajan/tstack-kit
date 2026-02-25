@@ -8,6 +8,7 @@
 export type WorkspaceStatus =
   | "creating"
   | "created"
+  | "partial"
   | "destroying"
   | "destroyed";
 export type ProjectType =

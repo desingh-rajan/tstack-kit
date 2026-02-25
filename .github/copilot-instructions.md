@@ -7,6 +7,13 @@
 - Use plain text for status indicators (e.g., "Updated", "Done", "Error" instead
   of checkmarks or icons)
 
+## Terminal Output Policy
+
+- NEVER truncate terminal output with `tail`, `head`, `grep`, or any other
+  filtering when running tests or commands. Always show the FULL output.
+- Do not pipe command output through filters unless the user explicitly asks.
+- If output is large, that is fine -- show it all.
+
 ## Code Standards
 
 - Follow existing patterns in the codebase

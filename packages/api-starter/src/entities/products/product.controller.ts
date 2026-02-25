@@ -111,8 +111,9 @@ export class ProductController extends BaseController<typeof productService> {
   adminListWithImages = async (c: Context) => {
     this.checkAdminRole(c);
     const url = new URL(c.req.url);
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const pageSize = parseInt(url.searchParams.get("pageSize") || "20");
+    const page = parseInt(url.searchParams.get("page") || "1", 10) || 1;
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "20", 10) ||
+      20;
     const search = url.searchParams.get("search") || undefined;
     const sortBy = url.searchParams.get("sortBy") || "createdAt";
     const sortOrder = (url.searchParams.get("sortOrder") || "desc") as

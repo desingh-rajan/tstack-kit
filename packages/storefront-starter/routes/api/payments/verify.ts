@@ -5,13 +5,14 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 import { getGuestId, getSessionToken } from "@/lib/auth.ts";
 
 export const handler = define.handlers({
   async POST(ctx) {
     const token = getSessionToken(ctx);
     const guestId = getGuestId(ctx);
+    const api = ctx.state.api;
 
     try {
       const body = await ctx.req.json();

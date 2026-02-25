@@ -4,13 +4,14 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
     const { token, guestId } = optionalAuth(ctx);
+    const api = ctx.state.api;
 
     const orderId = ctx.url.searchParams.get("orderId");
     const guestEmail = ctx.url.searchParams.get("email");

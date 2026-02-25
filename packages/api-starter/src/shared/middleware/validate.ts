@@ -7,14 +7,10 @@ import { ZodSchema } from "zod";
  */
 export function validate(schema: ZodSchema) {
   return async (c: Context, next: Next) => {
-    try {
-      const body = await c.req.json();
-      const validatedData = schema.parse(body);
-      c.set("validatedData", validatedData);
-      await next();
-    } catch (error) {
-      throw error;
-    }
+    const body = await c.req.json();
+    const validatedData = schema.parse(body);
+    c.set("validatedData", validatedData);
+    await next();
   };
 }
 
@@ -24,14 +20,10 @@ export function validate(schema: ZodSchema) {
  */
 export function validateQuery(schema: ZodSchema) {
   return async (c: Context, next: Next) => {
-    try {
-      const query = c.req.query();
-      const validatedQuery = schema.parse(query);
-      c.set("validatedQuery", validatedQuery);
-      await next();
-    } catch (error) {
-      throw error;
-    }
+    const query = c.req.query();
+    const validatedQuery = schema.parse(query);
+    c.set("validatedQuery", validatedQuery);
+    await next();
   };
 }
 
@@ -41,13 +33,9 @@ export function validateQuery(schema: ZodSchema) {
  */
 export function validateParams(schema: ZodSchema) {
   return async (c: Context, next: Next) => {
-    try {
-      const params = c.req.param();
-      const validatedParams = schema.parse(params);
-      c.set("validatedParams", validatedParams);
-      await next();
-    } catch (error) {
-      throw error;
-    }
+    const params = c.req.param();
+    const validatedParams = schema.parse(params);
+    c.set("validatedParams", validatedParams);
+    await next();
   };
 }

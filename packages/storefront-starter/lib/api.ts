@@ -618,7 +618,18 @@ export interface ProductQueryParams {
   sortOrder?: "asc" | "desc";
 }
 
-// Singleton instance - uses SSR_API_URL for server-side rendering performance
+// Factory function to create per-request API client instances.
+// This prevents auth token leakage between concurrent SSR requests
+// that would occur with a shared singleton.
+export function createApiClient(token?: string, guestId?: string): ApiClient {
+  const client = new ApiClient(SSR_API_URL, token);
+  if (guestId) client.setGuestId(guestId);
+  return client;
+}
+
+// Singleton instance for backward compatibility in islands/client-side code.
+// WARNING: Do not use this singleton in SSR route handlers -- use createApiClient()
+// or ctx.state.api instead to prevent auth leakage between requests.
 export const api = new ApiClient(SSR_API_URL);
 
 // Export URLs for use in other modules

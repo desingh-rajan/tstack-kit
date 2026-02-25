@@ -191,9 +191,8 @@ Deno.test(
 
     const res = await makeRequest(app, "/ts-admin/products");
 
-    // Expect 500 error (thrown error in handler)
-    assertEquals(res.status, 500);
-    // Just check it's an error - the error message might be wrapped
+    // HTTPException returns 401 for unauthenticated requests
+    assertEquals(res.status, 401);
   },
 );
 
@@ -237,9 +236,8 @@ Deno.test(
 
     const res = await makeRequest(app, "/ts-admin/products");
 
-    // Expect 500 error (thrown error in handler)
-    assertEquals(res.status, 500);
-    // Just check it's an error - the error message might be wrapped
+    // HTTPException returns 403 for users without required role
+    assertEquals(res.status, 403);
   },
 );
 

@@ -147,7 +147,7 @@ export abstract class BaseProjectCreator {
           const overwrite = prompt("Do you want to overwrite it? (yes/no):");
           if (overwrite?.toLowerCase() !== "yes") {
             Logger.info("Operation cancelled.");
-            Deno.exit(0);
+            return;
           }
         }
 

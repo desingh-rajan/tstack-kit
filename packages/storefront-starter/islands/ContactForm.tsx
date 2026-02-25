@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 
-interface FormData {
+interface ContactData {
   name: string;
   email: string;
   message: string;
@@ -16,14 +16,14 @@ export default function ContactForm() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const firstName = formData.get("first-name") as string;
-    const lastName = formData.get("last-name") as string;
+    const firstName = (formData.get("first-name") ?? "").toString();
+    const lastName = (formData.get("last-name") ?? "").toString();
     const name = [firstName, lastName].filter(Boolean).join(" ");
 
-    const data: FormData = {
-      name: name || undefined as unknown as string,
-      email: formData.get("email") as string,
-      message: formData.get("message") as string,
+    const data: ContactData = {
+      name,
+      email: (formData.get("email") ?? "").toString(),
+      message: (formData.get("message") ?? "").toString(),
     };
 
     // Validate

@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { type Address, api } from "@/lib/api.ts";
+import type { Address } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
@@ -12,6 +12,7 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account/addresses");
     if (token instanceof Response) return token;
 
+    const api = ctx.state.api;
     api.setToken(token);
     const response = await api.getAddresses();
 
@@ -28,6 +29,7 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account/addresses");
     if (token instanceof Response) return token;
 
+    const api = ctx.state.api;
     api.setToken(token);
     const formData = await ctx.req.formData();
     const action = formData.get("action") as string;

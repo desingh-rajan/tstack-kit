@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -74,7 +74,7 @@ export const handler = define.handlers({
       };
     }
 
-    const response = await api.resetPassword(token, password);
+    const response = await ctx.state.api.resetPassword(token, password);
 
     if (!response.success) {
       return {

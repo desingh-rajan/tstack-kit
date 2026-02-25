@@ -5,9 +5,68 @@
  */
 
 import { Context } from "hono";
+import { setCookie } from "hono/cookie";
 import { OAuthService } from "./oauth.service.ts";
 import { ApiResponse } from "../shared/utils/response.ts";
 import { BadRequestError } from "../shared/utils/errors.ts";
+
+/**
+ * Validate that a redirect URL is allowed (same-origin or in allowlist).
+ * Prevents open-redirect attacks by only permitting known origins.
+ */
+function isAllowedRedirect(url: string): boolean {
+  const allowedOrigins: string[] = [];
+
+  const storefrontUrl = Deno.env.get("STOREFRONT_URL");
+  const adminUrl = Deno.env.get("ADMIN_URL");
+  const appUrl = Deno.env.get("APP_URL");
+  const extraOrigins = Deno.env.get("ALLOWED_REDIRECT_ORIGINS");
+
+  if (storefrontUrl) allowedOrigins.push(new URL(storefrontUrl).origin);
+  if (adminUrl) allowedOrigins.push(new URL(adminUrl).origin);
+  if (appUrl) allowedOrigins.push(new URL(appUrl).origin);
+  if (extraOrigins) {
+    extraOrigins.split(",").forEach((o) => {
+      const trimmed = o.trim();
+      if (trimmed) allowedOrigins.push(trimmed);
+    });
+  }
+
+  // In development, allow localhost origins
+  const env = Deno.env.get("ENVIRONMENT") || "development";
+  if (env === "development" || env === "test") {
+    allowedOrigins.push("http://localhost:8000");
+    allowedOrigins.push("http://localhost:3000");
+    allowedOrigins.push("http://localhost:8080");
+  }
+
+  // Allow relative paths (same-origin)
+  if (url.startsWith("/")) return true;
+
+  try {
+    const parsed = new URL(url);
+    return allowedOrigins.includes(parsed.origin);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Set auth token as HttpOnly cookie instead of exposing in URL query string.
+ * This prevents token leakage via browser history, Referer headers, and server logs.
+ */
+function setAuthCookie(c: Context, token: string): void {
+  const env = Deno.env.get("ENVIRONMENT") || "development";
+  const isProduction = env === "production";
+
+  setCookie(c, "auth_token", token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 60 * 60, // 1 hour, matches JWT expiry
+  });
+}
 
 export class OAuthController {
   /**
@@ -17,6 +76,14 @@ export class OAuthController {
   static googleAuth(c: Context) {
     // Get optional redirect URL from query params
     const redirectUrl = c.req.query("redirect") || c.req.query("redirect_url");
+
+    // Validate redirect URL against allowlist to prevent open-redirect attacks
+    if (redirectUrl && !isAllowedRedirect(redirectUrl)) {
+      return c.json(
+        ApiResponse.error("Invalid redirect URL: origin not allowed"),
+        400,
+      );
+    }
 
     try {
       const authUrl = OAuthService.getGoogleAuthUrl(redirectUrl);
@@ -68,12 +135,21 @@ export class OAuthController {
       const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
       const storefrontUrl = Deno.env.get("STOREFRONT_URL") || appUrl;
 
-      // Build redirect URL with token
+      // Set token as HttpOnly cookie (prevents leakage via URL/browser history/Referer)
+      setAuthCookie(c, token);
+
+      // Build redirect URL without token in query string
       let finalRedirectUrl = redirectUrl || storefrontUrl;
-      const separator = finalRedirectUrl.includes("?") ? "&" : "?";
-      finalRedirectUrl = `${finalRedirectUrl}${separator}token=${token}${
-        isNewUser ? "&new_user=true" : ""
-      }`;
+
+      // Validate the final redirect URL for safety
+      if (!isAllowedRedirect(finalRedirectUrl)) {
+        finalRedirectUrl = storefrontUrl;
+      }
+
+      if (isNewUser) {
+        const separator = finalRedirectUrl.includes("?") ? "&" : "?";
+        finalRedirectUrl = `${finalRedirectUrl}${separator}new_user=true`;
+      }
 
       return c.redirect(finalRedirectUrl);
     } catch (error) {
@@ -152,6 +228,14 @@ export class OAuthController {
   static facebookAuth(c: Context) {
     const redirectUrl = c.req.query("redirect") || c.req.query("redirect_url");
 
+    // Validate redirect URL against allowlist to prevent open-redirect attacks
+    if (redirectUrl && !isAllowedRedirect(redirectUrl)) {
+      return c.json(
+        ApiResponse.error("Invalid redirect URL: origin not allowed"),
+        400,
+      );
+    }
+
     try {
       const authUrl = OAuthService.getFacebookAuthUrl(redirectUrl);
       return c.redirect(authUrl);
@@ -202,11 +286,21 @@ export class OAuthController {
       const appUrl = Deno.env.get("APP_URL") || "http://localhost:8000";
       const storefrontUrl = Deno.env.get("STOREFRONT_URL") || appUrl;
 
+      // Set token as HttpOnly cookie (prevents leakage via URL/browser history/Referer)
+      setAuthCookie(c, token);
+
+      // Build redirect URL without token in query string
       let finalRedirectUrl = redirectUrl || storefrontUrl;
-      const separator = finalRedirectUrl.includes("?") ? "&" : "?";
-      finalRedirectUrl = `${finalRedirectUrl}${separator}token=${token}${
-        isNewUser ? "&new_user=true" : ""
-      }`;
+
+      // Validate the final redirect URL for safety
+      if (!isAllowedRedirect(finalRedirectUrl)) {
+        finalRedirectUrl = storefrontUrl;
+      }
+
+      if (isNewUser) {
+        const separator = finalRedirectUrl.includes("?") ? "&" : "?";
+        finalRedirectUrl = `${finalRedirectUrl}${separator}new_user=true`;
+      }
 
       return c.redirect(finalRedirectUrl);
     } catch (error) {

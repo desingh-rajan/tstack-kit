@@ -5,7 +5,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api, type TrackOrderResponse } from "@/lib/api.ts";
+import type { TrackOrderResponse } from "@/lib/api.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 interface TrackOrderData {
@@ -21,6 +21,7 @@ export const handler = define.handlers({
     const orderNumber = ctx.url.searchParams.get("orderNumber") || "";
     const email = ctx.url.searchParams.get("email") || "";
     const success = ctx.url.searchParams.get("success") === "true";
+    const api = ctx.state.api;
 
     // If both params provided, auto-track
     if (orderNumber && email) {
@@ -52,6 +53,7 @@ export const handler = define.handlers({
     const formData = await ctx.req.formData();
     const orderNumber = (formData.get("orderNumber") as string || "").trim();
     const email = (formData.get("email") as string || "").trim();
+    const api = ctx.state.api;
 
     if (!orderNumber || !email) {
       return {

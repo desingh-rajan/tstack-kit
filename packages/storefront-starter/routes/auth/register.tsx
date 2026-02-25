@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -67,7 +67,7 @@ export const handler = define.handlers({
       };
     }
 
-    const response = await api.register({
+    const response = await ctx.state.api.register({
       email,
       password,
       fullName: fullName || undefined,
@@ -138,7 +138,12 @@ export default define.page<typeof handler>(function RegisterPage({
                 </svg>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-red-800">{error}</p>
+                <p
+                  class="text-sm font-medium text-red-800"
+                  data-testid="register-error"
+                >
+                  {error}
+                </p>
               </div>
             </div>
           </div>
@@ -176,7 +181,11 @@ export default define.page<typeof handler>(function RegisterPage({
         )}
 
         {!success && (
-          <form class="mt-8 space-y-6" method="POST">
+          <form
+            class="mt-8 space-y-6"
+            method="POST"
+            data-testid="register-form"
+          >
             {/* OAuth options */}
             <div>
               <div class="grid grid-cols-2 gap-3">
@@ -229,6 +238,7 @@ export default define.page<typeof handler>(function RegisterPage({
                   type="text"
                   autocomplete="name"
                   value={fullName}
+                  data-testid="register-fullname"
                   class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="John Doe"
                 />
@@ -248,6 +258,7 @@ export default define.page<typeof handler>(function RegisterPage({
                   autocomplete="email"
                   required
                   value={email}
+                  data-testid="register-email"
                   class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="you@example.com"
                 />
@@ -293,6 +304,7 @@ export default define.page<typeof handler>(function RegisterPage({
             <div>
               <button
                 type="submit"
+                data-testid="register-submit"
                 class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Create account

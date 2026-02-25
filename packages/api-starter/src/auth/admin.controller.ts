@@ -7,6 +7,16 @@ import {
 } from "./admin.dto.ts";
 import { ValidationUtil } from "../shared/utils/validation.ts";
 import { ApiResponse } from "../shared/utils/response.ts";
+import { BadRequestError } from "../shared/utils/errors.ts";
+
+/** Parse a route param as a positive integer or throw. */
+function requireIntParam(c: Context, name: string): number {
+  const val = parseInt(c.req.param(name), 10);
+  if (isNaN(val) || val <= 0) {
+    throw new BadRequestError(`Invalid ${name}: must be a positive integer`);
+  }
+  return val;
+}
 
 export class AdminController {
   /**
@@ -50,7 +60,7 @@ export class AdminController {
    * GET /admin/users/:id
    */
   static async getUserById(c: Context) {
-    const userId = parseInt(c.req.param("id"));
+    const userId = requireIntParam(c, "id");
     const user = await AdminService.getUserById(userId);
 
     return c.json(ApiResponse.success(user, "User retrieved successfully"));
@@ -61,7 +71,7 @@ export class AdminController {
    * PUT /admin/users/:id
    */
   static async updateUser(c: Context) {
-    const userId = parseInt(c.req.param("id"));
+    const userId = requireIntParam(c, "id");
     const currentUserId = c.get("userId");
     const body = await c.req.json();
     const validatedData = ValidationUtil.validate(UpdateUserSchema, body);
@@ -80,7 +90,7 @@ export class AdminController {
    * DELETE /admin/users/:id
    */
   static async deleteUser(c: Context) {
-    const userId = parseInt(c.req.param("id"));
+    const userId = requireIntParam(c, "id");
     const currentUserId = c.get("userId");
 
     await AdminService.deleteUser(userId, currentUserId);

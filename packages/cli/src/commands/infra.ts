@@ -549,12 +549,7 @@ async function createGithubWorkflow(options: InfraOptions): Promise<void> {
           mkdir -p ~/.ssh
           printf "%s" "\${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          cat > ~/.ssh/config << 'EOF'
-          Host *
-            StrictHostKeyChecking no
-            UserKnownHostsFile=/dev/null
-          EOF
-          chmod 600 ~/.ssh/config
+          ssh-keyscan -H \${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -582,6 +577,9 @@ on:
     branches:
       - main${options.enableStaging ? "\n      - staging" : ""}
 
+permissions:
+  contents: read
+
 jobs:
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -596,12 +594,7 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s" "\${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          cat > ~/.ssh/config << 'EOF'
-          Host *
-            StrictHostKeyChecking no
-            UserKnownHostsFile=/dev/null
-          EOF
-          chmod 600 ~/.ssh/config
+          ssh-keyscan -H \${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

@@ -4,6 +4,7 @@ import { articles } from "./article.model.ts";
 import { users } from "../../auth/user.model.ts";
 import { BadRequestError } from "../../shared/utils/errors.ts";
 import { BaseService } from "../../shared/services/base.service.ts";
+import { generateSlug } from "@tstack/admin";
 import type {
   ArticleResponseDTO,
   CreateArticleDTO,
@@ -84,7 +85,7 @@ export class ArticleService extends BaseService<
     data: CreateArticleDTO,
     authorId: number,
   ): Promise<ArticleResponseDTO> {
-    const slug = data.slug || this.generateSlug(data.title);
+    const slug = data.slug || generateSlug(data.title);
 
     const existing = await db
       .select()
@@ -113,15 +114,6 @@ export class ArticleService extends BaseService<
       authorName: undefined,
       isPublished: newRecord.isPublished,
     };
-  }
-
-  private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
   }
 }
 

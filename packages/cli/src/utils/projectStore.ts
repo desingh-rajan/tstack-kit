@@ -55,7 +55,7 @@ async function getKv(kvPath?: string): Promise<Deno.Kv> {
 }
 
 /**
- * Save project metadata
+ * Save project metadata atomically
  */
 export async function saveProject(
   metadata: ProjectMetadata,
@@ -63,14 +63,18 @@ export async function saveProject(
 ): Promise<void> {
   const db = await getKv(kvPath);
 
-  // Save by folder name (primary key)
-  await db.set(["projects", metadata.folderName], metadata);
+  // Atomically save both the primary entry and the name+type index
+  const res = await db.atomic()
+    .set(["projects", metadata.folderName], metadata)
+    .set(
+      ["projects_by_name", metadata.name, metadata.type],
+      metadata.folderName,
+    )
+    .commit();
 
-  // Also index by name+type for easy lookup
-  await db.set(
-    ["projects_by_name", metadata.name, metadata.type],
-    metadata.folderName,
-  );
+  if (!res.ok) {
+    throw new Error(`Failed to save project ${metadata.folderName}`);
+  }
 }
 
 /**
@@ -129,7 +133,7 @@ export async function listProjects(
 }
 
 /**
- * Delete project metadata
+ * Delete project metadata atomically
  */
 export async function deleteProject(
   folderName: string,
@@ -140,13 +144,17 @@ export async function deleteProject(
   // Get metadata first to clean up index
   const metadata = await getProject(folderName, kvPath);
 
+  const op = db.atomic()
+    .delete(["projects", folderName]);
+
   if (metadata) {
-    // Delete index entry
-    await db.delete(["projects_by_name", metadata.name, metadata.type]);
+    op.delete(["projects_by_name", metadata.name, metadata.type]);
   }
 
-  // Delete main entry
-  await db.delete(["projects", folderName]);
+  const res = await op.commit();
+  if (!res.ok) {
+    throw new Error(`Failed to delete project ${folderName}`);
+  }
 }
 
 /**

@@ -28,7 +28,11 @@ async function getCurrentVersion(): Promise<string | null> {
     const content = await Deno.readTextFile(denoJsonPath);
     const config = JSON.parse(content);
     return config.version || null;
-  } catch {
+  } catch (error) {
+    console.error(
+      "[upgrade] Could not read current version:",
+      error instanceof Error ? error.message : String(error),
+    );
     return null;
   }
 }
@@ -41,7 +45,11 @@ async function getLatestRelease(): Promise<GitHubRelease | null> {
     const response = await fetch(`${GITHUB_API}/releases/latest`);
     if (!response.ok) return null;
     return await response.json();
-  } catch {
+  } catch (error) {
+    console.error(
+      "[upgrade] Failed to fetch latest release:",
+      error instanceof Error ? error.message : String(error),
+    );
     return null;
   }
 }
@@ -57,7 +65,11 @@ async function getReleaseByTag(tag: string): Promise<GitHubRelease | null> {
     );
     if (!response.ok) return null;
     return await response.json();
-  } catch {
+  } catch (error) {
+    console.error(
+      "[upgrade] Failed to fetch release:",
+      error instanceof Error ? error.message : String(error),
+    );
     return null;
   }
 }

@@ -2,8 +2,28 @@ import { jwtVerify, SignJWT } from "jose";
 
 /**
  * JWT Configuration
+ *
+ * JWT_SECRET is required in production. In development/test environments,
+ * a default secret is used with a warning logged to the console.
  */
-const JWT_SECRET = Deno.env.get("JWT_SECRET") || "change-me-in-production";
+const ENVIRONMENT = Deno.env.get("ENVIRONMENT") || "development";
+const jwtSecretEnv = Deno.env.get("JWT_SECRET");
+
+if (!jwtSecretEnv && ENVIRONMENT === "production") {
+  throw new Error(
+    "FATAL: JWT_SECRET environment variable is required in production. " +
+      "Set it to a strong random string (e.g., openssl rand -base64 32).",
+  );
+}
+
+if (!jwtSecretEnv && ENVIRONMENT !== "test") {
+  console.warn(
+    "[SECURITY WARNING] JWT_SECRET not set -- using insecure default. " +
+      "Set JWT_SECRET in your .env file before deploying.",
+  );
+}
+
+const JWT_SECRET = jwtSecretEnv || "tstack-dev-secret-do-not-use-in-production";
 const JWT_ISSUER = Deno.env.get("JWT_ISSUER") || "tonystack";
 const JWT_EXPIRY = Deno.env.get("JWT_EXPIRY") || "1h"; // 1 hour default
 

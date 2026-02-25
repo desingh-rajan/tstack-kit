@@ -441,40 +441,43 @@ export class OrderService {
       }
     }
 
-    // Reduce stock for variants (individual updates needed due to quantity differences)
-    for (const update of variantStockUpdates) {
-      await db
-        .update(productVariants)
+    // Wrap stock updates, order items insertion, and cart status update in a transaction
+    await db.transaction(async (tx) => {
+      // Reduce stock for variants
+      for (const update of variantStockUpdates) {
+        await tx
+          .update(productVariants)
+          .set({
+            stockQuantity:
+              sql`${productVariants.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(productVariants.id, update.id));
+      }
+
+      // Reduce stock for products without variants
+      for (const update of productStockUpdates) {
+        await tx
+          .update(products)
+          .set({
+            stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, update.id));
+      }
+
+      // Insert order items
+      await tx.insert(orderItems).values(orderItemsData);
+
+      // Mark cart as converted
+      await tx
+        .update(carts)
         .set({
-          stockQuantity:
-            sql`${productVariants.stockQuantity} - ${update.quantity}`,
+          status: "converted",
           updatedAt: new Date(),
         })
-        .where(eq(productVariants.id, update.id));
-    }
-
-    // Reduce stock for products without variants
-    for (const update of productStockUpdates) {
-      await db
-        .update(products)
-        .set({
-          stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(products.id, update.id));
-    }
-
-    // Insert order items
-    await db.insert(orderItems).values(orderItemsData);
-
-    // Mark cart as converted
-    await db
-      .update(carts)
-      .set({
-        status: "converted",
-        updatedAt: new Date(),
-      })
-      .where(eq(carts.id, cart[0].id));
+        .where(eq(carts.id, cart[0].id));
+    });
 
     // Return order details
     return this.getOrderById(order.id, userId);
@@ -656,41 +659,43 @@ export class OrderService {
       );
     }
 
-    // Restore stock
+    // Restore stock and update order status atomically
     const items = await db
       .select()
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
 
-    for (const item of items) {
-      if (item.variantId) {
-        await db
-          .update(productVariants)
-          .set({
-            stockQuantity:
-              sql`${productVariants.stockQuantity} + ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(productVariants.id, item.variantId));
-      } else {
-        await db
-          .update(products)
-          .set({
-            stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(products.id, item.productId));
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        if (item.variantId) {
+          await tx
+            .update(productVariants)
+            .set({
+              stockQuantity:
+                sql`${productVariants.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(productVariants.id, item.variantId));
+        } else {
+          await tx
+            .update(products)
+            .set({
+              stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(products.id, item.productId));
+        }
       }
-    }
 
-    // Update order status
-    await db
-      .update(orders)
-      .set({
-        status: "cancelled",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+      // Update order status
+      await tx
+        .update(orders)
+        .set({
+          status: "cancelled",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
 
     return this.getOrderById(orderId);
   }
@@ -731,36 +736,55 @@ export class OrderService {
       );
     }
 
-    // If cancelling, restore stock
+    // If cancelling, restore stock and update order atomically
     if (status === "cancelled") {
       const items = await db
         .select()
         .from(orderItems)
         .where(eq(orderItems.orderId, orderId));
 
-      for (const item of items) {
-        if (item.variantId) {
-          await db
-            .update(productVariants)
-            .set({
-              stockQuantity:
-                sql`${productVariants.stockQuantity} + ${item.quantity}`,
-              updatedAt: new Date(),
-            })
-            .where(eq(productVariants.id, item.variantId));
-        } else {
-          await db
-            .update(products)
-            .set({
-              stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
-              updatedAt: new Date(),
-            })
-            .where(eq(products.id, item.productId));
-        }
+      const updateData: Partial<Order> = {
+        status,
+        updatedAt: new Date(),
+      };
+
+      if (adminNotes) {
+        updateData.adminNotes = adminNotes;
       }
+
+      await db.transaction(async (tx) => {
+        for (const item of items) {
+          if (item.variantId) {
+            await tx
+              .update(productVariants)
+              .set({
+                stockQuantity:
+                  sql`${productVariants.stockQuantity} + ${item.quantity}`,
+                updatedAt: new Date(),
+              })
+              .where(eq(productVariants.id, item.variantId));
+          } else {
+            await tx
+              .update(products)
+              .set({
+                stockQuantity:
+                  sql`${products.stockQuantity} + ${item.quantity}`,
+                updatedAt: new Date(),
+              })
+              .where(eq(products.id, item.productId));
+          }
+        }
+
+        await tx
+          .update(orders)
+          .set(updateData)
+          .where(eq(orders.id, orderId));
+      });
+
+      return this.getOrderById(orderId);
     }
 
-    // Update order
+    // Non-cancel status update
     const updateData: Partial<Order> = {
       status,
       updatedAt: new Date(),
