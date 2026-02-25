@@ -518,7 +518,7 @@ describe({
       assertEquals(response.status, 200);
 
       const json = await response.json();
-      assertEquals(json.data.count, 6); // 6 system settings
+      assertEquals(json.data.count, 7); // 7 system settings
     });
   });
 });

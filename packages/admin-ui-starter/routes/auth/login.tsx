@@ -93,7 +93,7 @@ export default define.page<typeof handler>(function LoginPage({ data }) {
             </div>
           )}
 
-          <form method="POST" class="space-y-5">
+          <form method="POST" class="space-y-5" data-testid="login-form">
             <div class="form-control">
               <label class="label">
                 <span class="label-text font-semibold text-gray-700 text-sm">
@@ -105,6 +105,7 @@ export default define.page<typeof handler>(function LoginPage({ data }) {
                 name="email"
                 autoComplete="off"
                 placeholder="admin@example.com"
+                data-testid="login-email"
                 class="input input-bordered w-full h-12 text-base rounded-xl border border-gray-300 bg-white text-gray-900 focus:bg-white focus:border-violet-500 focus:ring-4 focus:ring-violet-100 transition-all placeholder:text-gray-700"
                 required
               />
@@ -121,6 +122,7 @@ export default define.page<typeof handler>(function LoginPage({ data }) {
                 name="password"
                 autoComplete="off"
                 placeholder="Enter your password"
+                data-testid="login-password"
                 class="input input-bordered w-full h-12 text-base rounded-xl border border-gray-300 bg-white text-gray-900 focus:bg-white focus:border-violet-500 focus:ring-4 focus:ring-violet-100 transition-all placeholder:text-gray-700"
                 required
               />
@@ -129,6 +131,7 @@ export default define.page<typeof handler>(function LoginPage({ data }) {
             <div class="form-control mt-8">
               <button
                 type="submit"
+                data-testid="login-submit"
                 class="h-12 w-full rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-300"
               >
                 Sign In →

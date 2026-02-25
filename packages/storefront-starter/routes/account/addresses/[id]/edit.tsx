@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 import { requireAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
@@ -12,6 +12,7 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, `/account/addresses/${ctx.params.id}/edit`);
     if (token instanceof Response) return token;
 
+    const api = ctx.state.api;
     api.setToken(token);
     const addressesResponse = await api.getAddresses();
 
@@ -42,6 +43,7 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, `/account/addresses/${ctx.params.id}/edit`);
     if (token instanceof Response) return token;
 
+    const api = ctx.state.api;
     api.setToken(token);
     const formData = await ctx.req.formData();
 

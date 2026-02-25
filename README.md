@@ -46,7 +46,8 @@ my-shop/
 - JWT auth + OAuth (Google) ready
 - Admin panel with CRUD for all entities
 - E-commerce: Products, Cart, Orders, Payments
-- 255+ tests included (70% coverage)
+- Guest checkout with order tracking
+- 360+ tests included (70% coverage)
 
 ---
 
@@ -92,14 +93,14 @@ predictably.
 
 ### Scalable by Design
 
-| Your Stage                   | Architectural Guarantee                                               |
-| ---------------------------- | --------------------------------------------------------------------- |
-| **Portfolio site**           | **Minimal Footprint**. Contact forms, content management included.    |
-| **Product catalog**          | **Structured Data**. Listings, categories, admin panel built-in.      |
-| **E-commerce store**         | **Transaction Ready**. Carts, checkout, payments pre-configured.      |
-| **MVP testing**              | **Containerized**. Local Docker development fully configured.         |
-| **Scaling up**               | **Modular**. Architecture designed for microservices extraction.      |
-| **Enterprise multi-service** | **Orchestration Ready**. Docker compose and future k8s paths aligned. |
+| Your Stage                   | Architectural Guarantee                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| **Portfolio site**           | **Minimal Footprint**. Contact forms, content management included.                    |
+| **Product catalog**          | **Structured Data**. Listings, categories, admin panel built-in.                      |
+| **E-commerce store**         | **Transaction Ready**. Carts, checkout (guest + registered), payments pre-configured. |
+| **MVP testing**              | **Containerized**. Local Docker development fully configured.                         |
+| **Scaling up**               | **Modular**. Architecture designed for microservices extraction.                      |
+| **Enterprise multi-service** | **Orchestration Ready**. Docker compose and future k8s paths aligned.                 |
 
 ---
 
@@ -185,24 +186,28 @@ Entity automatically appears in Admin UI sidebar.
 
 ## Features
 
-| Feature                  | Description                                                            |
-| ------------------------ | ---------------------------------------------------------------------- |
-| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds                 |
-| **Workspace Management** | Create/destroy multi-project workspaces                                |
-| **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev` |
-| **Base Abstractions**    | 70-80% less code with BaseService/BaseController                       |
-| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                |
-| **Storefront**           | Public e-commerce site with Fresh + Tailwind                           |
-| **Type-Safe**            | Full TypeScript from database to API                                   |
-| **JWT Auth**             | Authentication system + password reset flow                            |
-| **OAuth Providers**      | Google & Facebook OAuth integration ready                              |
-| **RBAC**                 | Role-based access (user/admin/superadmin)                              |
-| **PostgreSQL**           | Three-database setup (dev/test/prod)                                   |
-| **Advanced Pagination**  | Filterable tables with date pickers & search                           |
-| **Email Templates**      | Order notifications (processing, shipped, delivered)                   |
-| **Kamal Deployment**     | One-command production deployment via `tstack infra`                   |
-| **255+ Tests**           | 70% coverage with real PostgreSQL integration tests                    |
-| **Docker Ready**         | docker-compose included                                                |
+| Feature                  | Description                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| **Entity Scope Control** | `--scope=core/listing/commerce` for progressive builds                                |
+| **Workspace Management** | Create/destroy multi-project workspaces                                               |
+| **GitHub Integration**   | Auto-create repos with `--github-org`; pushes `main`, `staging`, `dev`                |
+| **Base Abstractions**    | 70-80% less code with BaseService/BaseController                                      |
+| **Admin UI**             | Config-driven CRUD with Fresh + DaisyUI                                               |
+| **Storefront**           | Public e-commerce site with Fresh + Tailwind                                          |
+| **Guest Checkout**       | Full purchase flow without account creation (guest orders + payments)                 |
+| **Order Tracking**       | Public order lookup by email + order number                                           |
+| **Type-Safe**            | Full TypeScript from database to API                                                  |
+| **JWT Auth**             | Authentication system + password reset flow                                           |
+| **OAuth Providers**      | Google & Facebook OAuth integration ready                                             |
+| **Security Hardened**    | Rate limiting, validated redirects, request IDs, pinned deps, scoped Dockerfile perms |
+| **RBAC**                 | Role-based access (user/admin/superadmin)                                             |
+| **PostgreSQL**           | Three-database setup (dev/test/prod)                                                  |
+| **Advanced Pagination**  | Filterable tables with date pickers & search                                          |
+| **Email Templates**      | Order notifications (confirmation, processing, shipped, delivered)                    |
+| **Kamal Deployment**     | One-command production deployment via `tstack infra`                                  |
+| **360+ Tests**           | 70% coverage with real PostgreSQL integration tests                                   |
+| **Docker Ready**         | docker-compose included with internal networking support                              |
+| **Health Checks**        | `/health` endpoint on all services for container orchestration                        |
 
 ---
 
@@ -244,6 +249,82 @@ deno task migrate:run      # Run migrations
 deno task db:seed          # Seed database
 deno task db:studio        # Open Drizzle Studio
 ```
+
+---
+
+## Running Tests
+
+Three packages have test suites: `cli`, `admin`, and `api-starter`.
+
+### CLI (no database required)
+
+```bash
+cd packages/cli && deno task test
+```
+
+The default CLI test suite mocks all database operations. To run the full
+integration suite that actually creates/destroys real databases:
+
+```bash
+cd packages/cli
+TSTACK_TEST_DB=true PGUSER=your_user PGPASSWORD=your_password deno task test:db
+```
+
+#### Leftover test databases
+
+If a test run is interrupted, test databases may be left behind. Clean them up
+with:
+
+```bash
+cd packages/cli
+PGUSER=your_user PGPASSWORD=your_password deno task cleanup:test-dbs
+```
+
+### Admin
+
+Requires a local PostgreSQL server. Tests default to user `postgres` with
+password `password`. If your local PostgreSQL uses a different user:
+
+```bash
+cd packages/admin
+PGUSER=your_user PGPASSWORD=your_password deno task test
+```
+
+### API Starter
+
+Requires a local PostgreSQL server. Before running tests, create a
+`.env.test.local` file (gitignored) with your database credentials:
+
+```bash
+cd packages/api-starter
+cp .env.example .env.test.local
+```
+
+Edit `.env.test.local`:
+
+```dotenv
+ENVIRONMENT=test
+DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/tstack_starter_test
+```
+
+Then run:
+
+```bash
+deno task test
+```
+
+> **Common pitfalls**:
+>
+> - Tests fail with "password authentication failed" → wrong PostgreSQL
+>   credentials. Update `PGUSER`/`PGPASSWORD` (CLI, admin) or `DATABASE_URL` in
+>   `.env.test.local` (api-starter).
+> - Tests fail with `role "postgres" does not exist` → your system's default
+>   PostgreSQL user is not `postgres`. Pass your actual username via `PGUSER`.
+> - `api-starter` tests fail with "no such file or directory" for
+>   `.env.test.local` → run `cp .env.example .env.test.local` and set your
+>   credentials.
+> - The test runner creates and destroys test databases automatically. You only
+>   need a PostgreSQL user with `CREATEDB` privileges.
 
 ---
 
@@ -320,11 +401,18 @@ my-project-admin-ui/
 
 ```text
 my-project-store/
-├── components/              # Reusable UI components (Hero, Features, etc.)
+├── components/              # Reusable UI components (Navbar, Hero, Footer)
 ├── islands/                 # Interactive Preact islands
+├── lib/
+│   ├── api.ts               # API client (SSR_API_URL, guest methods)
+│   └── auth.ts              # Auth helpers (requireAuth, optionalAuth, guest ID)
 ├── routes/                  # Fresh file-based routing
+│   ├── _middleware.ts        # Session + cart resolution
+│   ├── track-order.tsx       # Public order tracking
+│   ├── checkout/             # Guest + authenticated checkout
+│   └── api/                  # Server-side proxy routes
 ├── static/                  # Static assets
-├── main.ts                  # Fresh entry point
+├── main.ts                  # Fresh entry + /health endpoint
 ├── deno.json                # Tasks & config
 └── vite.config.ts           # Vite + Tailwind
 ````

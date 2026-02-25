@@ -1,10 +1,11 @@
 /**
  * Checkout Page
+ * Supports both authenticated users (with saved addresses) and guest checkout
  */
 
 import { define } from "@/utils.ts";
-import { type Address, api, type Cart } from "@/lib/api.ts";
-import { requireAuth } from "@/lib/auth.ts";
+import type { Address, Cart, GuestAddress } from "@/lib/api.ts";
+import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 interface CheckoutData {
@@ -14,19 +15,28 @@ interface CheckoutData {
   step: "address" | "payment" | "review";
   selectedAddressId: string | null;
   paymentMethod: "razorpay" | "cod";
+  isGuest: boolean;
+  guestEmail: string;
+  guestAddress: GuestAddress | null;
 }
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const token = requireAuth(ctx, "/checkout");
-    if (token instanceof Response) return token;
+    const { token, guestId } = optionalAuth(ctx);
+    const isGuest = !token;
+    const api = ctx.state.api;
 
-    api.setToken(token);
+    if (token) {
+      api.setToken(token);
+    } else if (guestId) {
+      api.setGuestId(guestId);
+    }
 
-    const [cartResponse, addressesResponse] = await Promise.all([
-      api.getCart(),
-      api.getAddresses(),
-    ]);
+    // Fetch cart (always needed)
+    const cartResponse = await api.getCart();
+
+    // Fetch addresses only for authenticated users
+    const addressesResponse = token ? await api.getAddresses() : { data: [] };
 
     if (!cartResponse.success || !cartResponse.data?.items?.length) {
       return new Response(null, {
@@ -43,24 +53,30 @@ export const handler = define.handlers({
         step: "address",
         selectedAddressId: null,
         paymentMethod: "razorpay",
+        isGuest,
+        guestEmail: "",
+        guestAddress: null,
       },
     };
   },
 
   async POST(ctx) {
-    const token = requireAuth(ctx, "/checkout");
-    if (token instanceof Response) return token;
+    const { token, guestId } = optionalAuth(ctx);
+    const isGuest = !token;
+    const api = ctx.state.api;
 
-    api.setToken(token);
+    if (token) {
+      api.setToken(token);
+    } else if (guestId) {
+      api.setGuestId(guestId);
+    }
 
     const formData = await ctx.req.formData();
     const action = formData.get("action") as string;
 
-    // Reload cart and addresses
-    const [cartResponse, addressesResponse] = await Promise.all([
-      api.getCart(),
-      api.getAddresses(),
-    ]);
+    // Reload cart
+    const cartResponse = await api.getCart();
+    const addressesResponse = token ? await api.getAddresses() : { data: [] };
 
     const cart = cartResponse.data;
     const addresses = addressesResponse.data || [];
@@ -72,17 +88,105 @@ export const handler = define.handlers({
       });
     }
 
+    // Parse guest state from hidden fields
+    const savedGuestEmail = formData.get("guestEmail") as string || "";
+    const guestAddressStr = formData.get("guestAddress") as string | null;
+    let savedGuestAddress: GuestAddress | null = null;
+
+    if (guestAddressStr) {
+      try {
+        savedGuestAddress = JSON.parse(guestAddressStr);
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+
+    const baseData = {
+      cart,
+      addresses,
+      isGuest,
+    };
+
     switch (action) {
       case "select-address": {
         const addressId = formData.get("addressId") as string;
         return {
           data: {
-            cart,
-            addresses,
+            ...baseData,
             error: null,
-            step: "payment",
+            step: "payment" as const,
             selectedAddressId: addressId,
-            paymentMethod: "razorpay",
+            paymentMethod: "razorpay" as const,
+            guestEmail: savedGuestEmail,
+            guestAddress: savedGuestAddress,
+          },
+        };
+      }
+
+      case "guest-address": {
+        const guestEmail = formData.get("guestEmail") as string;
+        const shippingAddressStr = formData.get("shippingAddress") as string;
+
+        // Validate email
+        if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+          return {
+            data: {
+              ...baseData,
+              error: "Please enter a valid email address",
+              step: "address" as const,
+              selectedAddressId: null,
+              paymentMethod: "razorpay" as const,
+              guestEmail: guestEmail || "",
+              guestAddress: savedGuestAddress,
+            },
+          };
+        }
+
+        let shippingAddress: GuestAddress;
+        try {
+          shippingAddress = JSON.parse(shippingAddressStr);
+        } catch {
+          return {
+            data: {
+              ...baseData,
+              error: "Invalid address data",
+              step: "address" as const,
+              selectedAddressId: null,
+              paymentMethod: "razorpay" as const,
+              guestEmail,
+              guestAddress: null,
+            },
+          };
+        }
+
+        // Validate required fields
+        if (
+          !shippingAddress.fullName || !shippingAddress.phone ||
+          !shippingAddress.addressLine1 || !shippingAddress.city ||
+          !shippingAddress.state || !shippingAddress.postalCode
+        ) {
+          return {
+            data: {
+              ...baseData,
+              error: "Please fill in all required address fields",
+              step: "address" as const,
+              selectedAddressId: null,
+              paymentMethod: "razorpay" as const,
+              guestEmail,
+              guestAddress: shippingAddress,
+            },
+          };
+        }
+
+        return {
+          data: {
+            ...baseData,
+            error: null,
+            step: "payment" as const,
+            selectedAddressId: null,
+            paymentMethod: "razorpay" as const,
+            guestEmail,
+            guestAddress: shippingAddress,
           },
         };
       }
@@ -94,12 +198,13 @@ export const handler = define.handlers({
           | "cod";
         return {
           data: {
-            cart,
-            addresses,
+            ...baseData,
             error: null,
-            step: "review",
+            step: "review" as const,
             selectedAddressId: addressId,
             paymentMethod,
+            guestEmail: savedGuestEmail,
+            guestAddress: savedGuestAddress,
           },
         };
       }
@@ -111,22 +216,53 @@ export const handler = define.handlers({
           | "cod";
         const customerNotes = formData.get("customerNotes") as string;
 
-        // Create order
-        const orderResponse = await api.createOrder({
-          shippingAddressId: addressId,
-          paymentMethod,
-          customerNotes: customerNotes || undefined,
-        });
+        let orderResponse;
+
+        if (isGuest) {
+          const guestEmail = formData.get("guestEmail") as string;
+          const guestAddrStr = formData.get("guestAddress") as string;
+          let guestAddress: GuestAddress;
+
+          try {
+            guestAddress = JSON.parse(guestAddrStr);
+          } catch {
+            return {
+              data: {
+                ...baseData,
+                error: "Invalid address data",
+                step: "review" as const,
+                selectedAddressId: null,
+                paymentMethod,
+                guestEmail: "",
+                guestAddress: null,
+              },
+            };
+          }
+
+          orderResponse = await api.createGuestOrder({
+            guestEmail,
+            shippingAddress: guestAddress,
+            paymentMethod,
+            customerNotes: customerNotes || undefined,
+          });
+        } else {
+          orderResponse = await api.createOrder({
+            shippingAddressId: addressId,
+            paymentMethod,
+            customerNotes: customerNotes || undefined,
+          });
+        }
 
         if (!orderResponse.success || !orderResponse.data) {
           return {
             data: {
-              cart,
-              addresses,
+              ...baseData,
               error: orderResponse.error || "Failed to create order",
-              step: "review",
+              step: "review" as const,
               selectedAddressId: addressId,
               paymentMethod,
+              guestEmail: savedGuestEmail,
+              guestAddress: savedGuestAddress,
             },
           };
         }
@@ -134,7 +270,17 @@ export const handler = define.handlers({
         const order = orderResponse.data;
 
         if (paymentMethod === "cod") {
-          // COD order - redirect to confirmation
+          if (isGuest) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                Location:
+                  `/track-order?orderNumber=${order.orderNumber}&email=${
+                    encodeURIComponent(savedGuestEmail)
+                  }&success=true`,
+              },
+            });
+          }
           return new Response(null, {
             status: 302,
             headers: { Location: `/orders/${order.id}?success=true` },
@@ -142,6 +288,17 @@ export const handler = define.handlers({
         }
 
         // Razorpay - redirect to payment page
+        if (isGuest) {
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location:
+                `/checkout/payment?orderId=${order.id}&guest=true&email=${
+                  encodeURIComponent(savedGuestEmail)
+                }`,
+            },
+          });
+        }
         return new Response(null, {
           status: 302,
           headers: { Location: `/checkout/payment?orderId=${order.id}` },
@@ -149,7 +306,19 @@ export const handler = define.handlers({
       }
 
       case "add-address": {
-        // Redirect to add address page
+        if (isGuest) {
+          return {
+            data: {
+              ...baseData,
+              error: null,
+              step: "address" as const,
+              selectedAddressId: null,
+              paymentMethod: "razorpay" as const,
+              guestEmail: savedGuestEmail,
+              guestAddress: savedGuestAddress,
+            },
+          };
+        }
         return new Response(null, {
           status: 302,
           headers: { Location: "/account/addresses/new?redirect=/checkout" },
@@ -159,12 +328,13 @@ export const handler = define.handlers({
       default:
         return {
           data: {
-            cart,
-            addresses,
+            ...baseData,
             error: null,
-            step: "address",
+            step: "address" as const,
             selectedAddressId: null,
-            paymentMethod: "razorpay",
+            paymentMethod: "razorpay" as const,
+            guestEmail: savedGuestEmail,
+            guestAddress: savedGuestAddress,
           },
         };
     }
@@ -172,8 +342,17 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(function CheckoutPage({ data }) {
-  const { cart, addresses, error, step, selectedAddressId, paymentMethod } =
-    data;
+  const {
+    cart,
+    addresses,
+    error,
+    step,
+    selectedAddressId,
+    paymentMethod,
+    isGuest,
+    guestEmail,
+    guestAddress,
+  } = data;
 
   const formatCurrency = (amount: string | number) =>
     new Intl.NumberFormat("en-IN", {
@@ -183,10 +362,13 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
-  // Calculate totals
+  // Calculate totals (customize thresholds/rates for your store)
   const subtotal = parseFloat(cart?.subtotal || "0");
-  const shipping = subtotal >= 500 ? 0 : 50;
-  const tax = subtotal * 0.18;
+  const freeShippingThreshold = 100;
+  const shippingCost = 10;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost;
+  const taxRate = 0.08;
+  const tax = subtotal * taxRate;
   const total = subtotal + shipping + tax;
 
   return (
@@ -250,7 +432,31 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                   Shipping Address
                 </h2>
 
-                {addresses.length === 0
+                {isGuest
+                  ? (
+                    <div>
+                      <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                          <span class="font-medium">
+                            Checking out as guest.
+                          </span>{" "}
+                          <a
+                            href="/auth/login?redirect=/checkout"
+                            class="underline hover:text-blue-800"
+                          >
+                            Sign in
+                          </a>{" "}
+                          for faster checkout with saved addresses.
+                        </p>
+                      </div>
+
+                      <GuestAddressFormInline
+                        initialEmail={guestEmail}
+                        initialAddress={guestAddress}
+                      />
+                    </div>
+                  )
+                  : addresses.length === 0
                   ? (
                     <div class="text-center py-8">
                       <p class="text-gray-600 mb-4">
@@ -340,14 +546,15 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                       <div class="mt-6 flex justify-between">
                         <button
                           type="button"
+                          // @ts-ignore - Native onclick for server-rendered component
                           onClick="document.querySelector('[name=action]').value='add-address';this.form.submit()"
-                          class="text-sm text-indigo-600 hover:text-indigo-500"
+                          class="text-sm text-indigo-600 hover:text-indigo-500 cursor-pointer"
                         >
                           + Add new address
                         </button>
                         <button
                           type="submit"
-                          class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                          class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
                         >
                           Continue to Payment
                         </button>
@@ -369,8 +576,18 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                   <input
                     type="hidden"
                     name="addressId"
-                    value={selectedAddressId}
+                    value={selectedAddressId ?? ""}
                   />
+                  {isGuest && guestEmail && (
+                    <input type="hidden" name="guestEmail" value={guestEmail} />
+                  )}
+                  {isGuest && guestAddress && (
+                    <input
+                      type="hidden"
+                      name="guestAddress"
+                      value={JSON.stringify(guestAddress)}
+                    />
+                  )}
 
                   <div class="space-y-4">
                     <label class="block p-4 border rounded-lg cursor-pointer hover:border-indigo-500 border-indigo-500 bg-indigo-50">
@@ -428,7 +645,7 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                     </a>
                     <button
                       type="submit"
-                      class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                      class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
                     >
                       Review Order
                     </button>
@@ -445,27 +662,54 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                   <h2 class="text-lg font-medium text-gray-900 mb-4">
                     Shipping Address
                   </h2>
-                  {selectedAddress && (
-                    <div>
-                      <p class="font-medium">{selectedAddress.fullName}</p>
-                      <p class="text-gray-600">
-                        {selectedAddress.addressLine1}
-                      </p>
-                      {selectedAddress.addressLine2 && (
+                  {isGuest && guestAddress
+                    ? (
+                      <div>
+                        <p class="font-medium">{guestAddress.fullName}</p>
                         <p class="text-gray-600">
-                          {selectedAddress.addressLine2}
+                          {guestAddress.addressLine1}
                         </p>
-                      )}
-                      <p class="text-gray-600">
-                        {selectedAddress.city}, {selectedAddress.state}{" "}
-                        {selectedAddress.postalCode}
-                      </p>
-                      <p class="text-gray-600">{selectedAddress.country}</p>
-                      <p class="text-gray-500 mt-1">
-                        Phone: {selectedAddress.phone}
-                      </p>
-                    </div>
-                  )}
+                        {guestAddress.addressLine2 && (
+                          <p class="text-gray-600">
+                            {guestAddress.addressLine2}
+                          </p>
+                        )}
+                        <p class="text-gray-600">
+                          {guestAddress.city}, {guestAddress.state}{" "}
+                          {guestAddress.postalCode}
+                        </p>
+                        {guestAddress.country && (
+                          <p class="text-gray-600">{guestAddress.country}</p>
+                        )}
+                        <p class="text-gray-500 mt-1">
+                          Phone: {guestAddress.phone}
+                        </p>
+                        <p class="text-gray-500 mt-1">
+                          Email: {guestEmail}
+                        </p>
+                      </div>
+                    )
+                    : selectedAddress && (
+                      <div>
+                        <p class="font-medium">{selectedAddress.fullName}</p>
+                        <p class="text-gray-600">
+                          {selectedAddress.addressLine1}
+                        </p>
+                        {selectedAddress.addressLine2 && (
+                          <p class="text-gray-600">
+                            {selectedAddress.addressLine2}
+                          </p>
+                        )}
+                        <p class="text-gray-600">
+                          {selectedAddress.city}, {selectedAddress.state}{" "}
+                          {selectedAddress.postalCode}
+                        </p>
+                        <p class="text-gray-600">{selectedAddress.country}</p>
+                        <p class="text-gray-500 mt-1">
+                          Phone: {selectedAddress.phone}
+                        </p>
+                      </div>
+                    )}
                 </div>
 
                 {/* Payment Method */}
@@ -525,18 +769,28 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                 </div>
 
                 {/* Place Order */}
-                <form method="POST">
+                <form method="POST" id="place-order-form">
                   <input type="hidden" name="action" value="place-order" />
                   <input
                     type="hidden"
                     name="addressId"
-                    value={selectedAddressId}
+                    value={selectedAddressId ?? ""}
                   />
                   <input
                     type="hidden"
                     name="paymentMethod"
                     value={paymentMethod}
                   />
+                  {isGuest && guestEmail && (
+                    <input type="hidden" name="guestEmail" value={guestEmail} />
+                  )}
+                  {isGuest && guestAddress && (
+                    <input
+                      type="hidden"
+                      name="guestAddress"
+                      value={JSON.stringify(guestAddress)}
+                    />
+                  )}
 
                   <div class="bg-white shadow-sm rounded-lg p-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -560,7 +814,8 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                     </a>
                     <button
                       type="submit"
-                      class="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                      id="place-order-btn"
+                      class="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {paymentMethod === "razorpay"
                         ? "Proceed to Payment"
@@ -568,6 +823,27 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                     </button>
                   </div>
                 </form>
+                {/* deno-lint-ignore react-no-danger */}
+                <script
+                  dangerouslySetInnerHTML={{
+                    __html: `
+                    (function() {
+                      var form = document.getElementById('place-order-form');
+                      var btn = document.getElementById('place-order-btn');
+                      if (form && btn) {
+                        form.addEventListener('submit', function(e) {
+                          if (btn.disabled) {
+                            e.preventDefault();
+                            return false;
+                          }
+                          btn.disabled = true;
+                          btn.textContent = 'Processing...';
+                        });
+                      }
+                    })();
+                  `,
+                  }}
+                />
               </div>
             )}
           </div>
@@ -591,13 +867,13 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
                   <span class="font-medium">
                     {shipping === 0
                       ? <span class="text-green-600">FREE</span>
-                      : (
-                        formatCurrency(shipping)
-                      )}
+                      : formatCurrency(shipping)}
                   </span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Tax (GST 18%)</span>
+                  <span class="text-gray-600">
+                    Tax ({(taxRate * 100).toFixed(0)}%)
+                  </span>
                   <span class="font-medium">{formatCurrency(tax)}</span>
                 </div>
               </div>
@@ -618,7 +894,8 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
               )}
               {shipping > 0 && (
                 <p class="mt-4 text-sm text-gray-500">
-                  Add {formatCurrency(500 - subtotal)} more for free shipping
+                  Add {formatCurrency(freeShippingThreshold - subtotal)}{" "}
+                  more for free shipping
                 </p>
               )}
             </div>
@@ -628,3 +905,215 @@ export default define.page<typeof handler>(function CheckoutPage({ data }) {
     </div>
   );
 });
+
+/**
+ * Inline guest address form component (server-rendered, not an island)
+ */
+function GuestAddressFormInline(
+  { initialEmail, initialAddress }: {
+    initialEmail?: string;
+    initialAddress?: GuestAddress | null;
+  },
+) {
+  return (
+    <form method="POST" id="guest-address-form">
+      <input type="hidden" name="action" value="guest-address" />
+
+      {/* Email */}
+      <div class="mb-4">
+        <label
+          for="guestEmail"
+          class="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Email Address *
+        </label>
+        <input
+          type="email"
+          id="guestEmail"
+          name="guestEmail"
+          value={initialEmail || ""}
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="your@email.com"
+        />
+        <p class="mt-1 text-xs text-gray-500">
+          Order confirmation will be sent to this email
+        </p>
+      </div>
+
+      <h3 class="text-sm font-medium text-gray-900 mb-3">
+        Shipping Address
+      </h3>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label
+            for="fullName"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Full Name *
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={initialAddress?.fullName || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label
+            for="phone"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Phone *
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={initialAddress?.phone || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label
+            for="addressLine1"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Address Line 1 *
+          </label>
+          <input
+            type="text"
+            id="addressLine1"
+            name="addressLine1"
+            value={initialAddress?.addressLine1 || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label
+            for="addressLine2"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Address Line 2
+          </label>
+          <input
+            type="text"
+            id="addressLine2"
+            name="addressLine2"
+            value={initialAddress?.addressLine2 || ""}
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label
+            for="city"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            City *
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={initialAddress?.city || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label
+            for="state"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            State *
+          </label>
+          <input
+            type="text"
+            id="state"
+            name="state"
+            value={initialAddress?.state || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label
+            for="postalCode"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Postal Code *
+          </label>
+          <input
+            type="text"
+            id="postalCode"
+            name="postalCode"
+            value={initialAddress?.postalCode || ""}
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label
+            for="country"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Country
+          </label>
+          <input
+            type="text"
+            id="country"
+            name="country"
+            value={initialAddress?.country || "US"}
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+      </div>
+
+      {/* Hidden field to serialize address as JSON for form submission */}
+      <input type="hidden" name="shippingAddress" id="shippingAddressJson" />
+
+      <div class="mt-6 flex justify-end">
+        <button
+          type="submit"
+          class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
+        >
+          Continue to Payment
+        </button>
+      </div>
+
+      {/* Serialize address fields to JSON on submit */}
+      {/* deno-lint-ignore react-no-danger */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+          document.getElementById('guest-address-form').addEventListener('submit', function() {
+            var addr = {
+              fullName: document.getElementById('fullName').value,
+              phone: document.getElementById('phone').value,
+              addressLine1: document.getElementById('addressLine1').value,
+              addressLine2: document.getElementById('addressLine2').value || undefined,
+              city: document.getElementById('city').value,
+              state: document.getElementById('state').value,
+              postalCode: document.getElementById('postalCode').value,
+              country: document.getElementById('country').value || 'US'
+            };
+            document.getElementById('shippingAddressJson').value = JSON.stringify(addr);
+          });
+        `,
+        }}
+      />
+    </form>
+  );
+}

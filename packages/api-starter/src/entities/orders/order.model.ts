@@ -1,4 +1,5 @@
 import {
+  boolean,
   decimal,
   index,
   integer,
@@ -7,6 +8,7 @@ import {
   pgTable,
   text,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { commonUuidColumns } from "../../shared/utils/uuid-columns.ts";
 import { users } from "../../auth/user.model.ts";
@@ -65,10 +67,15 @@ export const orders = pgTable("orders", {
   // Order identifier
   orderNumber: text("order_number").notNull().unique(), // SC-20260107-00001
 
-  // User reference
+  // User reference (nullable for guest orders)
   userId: integer("user_id").references(() => users.id, {
     onDelete: "set null",
-  }).notNull(),
+  }),
+
+  // Guest order fields
+  isGuest: boolean("is_guest").default(false).notNull(),
+  guestEmail: varchar("guest_email", { length: 255 }),
+  guestPhone: varchar("guest_phone", { length: 20 }),
 
   // Totals (all in INR)
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(),
@@ -114,6 +121,12 @@ export const orders = pgTable("orders", {
   paymentStatusIdx: index("idx_orders_payment_status").on(table.paymentStatus),
   orderNumberIdx: index("idx_orders_order_number").on(table.orderNumber),
   createdAtIdx: index("idx_orders_created_at").on(table.createdAt),
+  // Guest order tracking index
+  guestTrackingIdx: index("idx_orders_guest_tracking").on(
+    table.orderNumber,
+    table.guestEmail,
+  ),
+  guestEmailIdx: index("idx_orders_guest_email").on(table.guestEmail),
 }));
 
 // Type inference from schema

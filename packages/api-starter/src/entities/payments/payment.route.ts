@@ -5,15 +5,28 @@ import { requireAuth } from "../../shared/middleware/requireAuth.ts";
 /**
  * Payment Routes (User)
  *
- * All routes require authentication
+ * Public routes (no authentication required):
+ * - POST /payments/guest/create-order - Create Razorpay order for guest checkout
+ * - POST /payments/guest/verify       - Verify payment for guest checkout
  *
- * POST /payments/create-order    - Create Razorpay order for checkout
- * POST /payments/verify          - Verify payment after checkout
- * GET  /payments/:orderId/status - Get payment status
+ * Protected routes (require authentication):
+ * - POST /payments/create-order    - Create Razorpay order for checkout
+ * - POST /payments/verify          - Verify payment after checkout
+ * - GET  /payments/:orderId/status - Get payment status
  */
 const paymentRoutes = new Hono();
 
-// Apply authentication to all routes
+// Guest payment routes (no authentication required)
+paymentRoutes.post(
+  "/payments/guest/create-order",
+  (c) => paymentController.createGuestOrder(c),
+);
+paymentRoutes.post(
+  "/payments/guest/verify",
+  (c) => paymentController.verifyGuestPayment(c),
+);
+
+// Apply authentication to all other routes
 paymentRoutes.use("/payments/*", requireAuth);
 paymentRoutes.use("/payments", requireAuth);
 

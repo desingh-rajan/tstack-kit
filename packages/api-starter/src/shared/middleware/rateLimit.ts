@@ -27,6 +27,7 @@ interface RateLimitEntry {
 }
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
+const RATE_LIMIT_MAX_ENTRIES = 10_000;
 
 // Clean up expired entries periodically (every 5 minutes)
 setInterval(() => {
@@ -110,6 +111,11 @@ export function rateLimit(options: RateLimitOptions) {
     let entry = rateLimitStore.get(key);
 
     if (!entry || entry.resetTime < now) {
+      // Evict oldest entries if store is at capacity
+      if (rateLimitStore.size >= RATE_LIMIT_MAX_ENTRIES) {
+        const firstKey = rateLimitStore.keys().next().value;
+        if (firstKey !== undefined) rateLimitStore.delete(firstKey);
+      }
       // Create new entry or reset expired one
       entry = {
         count: 1,

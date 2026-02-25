@@ -363,22 +363,9 @@ async function createRemoteRepo(
       throw new Error("Failed to create remote repository");
     }
 
-    if (!repoUrl) {
-      throw new Error("Failed to create remote repository");
-    }
-
-    // Authenticated URL for git operations (prevents password prompts)
-    let authenticatedUrl = repoUrl;
-    if (githubToken && repoUrl.startsWith("https://")) {
-      const url = new URL(repoUrl);
-      url.username = "oauth2";
-      url.password = githubToken;
-      authenticatedUrl = url.toString();
-    }
-
-    // Add remote
+    // Add remote (use plain HTTPS URL -- token passed via GIT_ASKPASS for security)
     const remoteCmd = new Deno.Command("git", {
-      args: ["remote", "add", "origin", authenticatedUrl],
+      args: ["remote", "add", "origin", repoUrl],
       cwd: projectPath,
       stdout: "piped",
       stderr: "piped",
@@ -391,10 +378,26 @@ async function createRemoteRepo(
     if (push) {
       Logger.info(`  📤 Pushing branches to remote...`);
 
+      // Build env with GIT_ASKPASS for secure token-based auth
+      // This avoids embedding the token in .git/config or remote URL
+      const gitEnv: Record<string, string> = {};
+      if (githubToken) {
+        // Create a temporary script that echoes the token for git auth
+        const askPassScript = await Deno.makeTempFile({ suffix: ".sh" });
+        await Deno.writeTextFile(
+          askPassScript,
+          `#!/bin/sh\necho "${githubToken}"\n`,
+        );
+        await Deno.chmod(askPassScript, 0o700);
+        gitEnv.GIT_ASKPASS = askPassScript;
+        gitEnv.GIT_TERMINAL_PROMPT = "0";
+      }
+
       for (const branch of ["main", "staging", "dev"]) {
         const pushCmd = new Deno.Command("git", {
           args: ["push", "-u", "origin", branch],
           cwd: projectPath,
+          env: { ...Deno.env.toObject(), ...gitEnv },
           stdout: "piped",
           stderr: "piped",
         });
@@ -409,6 +412,13 @@ async function createRemoteRepo(
             }`,
           );
         }
+      }
+
+      // Clean up temp askpass script
+      if (gitEnv.GIT_ASKPASS) {
+        try {
+          await Deno.remove(gitEnv.GIT_ASKPASS);
+        } catch { /* ignore cleanup failure */ }
       }
     }
 
@@ -620,6 +630,7 @@ export async function createWorkspace(
     await saveWorkspace(metadata);
 
     // Step 6: Create each component project
+    const failedComponents: string[] = [];
     for (const type of componentTypes) {
       Logger.newLine();
       const projectName = `${name}-${type}`;
@@ -678,8 +689,9 @@ export async function createWorkspace(
           }
         }
 
-        Logger.success(`✅ ${type} project created successfully`);
+        Logger.success(`${type} project created successfully`);
       } catch (error) {
+        failedComponents.push(type);
         Logger.error(
           `Failed to create ${type} project: ${
             error instanceof Error ? error.message : String(error)
@@ -688,10 +700,21 @@ export async function createWorkspace(
       }
     }
 
-    // Step 7: Update workspace status to "created"
-    metadata.status = "created";
-    metadata.updatedAt = new Date();
-    await updateWorkspace(name, metadata);
+    // Step 7: Update workspace status based on result
+    if (failedComponents.length > 0) {
+      metadata.status = "partial";
+      metadata.updatedAt = new Date();
+      await updateWorkspace(name, metadata);
+      Logger.warning(
+        `Workspace "${name}" created with failures in: ${
+          failedComponents.join(", ")
+        }`,
+      );
+    } else {
+      metadata.status = "created";
+      metadata.updatedAt = new Date();
+      await updateWorkspace(name, metadata);
+    }
 
     // Step 8: Success message
     Logger.newLine();
@@ -716,6 +739,12 @@ export async function createWorkspace(
     Logger.code(`cd ${name}-api && deno task dev`);
     Logger.newLine();
   } catch (error) {
+    // Update workspace status to partial on failure
+    try {
+      await updateWorkspace(name, { status: "partial", updatedAt: new Date() });
+    } catch {
+      // Ignore KV update failure during error handling
+    }
     Logger.error(
       `Failed to create workspace: ${
         error instanceof Error ? error.message : String(error)

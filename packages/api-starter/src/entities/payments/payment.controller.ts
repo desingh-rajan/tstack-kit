@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { paymentService } from "./payment.service.ts";
 import {
   CreatePaymentOrderSchema,
+  ManualRefundSchema,
   RefundPaymentSchema,
   VerifyPaymentSchema,
 } from "./payment.dto.ts";
@@ -74,6 +75,62 @@ export class PaymentController {
 
     return c.json(ApiResponse.success(result, "Payment status retrieved"));
   }
+
+  /**
+   * Create a Razorpay order for guest checkout
+   * POST /payments/guest/create-order
+   * Requires orderId and email in body for validation
+   */
+  async createGuestOrder(c: Context) {
+    const body = await c.req.json();
+
+    const validation = CreatePaymentOrderSchema.safeParse(body);
+    if (!validation.success) {
+      throw new BadRequestError(validation.error.errors[0].message);
+    }
+
+    if (!body.email) {
+      throw new BadRequestError("Email is required for guest checkout");
+    }
+
+    const result = await paymentService.createGuestPaymentOrder(
+      validation.data.orderId,
+      body.email,
+    );
+
+    return c.json(
+      ApiResponse.success(result, "Payment order created"),
+      201,
+    );
+  }
+
+  /**
+   * Verify payment for guest checkout
+   * POST /payments/guest/verify
+   * Requires email in body for validation
+   */
+  async verifyGuestPayment(c: Context) {
+    const body = await c.req.json();
+
+    const validation = VerifyPaymentSchema.safeParse(body);
+    if (!validation.success) {
+      throw new BadRequestError(validation.error.errors[0].message);
+    }
+
+    if (!body.email) {
+      throw new BadRequestError("Email is required for guest checkout");
+    }
+
+    const result = await paymentService.verifyGuestPayment(
+      validation.data.orderId,
+      body.email,
+      validation.data.razorpayOrderId,
+      validation.data.razorpayPaymentId,
+      validation.data.razorpaySignature,
+    );
+
+    return c.json(ApiResponse.success(result, result.message));
+  }
 }
 
 /**
@@ -101,6 +158,27 @@ export class AdminPaymentController {
     );
 
     return c.json(ApiResponse.success(result, "Refund processed"));
+  }
+
+  /**
+   * Record manual refund for COD/UPI orders
+   * POST /ts-admin/payments/:orderId/manual-refund
+   */
+  async manualRefund(c: Context) {
+    const orderId = c.req.param("orderId");
+    const body = await c.req.json().catch(() => ({}));
+
+    const validation = ManualRefundSchema.safeParse(body);
+    if (!validation.success) {
+      throw new BadRequestError(validation.error.errors[0].message);
+    }
+
+    const result = await paymentService.manualRefund(
+      orderId,
+      validation.data,
+    );
+
+    return c.json(ApiResponse.success(result, "Manual refund recorded"));
   }
 }
 

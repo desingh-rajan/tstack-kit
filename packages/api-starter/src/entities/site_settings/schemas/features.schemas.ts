@@ -10,6 +10,9 @@ export const FeatureFlagsSchema = z.object({
   enableBlog: z.boolean(),
   enableComments: z.boolean(),
   maintenanceMode: z.boolean(),
+  enableRazorpay: z.boolean(),
+  enableCOD: z.boolean(),
+  enableSelfPickup: z.boolean(),
 });
 
 export type FeatureFlags = z.infer<typeof FeatureFlagsSchema>;
@@ -20,4 +23,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   enableBlog: true,
   enableComments: false,
   maintenanceMode: false,
+  enableRazorpay: true,
+  enableCOD: true,
+  enableSelfPickup: true,
 };

@@ -41,6 +41,19 @@ export const RefundPaymentSchema = z.object({
 
 export type RefundPaymentDto = z.infer<typeof RefundPaymentSchema>;
 
+/**
+ * Manual refund request for COD/UPI orders (admin only)
+ */
+export const ManualRefundSchema = z.object({
+  reason: z.string().max(500).optional(),
+  transactionRef: z.string().min(1, "Transaction reference is required").max(
+    200,
+  ),
+  refundDate: z.string().min(1, "Refund date is required"),
+});
+
+export type ManualRefundDto = z.infer<typeof ManualRefundSchema>;
+
 // ============================================
 // Response DTOs
 // ============================================

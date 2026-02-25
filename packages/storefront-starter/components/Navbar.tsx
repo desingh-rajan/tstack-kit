@@ -101,6 +101,7 @@ export default function Navbar({
                   href="/cart"
                   class="text-gray-700 hover:text-indigo-600 transition-colors relative"
                   aria-label="Shopping cart"
+                  data-testid="cart-link"
                 >
                   <svg
                     class="h-6 w-6"

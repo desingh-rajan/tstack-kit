@@ -1,11 +1,20 @@
 import { Context } from "hono";
 import { enquiryService } from "./enquiry.service.ts";
 import { ApiResponse } from "../../shared/utils/response.ts";
-import { NotFoundError } from "../../shared/utils/errors.ts";
+import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
 import type {
   UpdateEnquiryNotesDTO,
   UpdateEnquiryStatusDTO,
 } from "./enquiry.dto.ts";
+
+/** Parse a route param as a positive integer or throw. */
+function requireIntParam(c: Context, name: string): number {
+  const val = parseInt(c.req.param(name), 10);
+  if (isNaN(val) || val <= 0) {
+    throw new BadRequestError(`Invalid ${name}: must be a positive integer`);
+  }
+  return val;
+}
 
 /**
  * Enquiry Controller
@@ -60,7 +69,7 @@ export class EnquiryController {
    * GET /api/enquiries/:id
    */
   static getById = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
+    const id = requireIntParam(c, "id");
     const enquiry = await enquiryService.getById(id);
 
     if (!enquiry) {
@@ -75,7 +84,7 @@ export class EnquiryController {
    * PATCH /api/enquiries/:id/status
    */
   static updateStatus = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
+    const id = requireIntParam(c, "id");
     const user = c.get("user");
     const { status } = c.get("validatedData") as UpdateEnquiryStatusDTO;
 
@@ -93,7 +102,7 @@ export class EnquiryController {
    * PATCH /api/enquiries/:id/notes
    */
   static updateNotes = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
+    const id = requireIntParam(c, "id");
     const { adminNotes } = c.get("validatedData") as UpdateEnquiryNotesDTO;
 
     const enquiry = await enquiryService.updateNotes(id, adminNotes);
@@ -110,7 +119,7 @@ export class EnquiryController {
    * DELETE /api/enquiries/:id
    */
   static delete = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
+    const id = requireIntParam(c, "id");
 
     const deleted = await enquiryService.delete(id);
 

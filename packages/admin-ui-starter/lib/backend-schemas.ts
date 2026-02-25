@@ -133,6 +133,9 @@ export interface FeatureFlags {
   enableBlog: boolean;
   enableComments: boolean;
   maintenanceMode: boolean;
+  enableRazorpay: boolean;
+  enableCOD: boolean;
+  enableSelfPickup: boolean;
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -141,6 +144,9 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   enableBlog: true,
   enableComments: false,
   maintenanceMode: false,
+  enableRazorpay: true,
+  enableCOD: true,
+  enableSelfPickup: true,
 };
 
 // ============================================================================

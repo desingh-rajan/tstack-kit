@@ -253,8 +253,14 @@ export class DrizzleAdapter<T extends Record<string, any>>
     // Find next available number
     let counter = 1;
     let uniqueSlug = `${baseSlug}-${counter}`;
+    const MAX_SLUG_ATTEMPTS = 100;
     while (existingSlugs.has(uniqueSlug)) {
       counter++;
+      if (counter > MAX_SLUG_ATTEMPTS) {
+        throw new Error(
+          `Failed to generate unique slug after ${MAX_SLUG_ATTEMPTS} attempts for: ${baseSlug}`,
+        );
+      }
       uniqueSlug = `${baseSlug}-${counter}`;
     }
 

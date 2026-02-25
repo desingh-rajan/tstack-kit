@@ -40,6 +40,7 @@ export class ApiResponse {
       pagination: {
         page,
         limit,
+        pageSize: limit,
         total,
         totalPages,
         hasNext,

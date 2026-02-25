@@ -21,7 +21,15 @@ import { exists } from "@std/fs";
 
 // Load test environment (Deno-style)
 Deno.env.set("ENVIRONMENT", "test");
-loadSync({ envPath: ".env.test", export: true });
+try {
+  loadSync({ envPath: ".env.test.local", export: true });
+} catch {
+  try {
+    loadSync({ envPath: ".env.test", export: true });
+  } catch {
+    // No env file found, rely on system environment variables
+  }
+}
 
 console.log("🧪 TonyStack Test Setup");
 console.log("=".repeat(50));

@@ -2,6 +2,7 @@ import { and, desc, eq, gte, ilike, inArray, lte, sql } from "drizzle-orm";
 import { db } from "../../config/database.ts";
 import {
   type AddressSnapshot,
+  type NewOrder,
   type Order,
   orders,
   type OrderStatus,
@@ -14,16 +15,22 @@ import { products } from "../products/product.model.ts";
 import { productVariants } from "../product_variants/product-variant.model.ts";
 import { productImages } from "../product_images/product-image.model.ts";
 import { addresses } from "../addresses/address.model.ts";
+import { users } from "../../auth/user.model.ts";
 import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
 import type {
   CheckoutValidationResponse,
   CreateOrderDTO,
+  GuestAddressDTO,
+  GuestCreateOrderDTO,
   OrderListQueryDTO,
   OrderListResponseDTO,
   OrderResponseDTO,
   OrderSummaryDTO,
   StockIssue,
+  TrackOrderDTO,
+  TrackOrderResponseDTO,
 } from "./order.dto.ts";
+import { notificationService } from "../../shared/services/notification.service.ts";
 
 // Constants
 const FREE_SHIPPING_THRESHOLD = 999; // Free shipping above 999 INR
@@ -69,6 +76,35 @@ export class OrderService {
     }
 
     return `${prefix}${String(sequence).padStart(5, "0")}`;
+  }
+
+  /**
+   * Insert order with automatic retry on duplicate order number collision.
+   * Recursively retries until successful or a non-duplicate error occurs.
+   */
+  private async insertOrderWithRetry(
+    orderData: Omit<NewOrder, "orderNumber">,
+  ): Promise<Order> {
+    try {
+      const orderNumber = await this.generateOrderNumber();
+      const [newOrder] = await db
+        .insert(orders)
+        .values({ ...orderData, orderNumber })
+        .returning();
+      return newOrder;
+    } catch (error: unknown) {
+      // Check for unique constraint violation on order_number
+      const isDuplicateOrderNumber = error instanceof Error &&
+        (error.message.includes("unique constraint") ||
+          error.message.includes("duplicate key")) &&
+        error.message.includes("order_number");
+
+      if (isDuplicateOrderNumber) {
+        // Race condition - another request got this number, try again
+        return this.insertOrderWithRetry(orderData);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -283,9 +319,6 @@ export class OrderService {
       );
     }
 
-    // Generate order number
-    const orderNumber = await this.generateOrderNumber();
-
     // Get cart with items for creating order items
     const cart = await db
       .select()
@@ -303,29 +336,23 @@ export class OrderService {
       .from(cartItems)
       .where(eq(cartItems.cartId, cart[0].id));
 
-    // Create order
-    const orderResult = await db
-      .insert(orders)
-      .values({
-        orderNumber,
-        userId,
-        subtotal: validation.totals.subtotal,
-        taxAmount: validation.totals.tax,
-        shippingAmount: validation.totals.shipping,
-        discountAmount: validation.totals.discount,
-        totalAmount: validation.totals.total,
-        status: "pending",
-        paymentStatus: "pending",
-        shippingAddressId: data.shippingAddressId,
-        billingAddressId,
-        shippingAddressSnapshot: validation.shippingAddress,
-        billingAddressSnapshot: validation.billingAddress,
-        paymentMethod: data.paymentMethod,
-        customerNotes: data.customerNotes,
-      })
-      .returning();
-
-    const order = orderResult[0];
+    // Create order with retry on order number collision
+    const order = await this.insertOrderWithRetry({
+      userId,
+      subtotal: validation.totals.subtotal,
+      taxAmount: validation.totals.tax,
+      shippingAmount: validation.totals.shipping,
+      discountAmount: validation.totals.discount,
+      totalAmount: validation.totals.total,
+      status: "pending",
+      paymentStatus: "pending",
+      shippingAddressId: data.shippingAddressId,
+      billingAddressId,
+      shippingAddressSnapshot: validation.shippingAddress,
+      billingAddressSnapshot: validation.billingAddress,
+      paymentMethod: data.paymentMethod,
+      customerNotes: data.customerNotes,
+    });
 
     // Create order items with product snapshots using batched queries
     const orderItemsData: NewOrderItem[] = [];
@@ -414,40 +441,43 @@ export class OrderService {
       }
     }
 
-    // Reduce stock for variants (individual updates needed due to quantity differences)
-    for (const update of variantStockUpdates) {
-      await db
-        .update(productVariants)
+    // Wrap stock updates, order items insertion, and cart status update in a transaction
+    await db.transaction(async (tx) => {
+      // Reduce stock for variants
+      for (const update of variantStockUpdates) {
+        await tx
+          .update(productVariants)
+          .set({
+            stockQuantity:
+              sql`${productVariants.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(productVariants.id, update.id));
+      }
+
+      // Reduce stock for products without variants
+      for (const update of productStockUpdates) {
+        await tx
+          .update(products)
+          .set({
+            stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, update.id));
+      }
+
+      // Insert order items
+      await tx.insert(orderItems).values(orderItemsData);
+
+      // Mark cart as converted
+      await tx
+        .update(carts)
         .set({
-          stockQuantity:
-            sql`${productVariants.stockQuantity} - ${update.quantity}`,
+          status: "converted",
           updatedAt: new Date(),
         })
-        .where(eq(productVariants.id, update.id));
-    }
-
-    // Reduce stock for products without variants
-    for (const update of productStockUpdates) {
-      await db
-        .update(products)
-        .set({
-          stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(products.id, update.id));
-    }
-
-    // Insert order items
-    await db.insert(orderItems).values(orderItemsData);
-
-    // Mark cart as converted
-    await db
-      .update(carts)
-      .set({
-        status: "converted",
-        updatedAt: new Date(),
-      })
-      .where(eq(carts.id, cart[0].id));
+        .where(eq(carts.id, cart[0].id));
+    });
 
     // Return order details
     return this.getOrderById(order.id, userId);
@@ -485,6 +515,9 @@ export class OrderService {
       id: order[0].id,
       orderNumber: order[0].orderNumber,
       userId: order[0].userId,
+      isGuest: order[0].isGuest,
+      guestEmail: order[0].guestEmail,
+      guestPhone: order[0].guestPhone,
       status: order[0].status as OrderStatus,
       paymentStatus: order[0].paymentStatus as PaymentStatus,
       subtotal: order[0].subtotal,
@@ -523,8 +556,8 @@ export class OrderService {
     userId: number,
     query: OrderListQueryDTO,
   ): Promise<OrderListResponseDTO> {
-    const { page, limit, status, paymentStatus, startDate, endDate, search } =
-      query;
+    const { page, status, paymentStatus, startDate, endDate, search } = query;
+    const limit = query.pageSize ?? query.limit ?? 20;
     const offset = (page - 1) * limit;
 
     const conditions = [eq(orders.userId, userId)];
@@ -577,6 +610,9 @@ export class OrderService {
           paymentStatus: order.paymentStatus as PaymentStatus,
           totalAmount: order.totalAmount,
           itemCount: Number(itemsResult[0]?.count || 0),
+          isGuest: order.isGuest,
+          guestEmail: order.guestEmail,
+          guestPhone: order.guestPhone,
           createdAt: order.createdAt,
         };
       }),
@@ -586,6 +622,7 @@ export class OrderService {
       orders: orderSummaries,
       pagination: {
         page,
+        pageSize: limit,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
@@ -622,41 +659,43 @@ export class OrderService {
       );
     }
 
-    // Restore stock
+    // Restore stock and update order status atomically
     const items = await db
       .select()
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
 
-    for (const item of items) {
-      if (item.variantId) {
-        await db
-          .update(productVariants)
-          .set({
-            stockQuantity:
-              sql`${productVariants.stockQuantity} + ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(productVariants.id, item.variantId));
-      } else {
-        await db
-          .update(products)
-          .set({
-            stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(products.id, item.productId));
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        if (item.variantId) {
+          await tx
+            .update(productVariants)
+            .set({
+              stockQuantity:
+                sql`${productVariants.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(productVariants.id, item.variantId));
+        } else {
+          await tx
+            .update(products)
+            .set({
+              stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(products.id, item.productId));
+        }
       }
-    }
 
-    // Update order status
-    await db
-      .update(orders)
-      .set({
-        status: "cancelled",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
+      // Update order status
+      await tx
+        .update(orders)
+        .set({
+          status: "cancelled",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId));
+    });
 
     return this.getOrderById(orderId);
   }
@@ -697,36 +736,55 @@ export class OrderService {
       );
     }
 
-    // If cancelling, restore stock
+    // If cancelling, restore stock and update order atomically
     if (status === "cancelled") {
       const items = await db
         .select()
         .from(orderItems)
         .where(eq(orderItems.orderId, orderId));
 
-      for (const item of items) {
-        if (item.variantId) {
-          await db
-            .update(productVariants)
-            .set({
-              stockQuantity:
-                sql`${productVariants.stockQuantity} + ${item.quantity}`,
-              updatedAt: new Date(),
-            })
-            .where(eq(productVariants.id, item.variantId));
-        } else {
-          await db
-            .update(products)
-            .set({
-              stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
-              updatedAt: new Date(),
-            })
-            .where(eq(products.id, item.productId));
-        }
+      const updateData: Partial<Order> = {
+        status,
+        updatedAt: new Date(),
+      };
+
+      if (adminNotes) {
+        updateData.adminNotes = adminNotes;
       }
+
+      await db.transaction(async (tx) => {
+        for (const item of items) {
+          if (item.variantId) {
+            await tx
+              .update(productVariants)
+              .set({
+                stockQuantity:
+                  sql`${productVariants.stockQuantity} + ${item.quantity}`,
+                updatedAt: new Date(),
+              })
+              .where(eq(productVariants.id, item.variantId));
+          } else {
+            await tx
+              .update(products)
+              .set({
+                stockQuantity:
+                  sql`${products.stockQuantity} + ${item.quantity}`,
+                updatedAt: new Date(),
+              })
+              .where(eq(products.id, item.productId));
+          }
+        }
+
+        await tx
+          .update(orders)
+          .set(updateData)
+          .where(eq(orders.id, orderId));
+      });
+
+      return this.getOrderById(orderId);
     }
 
-    // Update order
+    // Non-cancel status update
     const updateData: Partial<Order> = {
       status,
       updatedAt: new Date(),
@@ -792,8 +850,8 @@ export class OrderService {
    * Get all orders (admin)
    */
   async getAllOrders(query: OrderListQueryDTO): Promise<OrderListResponseDTO> {
-    const { page, limit, status, paymentStatus, startDate, endDate, search } =
-      query;
+    const { page, status, paymentStatus, startDate, endDate, search } = query;
+    const limit = query.pageSize ?? query.limit ?? 20;
     const offset = (page - 1) * limit;
 
     const conditions = [];
@@ -831,13 +889,27 @@ export class OrderService {
       .limit(limit)
       .offset(offset);
 
-    // Get item counts for each order
+    // Get item counts for each order (admin view includes guest info)
+    const userIds = [
+      ...new Set(
+        ordersList.filter((o) => o.userId).map((o) => o.userId as number),
+      ),
+    ];
+
+    // Batch fetch users for order summaries
+    const usersData = userIds.length > 0
+      ? await db.select().from(users).where(inArray(users.id, userIds))
+      : [];
+    const userMap = new Map(usersData.map((u) => [u.id, u]));
+
     const orderSummaries: OrderSummaryDTO[] = await Promise.all(
       ordersList.map(async (order) => {
         const itemsResult = await db
           .select({ count: sql<number>`sum(quantity)` })
           .from(orderItems)
           .where(eq(orderItems.orderId, order.id));
+
+        const user = order.userId ? userMap.get(order.userId) : undefined;
 
         return {
           id: order.id,
@@ -846,7 +918,17 @@ export class OrderService {
           paymentStatus: order.paymentStatus as PaymentStatus,
           totalAmount: order.totalAmount,
           itemCount: Number(itemsResult[0]?.count || 0),
+          isGuest: order.isGuest,
+          guestEmail: order.guestEmail,
+          guestPhone: order.guestPhone,
           createdAt: order.createdAt,
+          user: user
+            ? {
+              id: user.id,
+              email: user.email,
+              username: user.username ?? undefined,
+            }
+            : undefined,
         };
       }),
     );
@@ -855,6 +937,7 @@ export class OrderService {
       orders: orderSummaries,
       pagination: {
         page,
+        pageSize: limit,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
@@ -896,6 +979,529 @@ export class OrderService {
       postalCode: address[0].postalCode,
       country: address[0].country,
     };
+  }
+
+  /**
+   * Convert inline address DTO to AddressSnapshot
+   */
+  private addressDtoToSnapshot(address: GuestAddressDTO): AddressSnapshot {
+    return {
+      id: crypto.randomUUID(),
+      fullName: address.fullName,
+      phone: address.phone,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 ?? undefined,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country ?? "US",
+    };
+  }
+
+  // ==================== GUEST CHECKOUT METHODS ====================
+
+  /**
+   * Validate guest checkout with inline addresses
+   */
+  async validateGuestCheckout(
+    guestId: string,
+    shippingAddress: GuestAddressDTO,
+    billingAddress?: GuestAddressDTO,
+    useSameAddress = true,
+  ): Promise<CheckoutValidationResponse> {
+    // Get guest's active cart
+    const cart = await db
+      .select()
+      .from(carts)
+      .where(
+        and(
+          eq(carts.guestId, guestId),
+          eq(carts.status, "active"),
+        ),
+      )
+      .limit(1);
+
+    if (cart.length === 0) {
+      throw new BadRequestError("No active cart found");
+    }
+
+    // Get cart items
+    const items = await db
+      .select()
+      .from(cartItems)
+      .where(eq(cartItems.cartId, cart[0].id));
+
+    if (items.length === 0) {
+      throw new BadRequestError("Cart is empty");
+    }
+
+    // Convert inline addresses to snapshots
+    const shippingAddressSnapshot = this.addressDtoToSnapshot(shippingAddress);
+    const billingAddressSnapshot = useSameAddress
+      ? shippingAddressSnapshot
+      : billingAddress
+      ? this.addressDtoToSnapshot(billingAddress)
+      : shippingAddressSnapshot;
+
+    // Validate stock and calculate totals using BATCH QUERIES
+    const stockIssues: StockIssue[] = [];
+    let subtotal = 0;
+    let itemCount = 0;
+
+    const productIds = [...new Set(items.map((item) => item.productId))];
+    const variantIds = items
+      .filter((item) => item.variantId)
+      .map((item) => item.variantId as string);
+
+    const productsData = productIds.length > 0
+      ? await db.select().from(products).where(inArray(products.id, productIds))
+      : [];
+    const productMap = new Map(productsData.map((p) => [p.id, p]));
+
+    const variantsData = variantIds.length > 0
+      ? await db
+        .select()
+        .from(productVariants)
+        .where(inArray(productVariants.id, variantIds))
+      : [];
+    const variantMap = new Map(variantsData.map((v) => [v.id, v]));
+
+    for (const item of items) {
+      const product = productMap.get(item.productId);
+
+      if (!product || !product.isActive || product.deletedAt) {
+        stockIssues.push({
+          itemId: item.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: product?.name || "Unknown product",
+          requested: item.quantity,
+          available: 0,
+          issue: "product_unavailable",
+        });
+        continue;
+      }
+
+      const variant = item.variantId ? variantMap.get(item.variantId) : null;
+      const activeVariant = variant?.isActive ? variant : undefined;
+      const stockQuantity = activeVariant?.stockQuantity ??
+        product.stockQuantity;
+
+      if (stockQuantity <= 0) {
+        stockIssues.push({
+          itemId: item.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: product.name,
+          requested: item.quantity,
+          available: 0,
+          issue: "out_of_stock",
+        });
+      } else if (stockQuantity < item.quantity) {
+        stockIssues.push({
+          itemId: item.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: product.name,
+          requested: item.quantity,
+          available: stockQuantity,
+          issue: "insufficient_stock",
+        });
+      }
+
+      const price = activeVariant?.price ?? product.price;
+      subtotal += parseFloat(price) * item.quantity;
+      itemCount += item.quantity;
+    }
+
+    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD
+      ? 0
+      : SHIPPING_COST;
+    const taxAmount = subtotal * TAX_RATE;
+    const totalAmount = subtotal + shippingAmount + taxAmount;
+
+    return {
+      valid: stockIssues.length === 0,
+      cart: {
+        id: cart[0].id,
+        itemCount,
+        uniqueItemCount: items.length,
+        subtotal: subtotal.toFixed(2),
+      },
+      shipping: {
+        amount: shippingAmount.toFixed(2),
+        freeShippingThreshold: FREE_SHIPPING_THRESHOLD.toFixed(2),
+        isFreeShipping: shippingAmount === 0,
+      },
+      tax: {
+        rate: (TAX_RATE * 100).toFixed(0) + "%",
+        amount: taxAmount.toFixed(2),
+      },
+      discount: {
+        amount: "0.00",
+      },
+      totals: {
+        subtotal: subtotal.toFixed(2),
+        shipping: shippingAmount.toFixed(2),
+        tax: taxAmount.toFixed(2),
+        discount: "0.00",
+        total: totalAmount.toFixed(2),
+      },
+      issues: stockIssues,
+      shippingAddress: shippingAddressSnapshot,
+      billingAddress: billingAddressSnapshot,
+    };
+  }
+
+  /**
+   * Create order for guest user
+   */
+  async createGuestOrder(
+    guestId: string,
+    data: GuestCreateOrderDTO,
+  ): Promise<OrderResponseDTO> {
+    // Validate guest checkout first
+    const validation = await this.validateGuestCheckout(
+      guestId,
+      data.shippingAddress,
+      data.billingAddress,
+      data.useSameAddress,
+    );
+
+    if (!validation.valid) {
+      throw new BadRequestError(
+        `Cannot create order: ${
+          validation.issues.map((i) => i.productName + " - " + i.issue).join(
+            ", ",
+          )
+        }`,
+      );
+    }
+
+    // Get guest cart with items
+    const cart = await db
+      .select()
+      .from(carts)
+      .where(
+        and(
+          eq(carts.guestId, guestId),
+          eq(carts.status, "active"),
+        ),
+      )
+      .limit(1);
+
+    const cartItemsList = await db
+      .select()
+      .from(cartItems)
+      .where(eq(cartItems.cartId, cart[0].id));
+
+    const guestPhone = data.shippingAddress.phone;
+
+    // Create guest order with retry on order number collision
+    const order = await this.insertOrderWithRetry({
+      userId: null,
+      isGuest: true,
+      guestEmail: data.guestEmail,
+      guestPhone: guestPhone,
+      subtotal: validation.totals.subtotal,
+      taxAmount: validation.totals.tax,
+      shippingAmount: validation.totals.shipping,
+      discountAmount: validation.totals.discount,
+      totalAmount: validation.totals.total,
+      status: "pending",
+      paymentStatus: "pending",
+      shippingAddressId: null,
+      billingAddressId: null,
+      shippingAddressSnapshot: validation.shippingAddress,
+      billingAddressSnapshot: validation.billingAddress,
+      paymentMethod: data.paymentMethod,
+      customerNotes: data.customerNotes,
+    });
+
+    // Create order items with product snapshots using BATCH QUERIES
+    const productIds = [
+      ...new Set(cartItemsList.map((item) => item.productId)),
+    ];
+    const variantIds = cartItemsList
+      .filter((item) => item.variantId)
+      .map((item) => item.variantId as string);
+
+    const productsData = productIds.length > 0
+      ? await db.select().from(products).where(inArray(products.id, productIds))
+      : [];
+    const productMap = new Map(productsData.map((p) => [p.id, p]));
+
+    const imagesData = productIds.length > 0
+      ? await db
+        .select()
+        .from(productImages)
+        .where(
+          and(
+            inArray(productImages.productId, productIds),
+            eq(productImages.isPrimary, true),
+          ),
+        )
+      : [];
+    const imageMap = new Map(imagesData.map((img) => [img.productId, img]));
+
+    const variantsData = variantIds.length > 0
+      ? await db
+        .select()
+        .from(productVariants)
+        .where(inArray(productVariants.id, variantIds))
+      : [];
+    const variantMap = new Map(variantsData.map((v) => [v.id, v]));
+
+    const orderItemsData: NewOrderItem[] = [];
+    const productStockUpdates: { id: string; quantity: number }[] = [];
+    const variantStockUpdates: { id: string; quantity: number }[] = [];
+
+    for (const item of cartItemsList) {
+      const product = productMap.get(item.productId);
+      if (!product) continue;
+
+      const image = imageMap.get(item.productId);
+      const variant = item.variantId ? variantMap.get(item.variantId) : null;
+
+      const price = variant?.price ?? product.price;
+      const totalPrice = (parseFloat(price) * item.quantity).toFixed(2);
+
+      let variantName = null;
+      if (variant?.options) {
+        const options = variant.options as Record<string, string>;
+        variantName = Object.entries(options)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(", ");
+      }
+
+      orderItemsData.push({
+        orderId: order.id,
+        productId: item.productId,
+        variantId: item.variantId,
+        productName: product.name,
+        variantName,
+        sku: variant?.sku ?? product.sku,
+        productImage: image?.url ?? null,
+        price,
+        quantity: item.quantity,
+        totalPrice,
+      });
+
+      if (variant) {
+        variantStockUpdates.push({ id: variant.id, quantity: item.quantity });
+      } else {
+        productStockUpdates.push({
+          id: item.productId,
+          quantity: item.quantity,
+        });
+      }
+    }
+
+    // Wrap stock updates, order items insertion, and cart status update in a transaction
+    await db.transaction(async (tx) => {
+      for (const update of productStockUpdates) {
+        await tx
+          .update(products)
+          .set({
+            stockQuantity: sql`${products.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, update.id));
+      }
+
+      for (const update of variantStockUpdates) {
+        await tx
+          .update(productVariants)
+          .set({
+            stockQuantity:
+              sql`${productVariants.stockQuantity} - ${update.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(productVariants.id, update.id));
+      }
+
+      await tx.insert(orderItems).values(orderItemsData);
+
+      await tx
+        .update(carts)
+        .set({
+          status: "converted",
+          updatedAt: new Date(),
+        })
+        .where(eq(carts.id, cart[0].id));
+    });
+
+    const orderDetails = await this.getOrderById(order.id);
+
+    // Send confirmation email for COD orders
+    if (
+      orderDetails.paymentMethod === "cod" &&
+      orderDetails.shippingAddress
+    ) {
+      const recipientEmail = orderDetails.guestEmail!;
+      notificationService.sendOrderConfirmationEmail(recipientEmail, {
+        userName: orderDetails.shippingAddress.fullName,
+        orderNumber: orderDetails.orderNumber,
+        orderDate: orderDetails.createdAt.toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        items: orderDetails.items.map((item) => ({
+          name: item.productName,
+          variant: item.variantName || undefined,
+          quantity: item.quantity,
+          price: parseFloat(item.price),
+        })),
+        subtotal: parseFloat(orderDetails.subtotal),
+        shipping: parseFloat(orderDetails.shippingAmount),
+        tax: parseFloat(orderDetails.taxAmount),
+        total: parseFloat(orderDetails.totalAmount),
+        shippingAddress: {
+          fullName: orderDetails.shippingAddress.fullName,
+          addressLine1: orderDetails.shippingAddress.addressLine1,
+          addressLine2: orderDetails.shippingAddress.addressLine2,
+          city: orderDetails.shippingAddress.city,
+          state: orderDetails.shippingAddress.state,
+          postalCode: orderDetails.shippingAddress.postalCode,
+          country: orderDetails.shippingAddress.country,
+        },
+      }).catch((err: unknown) => {
+        console.error(
+          "[OrderService] Failed to send guest COD confirmation email:",
+          err,
+        );
+      });
+    }
+
+    return orderDetails;
+  }
+
+  /**
+   * Track order by order number and email (public endpoint)
+   */
+  async trackOrder(data: TrackOrderDTO): Promise<TrackOrderResponseDTO> {
+    const normalizedEmail = data.email.toLowerCase().trim();
+
+    // Find order by order number and match email
+    const result = await db
+      .select({
+        order: orders,
+        userEmail: users.email,
+      })
+      .from(orders)
+      .leftJoin(users, eq(orders.userId, users.id))
+      .where(eq(orders.orderNumber, data.orderNumber))
+      .limit(1);
+
+    if (result.length === 0) {
+      throw new NotFoundError("Order not found");
+    }
+
+    const row = result[0];
+
+    // Match email: check guest email or user email
+    const orderEmail = row.order.isGuest
+      ? row.order.guestEmail?.toLowerCase().trim()
+      : row.userEmail?.toLowerCase().trim();
+
+    if (orderEmail !== normalizedEmail) {
+      throw new NotFoundError("Order not found"); // Don't reveal if order exists
+    }
+
+    // Get order items
+    const items = await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, row.order.id));
+
+    return {
+      id: row.order.id,
+      orderNumber: row.order.orderNumber,
+      status: row.order.status as OrderStatus,
+      paymentStatus: row.order.paymentStatus as PaymentStatus,
+      totalAmount: row.order.totalAmount,
+      paymentMethod: row.order.paymentMethod,
+      shippingAddress: row.order.shippingAddressSnapshot as
+        | AddressSnapshot
+        | null,
+      items: items.map((item) => ({
+        id: item.id,
+        productId: item.productId,
+        variantId: item.variantId,
+        productName: item.productName,
+        variantName: item.variantName,
+        sku: item.sku,
+        price: item.price,
+        quantity: item.quantity,
+        totalPrice: item.totalPrice,
+        productImage: item.productImage,
+      })),
+      createdAt: row.order.createdAt,
+      updatedAt: row.order.updatedAt,
+    };
+  }
+
+  /**
+   * Get guest order for payment (verifies email ownership)
+   */
+  async getGuestOrderForPayment(
+    orderId: string,
+    email: string,
+  ): Promise<OrderResponseDTO> {
+    const normalizedEmail = email.toLowerCase().trim();
+    const order = await this.getOrderById(orderId);
+
+    if (!order.isGuest) {
+      throw new NotFoundError("Order not found");
+    }
+
+    if (order.guestEmail?.toLowerCase().trim() !== normalizedEmail) {
+      throw new NotFoundError("Order not found");
+    }
+
+    return order;
+  }
+
+  /**
+   * Claim guest orders when a user registers with the same email.
+   * Reassigns guest orders to the authenticated user.
+   */
+  async claimGuestOrders(
+    userId: number,
+    email: string,
+  ): Promise<{ claimedCount: number }> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const guestOrders = await db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.isGuest, true),
+          sql`LOWER(${orders.guestEmail}) = ${normalizedEmail}`,
+        ),
+      );
+
+    if (guestOrders.length === 0) {
+      return { claimedCount: 0 };
+    }
+
+    const orderIds = guestOrders.map((o) => o.id);
+    await db
+      .update(orders)
+      .set({
+        userId: userId,
+        isGuest: false,
+        updatedAt: new Date(),
+      })
+      .where(inArray(orders.id, orderIds));
+
+    console.log(
+      `[OrderService] Claimed ${orderIds.length} guest orders for user ${userId} (${email})`,
+    );
+
+    return { claimedCount: orderIds.length };
   }
 }
 

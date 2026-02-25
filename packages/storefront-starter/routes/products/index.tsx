@@ -4,7 +4,7 @@
 
 import { Head } from "fresh/runtime";
 import { define } from "@/utils.ts";
-import { api, type Category, type Product } from "@/lib/api.ts";
+import type { Category, Product } from "@/lib/api.ts";
 import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer.tsx";
 
@@ -18,6 +18,7 @@ export const handler = define.handlers({
     const sortOrder = (url.searchParams.get("order") || "desc") as
       | "asc"
       | "desc";
+    const api = ctx.state.api;
 
     const [productsResponse, categoriesResponse] = await Promise.all([
       api.getProducts({

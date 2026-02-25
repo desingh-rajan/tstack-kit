@@ -111,6 +111,7 @@ export default function AddToCart(
           type="button"
           onClick={addToCart}
           disabled={!inStock || isLoading}
+          data-testid="add-to-cart"
           class={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
             inStock && !isLoading
               ? "bg-indigo-600 text-white hover:bg-indigo-700"

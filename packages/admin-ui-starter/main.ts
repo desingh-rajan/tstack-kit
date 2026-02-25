@@ -5,6 +5,11 @@ export const app = new App<State>();
 
 app.use(staticFiles());
 
+// Health check endpoint for deployment monitoring
+app.get("/health", () => {
+  return Response.json({ status: "ok" });
+});
+
 // Pass a shared value from a middleware
 app.use(async (ctx) => {
   ctx.state.shared = "hello";
@@ -28,3 +33,7 @@ app.use(exampleLoggerMiddleware);
 
 // Include file-system based routes here
 app.fsRoutes();
+
+if (import.meta.main) {
+  app.listen();
+}

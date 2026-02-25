@@ -3,7 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 
 export const handler = define.handlers({
   GET(_ctx) {
@@ -30,7 +30,7 @@ export const handler = define.handlers({
       };
     }
 
-    const _response = await api.forgotPassword(email);
+    const _response = await ctx.state.api.forgotPassword(email);
 
     // Always show success to prevent email enumeration
     return {

@@ -28,10 +28,12 @@ async function dropDatabaseWithPassword(
       args: [
         "-U",
         dbUser,
+        "-d",
+        "postgres",
         "-h",
         "localhost",
         "-c",
-        `DROP DATABASE IF EXISTS ${dbName}`,
+        `DROP DATABASE IF EXISTS "${dbName.replace(/"/g, '""')}"`,
       ],
       env: { PGPASSWORD: dbPassword },
       stdout: "piped",
@@ -80,7 +82,7 @@ async function dropDatabaseWithDocker(dbName: string): Promise<boolean> {
         "-U",
         "postgres",
         "-c",
-        `DROP DATABASE IF EXISTS ${dbName}`,
+        `DROP DATABASE IF EXISTS "${dbName.replace(/"/g, '""')}"`,
       ],
       stdout: "piped",
       stderr: "piped",
@@ -104,7 +106,7 @@ async function dropDatabaseWithSudo(dbName: string): Promise<boolean> {
         "postgres",
         "psql",
         "-c",
-        `DROP DATABASE IF EXISTS ${dbName}`,
+        `DROP DATABASE IF EXISTS "${dbName.replace(/"/g, '""')}"`,
       ],
       stdin: "inherit",
       stdout: "inherit",
@@ -132,8 +134,8 @@ async function dropDatabases(
     { name: prodDbName, label: "Production database" },
   ];
 
-  const dbUser = "postgres";
-  const dbPassword = "password";
+  const dbUser = Deno.env.get("PGUSER") || "postgres";
+  const dbPassword = Deno.env.get("PGPASSWORD") || "password";
 
   for (const { name, label } of databases) {
     let dropped = false;

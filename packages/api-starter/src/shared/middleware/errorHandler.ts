@@ -4,11 +4,6 @@ import { AppError, ValidationError } from "../utils/errors.ts";
 import { isDevelopment } from "../../config/env.ts";
 import { ZodError } from "zod";
 
-// Generate unique request ID for correlation
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
-
 // Extract and format Zod validation errors
 function formatZodErrors(zodError: ZodError, isProduction: boolean) {
   if (isProduction) {
@@ -31,7 +26,8 @@ function formatZodErrors(zodError: ZodError, isProduction: boolean) {
 }
 
 export function errorHandler(err: Error, c: Context) {
-  const requestId = generateRequestId();
+  const requestId = c.get("requestId") ||
+    `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   const isProduction = !isDevelopment;
 
   // Log error with request correlation

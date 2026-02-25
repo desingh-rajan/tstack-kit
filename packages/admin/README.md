@@ -239,11 +239,42 @@ curl "http://localhost:8000/admin/products?search=widget&page=1&limit=20"
 
 ## Testing
 
-Core unit tests run without database dependency.
+The test suite includes both pure unit tests (no database) and integration tests
+that run against a real PostgreSQL database.
+
+### Prerequisites
+
+- A running local PostgreSQL server.
+- A PostgreSQL user with `CREATEDB` privileges.
+
+### Database Credentials
+
+Integration tests connect using the `PGUSER` and `PGPASSWORD` environment
+variables. Defaults are `postgres` / `password`.
+
+If your local PostgreSQL uses a different user:
+
+```bash
+PGUSER=your_user PGPASSWORD=your_password deno task test
+```
+
+The test runner creates a `tstack_admin_test` database automatically and drops
+it after tests complete.
+
+### Running Tests
 
 ```bash
 deno task test
 ```
+
+### Troubleshooting
+
+| Symptom                          | Fix                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------ |
+| `password authentication failed` | Set `PGUSER` and `PGPASSWORD` to your local PostgreSQL credentials             |
+| `role "postgres" does not exist` | Same as above -- your system uses a different default user                     |
+| `connection refused`             | Start PostgreSQL: `sudo systemctl start postgresql`                            |
+| Database left behind after crash | `psql -U your_user -d postgres -c "DROP DATABASE IF EXISTS tstack_admin_test"` |
 
 ```
 Core Pagination ........ 22/22 tests

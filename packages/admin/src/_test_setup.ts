@@ -20,8 +20,10 @@ if (environment !== "test") {
 
 // Admin package uses its own test database
 const adminTestDb = "tstack_admin_test";
+const dbUser = Deno.env.get("PGUSER") || "postgres";
+const dbPassword = Deno.env.get("PGPASSWORD") || "password";
 const connectionString =
-  `postgresql://postgres:password@localhost:5432/${adminTestDb}`;
+  `postgresql://${dbUser}:${dbPassword}@localhost:5432/${adminTestDb}`;
 
 // Set DATABASE_URL for tests that expect it
 Deno.env.set("DATABASE_URL", connectionString);
@@ -37,13 +39,15 @@ async function ensureDatabase(dbName: string): Promise<void> {
     const cmd = new Deno.Command("psql", {
       args: [
         "-U",
-        "postgres",
+        dbUser,
         "-h",
         "localhost",
+        "-d",
+        "postgres",
         "-c",
         `CREATE DATABASE ${dbName}`,
       ],
-      env: { PGPASSWORD: "password" },
+      env: { PGPASSWORD: dbPassword },
       stdout: "piped",
       stderr: "piped",
     });

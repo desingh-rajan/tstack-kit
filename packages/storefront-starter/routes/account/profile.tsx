@@ -3,7 +3,6 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer.tsx";
@@ -27,6 +26,7 @@ export const handler = define.handlers({
     const token = requireAuth(ctx, "/account/profile");
     if (token instanceof Response) return token;
 
+    const api = ctx.state.api;
     api.setToken(token);
 
     const formData = await ctx.req.formData();

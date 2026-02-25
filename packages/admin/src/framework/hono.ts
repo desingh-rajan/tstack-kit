@@ -6,6 +6,7 @@
  */
 
 import type { Context } from "hono";
+import { HTTPException } from "hono/http-exception";
 import type { IORMAdapter } from "../orm/base.ts";
 import type { AuthUser, UserRole } from "../core/types.ts";
 
@@ -98,8 +99,11 @@ export class HonoAdminAdapter<T> {
       this.checkAuth(c);
 
       // Parse query parameters
-      const page = parseInt(c.req.query("page") || "1");
-      const limit = Math.min(parseInt(c.req.query("limit") || "20"), 100); // Maximum allowed limit is 100
+      const page = parseInt(c.req.query("page") || "1", 10) || 1;
+      const limit = Math.min(
+        parseInt(c.req.query("limit") || "20", 10) || 20,
+        100,
+      ); // Maximum allowed limit is 100
       const search = c.req.query("search") || "";
       const orderBy = c.req.query("orderBy");
       const orderDir = (c.req.query("orderDir") as "asc" | "desc") || "desc";
@@ -297,10 +301,18 @@ export class HonoAdminAdapter<T> {
       this.checkAuth(c);
 
       const body = await c.req.json();
-      const ids = body.ids || [];
+      const ids = body.ids;
 
       if (!Array.isArray(ids) || ids.length === 0) {
         return c.json({ error: "No IDs provided" }, 400);
+      }
+
+      // Validate each ID is a string or number (prevent injection)
+      const valid = ids.every(
+        (id: unknown) => typeof id === "string" || typeof id === "number",
+      );
+      if (!valid) {
+        return c.json({ error: "Invalid ID format in array" }, 400);
       }
 
       const deletedCount = await this.config.ormAdapter.bulkDelete(ids);
@@ -319,13 +331,17 @@ export class HonoAdminAdapter<T> {
     const user = c.get("user") as AuthUser | undefined;
 
     if (!user) {
-      throw new Error("Unauthorized: Authentication required");
+      throw new HTTPException(401, {
+        message: "Unauthorized: Authentication required",
+      });
     }
 
     if (!this.config.allowedRoles.includes(user.role)) {
-      throw new Error(
-        `Forbidden: Requires one of: ${this.config.allowedRoles.join(", ")}`,
-      );
+      throw new HTTPException(403, {
+        message: `Forbidden: Requires one of: ${
+          this.config.allowedRoles.join(", ")
+        }`,
+      });
     }
   }
 

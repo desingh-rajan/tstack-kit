@@ -151,19 +151,21 @@ const handlers = createCRUDHandlers(postConfig);
 
 ## Supported Field Types
 
-| Type           | UI Output           | Form Input                      |
-| -------------- | ------------------- | ------------------------------- |
-| `string`       | Text                | `<input type="text">`           |
-| `text`         | Truncated/formatted | `<textarea>`                    |
-| `number`       | Number              | `<input type="number">`         |
-| `boolean`      | Badge (Yes/No)      | `<checkbox>`                    |
-| `date`         | Formatted date      | `<input type="date">`           |
-| `datetime`     | Formatted datetime  | `<input type="datetime-local">` |
-| `email`        | Link                | `<input type="email">`          |
-| `select`       | Badge/text          | `<select>` with options         |
-| `json`         | Pretty JSON         | `<textarea>`                    |
-| `image`        | Image gallery       | `ImageUploadPane` component     |
-| `relationship` | Link to related     | `RelationshipSelect` dropdown   |
+| Type           | UI Output           | Form Input                    |
+| -------------- | ------------------- | ----------------------------- |
+| `string`       | Text                | `<input type="text">`         |
+| `text`         | Truncated/formatted | `<textarea>`                  |
+| `textarea`     | Multi-line text     | `<textarea>` (explicit)       |
+| `number`       | Number              | `<input type="number">`       |
+| `boolean`      | Badge (Yes/No)      | `<checkbox>`                  |
+| `date`         | Formatted date      | `<input type="date">`         |
+| `datetime`     | Formatted datetime  | DatePicker component          |
+| `email`        | Link                | `<input type="email">`        |
+| `select`       | Badge/text          | `<select>` with options       |
+| `json`         | Pretty JSON         | `<textarea>`                  |
+| `image`        | Image gallery       | `ImageUploadPane` component   |
+| `relationship` | Link to related     | `RelationshipSelect` dropdown |
+| `custom`       | Custom render fn    | Custom form component         |
 
 ## Image Upload Support
 
@@ -232,13 +234,45 @@ import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
 
 ## Features
 
-- ✅ **Pagination** - Query params `?page=1&pageSize=20`
-- ✅ **Auth** - JWT token in HttpOnly cookies
-- ✅ **Validation** - Client & server-side
-- ✅ **Error Handling** - Graceful fallbacks
-- ✅ **Responsive** - Mobile-friendly
-- ✅ **Theme Switching** - Dark/light mode
-- ✅ **Type-safe** - Full TypeScript inference
+- **Pagination** - Query params `?page=1&pageSize=20`
+- **Auth** - JWT token in HttpOnly cookies
+- **Validation** - Client & server-side
+- **Error Handling** - Graceful fallbacks
+- **Responsive** - Mobile-friendly
+- **Theme Switching** - Dark/light mode
+- **Type-safe** - Full TypeScript inference
+- **Health Check** - `/health` endpoint for container orchestration
+- **SSR API Routing** - `SSR_API_URL` (Docker internal URL) for server-side
+  requests, falls back to `API_BASE_URL`
+
+## Guest Order Management
+
+The admin panel fully supports orders placed by guest (non-registered) users:
+
+- **Customer Type Filter** - Filter orders by All / Guest Orders / Registered
+  Users
+- **Guest Badge** - Orders from guests show a "Guest" badge with their email and
+  phone in the order list
+- **Customer Info Card** - Order detail page shows guest contact info or
+  registered user details
+- **Manual Refund** - Admin can process manual refunds with a transaction
+  reference for orders where automated refund is not available
+
+## Feature Flags
+
+Backend `site_settings` feature flags are loaded and available in entity
+configs:
+
+- `enableRazorpay` / `enableCOD` / `enableSelfPickup` - Payment method toggles
+- `OrderNotifications` - Order email notification toggle
+
+## Entity Config Options
+
+| Option          | Type       | Description                                    |
+| --------------- | ---------- | ---------------------------------------------- |
+| `canEditRecord` | `function` | Per-record control over edit button visibility |
+| `limit`         | `number`   | Custom page size for list queries              |
+| `filters`       | `array`    | Filterable fields with options                 |
 
 ## Project Structure
 

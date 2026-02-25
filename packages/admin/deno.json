@@ -13,14 +13,14 @@
     "lint": "deno lint"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.0",
-    "@std/dotenv": "jsr:@std/dotenv@^0.225.0",
-    "@std/path": "jsr:@std/path@^1.0.0",
-    "hono": "jsr:@hono/hono@^4.6.0",
-    "drizzle-orm": "npm:drizzle-orm@^0.36.0",
-    "drizzle-orm/pg-core": "npm:drizzle-orm@^0.36.0/pg-core",
-    "drizzle-orm/postgres-js": "npm:drizzle-orm@^0.36.0/postgres-js",
-    "postgres": "npm:postgres@^3.4.0"
+    "@std/assert": "jsr:@std/assert@1.0.0",
+    "@std/dotenv": "jsr:@std/dotenv@0.225.0",
+    "@std/path": "jsr:@std/path@1.0.0",
+    "hono": "jsr:@hono/hono@4.6.0",
+    "drizzle-orm": "npm:drizzle-orm@0.36.0",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@0.36.0/pg-core",
+    "drizzle-orm/postgres-js": "npm:drizzle-orm@0.36.0/postgres-js",
+    "postgres": "npm:postgres@3.4.0"
   },
   "fmt": {
     "semiColons": true,

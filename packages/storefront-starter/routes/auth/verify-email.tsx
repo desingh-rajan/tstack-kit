@@ -4,7 +4,7 @@
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -19,7 +19,7 @@ export const handler = define.handlers({
       };
     }
 
-    const response = await api.verifyEmail(token);
+    const response = await ctx.state.api.verifyEmail(token);
 
     return {
       data: {

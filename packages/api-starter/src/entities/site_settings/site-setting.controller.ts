@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import { SiteSettingService } from "./site-setting.service.ts";
 import { ApiResponse } from "../../shared/utils/response.ts";
-import { NotFoundError } from "../../shared/utils/errors.ts";
+import { BadRequestError, NotFoundError } from "../../shared/utils/errors.ts";
 
 export class SiteSettingController {
   /**
@@ -76,7 +76,10 @@ export class SiteSettingController {
    * Requires authentication and superadmin role
    */
   static async update(c: Context) {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id"), 10);
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestError("Invalid id: must be a positive integer");
+    }
     const body = await c.req.json();
     const siteSetting = await SiteSettingService.update(id, body);
 
@@ -96,7 +99,10 @@ export class SiteSettingController {
    * Requires authentication and superadmin role
    */
   static async delete(c: Context) {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id"), 10);
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestError("Invalid id: must be a positive integer");
+    }
     const success = await SiteSettingService.delete(id);
 
     if (!success) {

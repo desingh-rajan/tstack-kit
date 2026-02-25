@@ -105,11 +105,37 @@ Manage your catalog complexity with ease.
 
 Transactional integrity for serious business.
 
-- **Shopping Cart**: Persistent cart logic with guest support.
-- **Order Lifecycle**: State machine for order status (Pending → Paid →
-  Shipped).
-- **Payments**: Abstracted payment processing layer.
+- **Shopping Cart**: Persistent cart logic with guest identity support
+  (`X-Guest-Id` header).
+- **Guest Checkout**: Full purchase flow without account creation. Orders store
+  `guestEmail`, `guestPhone`, and `isGuest` flag. Guest routes are placed before
+  the auth middleware.
+- **Order Lifecycle**: State machine for order status (Pending -> Paid ->
+  Shipped -> Delivered). Includes `insertOrderWithRetry` for order number
+  collision handling.
+- **Order Tracking**: Public endpoint (`POST /orders/track`) to look up orders
+  by email + order number without authentication.
+- **Payments**: Razorpay integration with separate guest and authenticated
+  flows. Includes manual refund support for admin.
 - **Address Book**: User shipping/billing address management.
+
+### 4. Email & Notification System
+
+Transactional email support via Resend or AWS SES.
+
+- **Email Templates**: Order confirmation, processing, shipped, delivered, and
+  refunded notifications.
+- **Admin Notifications**: Automatic email to admin on new order placement.
+- **Notification Service**: Centralized service for dispatching order lifecycle
+  emails.
+
+### 5. Site Settings & Feature Flags
+
+Runtime configuration via `site_settings` table:
+
+- **Payment Method Flags**: `enableRazorpay`, `enableCOD`, `enableSelfPickup`
+- **Notification Flags**: `OrderNotifications` to toggle order emails
+- **Dynamic Config**: Update settings without redeployment
 
 ---
 
@@ -241,6 +267,10 @@ export const publicRoutes = BaseRouteFactory.createCrudRoutes({ ... });
 | `DATABASE_URL`            | **Critical** | PostgreSQL connection string.                        |
 | `JWT_SECRET`              | **Critical** | 64-char hex string for signing tokens.               |
 | `ENVIRONMENT`             | High         | `development`, `test`, or `production`.              |
+| `APP_URL`                 | High         | API base URL (e.g., `https://api.example.com`).      |
+| `STOREFRONT_URL`          | High         | Storefront URL for email links.                      |
+| `APP_CURRENCY`            | Optional     | Currency code for formatting (default: `INR`).       |
+| `DB_POOL_SIZE`            | Optional     | Database connection pool size.                       |
 | `GOOGLE_CLIENT_ID`        | Auth         | Google OAuth Client ID.                              |
 | `GOOGLE_CLIENT_SECRET`    | Auth         | Google OAuth Client Secret.                          |
 | `RAZORPAY_KEY_ID`         | Payments     | Razorpay API Key ID.                                 |
@@ -264,10 +294,52 @@ We treat tests as a first-class citizen.
 - **Integration Tests**: We test against a **real PostgreSQL database**, not
   mocks.
 - **Lifecycle**: The `deno task test` command handles the entire lifecycle:
-  1. Spins up a fresh test DB.
-  2. Runs migrations.
+  1. Creates a fresh `tstack_starter_test` database.
+  2. Generates and runs migrations.
   3. Executes tests.
-  4. Tears down the DB.
+  4. Drops the test database and cleans up generated migrations.
+
+### Prerequisites
+
+- A running local PostgreSQL server.
+- A PostgreSQL user with `CREATEDB` privileges.
+
+### Setup
+
+Create a `.env.test.local` file (gitignored) with your local credentials:
+
+```bash
+cp .env.example .env.test.local
+```
+
+Edit `.env.test.local` -- only these two lines matter:
+
+```dotenv
+ENVIRONMENT=test
+DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/tstack_starter_test
+```
+
+Replace `YOUR_USER` and `YOUR_PASSWORD` with your local PostgreSQL user and
+password. The database name (`tstack_starter_test`) is created and destroyed by
+the test runner -- do not create it manually.
+
+### Running Tests
+
+```bash
+deno task test
+```
+
+### Troubleshooting
+
+| Symptom                          | Cause                                     | Fix                                                                              |
+| -------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `password authentication failed` | Wrong credentials in `.env.test.local`    | Update `DATABASE_URL` with correct user/password                                 |
+| `role "postgres" does not exist` | Default user doesn't exist on your system | Set `DATABASE_URL` to your actual PostgreSQL user                                |
+| `connection refused`             | PostgreSQL not running                    | Start PostgreSQL: `sudo systemctl start postgresql`                              |
+| `.env.test.local` not loading    | File not created                          | Run `cp .env.example .env.test.local` and edit it                                |
+| Database left behind after crash | Test run killed mid-run                   | `psql -U your_user -d postgres -c "DROP DATABASE IF EXISTS tstack_starter_test"` |
+
+### Test Files
 
 `src/entities/products/product.test.ts` (Public API)
 `src/entities/products/product.admin.test.ts` (Admin API)

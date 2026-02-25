@@ -1,19 +1,21 @@
 /**
  * Razorpay Payment Page
- * Handles the Razorpay checkout flow
+ * Handles the Razorpay checkout flow for both authenticated and guest users
  */
 
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
-import { requireAuth } from "@/lib/auth.ts";
+// Per-request API client from middleware (ctx.state.api)
+import { optionalAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const token = requireAuth(ctx, "/checkout");
-    if (token instanceof Response) return token;
+    const { token, guestId } = optionalAuth(ctx);
+    const api = ctx.state.api;
 
     const orderId = ctx.url.searchParams.get("orderId");
+    const guestEmail = ctx.url.searchParams.get("email");
+
     if (!orderId) {
       return new Response(null, {
         status: 302,
@@ -21,11 +23,30 @@ export const handler = define.handlers({
       });
     }
 
-    api.setToken(token);
+    // Determine if this is a guest checkout
+    const isGuest = !token && !!guestEmail;
 
-    // Get order details
-    const orderResponse = await api.getOrder(orderId);
-    if (!orderResponse.success || !orderResponse.data) {
+    // Require either token or guest email
+    if (!token && !guestEmail) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/auth/login?redirect=/checkout" },
+      });
+    }
+
+    // Fetch order - different method for guests vs authenticated users
+    let orderResponse;
+    if (token) {
+      api.setToken(token);
+      orderResponse = await api.getOrder(orderId);
+    } else if (guestEmail) {
+      if (guestId) {
+        api.setGuestId(guestId);
+      }
+      orderResponse = await api.getGuestOrderForPayment(orderId, guestEmail);
+    }
+
+    if (!orderResponse?.success || !orderResponse?.data) {
       return new Response(null, {
         status: 302,
         headers: { Location: "/checkout?error=order-not-found" },
@@ -36,20 +57,49 @@ export const handler = define.handlers({
 
     // Check if already paid
     if (order.paymentStatus === "paid") {
+      if (isGuest) {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `/track-order?orderNumber=${order.orderNumber}&email=${
+              encodeURIComponent(guestEmail!)
+            }&success=true`,
+          },
+        });
+      }
       return new Response(null, {
         status: 302,
         headers: { Location: `/orders/${orderId}?success=true` },
       });
     }
 
-    // Create Razorpay order
-    const paymentResponse = await api.createPaymentOrder(orderId);
+    // Create Razorpay order - use different methods for guests vs authenticated
+    let paymentResponse;
+    if (isGuest && guestEmail) {
+      paymentResponse = await api.createGuestPaymentOrder(orderId, guestEmail);
+    } else if (token) {
+      api.setToken(token);
+      paymentResponse = await api.createPaymentOrder(orderId);
+    } else {
+      return {
+        data: {
+          order,
+          paymentOrder: null,
+          error: "Authentication required",
+          isGuest,
+          guestEmail,
+        },
+      };
+    }
+
     if (!paymentResponse.success || !paymentResponse.data) {
       return {
         data: {
           order,
           paymentOrder: null,
           error: paymentResponse.error || "Failed to create payment order",
+          isGuest,
+          guestEmail,
         },
       };
     }
@@ -59,6 +109,8 @@ export const handler = define.handlers({
         order,
         paymentOrder: paymentResponse.data,
         error: null,
+        isGuest,
+        guestEmail,
       },
     };
   },
@@ -68,8 +120,30 @@ export default define.page<typeof handler>(function PaymentPage({
   data,
   state,
 }) {
-  const { order, paymentOrder, error } = data;
+  const { order, paymentOrder, error, isGuest, guestEmail } = data;
   const user = state.user;
+
+  // For guests, use the guest email and name from the order
+  const prefillName = isGuest
+    ? (order.shippingAddressSnapshot?.fullName || "")
+    : (user?.fullName || "");
+  const prefillEmail = isGuest ? (guestEmail || "") : (user?.email || "");
+  const prefillPhone = isGuest
+    ? (order.guestPhone || order.shippingAddressSnapshot?.phone || "")
+    : (user?.phone || "");
+
+  // Success redirect URL depends on user type
+  const successUrl = isGuest
+    ? `/track-order?orderNumber=${order.orderNumber}&email=${
+      encodeURIComponent(guestEmail || "")
+    }&success=true`
+    : `/orders/${order.id}?success=true`;
+
+  const errorUrl = isGuest
+    ? `/track-order?orderNumber=${order.orderNumber}&email=${
+      encodeURIComponent(guestEmail || "")
+    }&error=verification-failed`
+    : `/orders/${order.id}?error=verification-failed`;
 
   const formatCurrency = (amount: string | number) =>
     new Intl.NumberFormat("en-IN", {
@@ -165,8 +239,8 @@ export default define.page<typeof handler>(function PaymentPage({
 
       {/* Razorpay Script */}
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+      {/* deno-lint-ignore react-no-danger */}
       <script
-        // deno-lint-ignore react-no-danger
         dangerouslySetInnerHTML={{
           __html: `
           document.getElementById('pay-button').onclick = function(e) {
@@ -181,9 +255,9 @@ export default define.page<typeof handler>(function PaymentPage({
               order_id: "${paymentOrder.razorpayOrderId}",
               image: "",
               prefill: {
-                name: "${user?.fullName || ""}",
-                email: "${user?.email || ""}",
-                contact: "${user?.phone || ""}"
+                name: "${prefillName}",
+                email: "${prefillEmail}",
+                contact: "${prefillPhone}"
               },
               notes: {
                 order_id: "${order.id}",
@@ -203,26 +277,27 @@ export default define.page<typeof handler>(function PaymentPage({
                     orderId: "${order.id}",
                     razorpayOrderId: response.razorpay_order_id,
                     razorpayPaymentId: response.razorpay_payment_id,
-                    razorpaySignature: response.razorpay_signature
+                    razorpaySignature: response.razorpay_signature${
+            isGuest ? `,\n                    email: "${guestEmail}"` : ""
+          }
                   })
                 })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                   if (data.success) {
-                    window.location.href = "/orders/${order.id}?success=true";
+                    window.location.href = "${successUrl}";
                   } else {
                     alert("Payment verification failed. Please contact support.");
-                    window.location.href = "/orders/${order.id}?error=verification-failed";
+                    window.location.href = "${errorUrl}";
                   }
                 })
-                .catch(function(err) {
+                .catch(function() {
                   alert("Payment verification failed. Please contact support.");
-                  window.location.href = "/orders/${order.id}?error=verification-failed";
+                  window.location.href = "${errorUrl}";
                 });
               },
               modal: {
                 ondismiss: function() {
-                  // User closed the modal without completing payment
                   console.log("Payment modal closed by user");
                 },
                 escape: true,

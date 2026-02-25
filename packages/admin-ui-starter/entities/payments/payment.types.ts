@@ -41,6 +41,12 @@ export interface RefundRequest {
   reason?: string;
 }
 
+export interface ManualRefundRequest {
+  reason: string;
+  transactionRef: string;
+  refundDate?: string;
+}
+
 export interface RefundResponse {
   success: boolean;
   refundId: string;

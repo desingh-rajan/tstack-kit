@@ -337,7 +337,7 @@ export default define.page<typeof handler>(function OrderDetailPage({ data }) {
                       </span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-base-content/60">Tax (GST 18%)</span>
+                      <span class="text-base-content/60">Tax</span>
                       <span>{formatCurrency(order.taxAmount)}</span>
                     </div>
                     {parseFloat(order.discountAmount) > 0 && (
@@ -356,32 +356,80 @@ export default define.page<typeof handler>(function OrderDetailPage({ data }) {
               </div>
             </div>
 
-            {/* Shipping Address */}
-            {order.shippingAddressSnapshot && (
-              <div class="card bg-base-100 shadow">
-                <div class="card-body">
-                  <h2 class="card-title">Shipping Address</h2>
-                  <div>
-                    <div class="font-semibold">
-                      {order.shippingAddressSnapshot.fullName}
-                    </div>
-                    <div>{order.shippingAddressSnapshot.addressLine1}</div>
-                    {order.shippingAddressSnapshot.addressLine2 && (
-                      <div>{order.shippingAddressSnapshot.addressLine2}</div>
-                    )}
-                    <div>
-                      {order.shippingAddressSnapshot.city},{" "}
-                      {order.shippingAddressSnapshot.state}{" "}
-                      {order.shippingAddressSnapshot.postalCode}
-                    </div>
-                    <div>{order.shippingAddressSnapshot.country}</div>
-                    <div class="text-base-content/60 mt-2">
-                      Phone: {order.shippingAddressSnapshot.phone}
-                    </div>
-                  </div>
+            {/* Customer Info */}
+            <div class="card bg-base-100 shadow">
+              <div class="card-body">
+                <h2 class="card-title">
+                  Customer
+                  {order.isGuest && (
+                    <span class="badge badge-ghost badge-sm">Guest</span>
+                  )}
+                </h2>
+                <div class="space-y-1">
+                  {order.isGuest
+                    ? (
+                      <>
+                        <div class="font-semibold">Guest User</div>
+                        {order.guestEmail && (
+                          <div class="text-sm text-base-content/70">
+                            {order.guestEmail}
+                          </div>
+                        )}
+                        {order.guestPhone && (
+                          <div class="text-sm text-base-content/70">
+                            {order.guestPhone}
+                          </div>
+                        )}
+                      </>
+                    )
+                    : order.user
+                    ? (
+                      <>
+                        <div class="font-semibold">
+                          {order.user.name || "Registered User"}
+                        </div>
+                        <div class="text-sm text-base-content/70">
+                          {order.user.email}
+                        </div>
+                        {order.user.phone && (
+                          <div class="text-sm text-base-content/70">
+                            {order.user.phone}
+                          </div>
+                        )}
+                      </>
+                    )
+                    : <div class="text-sm text-base-content/60">Unknown</div>}
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Shipping Address */}
+            {(order.shippingAddress || order.shippingAddressSnapshot) &&
+              (() => {
+                const addr = order.shippingAddress ||
+                  order.shippingAddressSnapshot;
+                return (
+                  <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                      <h2 class="card-title">Shipping Address</h2>
+                      <div>
+                        <div class="font-semibold">{addr.fullName}</div>
+                        <div>{addr.addressLine1}</div>
+                        {addr.addressLine2 && <div>{addr.addressLine2}</div>}
+                        <div>
+                          {addr.city}, {addr.state} {addr.postalCode}
+                        </div>
+                        <div>{addr.country}</div>
+                        {addr.phone && (
+                          <div class="text-base-content/60 mt-2">
+                            Phone: {addr.phone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
 
           {/* Sidebar */}

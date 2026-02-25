@@ -71,8 +71,14 @@ export async function ensureUniqueSlug(
 ): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
+  const MAX_SLUG_ATTEMPTS = 100;
 
   while (await checkExists(slug)) {
+    if (counter > MAX_SLUG_ATTEMPTS) {
+      throw new Error(
+        `Failed to generate unique slug after ${MAX_SLUG_ATTEMPTS} attempts for: ${baseSlug}`,
+      );
+    }
     slug = `${baseSlug}-${counter}`;
     counter++;
   }
@@ -98,8 +104,14 @@ export function ensureUniqueSlugSync(
 ): string {
   let slug = baseSlug;
   let counter = 1;
+  const MAX_SLUG_ATTEMPTS = 100;
 
   while (existingSlugs.includes(slug)) {
+    if (counter > MAX_SLUG_ATTEMPTS) {
+      throw new Error(
+        `Failed to generate unique slug after ${MAX_SLUG_ATTEMPTS} attempts for: ${baseSlug}`,
+      );
+    }
     slug = `${baseSlug}-${counter}`;
     counter++;
   }

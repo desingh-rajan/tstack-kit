@@ -1,5 +1,10 @@
 import { Context, Next } from "hono";
 
+/** Generate a unique request ID for correlation across logs. */
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
 export function requestLogger() {
   return async (c: Context, next: Next) => {
     const start = Date.now();
@@ -10,7 +15,14 @@ export function requestLogger() {
       c.req.header("X-Real-IP") ||
       "unknown";
 
+    // Generate request ID at the start of the pipeline
+    const requestId = c.req.header("X-Request-ID") || generateRequestId();
+    c.set("requestId", requestId);
+
     await next();
+
+    // Attach request ID to response
+    c.header("X-Request-ID", requestId);
 
     const duration = Date.now() - start;
     const status = c.res.status;

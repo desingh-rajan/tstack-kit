@@ -3,12 +3,7 @@
  */
 
 import { define } from "@/utils.ts";
-import {
-  api,
-  type Order,
-  type OrderStatus,
-  type PaymentStatus,
-} from "@/lib/api.ts";
+import { type Order, type OrderStatus, type PaymentStatus } from "@/lib/api.ts";
 import { requireAuth } from "@/lib/auth.ts";
 import Navbar from "@/components/Navbar.tsx";
 
@@ -35,6 +30,7 @@ export const handler = define.handlers({
     if (token instanceof Response) return token;
 
     try {
+      const api = ctx.state.api;
       api.setToken(token);
       const response = await api.getOrders();
 

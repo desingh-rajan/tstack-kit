@@ -30,6 +30,19 @@ cd packages/cli
 deno task test
 ```
 
+The task runs: `deno test --allow-all --unstable-kv src/ tests/` followed by
+test DB cleanup.
+
+- `--allow-all` -- tests need filesystem, network, and env access
+- `--unstable-kv` -- required because the CLI uses `Deno.openKv()` for project
+  and workspace stores
+
+Manual run (without cleanup):
+
+```bash
+deno test --allow-all --unstable-kv src/ tests/
+```
+
 ### admin
 
 ```bash
@@ -37,12 +50,32 @@ cd packages/admin
 deno task test
 ```
 
+The task runs:
+`ENVIRONMENT=test deno test --allow-all --no-check --trace-leaks src/_test_setup.ts src/`
+followed by test DB cleanup.
+
+- `--allow-all` -- tests connect to PostgreSQL and need env/net/read access
+- `--no-check` -- skips TypeScript type-checking (pre-existing type issues)
+- `--trace-leaks` -- helps identify resource/async-op leaks
+- `src/_test_setup.ts` -- must be listed first; creates and seeds the test
+  database
+- Requires `PGUSER` and `PGPASSWORD` env vars matching your local PostgreSQL
+  credentials (e.g. `PGUSER=tony PGPASSWORD=password deno task test`)
+
 ### api-starter
 
 ```bash
 cd packages/api-starter
 deno task test
 ```
+
+The task runs: test DB setup script, then
+`ENVIRONMENT=test deno test --allow-all src/_test_setup.ts src/`, then cleanup.
+
+- `--allow-all` -- tests need database, filesystem, and env access
+- `src/_test_setup.ts` -- must be listed first; creates the test database
+- If running manually without the setup script, you can run individual test
+  files with: `ENVIRONMENT=test deno test --allow-all --no-check <file>`
 
 > `storefront-starter` and `admin-ui-starter` have no test suite — skip for
 > those packages.

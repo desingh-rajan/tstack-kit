@@ -4,7 +4,7 @@
 
 import { Head } from "fresh/runtime";
 import { define } from "@/utils.ts";
-import { api } from "@/lib/api.ts";
+// Per-request API client from middleware (ctx.state.api)
 import Navbar from "@/components/Navbar.tsx";
 import Footer from "@/components/Footer.tsx";
 import AddToCart from "@/islands/AddToCart.tsx";
@@ -13,6 +13,7 @@ import ProductGallery from "@/islands/ProductGallery.tsx";
 export const handler = define.handlers({
   async GET(ctx) {
     const slug = ctx.params.slug;
+    const api = ctx.state.api;
 
     const response = await api.getProductBySlug(slug);
 

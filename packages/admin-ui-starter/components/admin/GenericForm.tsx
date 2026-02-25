@@ -7,6 +7,7 @@
 import type { EntityConfig, FieldConfig } from "@/lib/admin/types.ts";
 import RelationshipSelect from "@/islands/RelationshipSelect.tsx";
 import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
+import DatePicker from "@/islands/DatePicker.tsx";
 
 interface FormProps {
   config: EntityConfig<unknown>;
@@ -243,13 +244,9 @@ export function GenericForm(
               {field.label}
               {field.required && <span class="text-red-500 ml-1">*</span>}
             </label>
-            <input
-              type="date"
+            <DatePicker
               name={field.name}
               required={field.required}
-              class={`${inputClasses} ${
-                hasError ? "border-red-500 focus:ring-red-100" : ""
-              }`}
               value={value
                 ? new Date(value as string).toISOString().split("T")[0]
                 : ""}
@@ -268,13 +265,10 @@ export function GenericForm(
               {field.label}
               {field.required && <span class="text-red-500 ml-1">*</span>}
             </label>
-            <input
-              type="datetime-local"
+            <DatePicker
               name={field.name}
               required={field.required}
-              class={`${inputClasses} ${
-                hasError ? "border-red-500 focus:ring-red-100" : ""
-              }`}
+              includeTime
               value={value
                 ? new Date(value as string).toISOString().slice(0, 16)
                 : ""}

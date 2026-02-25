@@ -42,7 +42,11 @@ export interface OrderItem {
 export interface Order {
   id: string;
   orderNumber: string;
-  userId: number;
+  userId: number | null;
+  // Guest order fields
+  isGuest: boolean;
+  guestEmail: string | null;
+  guestPhone: string | null;
   subtotal: string;
   taxAmount: string;
   shippingAmount: string;
@@ -55,8 +59,11 @@ export interface Order {
   razorpayPaymentId: string | null;
   shippingAddressId: string | null;
   billingAddressId: string | null;
-  shippingAddressSnapshot: AddressSnapshot | null;
-  billingAddressSnapshot: AddressSnapshot | null;
+  shippingAddress: AddressSnapshot | null;
+  billingAddress: AddressSnapshot | null;
+  // Legacy aliases
+  shippingAddressSnapshot?: AddressSnapshot | null;
+  billingAddressSnapshot?: AddressSnapshot | null;
   customerNotes: string | null;
   adminNotes: string | null;
   createdAt: string;
@@ -67,6 +74,7 @@ export interface Order {
   user?: {
     id: number;
     email: string;
+    phone?: string;
   };
 }
 
@@ -77,6 +85,7 @@ export interface OrderListResponse {
     pagination: {
       page: number;
       limit: number;
+      pageSize?: number;
       total: number;
       totalPages: number;
     };

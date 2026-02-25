@@ -4,7 +4,10 @@ import { BadRequestError } from "../../shared/utils/errors.ts";
 import {
   CheckoutValidateSchema,
   CreateOrderSchema,
+  GuestCheckoutValidateSchema,
+  GuestCreateOrderSchema,
   OrderListQuerySchema,
+  TrackOrderSchema,
   UpdateOrderStatusSchema,
 } from "./order.dto.ts";
 
@@ -152,6 +155,115 @@ export class OrderController {
     return c.json({
       success: true,
       message: "Order cancelled successfully",
+      data: order,
+    });
+  }
+
+  // ==================== GUEST CHECKOUT METHODS ====================
+
+  /**
+   * POST /checkout/guest/validate - Validate cart for guest checkout
+   */
+  async validateGuestCheckout(c: Context) {
+    const guestId = c.req.header("X-Guest-Id") || c.req.query("guestId");
+    if (!guestId) {
+      throw new BadRequestError("Guest ID is required");
+    }
+
+    const body = await c.req.json();
+    const parseResult = GuestCheckoutValidateSchema.safeParse(body);
+    if (!parseResult.success) {
+      throw new BadRequestError(
+        parseResult.error.errors.map((e: { message: string }) => e.message)
+          .join(", "),
+      );
+    }
+
+    const validation = await orderService.validateGuestCheckout(
+      guestId,
+      parseResult.data.shippingAddress,
+      parseResult.data.billingAddress,
+      parseResult.data.useSameAddress,
+    );
+
+    return c.json({
+      success: true,
+      data: validation,
+    });
+  }
+
+  /**
+   * POST /checkout/guest/create - Create order for guest user
+   */
+  async createGuestOrder(c: Context) {
+    const guestId = c.req.header("X-Guest-Id") || c.req.query("guestId");
+    if (!guestId) {
+      throw new BadRequestError("Guest ID is required");
+    }
+
+    const body = await c.req.json();
+    const parseResult = GuestCreateOrderSchema.safeParse(body);
+    if (!parseResult.success) {
+      throw new BadRequestError(
+        parseResult.error.errors.map((e: { message: string }) => e.message)
+          .join(", "),
+      );
+    }
+
+    const order = await orderService.createGuestOrder(
+      guestId,
+      parseResult.data,
+    );
+
+    return c.json({
+      success: true,
+      message: "Order created successfully",
+      data: order,
+    }, 201);
+  }
+
+  /**
+   * POST /orders/track - Track order by order number and email
+   * Public endpoint - no authentication required
+   */
+  async trackOrder(c: Context) {
+    const body = await c.req.json();
+    const parseResult = TrackOrderSchema.safeParse(body);
+    if (!parseResult.success) {
+      throw new BadRequestError(
+        parseResult.error.errors.map((e: { message: string }) => e.message)
+          .join(", "),
+      );
+    }
+
+    const order = await orderService.trackOrder(parseResult.data);
+
+    return c.json({
+      success: true,
+      data: order,
+    });
+  }
+
+  /**
+   * GET /checkout/guest/order/:id - Get guest order for payment
+   * Public endpoint - requires email query param for verification
+   */
+  async getGuestOrderForPayment(c: Context) {
+    const orderId = c.req.param("id");
+    const email = c.req.query("email");
+
+    if (!orderId) {
+      throw new BadRequestError("Order ID is required");
+    }
+
+    if (!email) {
+      throw new BadRequestError("Email is required");
+    }
+
+    const order = await orderService.getGuestOrderForPayment(orderId, email);
+
+    return c.json({
+      success: true,
       data: order,
     });
   }

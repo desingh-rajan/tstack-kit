@@ -19,18 +19,20 @@ export function promptForCredentials(
   // Convert project name to database name: blog-api -> blog_api_dev
   const defaultDbName = projectName.replace(/-/g, "_") + "_dev";
 
+  const dbUser = Deno.env.get("PGUSER") || "postgres";
+  const dbPassword = Deno.env.get("PGPASSWORD") || "password";
+
   Logger.subtitle("Database Configuration:");
   Logger.newLine();
   Logger.info(`Development: ${defaultDbName}`);
   Logger.info(`Test: ${projectName.replace(/-/g, "_")}_test`);
-  Logger.info(`User: postgres (shared for all projects)`);
-  Logger.info(`Password: password (default for local dev)`);
+  Logger.info(`User: ${dbUser}`);
   Logger.newLine();
 
   return {
     dbName: defaultDbName,
-    dbUser: "postgres",
-    dbPassword: "password",
+    dbUser,
+    dbPassword,
   };
 }
 
@@ -47,10 +49,12 @@ async function createDatabaseWithPassword(
       args: [
         "-U",
         dbUser,
+        "-d",
+        "postgres",
         "-h",
         "localhost",
         "-c",
-        `CREATE DATABASE ${dbName}`,
+        `CREATE DATABASE "${dbName.replace(/"/g, '""')}"`,
       ],
       env: { PGPASSWORD: dbPassword },
       stdout: "piped",
@@ -99,7 +103,7 @@ async function createDatabaseWithDocker(dbName: string): Promise<boolean> {
         "-U",
         "postgres",
         "-c",
-        `CREATE DATABASE ${dbName}`,
+        `CREATE DATABASE "${dbName.replace(/"/g, '""')}"`,
       ],
       stdout: "piped",
       stderr: "piped",
@@ -122,7 +126,13 @@ async function createDatabaseWithSudo(dbName: string): Promise<boolean> {
     );
 
     const cmd = new Deno.Command("sudo", {
-      args: ["-u", "postgres", "psql", "-c", `CREATE DATABASE ${dbName}`],
+      args: [
+        "-u",
+        "postgres",
+        "psql",
+        "-c",
+        `CREATE DATABASE "${dbName.replace(/"/g, '""')}"`,
+      ],
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
@@ -189,12 +199,12 @@ export async function setupDatabases(
     `1. Docker: cd ${dbName.replace(/_dev$/, "")} && docker compose up -d`,
   );
   Logger.code(
-    `2. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${dbName}"`,
+    `2. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c 'CREATE DATABASE "${dbName}"'`,
   );
   Logger.code(
-    `3. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${testDbName}"`,
+    `3. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c 'CREATE DATABASE "${testDbName}"'`,
   );
   Logger.code(
-    `4. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c "CREATE DATABASE ${prodDbName}"`,
+    `4. Manual: PGPASSWORD=${dbPassword} psql -U ${dbUser} -h localhost -c 'CREATE DATABASE "${prodDbName}"'`,
   );
 }

@@ -77,3 +77,23 @@ export const DEFAULT_API_CONFIG: ApiConfig = {
     allowedOrigins: ["http://localhost:3000"],
   },
 };
+
+/**
+ * Order Notifications Schema
+ * Admin email notifications for order-related events
+ */
+export const OrderNotificationsSchema = z.object({
+  adminEmail: z.string().min(1),
+  notifyOnNewOrder: z.boolean(),
+  notifyOnRefund: z.boolean(),
+  notifyOnCancellation: z.boolean(),
+});
+
+export type OrderNotifications = z.infer<typeof OrderNotificationsSchema>;
+
+export const DEFAULT_ORDER_NOTIFICATIONS: OrderNotifications = {
+  adminEmail: Deno.env.get("SUPPORT_EMAIL") || "admin@example.com",
+  notifyOnNewOrder: true,
+  notifyOnRefund: true,
+  notifyOnCancellation: true,
+};

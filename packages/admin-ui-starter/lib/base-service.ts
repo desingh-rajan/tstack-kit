@@ -20,9 +20,10 @@ export interface ListResponse<T> {
 /**
  * API Response wrapper format from backend
  * Backend returns: { status: "success", data: ..., pagination?: ... }
+ * Also supports flat pagination fields: { status, data, page, pageSize, total, totalPages }
  */
 interface ApiResponse<T> {
-  status: string;
+  status?: string;
   data: T;
   pagination?: {
     page: number;
@@ -30,6 +31,12 @@ interface ApiResponse<T> {
     total: number;
     totalPages: number;
   };
+  // Flat pagination fields (some endpoints return these at top level)
+  page?: number;
+  pageSize?: number;
+  limit?: number;
+  total?: number;
+  totalPages?: number;
 }
 
 /**
@@ -71,16 +78,10 @@ export class BaseService<T> {
 
     // Extract pagination from nested or flat format
     const paginationData = response.pagination || {
-      page: (response as unknown as Record<string, unknown>).page as number ||
-        1,
-      pageSize:
-        (response as unknown as Record<string, unknown>).pageSize as number ||
-        (response as unknown as Record<string, unknown>).limit as number ||
-        requestedPageSize,
-      total: (response as unknown as Record<string, unknown>).total as number ||
-        dataLength,
-      totalPages:
-        (response as unknown as Record<string, unknown>).totalPages as number ||
+      page: response.page || 1,
+      pageSize: response.pageSize || response.limit || requestedPageSize,
+      total: response.total || dataLength,
+      totalPages: response.totalPages ||
         Math.ceil(dataLength / requestedPageSize) || 1,
     };
 
@@ -89,9 +90,7 @@ export class BaseService<T> {
       data: dataArray,
       pagination: {
         page: paginationData.page || 1,
-        pageSize: paginationData.pageSize ||
-          (paginationData as unknown as { limit?: number }).limit ||
-          requestedPageSize,
+        pageSize: paginationData.pageSize || requestedPageSize,
         total: paginationData.total || dataLength,
         totalPages: paginationData.totalPages ||
           Math.ceil(dataLength / requestedPageSize) || 1,

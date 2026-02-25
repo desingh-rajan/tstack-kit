@@ -238,9 +238,21 @@ export default define.page<typeof handler>(function OrdersListPage({ data }) {
                           </td>
                           <td class="text-sm">{formatDate(order.createdAt)}</td>
                           <td>
-                            <span class="text-sm">
-                              {order.user?.email || `User #${order.userId}`}
-                            </span>
+                            <div class="text-sm">
+                              {order.isGuest
+                                ? (
+                                  <>
+                                    <span class="badge badge-ghost badge-xs mr-1">
+                                      Guest
+                                    </span>
+                                    {order.guestEmail || "Guest"}
+                                  </>
+                                )
+                                : (order.user?.email ||
+                                  (order.userId
+                                    ? `User #${order.userId}`
+                                    : "N/A"))}
+                            </div>
                           </td>
                           <td>{order.itemCount || "-"}</td>
                           <td class="font-semibold">

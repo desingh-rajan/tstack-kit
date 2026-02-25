@@ -37,6 +37,20 @@ postgresql://user:password@host:port/database
 
 ---
 
+## Database Pool Configuration
+
+| Variable             | Required | Default | Description                                          |
+| -------------------- | -------- | ------- | ---------------------------------------------------- |
+| `DB_POOL_SIZE`       | No       | `20`    | Maximum number of connections in the pool            |
+| `DB_IDLE_TIMEOUT`    | No       | `20`    | Seconds before idle connections are closed           |
+| `DB_CONNECT_TIMEOUT` | No       | `10`    | Seconds to wait for a new connection before failing  |
+| `DB_MAX_LIFETIME`    | No       | `1800`  | Seconds before a connection is forcibly cycled (30m) |
+
+Tune these for your deployment size. A small VPS may only need `DB_POOL_SIZE=5`;
+a high-traffic deployment may need `50+`.
+
+---
+
 ## URL Configuration
 
 | Variable         | Required | Default                 | Description                            |

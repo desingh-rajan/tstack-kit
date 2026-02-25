@@ -28,4 +28,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 USER deno
 
-CMD ["run", "--allow-all", "src/main.ts"]
+CMD ["run", "--allow-net", "--allow-env", "--allow-read", "--allow-write=/tmp", "src/main.ts"]

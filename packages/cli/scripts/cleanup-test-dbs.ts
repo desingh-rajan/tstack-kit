@@ -85,9 +85,22 @@ async function listTestDatabases(): Promise<string[]> {
     const query =
       `SELECT datname FROM pg_database WHERE (${includeConditions}) AND ${protectedExact} AND ${protectedPrefixes}`;
 
+    const pgUser = Deno.env.get("PGUSER") || "postgres";
+    const pgPassword = Deno.env.get("PGPASSWORD") || "password";
     const cmd = new Deno.Command("psql", {
-      args: ["-U", "postgres", "-h", "localhost", "-t", "-A", "-c", query],
-      env: { PGPASSWORD: "password" },
+      args: [
+        "-U",
+        pgUser,
+        "-d",
+        "postgres",
+        "-h",
+        "localhost",
+        "-t",
+        "-A",
+        "-c",
+        query,
+      ],
+      env: { PGPASSWORD: pgPassword },
       stdout: "piped",
       stderr: "piped",
     });
@@ -156,16 +169,20 @@ async function dropDatabase(dbName: string): Promise<boolean> {
   }
 
   try {
+    const pgUser = Deno.env.get("PGUSER") || "postgres";
+    const pgPassword = Deno.env.get("PGPASSWORD") || "password";
     const cmd = new Deno.Command("psql", {
       args: [
         "-U",
+        pgUser,
+        "-d",
         "postgres",
         "-h",
         "localhost",
         "-c",
         `DROP DATABASE IF EXISTS "${dbName}"`,
       ],
-      env: { PGPASSWORD: "password" },
+      env: { PGPASSWORD: pgPassword },
       stdout: "piped",
       stderr: "piped",
     });

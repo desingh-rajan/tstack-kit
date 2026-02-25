@@ -4,10 +4,18 @@ import { sql } from "drizzle-orm";
 import { config } from "./env.ts";
 
 // Initialize PostgreSQL connection with pool limits
+// All values can be tuned via environment variables for different deployment sizes.
+const poolSize = parseInt(Deno.env.get("DB_POOL_SIZE") || "20", 10) || 20;
+const idleTimeout = parseInt(Deno.env.get("DB_IDLE_TIMEOUT") || "20", 10) || 20;
+const connectTimeout =
+  parseInt(Deno.env.get("DB_CONNECT_TIMEOUT") || "10", 10) || 10;
+const maxLifetime =
+  parseInt(Deno.env.get("DB_MAX_LIFETIME") || String(60 * 30), 10) || 60 * 30;
 const client = postgres(config.databaseUrl, {
-  max: 20, // Maximum number of connections in pool
-  idle_timeout: 30, // Close idle connections after 30 seconds
-  connect_timeout: 10, // Connection timeout in seconds
+  max: poolSize, // DB_POOL_SIZE — max connections in pool (default: 20)
+  idle_timeout: idleTimeout, // DB_IDLE_TIMEOUT — close idle connections after N seconds (default: 20)
+  connect_timeout: connectTimeout, // DB_CONNECT_TIMEOUT — connection timeout in seconds (default: 10)
+  max_lifetime: maxLifetime, // DB_MAX_LIFETIME — close connections after N seconds (default: 1800)
 });
 
 // Create Drizzle instance with automatic camelCase to snake_case conversion
