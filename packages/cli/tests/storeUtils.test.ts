@@ -147,11 +147,7 @@ Deno.test({
         );
 
         // Update the workspace
-        await updateWorkspace(
-          "test-ws-occ",
-          { status: "partial" },
-          kvPath,
-        );
+        await updateWorkspace("test-ws-occ", { status: "partial" }, kvPath);
 
         const updated = await getWorkspace("test-ws-occ", kvPath);
         assertEquals(updated!.status, "partial");

@@ -77,16 +77,22 @@ export function getMonitoredServices(): { name: string; url: string }[] {
   const services: { name: string; url: string }[] = [];
 
   if (config.apiUrl) {
-    services.push({ name: "API", url: `${config.apiUrl}/health` });
+    services.push({
+      name: "API",
+      url: `${config.apiUrl}${config.apiHealthPath}`,
+    });
   }
   if (config.storefrontUrl) {
     services.push({
       name: "Storefront",
-      url: `${config.storefrontUrl}/health`,
+      url: `${config.storefrontUrl}${config.storefrontHealthPath}`,
     });
   }
   if (config.adminUrl) {
-    services.push({ name: "Admin UI", url: `${config.adminUrl}/health` });
+    services.push({
+      name: "Admin UI",
+      url: `${config.adminUrl}${config.adminHealthPath}`,
+    });
   }
 
   return services;

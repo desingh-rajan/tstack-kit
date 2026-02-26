@@ -26,7 +26,7 @@ Deno.test("checker", async (t) => {
   });
 
   await t.step(
-    "getMonitoredServices returns configured services",
+    "getMonitoredServices returns configured services with health paths",
     () => {
       const services = getMonitoredServices();
       // Default config has 3 services
@@ -34,6 +34,10 @@ Deno.test("checker", async (t) => {
       assertEquals(services[0].name, "API");
       assertEquals(services[1].name, "Storefront");
       assertEquals(services[2].name, "Admin UI");
+      // Health paths included in URLs
+      assertEquals(services[0].url.endsWith("/health"), true);
+      assertEquals(services[1].url.endsWith("/health"), true);
+      assertEquals(services[2].url.endsWith("/health"), true);
     },
   );
 });
