@@ -32,16 +32,16 @@
 ## Installation
 
 ```bash
-# Install globally from JSR
-deno install --global --allow-read --allow-write --allow-env --allow-run --allow-net --unstable-kv -n tstack jsr:@tonystack/cli
-
-# Or with shorthand flags
-deno install -gArf --unstable-kv -n tstack jsr:@tonystack/cli
+# Install via the official install script (downloads from GitHub release tag)
+curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
 
 # Verify installation
 tstack --version
 tstack --help
 ```
+
+> **Note:** `@tonystack/cli` is not yet published to JSR. Install via the script
+> above. JSR publishing is planned for a future release.
 
 **Required Permissions**:
 

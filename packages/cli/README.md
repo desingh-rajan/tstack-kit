@@ -7,12 +7,13 @@
 
 ## Installation
 
-Install globally via Deno.
-
 ```bash
-# Install with full permissions (Required for FS/Network/Process access)
-deno install -A -g -n tstack jsr:@tonystack/cli
+curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
 ```
+
+> **Note:** `@tonystack/cli` is not yet published to JSR. The install script
+> downloads the CLI directly from a tagged GitHub release and installs it via
+> `deno install`.
 
 **Verification:**
 

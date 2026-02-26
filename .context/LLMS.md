@@ -75,13 +75,13 @@ tstack-kit/
 
 ### Package Purposes
 
-| Package              | Published As     | Purpose                                       |
-| -------------------- | ---------------- | --------------------------------------------- |
-| `cli`                | `@tonystack/cli` | CLI tool for project creation and scaffolding |
-| `admin`              | `@tstack/admin`  | Framework-agnostic admin CRUD library         |
-| `api-starter`        | Template         | Backend API template (copied to new projects) |
-| `admin-ui-starter`   | Template         | Admin dashboard template                      |
-| `storefront-starter` | Template         | E-commerce frontend template                  |
+| Package              | Published As                | Purpose                                       |
+| -------------------- | --------------------------- | --------------------------------------------- |
+| `cli`                | Not yet on JSR (install.sh) | CLI tool for project creation and scaffolding |
+| `admin`              | `@tstack/admin`             | Framework-agnostic admin CRUD library         |
+| `api-starter`        | Template                    | Backend API template (copied to new projects) |
+| `admin-ui-starter`   | Template                    | Admin dashboard template                      |
+| `storefront-starter` | Template                    | E-commerce frontend template                  |
 
 ---
 
@@ -90,7 +90,7 @@ tstack-kit/
 ### 1. Install the CLI
 
 ```bash
-deno install -gArf --unstable-kv -n tstack jsr:@tonystack/cli
+curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
 ```
 
 ### 2. Create a Workspace
