@@ -247,5 +247,74 @@ describe("Payment Provider", () => {
       assertExists(available);
       assertEquals(Array.isArray(available), true);
     });
+
+    it("should throw in production when no provider configured", () => {
+      const originalEnv = Deno.env.get("ENVIRONMENT");
+      const originalProvider = Deno.env.get("PAYMENT_PROVIDER");
+      const originalKey = Deno.env.get("RAZORPAY_KEY_ID");
+      const originalSecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+
+      try {
+        // Clear any payment credentials
+        Deno.env.delete("PAYMENT_PROVIDER");
+        Deno.env.delete("RAZORPAY_KEY_ID");
+        Deno.env.delete("RAZORPAY_KEY_SECRET");
+        Deno.env.set("ENVIRONMENT", "production");
+
+        let threw = false;
+        try {
+          createPaymentProvider();
+        } catch (e) {
+          threw = true;
+          assertEquals(
+            (e as Error).message.includes("No payment provider configured"),
+            true,
+          );
+        }
+        assertEquals(
+          threw,
+          true,
+          "Should throw in production without provider",
+        );
+      } finally {
+        // Restore environment
+        if (originalEnv) Deno.env.set("ENVIRONMENT", originalEnv);
+        else Deno.env.delete("ENVIRONMENT");
+        if (originalProvider) {
+          Deno.env.set("PAYMENT_PROVIDER", originalProvider);
+        }
+        if (originalKey) Deno.env.set("RAZORPAY_KEY_ID", originalKey);
+        if (originalSecret) {
+          Deno.env.set("RAZORPAY_KEY_SECRET", originalSecret);
+        }
+      }
+    });
+
+    it("should allow NoOp in development/test without provider", () => {
+      const originalEnv = Deno.env.get("ENVIRONMENT");
+      const originalProvider = Deno.env.get("PAYMENT_PROVIDER");
+      const originalKey = Deno.env.get("RAZORPAY_KEY_ID");
+      const originalSecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+
+      try {
+        Deno.env.delete("PAYMENT_PROVIDER");
+        Deno.env.delete("RAZORPAY_KEY_ID");
+        Deno.env.delete("RAZORPAY_KEY_SECRET");
+        Deno.env.set("ENVIRONMENT", "test");
+
+        const provider = createPaymentProvider();
+        assertEquals(provider.name, "noop");
+      } finally {
+        if (originalEnv) Deno.env.set("ENVIRONMENT", originalEnv);
+        else Deno.env.delete("ENVIRONMENT");
+        if (originalProvider) {
+          Deno.env.set("PAYMENT_PROVIDER", originalProvider);
+        }
+        if (originalKey) Deno.env.set("RAZORPAY_KEY_ID", originalKey);
+        if (originalSecret) {
+          Deno.env.set("RAZORPAY_KEY_SECRET", originalSecret);
+        }
+      }
+    });
   });
 });

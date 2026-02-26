@@ -83,6 +83,7 @@ Deno.test({
         skipApi: false,
         skipAdminUi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       // List all projects

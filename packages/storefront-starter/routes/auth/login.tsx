@@ -4,13 +4,14 @@
 
 import { define } from "@/utils.ts";
 // Per-request API client from middleware (ctx.state.api)
-import { setSessionCookie } from "@/lib/auth.ts";
+import { isSafeRedirect, setSessionCookie } from "@/lib/auth.ts";
 
 export const handler = define.handlers({
   GET(ctx) {
     // Already logged in?
     if (ctx.state.user) {
-      const redirect = ctx.url.searchParams.get("redirect") || "/";
+      const raw = ctx.url.searchParams.get("redirect") || "/";
+      const redirect = isSafeRedirect(raw) ? raw : "/";
       return new Response(null, {
         status: 302,
         headers: { Location: redirect },
@@ -29,7 +30,8 @@ export const handler = define.handlers({
     const formData = await ctx.req.formData();
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const redirect = formData.get("redirect") as string || "/";
+    const rawRedirect = formData.get("redirect") as string || "/";
+    const redirect = isSafeRedirect(rawRedirect) ? rawRedirect : "/";
 
     if (!email || !password) {
       return {

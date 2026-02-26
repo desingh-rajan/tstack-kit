@@ -137,7 +137,8 @@ Entity automatically appears in the Admin UI sidebar.
 | Feature                  | Description                                                                              |
 | ------------------------ | ---------------------------------------------------------------------------------------- |
 | **Security Hardened**    | Rate limiting, SQL injection prevention, JWT strict mode, pinned deps, scoped Dockerfile |
-| **360+ Tests**           | Real PostgreSQL integration tests (CLI: 225, Admin: 83, API: 35)                         |
+| **Open Redirect Guard**  | `isSafeRedirect()` on all auth redirects, constant-time webhook signature verification   |
+| **390+ Tests**           | Real PostgreSQL integration tests (CLI: 235, Admin: 83, API: 50)                         |
 | **Guest Checkout**       | Full purchase flow without account creation                                              |
 | **Order Tracking**       | Public order lookup by email + order number                                              |
 | **Entity Scopes**        | `--scope=core/listing/commerce` for progressive builds                                   |
@@ -175,6 +176,12 @@ v1.6 includes a comprehensive security audit across all packages:
 - **Input validation** -- NaN guards on all `parseInt()`, Zod schemas on all
   mutations
 - **DB transactions** -- order and payment mutations wrapped in transactions
+- **Open redirect prevention** -- `isSafeRedirect()` validates all auth redirect
+  URLs (v1.6.1)
+- **Secure cookies** -- `Secure` flag on session cookies in production (v1.6.1)
+- **Constant-time signature verification** -- `timingSafeEqual` for Razorpay
+  webhook signatures (v1.6.1)
+- **NoOp payment guard** -- NoOp payment provider throws in production (v1.6.1)
 
 ---
 
@@ -396,6 +403,21 @@ environment variables, and troubleshooting.
 - Pinned dependency versions across all packages
 - CLI robustness (partial workspace tracking, better error handling)
 
+### v1.6.1 (February 2026) -- Shipped
+
+- Open redirect prevention (`isSafeRedirect()`) on all auth routes
+- Secure cookie flag on session cookies in production
+- Constant-time webhook signature verification (`timingSafeEqual`)
+- NoOp payment provider guard (throws in production)
+- N+1 query fix in `getUserOrders` (single `GROUP BY` query)
+- Deterministic entity route registration (sorted `readDir`)
+- `EnvFileBuilder` utility replacing regex-based .env manipulation
+- Migration tooling: `db:migrate:status`, `db:migrate:rollback`,
+  `db:migrate:check`
+- SEO routes: `robots.txt` and `sitemap.xml` for storefront
+- CLI KV store fixes: `kvPath` passthrough, OCC for `updateWorkspace`
+- 390+ tests across all packages (CLI: 235, Admin: 83, API: 50)
+
 ### v1.7 (Q2 2026)
 
 - Playwright E2E tests for storefront and admin UI
@@ -411,8 +433,6 @@ environment variables, and troubleshooting.
   ([#65](https://github.com/desingh-rajan/tstack-kit/issues/65))
 - Test coverage improvements
   ([#71](https://github.com/desingh-rajan/tstack-kit/issues/71))
-- Remaining audit backlog
-  ([#102](https://github.com/desingh-rajan/tstack-kit/issues/102))
 
 ### v2.0 (2026)
 

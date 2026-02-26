@@ -3,13 +3,15 @@
  */
 
 import { define } from "@/utils.ts";
+import { isSafeRedirect } from "@/lib/auth.ts";
 // Per-request API client from middleware (ctx.state.api)
 
 export const handler = define.handlers({
   GET(ctx) {
     // Already logged in?
     if (ctx.state.user) {
-      const redirect = ctx.url.searchParams.get("redirect") || "/";
+      const raw = ctx.url.searchParams.get("redirect") || "/";
+      const redirect = isSafeRedirect(raw) ? raw : "/";
       return new Response(null, {
         status: 302,
         headers: { Location: redirect },

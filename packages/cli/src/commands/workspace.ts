@@ -44,6 +44,9 @@ export interface WorkspaceOptions {
   githubToken?: string;
   visibility?: "private" | "public";
 
+  // Database setup
+  skipDbSetup?: boolean; // Skip database creation (useful for tests)
+
   // Entity scope (API only)
   scope?: ProjectScope; // core | listing | commerce (default: commerce)
   // Legacy flags (still supported)
@@ -641,7 +644,8 @@ export async function createWorkspace(
           projectName: name,
           projectType: type as "api" | "admin-ui" | "store",
           targetDir: workspacePath,
-          skipDbSetup: type === "admin-ui" || type === "store", // Only API needs database
+          skipDbSetup: options.skipDbSetup ||
+            type === "admin-ui" || type === "store", // Only API needs database
           // Pass scope to both API and admin-ui so the sidebar is filtered correctly
           scope: type === "api" || type === "admin-ui"
             ? options.scope

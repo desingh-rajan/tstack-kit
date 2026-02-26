@@ -108,8 +108,8 @@ export async function getProjectByNameAndType(
 
   if (!indexResult.value) return null;
 
-  // Get full metadata
-  return getProject(indexResult.value);
+  // Get full metadata — pass kvPath to ensure same DB is used
+  return getProject(indexResult.value, kvPath);
 }
 
 /**

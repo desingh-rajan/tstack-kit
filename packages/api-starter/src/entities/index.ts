@@ -92,6 +92,9 @@ export async function registerEntityRoutes(app: Hono): Promise<void> {
       return;
     }
 
+    // Sort entries alphabetically for deterministic route registration order
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+
     // Import and register routes from each entity directory
     for (const entry of entries) {
       // Fix path concatenation - ensure proper separator

@@ -68,7 +68,15 @@ export function createPaymentProvider(): IPaymentProvider {
   //   return new StripeProvider();
   // }
 
-  // No provider configured - use NoOp for development
+  // No provider configured - block in production, allow NoOp in dev/test
+  const environment = Deno.env.get("ENVIRONMENT");
+  if (environment === "production") {
+    throw new Error(
+      "[PaymentFactory] No payment provider configured in production. " +
+        "Set PAYMENT_PROVIDER and credentials (e.g., RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET).",
+    );
+  }
+
   console.warn(
     "[PaymentFactory] No payment provider configured - using NoOp mock provider",
   );

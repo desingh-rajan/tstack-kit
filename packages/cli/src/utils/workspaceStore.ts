@@ -54,15 +54,21 @@ let kv: Deno.Kv | null = null;
 
 /**
  * Get or initialize the KV store (shared across all stores)
+ * Supports test mode via TSTACK_CLI_TEST env var and optional kvPath override.
  */
-async function getKv(): Promise<Deno.Kv> {
+async function getKv(kvPath?: string): Promise<Deno.Kv> {
   if (!kv) {
     const homeDir = Deno.env.get("HOME") || Deno.env.get("USERPROFILE") || "";
     if (!homeDir) {
       throw new Error("Could not determine home directory");
     }
 
-    const kvPath = `${homeDir}/.tstack/projects.db`;
+    // Use custom path for testing (via env var or parameter), or default production path
+    const isTest = Deno.env.get("TSTACK_CLI_TEST") === "true";
+    const dbPath = kvPath ||
+      (isTest
+        ? `${homeDir}/.tstack/projects-test.db`
+        : `${homeDir}/.tstack/projects.db`);
 
     // Ensure .tstack directory exists
     try {
@@ -71,7 +77,7 @@ async function getKv(): Promise<Deno.Kv> {
       // Directory might already exist
     }
 
-    kv = await Deno.openKv(kvPath);
+    kv = await Deno.openKv(dbPath);
   }
   return kv;
 }
@@ -81,8 +87,9 @@ async function getKv(): Promise<Deno.Kv> {
  */
 export async function saveWorkspace(
   metadata: WorkspaceMetadata,
+  kvPath?: string,
 ): Promise<void> {
-  const db = await getKv();
+  const db = await getKv(kvPath);
   await db.set(["workspaces", metadata.name], metadata);
 }
 
@@ -91,8 +98,9 @@ export async function saveWorkspace(
  */
 export async function getWorkspace(
   name: string,
+  kvPath?: string,
 ): Promise<WorkspaceMetadata | null> {
-  const db = await getKv();
+  const db = await getKv(kvPath);
   const result = await db.get<WorkspaceMetadata>(["workspaces", name]);
   return result.value;
 }
@@ -100,8 +108,10 @@ export async function getWorkspace(
 /**
  * List all workspaces
  */
-export async function listWorkspaces(): Promise<WorkspaceMetadata[]> {
-  const db = await getKv();
+export async function listWorkspaces(
+  kvPath?: string,
+): Promise<WorkspaceMetadata[]> {
+  const db = await getKv(kvPath);
   const workspaces: WorkspaceMetadata[] = [];
 
   const entries = db.list<WorkspaceMetadata>({ prefix: ["workspaces"] });
@@ -120,32 +130,45 @@ export async function listWorkspaces(): Promise<WorkspaceMetadata[]> {
 /**
  * Delete workspace metadata
  */
-export async function deleteWorkspace(name: string): Promise<void> {
-  const db = await getKv();
+export async function deleteWorkspace(
+  name: string,
+  kvPath?: string,
+): Promise<void> {
+  const db = await getKv(kvPath);
   await db.delete(["workspaces", name]);
 }
 
 /**
- * Update workspace metadata (e.g., add new repo)
+ * Update workspace metadata using atomic transactions to prevent race conditions.
+ * Uses optimistic concurrency -- retries until the check passes.
  */
 export async function updateWorkspace(
   name: string,
   updates: Partial<WorkspaceMetadata>,
+  kvPath?: string,
 ): Promise<void> {
-  const db = await getKv();
-  const existing = await getWorkspace(name);
+  const db = await getKv(kvPath);
+  const key = ["workspaces", name];
 
-  if (!existing) {
-    throw new Error(`Workspace ${name} not found`);
+  let res = { ok: false };
+  while (!res.ok) {
+    const entry = await db.get<WorkspaceMetadata>(key);
+
+    if (!entry.value) {
+      throw new Error(`Workspace ${name} not found`);
+    }
+
+    const updated: WorkspaceMetadata = {
+      ...entry.value,
+      ...updates,
+      updatedAt: new Date(),
+    };
+
+    res = await db.atomic()
+      .check(entry) // Only commit if entry hasn't changed since we read it
+      .set(key, updated)
+      .commit();
   }
-
-  const updated: WorkspaceMetadata = {
-    ...existing,
-    ...updates,
-    updatedAt: new Date(),
-  };
-
-  await db.set(["workspaces", name], updated);
 }
 
 /**

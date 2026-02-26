@@ -595,28 +595,37 @@ export class OrderService {
       .limit(limit)
       .offset(offset);
 
-    // Get item counts for each order
-    const orderSummaries: OrderSummaryDTO[] = await Promise.all(
-      ordersList.map(async (order) => {
-        const itemsResult = await db
-          .select({ count: sql<number>`sum(quantity)` })
-          .from(orderItems)
-          .where(eq(orderItems.orderId, order.id));
+    // Get item counts for all orders in a single query (avoids N+1)
+    const orderIds = ordersList.map((o) => o.id);
+    const itemCountMap = new Map<string, number>();
 
-        return {
-          id: order.id,
-          orderNumber: order.orderNumber,
-          status: order.status as OrderStatus,
-          paymentStatus: order.paymentStatus as PaymentStatus,
-          totalAmount: order.totalAmount,
-          itemCount: Number(itemsResult[0]?.count || 0),
-          isGuest: order.isGuest,
-          guestEmail: order.guestEmail,
-          guestPhone: order.guestPhone,
-          createdAt: order.createdAt,
-        };
-      }),
-    );
+    if (orderIds.length > 0) {
+      const itemCounts = await db
+        .select({
+          orderId: orderItems.orderId,
+          count: sql<number>`sum(${orderItems.quantity})`,
+        })
+        .from(orderItems)
+        .where(inArray(orderItems.orderId, orderIds))
+        .groupBy(orderItems.orderId);
+
+      for (const row of itemCounts) {
+        itemCountMap.set(row.orderId, Number(row.count));
+      }
+    }
+
+    const orderSummaries: OrderSummaryDTO[] = ordersList.map((order) => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status as OrderStatus,
+      paymentStatus: order.paymentStatus as PaymentStatus,
+      totalAmount: order.totalAmount,
+      itemCount: itemCountMap.get(order.id) || 0,
+      isGuest: order.isGuest,
+      guestEmail: order.guestEmail,
+      guestPhone: order.guestPhone,
+      createdAt: order.createdAt,
+    }));
 
     return {
       orders: orderSummaries,

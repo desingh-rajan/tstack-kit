@@ -56,6 +56,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         skipRemote: true, // Local only
+        skipDbSetup: true,
       });
 
       // Verify workspace metadata
@@ -125,6 +126,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         // No githubOrg, no skipRemote - should warn about local-only
+        skipDbSetup: true,
       });
 
       // Verify workspace created locally
@@ -169,6 +171,7 @@ Deno.test({
             targetDir: tempDir,
             githubOrg: "some-org",
             // No githubToken provided, GITHUB_TOKEN env var deleted
+            skipDbSetup: true,
           });
         },
         Error,
@@ -202,6 +205,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -243,6 +247,7 @@ Deno.test({
         targetDir: tempDir,
         skipAdminUi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -277,6 +282,7 @@ Deno.test({
         targetDir: tempDir,
         skipStore: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -321,6 +327,7 @@ Deno.test({
         targetDir: tempDir,
         withStore: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -366,6 +373,7 @@ Deno.test({
           name,
           targetDir: tempDir,
           skipRemote: true,
+          skipDbSetup: true,
         });
       } catch (error) {
         errorThrown = true;
@@ -397,6 +405,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       // Try to create again
@@ -407,6 +416,7 @@ Deno.test({
           targetDir: tempDir,
           withApi: true,
           skipRemote: true,
+          skipDbSetup: true,
         });
       } catch (error) {
         errorThrown = true;
@@ -439,6 +449,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const apiPath = join(tempDir, workspaceName, `${workspaceName}-api`);
@@ -493,6 +504,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         githubOrg: GITHUB_ORG,
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -547,6 +559,7 @@ Deno.test({
         withApi: true,
         githubOrg: GITHUB_ORG,
         skipRemote: true, // Should skip remote creation
+        skipDbSetup: true,
       });
 
       const workspace = await getWorkspace(workspaceName);
@@ -590,6 +603,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         githubOrg: GITHUB_ORG,
+        skipDbSetup: true,
       });
 
       // Verify remote branch exists
@@ -629,6 +643,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         githubOrg: GITHUB_ORG, // Should create 2 repos
+        skipDbSetup: true,
       });
 
       // Verify workspace metadata
@@ -713,6 +728,7 @@ Deno.test({
         targetDir: tempDir,
         withAdminUi: true, // Only admin-ui
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       // Verify workspace metadata
@@ -773,6 +789,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const projectPath = join(
@@ -862,6 +879,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         skipRemote: true, // api + admin-ui + store
+        skipDbSetup: true,
       });
 
       const workspacePath = join(tempDir, workspaceName);
@@ -932,6 +950,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         githubOrg: GITHUB_ORG,
+        skipDbSetup: true,
       });
 
       const repoName = `${workspaceName}-api`;
@@ -992,6 +1011,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspacePath = join(tempDir, workspaceName);
@@ -1041,6 +1061,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         skipRemote: true,
+        skipDbSetup: true,
       });
 
       const workspacePath = join(tempDir, workspaceName);
@@ -1122,6 +1143,7 @@ Deno.test({
         targetDir: tempDir,
         withApi: true,
         githubOrg: GITHUB_ORG,
+        skipDbSetup: true,
       });
 
       // Verify repo exists
@@ -1184,6 +1206,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         githubOrg: GITHUB_ORG, // Creates 2 repos
+        skipDbSetup: true,
       });
 
       // Verify both repos exist
@@ -1278,6 +1301,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         skipRemote: true,
+        skipDbSetup: true,
         scope: "core",
       });
 
@@ -1352,6 +1376,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         skipRemote: true,
+        skipDbSetup: true,
         scope: "listing",
       });
 
@@ -1433,6 +1458,7 @@ Deno.test({
         name: workspaceName,
         targetDir: tempDir,
         skipRemote: true,
+        skipDbSetup: true,
         scope: "commerce",
       });
 

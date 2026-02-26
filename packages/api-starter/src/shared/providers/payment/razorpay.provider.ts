@@ -21,6 +21,7 @@ import type {
   VerifyPaymentOptions,
   WebhookEvent,
 } from "./payment-provider.interface.ts";
+import { timingSafeEqual } from "@std/crypto/timing-safe-equal";
 
 const RAZORPAY_API_URL = "https://api.razorpay.com/v1";
 
@@ -263,7 +264,15 @@ export class RazorpayProvider implements IPaymentProvider {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    if (expectedSignature !== signature) {
+    // Use constant-time comparison to prevent timing attacks
+    const encoder2 = new TextEncoder();
+    const expectedBytes = encoder2.encode(expectedSignature);
+    const actualBytes = encoder2.encode(signature);
+
+    if (
+      expectedBytes.length !== actualBytes.length ||
+      !timingSafeEqual(expectedBytes, actualBytes)
+    ) {
       console.warn("[WARN] Webhook signature verification failed");
       return null;
     }

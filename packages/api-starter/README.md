@@ -36,21 +36,24 @@ deno task dev
 
 Your daily driver commands. Run these from the project root.
 
-| Task                    | Description                                                    |
-| :---------------------- | :------------------------------------------------------------- |
-| **Development**         |                                                                |
-| `deno task dev`         | Start development server with hot-reload and full permissions. |
-| `deno task start`       | Production start (no watcher).                                 |
-| `deno task check`       | Run formatter check (`fmt`) and linter (`lint`).               |
-| `deno task routes`      | Print all registered API routes to the console.                |
-| **Database**            |                                                                |
-| `deno task db:migrate`  | Apply pending migrations to the database.                      |
-| `deno task db:generate` | Generate new migration files from schema changes.              |
-| `deno task db:studio`   | Open Drizzle Studio to browse data visually.                   |
-| `deno task setup`       | Full reset: Run migrations and seed core data.                 |
-| **Testing**             |                                                                |
-| `deno task test`        | Run full test suite (Database setup → Run → Cleanup).          |
-| `deno task test:watch`  | Run tests in watch mode for TDD.                               |
+| Task                            | Description                                                    |
+| :------------------------------ | :------------------------------------------------------------- |
+| **Development**                 |                                                                |
+| `deno task dev`                 | Start development server with hot-reload and full permissions. |
+| `deno task start`               | Production start (no watcher).                                 |
+| `deno task check`               | Run formatter check (`fmt`) and linter (`lint`).               |
+| `deno task routes`              | Print all registered API routes to the console.                |
+| **Database**                    |                                                                |
+| `deno task db:migrate`          | Apply pending migrations to the database.                      |
+| `deno task db:generate`         | Generate new migration files from schema changes.              |
+| `deno task db:studio`           | Open Drizzle Studio to browse data visually.                   |
+| `deno task db:migrate:status`   | Show applied vs pending migration status.                      |
+| `deno task db:migrate:rollback` | Roll back the last applied migration record.                   |
+| `deno task db:migrate:check`    | Preview pending schema changes without generating files.       |
+| `deno task setup`               | Full reset: Run migrations and seed core data.                 |
+| **Testing**                     |                                                                |
+| `deno task test`                | Run full test suite (Database setup → Run → Cleanup).          |
+| `deno task test:watch`          | Run tests in watch mode for TDD.                               |
 
 ---
 
@@ -158,6 +161,62 @@ Built-in security middleware and hardening (v1.6):
   transactions.
 - **Scoped Dockerfile**: Granular `--allow-*` permission flags instead of
   `--allow-all`.
+- **Constant-Time Signature Verification**: Razorpay webhook signatures use
+  `timingSafeEqual` to prevent timing attacks (v1.6.1).
+- **NoOp Payment Guard**: NoOp payment provider throws in production to prevent
+  accidental misconfiguration (v1.6.1).
+- **N+1 Query Fix**: `getUserOrders` uses a single `GROUP BY` query for item
+  counts instead of per-order queries (v1.6.1).
+- **Deterministic Route Registration**: Entity routes are sorted alphabetically
+  for consistent startup order (v1.6.1).
+
+---
+
+## Migration Tooling
+
+Three utility tasks supplement the standard `db:migrate` / `db:generate`
+workflow.
+
+### `deno task db:migrate:status`
+
+Compares your migration files on disk against what has actually been applied to
+the database and prints a status table:
+
+```
+Migration Status
+============================================================
+Migration                                Status
+------------------------------------------------------------
+0000_initial_schema                      Applied
+0001_add_orders                          Applied
+0002_add_payments                        Pending
+------------------------------------------------------------
+Total: 3 migrations, 1 pending
+
+Run 'deno task db:migrate' to apply pending migrations.
+```
+
+Reads `migrations/meta/_journal.json` (drizzle-kit's file index) and queries
+`__drizzle_migrations` in your database to compute the diff.
+
+### `deno task db:migrate:rollback`
+
+Removes the **last applied migration record** from `__drizzle_migrations`, so
+drizzle treats it as pending again on the next `db:migrate` run.
+
+> **Important**: This only removes the tracking record. The DDL changes (table
+> creates, column adds, etc.) are **not** automatically reversed. You must
+> manually undo the schema changes or create a compensating migration. The
+> script prints a loud warning reminding you of this.
+
+Typical use case: you applied a migration with buggy SQL, need to fix the
+migration file and re-apply it without generating a new one.
+
+### `deno task db:migrate:check`
+
+Runs `drizzle-kit generate --custom` in dry-run mode — shows what SQL would be
+generated from your current schema changes **without writing any files**. Use
+this to preview schema drift before committing a new migration.
 
 ---
 

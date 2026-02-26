@@ -9,6 +9,21 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export const GUEST_ID_COOKIE = "guest_cart_id";
 
+/**
+ * Check if a redirect URL is safe (relative path only).
+ * Blocks absolute URLs, protocol-relative URLs, javascript: URIs, etc.
+ */
+export function isSafeRedirect(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  // Must start with a single forward slash
+  if (!url.startsWith("/")) return false;
+  // Block protocol-relative URLs (//evil.com)
+  if (url.startsWith("//")) return false;
+  // Block backslash variants (\\evil.com, \/\/evil.com)
+  if (url.includes("\\")) return false;
+  return true;
+}
+
 export function getSessionToken(ctx: FreshContext): string | undefined {
   const cookies = ctx.req.headers.get("cookie");
   if (!cookies) return undefined;
@@ -44,16 +59,26 @@ export function setSessionCookie(
   token: string,
   maxAge: number = SESSION_MAX_AGE,
 ): void {
+  const env = typeof Deno !== "undefined"
+    ? Deno.env.get("ENVIRONMENT")
+    : undefined;
+  const secure = env !== "development" && env !== "test";
+  const securePart = secure ? " Secure;" : "";
   headers.set(
     "Set-Cookie",
-    `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
+    `${SESSION_COOKIE}=${token}; Path=/; HttpOnly;${securePart} SameSite=Lax; Max-Age=${maxAge}`,
   );
 }
 
 export function clearSessionCookie(headers: Headers): void {
+  const env = typeof Deno !== "undefined"
+    ? Deno.env.get("ENVIRONMENT")
+    : undefined;
+  const secure = env !== "development" && env !== "test";
+  const securePart = secure ? " Secure;" : "";
   headers.set(
     "Set-Cookie",
-    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
+    `${SESSION_COOKIE}=; Path=/; HttpOnly;${securePart} SameSite=Lax; Max-Age=0`,
   );
 }
 

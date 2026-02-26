@@ -3,14 +3,15 @@
  * Receives token from API and sets auth cookie
  */
 import { define } from "@/utils.ts";
-import { setSessionCookie } from "@/lib/auth.ts";
+import { isSafeRedirect, setSessionCookie } from "@/lib/auth.ts";
 
 export const handler = define.handlers({
   GET(ctx) {
     const token = ctx.url.searchParams.get("token");
     const error = ctx.url.searchParams.get("error") ||
       ctx.url.searchParams.get("message");
-    const redirect = ctx.url.searchParams.get("redirect") || "/";
+    const rawRedirect = ctx.url.searchParams.get("redirect") || "/";
+    const redirect = isSafeRedirect(rawRedirect) ? rawRedirect : "/";
     const isNewUser = ctx.url.searchParams.get("new_user") === "true";
 
     // Handle errors

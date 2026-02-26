@@ -8,6 +8,7 @@ import {
   setupDatabases,
 } from "../../utils/database.ts";
 import { BaseProjectCreator } from "./base-creator.ts";
+import { EnvFileBuilder } from "../../utils/envFileBuilder.ts";
 
 /**
  * API Project Creator
@@ -43,12 +44,12 @@ export class ApiProjectCreator extends BaseProjectCreator {
     // Update .env.example with database credentials
     if (this.credentials) {
       const envPath = join(this.projectPath, ".env.example");
-      let envContent = await Deno.readTextFile(envPath);
-      envContent = envContent.replace(
-        /DATABASE_URL=postgresql:\/\/tonystack:password@localhost:5432\/tonystack/g,
-        `DATABASE_URL=postgresql://${this.credentials.dbUser}:${this.credentials.dbPassword}@localhost:5432/${this.credentials.dbName}`,
-      );
-      await Deno.writeTextFile(envPath, envContent);
+      const envContent = await Deno.readTextFile(envPath);
+      const dbUrl =
+        `postgresql://${this.credentials.dbUser}:${this.credentials.dbPassword}@localhost:5432/${this.credentials.dbName}`;
+      const builder = new EnvFileBuilder().parse(envContent);
+      builder.set("DATABASE_URL", dbUrl);
+      await Deno.writeTextFile(envPath, builder.build());
 
       // Update docker-compose.yml with database credentials
       const dockerComposePath = join(this.projectPath, "docker-compose.yml");
@@ -180,12 +181,12 @@ JWT_EXPIRY=7d
 
     // Update DATABASE_URL with correct database name
     if (this.credentials) {
-      let envContent = await Deno.readTextFile(envPath);
-      envContent = envContent.replace(
-        /DATABASE_URL=postgresql:\/\/[^:]+:[^@]+@[^/]+\/\w+/,
-        `DATABASE_URL=postgresql://${this.credentials.dbUser}:${this.credentials.dbPassword}@localhost:5432/${this.credentials.dbName}`,
-      );
-      await Deno.writeTextFile(envPath, envContent);
+      const envContent = await Deno.readTextFile(envPath);
+      const dbUrl =
+        `postgresql://${this.credentials.dbUser}:${this.credentials.dbPassword}@localhost:5432/${this.credentials.dbName}`;
+      const builder = new EnvFileBuilder().parse(envContent);
+      builder.set("DATABASE_URL", dbUrl);
+      await Deno.writeTextFile(envPath, builder.build());
       Logger.info(".env file created");
 
       // 2. Create/Setup .env.development.local

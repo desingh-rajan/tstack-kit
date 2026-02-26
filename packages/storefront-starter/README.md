@@ -8,20 +8,23 @@ framework) with Preact islands architecture.
 
 ## Features
 
-| Feature                | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| **Guest Checkout**     | Full purchase flow without account creation                  |
-| **Order Tracking**     | Public `/track-order` page by email + order number           |
-| **Razorpay Payments**  | Integrated payment flow for guests and registered users      |
-| **Authentication**     | Login, register, Google OAuth, email verification            |
-| **Shopping Cart**      | Persistent cart with guest identity via cookie               |
-| **Contact Form**       | Server-proxied contact form (no client-side API keys leaked) |
-| **Email Verification** | Resend verification email island                             |
-| **Health Check**       | `/health` endpoint for container orchestration               |
-| **Error Pages**        | Custom `_error.tsx` for 404 and 500 handling                 |
-| **Test Attributes**    | `data-testid` on login, register, cart, add-to-cart buttons  |
-| **SSR API Routing**    | Docker-aware internal API URL for server-side rendering      |
-| **Landing Page**       | Hero, features grid, about section, footer                   |
+| Feature                 | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| **Guest Checkout**      | Full purchase flow without account creation                  |
+| **Order Tracking**      | Public `/track-order` page by email + order number           |
+| **Razorpay Payments**   | Integrated payment flow for guests and registered users      |
+| **Authentication**      | Login, register, Google OAuth, email verification            |
+| **Shopping Cart**       | Persistent cart with guest identity via cookie               |
+| **Contact Form**        | Server-proxied contact form (no client-side API keys leaked) |
+| **Email Verification**  | Resend verification email island                             |
+| **Health Check**        | `/health` endpoint for container orchestration               |
+| **Error Pages**         | Custom `_error.tsx` for 404 and 500 handling                 |
+| **Test Attributes**     | `data-testid` on login, register, cart, add-to-cart buttons  |
+| **SSR API Routing**     | Docker-aware internal API URL for server-side rendering      |
+| **Landing Page**        | Hero, features grid, about section, footer                   |
+| **SEO Routes**          | Auto-generated `robots.txt` and `sitemap.xml`                |
+| **Open Redirect Guard** | `isSafeRedirect()` validates all auth redirect URLs          |
+| **Secure Cookies**      | `Secure` flag on session cookies in production               |
 
 ## Getting Started
 
@@ -46,6 +49,8 @@ The storefront supports both registered users and guest shoppers.
 - `requireAuth()` -- redirects to `/auth/login` if no session token
 - `optionalAuth()` -- returns `{ token, guestId }`, allowing either identity
 - `getGuestId()` -- reads the `guest_cart_id` cookie (7-day TTL)
+- `isSafeRedirect(url)` -- validates redirect URLs to prevent open redirect
+  attacks (blocks protocol-relative, absolute, javascript:, data: URLs)
 - `GUEST_ID_COOKIE` -- cookie name constant (`guest_cart_id`)
 
 Guest users are identified by a UUID stored in the `guest_cart_id` cookie. This
