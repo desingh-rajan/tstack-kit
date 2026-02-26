@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/desingh-rajan/tstack-kit/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/desingh-rajan/tstack-kit/branch/main/graph/badge.svg)](https://codecov.io/gh/desingh-rajan/tstack-kit)
-[![Version](https://img.shields.io/github/v/release/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
+[![Version](https://img.shields.io/github/v/tag/desingh-rajan/tstack-kit?label=version)](https://github.com/desingh-rajan/tstack-kit/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![JSR @tstack/admin](https://jsr.io/badges/@tstack/admin)](https://jsr.io/@tstack/admin)
 
