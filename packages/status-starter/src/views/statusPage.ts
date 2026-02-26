@@ -50,6 +50,7 @@ export function renderStatusPage(services: ServiceData[]): string {
         <h1>${escapeHtml(config.siteTitle)}</h1>
         <div class="subtitle">Service health monitoring</div>
       </div>
+      <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
     </div>
 
     <div class="banner ${bannerClass}">${bannerText}</div>

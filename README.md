@@ -195,9 +195,7 @@ tstack create workspace my-app --scope=core       # Minimal scope
 tstack create api my-api                          # API only
 tstack create admin-ui my-admin                   # Admin UI only
 tstack create store my-store                      # Storefront only
-
-# Scaffold
-tstack scaffold products                          # Generate entity vertical slice
+tstack create status my-status                    # Status page only
 
 # Destroy
 tstack destroy my-api                             # Remove project + databases
@@ -418,17 +416,22 @@ environment variables, and troubleshooting.
 - CLI KV store fixes: `kvPath` passthrough, OCC for `updateWorkspace`
 - 390+ tests across all packages (CLI: 235, Admin: 83, API: 50)
 
+### v1.6.2 (February 2026) -- Shipped
+
+- Self-hosted status page (`packages/status-starter`): Hono + Deno KV, 90-day
+  uptime history, dark/light theme toggle, server-rendered, no build step
+- `tstack create status` command -- scaffold a status page project
+- Status page included as default component in every `tstack create workspace`
+- Per-service configurable health check paths (`API_HEALTH_PATH`, etc.)
+- `/health` routes added to storefront and admin-ui templates
+- Comprehensive Kamal multi-service deployment guide in `docs/deployment.md`
+
 ### v1.7 (Q2 2026)
 
 - Playwright E2E tests for storefront and admin UI
   ([#84](https://github.com/desingh-rajan/tstack-kit/issues/84))
-- Kamal deployment configuration guide
-  ([#89](https://github.com/desingh-rajan/tstack-kit/issues/89))
-- Status page ([#83](https://github.com/desingh-rajan/tstack-kit/issues/83))
 - Docker multi-environment setup
   ([#43](https://github.com/desingh-rajan/tstack-kit/issues/43))
-- S3 bucket CLI commands
-  ([#72](https://github.com/desingh-rajan/tstack-kit/issues/72))
 - Integer vs UUID column support
   ([#65](https://github.com/desingh-rajan/tstack-kit/issues/65))
 - Test coverage improvements
