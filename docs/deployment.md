@@ -36,24 +36,24 @@ You need a domain with DNS A records pointing to your server IPs.
 | A    | @       | 159.89.162.100 | 600 |
 | A    | www     | 159.89.162.100 | 600 |
 | A    | admin   | 159.89.162.100 | 600 |
+| A    | status  | 159.89.162.100 | 600 |
+| A    | logs    | 159.89.162.100 | 600 |
 | A    | staging | 167.71.225.50  | 600 |
 
-**Multi-Service Setup (API, Admin, Store on same server):**
+All subdomains point to the **same VPS IP**. A single `kamal-proxy` instance
+runs on the server, reads the `Host` header of every incoming request, and
+routes it to the correct container automatically. You only need one server, one
+IP — kamal-proxy handles all routing.
 
-TStack uses a **path prefix** approach for the API instead of subdomains:
+**Full routing picture for a production workspace:**
 
 ```
-yourdomain.com              → Store/Frontend
-yourdomain.com/ts-be/api/*  → API (path prefix, no separate DNS)
-admin.yourdomain.com        → Admin UI
+example.com              → sc-store  (kamal-proxy: host=example.com)
+example.com/sc-be/*      → sc-api    (kamal-proxy: host=example.com, path_prefix=/sc-be)
+admin.example.com        → sc-admin-ui  (kamal-proxy: host=admin.example.com)
+status.example.com       → sc-status    (kamal-proxy: host=status.example.com)
+logs.example.com         → dozzle       (kamal-proxy: host=logs.example.com)
 ```
-
-This means:
-
-- **Store**: `https://yourdomain.com`
-- **API**: `https://yourdomain.com/ts-be/api/health`, `/ts-be/api/auth/login`,
-  etc.
-- **Admin**: `https://admin.yourdomain.com`
 
 **Why path prefix for API?**
 
@@ -68,6 +68,9 @@ Verify with:
 ```bash
 dig +short yourdomain.com
 # Should return: 159.89.162.100
+
+dig +short status.yourdomain.com
+# Should also return: 159.89.162.100
 ```
 
 ### 3. SSH Key Setup
@@ -942,6 +945,201 @@ servers:
     options:
       memory: 500m # Limit to 500MB RAM
 ```
+
+## Status Starter — Production Deployment
+
+The status page (`sc-status`) is a standalone Hono service. It runs as a full
+Kamal **service** (not an accessory) so kamal-proxy handles SSL and subdomain
+routing automatically.
+
+### DNS
+
+Add an A record for `status.example.com` pointing to the same VPS IP (see
+[Domain & DNS Setup](#2-domain--dns-setup) above).
+
+### deploy.yml
+
+```yaml
+# sc-status/config/deploy.yml
+service: sc-status
+image: youruser/sc-status
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    options:
+      # Same Docker network as other services so the status page
+      # reaches them via their network-alias without going through
+      # the public internet or kamal-proxy
+      network: kamal
+
+proxy:
+  host: status.example.com # DNS A record must exist
+  app_port: 8001
+  ssl: true
+  healthcheck:
+    path: /health
+    interval: 10
+
+registry:
+  username: youruser
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+
+env:
+  clear:
+    PORT: "8001"
+    ENVIRONMENT: production
+    CHECK_INTERVAL_SECONDS: "60"
+    CHECK_TIMEOUT_MS: "5000"
+    HISTORY_DAYS: "90"
+    SITE_TITLE: "My App Status"
+    # Reach other services via Docker internal network aliases
+    # (bypasses kamal-proxy — direct container-to-container)
+    API_URL: http://sc-api-internal:8000
+    STOREFRONT_URL: http://sc-store-internal:8000
+    ADMIN_URL: http://sc-admin-internal:8000
+  secret:
+    - DOZZLE_USERNAME # not required, but keep env consistent
+```
+
+> **Important**: `API_URL`, `STOREFRONT_URL`, and `ADMIN_URL` use Docker
+> internal network aliases — NOT the public hostnames. This means the status
+> page hits `/health` directly on each container without going through SSL or
+> the reverse proxy. It is faster, more reliable, and works even if the public
+> proxy is overloaded.
+
+### Deno KV persistence
+
+Deno KV stores data on the container filesystem by default. To persist uptime
+history across deployments, mount a volume:
+
+```yaml
+# Add to the service definition above:
+volumes:
+  - sc-status-data:/home/deno/.deno/kv
+```
+
+### Deploy
+
+```bash
+# First deploy
+kamal deploy -d sc-status
+
+# Subsequent deployments
+kamal deploy
+```
+
+### Access
+
+- Status page: `https://status.example.com`
+- JSON API: `https://status.example.com/api/status`
+- Health check: `https://status.example.com/health`
+
+---
+
+## Dozzle — Docker Log Viewer
+
+[Dozzle](https://dozzle.dev) is a lightweight, real-time Docker log viewer. It
+runs as a Kamal **service** (not an accessory) so that kamal-proxy can route
+`logs.example.com` to it with automatic SSL — the same way it handles all other
+services.
+
+> **Why not an accessory?** Kamal accessories don't go through kamal-proxy, so
+> they can't get subdomain routing or SSL automatically. Running Dozzle as a
+> full service gives it a proper `proxy:` stanza and full kamal-proxy
+> integration.
+
+### DNS
+
+Add an A record for `logs.example.com` pointing to the same VPS IP (see
+[Domain & DNS Setup](#2-domain--dns-setup) above).
+
+### deploy.yml
+
+Create a minimal `config/deploy.yml` in whichever repo manages accessories
+(typically `sc-api`), or create a standalone `sc-logs/` directory:
+
+```yaml
+# sc-api/config/deploy.yml  — add alongside existing services, OR
+# sc-logs/config/deploy.yml — standalone directory
+
+service: sc-dozzle
+image: amir20/dozzle:latest
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    labels:
+      # Dozzle needs access to the Docker socket
+      com.centurylinklabs.watchtower.enable: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+proxy:
+  host: logs.example.com # DNS A record must exist
+  app_port: 8080 # Dozzle's default internal port
+  ssl: true
+  healthcheck:
+    path: /healthcheck # Dozzle's built-in health endpoint
+    interval: 10
+
+registry:
+  # Dozzle is pulled from Docker Hub — no private registry needed
+  server: registry-1.docker.io
+  username: ""
+  password: []
+
+builder:
+  # No build step — pulling a public image directly
+  driver: remote
+  remote:
+    arch: amd64
+
+env:
+  clear:
+    DOZZLE_BASE: / # Serve at root of logs.example.com
+    DOZZLE_NO_ANALYTICS: "1" # Opt out of usage analytics
+    DOZZLE_AUTH_PROVIDER: simple
+  secret:
+    - DOZZLE_USERNAME # e.g. DOZZLE_USERNAME=admin
+    - DOZZLE_PASSWORD # e.g. DOZZLE_PASSWORD=your-secret
+```
+
+### Required secrets
+
+Add these to your `.env` (passed via `kamal secrets`):
+
+```bash
+DOZZLE_USERNAME=admin
+DOZZLE_PASSWORD=your-long-random-password
+```
+
+### Deploy and start
+
+```bash
+# First deploy
+kamal deploy
+
+# Restart after config changes
+kamal app restart
+```
+
+### Access
+
+- `https://logs.example.com` — protected by username/password
+
+Dozzle has read-only access via the Docker socket (`:ro`). It can tail logs and
+inspect container states but cannot exec into containers or start/stop services.
+
+> **Security note**: `DOZZLE_USERNAME` and `DOZZLE_PASSWORD` enable Dozzle's
+> built-in simple auth. Never expose Dozzle without authentication. The Docker
+> socket is mounted read-only.
 
 ## Further Reading
 
