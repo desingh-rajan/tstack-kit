@@ -18,6 +18,8 @@ framework) with Preact islands architecture.
 | **Contact Form**       | Server-proxied contact form (no client-side API keys leaked) |
 | **Email Verification** | Resend verification email island                             |
 | **Health Check**       | `/health` endpoint for container orchestration               |
+| **Error Pages**        | Custom `_error.tsx` for 404 and 500 handling                 |
+| **Test Attributes**    | `data-testid` on login, register, cart, add-to-cart buttons  |
 | **SSR API Routing**    | Docker-aware internal API URL for server-side rendering      |
 | **Landing Page**       | Hero, features grid, about section, footer                   |
 
@@ -29,7 +31,7 @@ cd my-shop/my-shop-store
 deno task dev
 ```
 
-Storefront runs at `http://localhost:8000`.
+Storefront runs at `http://localhost:5173` (Vite default).
 
 ---
 
@@ -54,6 +56,9 @@ without login.
 
 Centralized HTTP client with:
 
+- **Per-request client factory**: Each SSR request creates its own API client
+  instance. This prevents auth token leakage between concurrent server-side
+  requests (security fix in v1.6).
 - **`SSR_API_URL`**: Server-side requests use `API_INTERNAL_URL` (for Docker
   internal networking) with fallback to `API_BASE_URL`
 - **`isDeno` guard**: Automatically selects internal vs. public URL based on
@@ -130,6 +135,13 @@ the API over the internal network instead of going through the public URL.
 
 ---
 
+## Error Handling
+
+Custom `_error.tsx` handles 404 (Not Found) and 500 (Server Error) pages with
+user-friendly messages and navigation back to the home page.
+
+---
+
 ## Project Structure
 
 ```text
@@ -144,9 +156,10 @@ storefront-starter/
 │   ├── ContactForm.tsx    # Contact form with validation
 │   └── ResendVerification.tsx  # Email verification resend
 ├── lib/
-│   ├── api.ts             # API client (SSR_API_URL, guest methods)
+│   ├── api.ts             # API client (per-request, SSR-aware, guest methods)
 │   └── auth.ts            # Auth helpers (requireAuth, optionalAuth, guest ID)
 ├── routes/
+│   ├── _error.tsx         # 404/500 error pages
 │   ├── _middleware.ts     # Session + cart resolution
 │   ├── index.tsx          # Landing page
 │   ├── track-order.tsx    # Public order tracking

@@ -24,7 +24,7 @@ deno task seed:ecommerce   # E-commerce data (Products, Categories, Brands)
 deno task dev
 ```
 
-**Endpoinst Active:**
+**Endpoints Active:**
 
 - API: `http://localhost:8000`
 - Docs: `http://localhost:8000/docs` (if enabled)
@@ -137,9 +137,31 @@ Runtime configuration via `site_settings` table:
 - **Notification Flags**: `OrderNotifications` to toggle order emails
 - **Dynamic Config**: Update settings without redeployment
 
+### 6. Security
+
+Built-in security middleware and hardening (v1.6):
+
+- **Rate Limiting**: Configurable per-route limits with FIFO eviction (cap:
+  10,000 entries). Auth routes: 10 req/15min (login/register), 5 req/15min
+  (password reset).
+- **JWT Strict Mode**: No fallback secret. `JWT_SECRET` must be set in
+  production or the server throws on startup.
+- **SQL Injection Prevention**: All dynamic SQL uses quoted identifiers.
+- **OAuth Redirect Allowlist**: Validated redirect URIs with HttpOnly cookies
+  (no token-in-URL).
+- **Request ID Tracing**: `X-Request-ID` header generated at the start of the
+  middleware pipeline, echoed in error responses.
+- **Security Headers**: Applied via middleware on every response.
+- **Input Validation**: NaN guards on all `parseInt()` calls, Zod schemas on all
+  mutations.
+- **DB Transactions**: Order and payment mutations wrapped in database
+  transactions.
+- **Scoped Dockerfile**: Granular `--allow-*` permission flags instead of
+  `--allow-all`.
+
 ---
 
-## 🔌 Integration Deep Dive
+## Integration Deep Dive
 
 ### 1. Google OAuth 2.0
 
@@ -262,28 +284,31 @@ export const publicRoutes = BaseRouteFactory.createCrudRoutes({ ... });
 
 **Environment Variables** (`.env`)
 
-| Variable                  | Importance   | Description                                          |
-| :------------------------ | :----------- | :--------------------------------------------------- |
-| `DATABASE_URL`            | **Critical** | PostgreSQL connection string.                        |
-| `JWT_SECRET`              | **Critical** | 64-char hex string for signing tokens.               |
-| `ENVIRONMENT`             | High         | `development`, `test`, or `production`.              |
-| `APP_URL`                 | High         | API base URL (e.g., `https://api.example.com`).      |
-| `STOREFRONT_URL`          | High         | Storefront URL for email links.                      |
-| `APP_CURRENCY`            | Optional     | Currency code for formatting (default: `INR`).       |
-| `DB_POOL_SIZE`            | Optional     | Database connection pool size.                       |
-| `GOOGLE_CLIENT_ID`        | Auth         | Google OAuth Client ID.                              |
-| `GOOGLE_CLIENT_SECRET`    | Auth         | Google OAuth Client Secret.                          |
-| `RAZORPAY_KEY_ID`         | Payments     | Razorpay API Key ID.                                 |
-| `RAZORPAY_KEY_SECRET`     | Payments     | Razorpay Key Secret.                                 |
-| `RAZORPAY_WEBHOOK_SECRET` | Payments     | Secret for verifying webhook signatures.             |
-| `RESEND_API_KEY`          | Email        | API Key for Resend (starts with `re_`).              |
-| `SES_ACCESS_KEY_ID`       | Email        | AWS Access Key for SES (overrides general AWS keys). |
-| `SES_SECRET_ACCESS_KEY`   | Email        | AWS Secret Key for SES.                              |
-| `SES_REGION`              | Email        | AWS Region for SES (e.g., `us-east-1`).              |
-| `EMAIL_FROM`              | Email        | Default sender address (e.g., `noreply@domain.com`). |
-| `AWS_ACCESS_KEY_ID`       | Optional     | For S3 image uploads (also fallback for SES).        |
-| `AWS_SECRET_ACCESS_KEY`   | Optional     | For S3 image uploads (also fallback for SES).        |
-| `S3_BUCKET_NAME`          | Optional     | Target bucket for assets.                            |
+| Variable                  | Importance   | Description                                                                  |
+| :------------------------ | :----------- | :--------------------------------------------------------------------------- |
+| `DATABASE_URL`            | **Critical** | PostgreSQL connection string.                                                |
+| `JWT_SECRET`              | **Critical** | 64-char hex string for signing tokens. Required in production (no fallback). |
+| `ENVIRONMENT`             | High         | `development`, `test`, or `production`.                                      |
+| `APP_URL`                 | High         | API base URL (e.g., `https://api.example.com`).                              |
+| `STOREFRONT_URL`          | High         | Storefront URL for email links.                                              |
+| `APP_CURRENCY`            | Optional     | Currency code for formatting (default: `INR`).                               |
+| `DB_POOL_SIZE`            | Optional     | Database connection pool size.                                               |
+| `DB_IDLE_TIMEOUT`         | Optional     | Idle connection timeout in seconds (default: 20).                            |
+| `DB_CONNECT_TIMEOUT`      | Optional     | Connection timeout in seconds (default: 10).                                 |
+| `DB_MAX_LIFETIME`         | Optional     | Max connection lifetime in seconds (default: 1800).                          |
+| `GOOGLE_CLIENT_ID`        | Auth         | Google OAuth Client ID.                                                      |
+| `GOOGLE_CLIENT_SECRET`    | Auth         | Google OAuth Client Secret.                                                  |
+| `RAZORPAY_KEY_ID`         | Payments     | Razorpay API Key ID.                                                         |
+| `RAZORPAY_KEY_SECRET`     | Payments     | Razorpay Key Secret.                                                         |
+| `RAZORPAY_WEBHOOK_SECRET` | Payments     | Secret for verifying webhook signatures.                                     |
+| `RESEND_API_KEY`          | Email        | API Key for Resend (starts with `re_`).                                      |
+| `SES_ACCESS_KEY_ID`       | Email        | AWS Access Key for SES (overrides general AWS keys).                         |
+| `SES_SECRET_ACCESS_KEY`   | Email        | AWS Secret Key for SES.                                                      |
+| `SES_REGION`              | Email        | AWS Region for SES (e.g., `us-east-1`).                                      |
+| `EMAIL_FROM`              | Email        | Default sender address (e.g., `noreply@domain.com`).                         |
+| `AWS_ACCESS_KEY_ID`       | Optional     | For S3 image uploads (also fallback for SES).                                |
+| `AWS_SECRET_ACCESS_KEY`   | Optional     | For S3 image uploads (also fallback for SES).                                |
+| `S3_BUCKET_NAME`          | Optional     | Target bucket for assets.                                                    |
 
 ---
 

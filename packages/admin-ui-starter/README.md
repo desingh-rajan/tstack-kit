@@ -14,12 +14,12 @@ admin panel framework built with:
 
 Define your entity **once** in a config file, get complete CRUD for free:
 
-- ✅ List page with **ALL columns** (paginated, sortable)
-- ✅ Show page with **ALL fields** (formatted by type)
-- ✅ Create/Edit forms (auto-generated with validation)
-- ✅ Delete with confirmation
-- ✅ Auth checks built-in
-- ✅ Error handling
+- List page with **all columns** (paginated, sortable)
+- Show page with **all fields** (formatted by type)
+- Create/Edit forms (auto-generated with validation)
+- Delete with confirmation
+- Auth checks built-in
+- Error handling (404/500 via `_error.tsx`)
 
 ## Quick Start
 
@@ -147,7 +147,7 @@ import { postConfig } from "@/config/entities/posts.config.ts";
 const handlers = createCRUDHandlers(postConfig);
 ```
 
-### Step 3: Done! ✅
+### Step 3: Done
 
 ## Supported Field Types
 
@@ -194,7 +194,7 @@ The admin UI includes a powerful `ImageUploadPane` island for S3 image uploads.
 }
 ```
 
-1. **Use in Show/Edit pages**:
+2. **Use in Show/Edit pages**:
 
 ```typescript
 // routes/admin/products/[id].tsx
@@ -242,8 +242,20 @@ import ImageUploadPane from "@/islands/ImageUploadPane.tsx";
 - **Theme Switching** - Dark/light mode
 - **Type-safe** - Full TypeScript inference
 - **Health Check** - `/health` endpoint for container orchestration
+- **Error Pages** - Custom `_error.tsx` for 404 and 500 handling
 - **SSR API Routing** - `SSR_API_URL` (Docker internal URL) for server-side
   requests, falls back to `API_BASE_URL`
+- **Test Attributes** - `data-testid` on login form for E2E testing
+
+## Environment Variables
+
+| Variable           | Required | Description                                        |
+| :----------------- | :------- | :------------------------------------------------- |
+| `API_BASE_URL`     | Yes      | Public API URL (e.g., `http://localhost:8000/api`) |
+| `API_INTERNAL_URL` | No       | Docker internal URL (e.g., `http://api:8000/api`)  |
+
+When running in Docker, set `API_INTERNAL_URL` so server-side rendering calls
+the API over the internal network instead of going through the public URL.
 
 ## Guest Order Management
 
@@ -281,6 +293,7 @@ admin-ui-starter/
 ├── config/
 │   └── entities/          # Entity configs (1 file per entity)
 │       ├── articles.config.ts
+│       ├── orders.config.tsx
 │       ├── users.config.ts
 │       └── site-settings.config.ts
 ├── lib/
@@ -293,14 +306,14 @@ admin-ui-starter/
 │   ├── admin/             # Generic CRUD components
 │   │   ├── DataTable.tsx
 │   │   ├── ShowPage.tsx
-│   │   ├── GenericForm.tsx
-│   │   └── Pagination.tsx
-│   ├── layout/
-│   │   └── AdminLayout.tsx
-│   └── ui/                # (empty - old components removed)
+│   │   └── GenericForm.tsx
+│   └── layout/
+│       └── AdminLayout.tsx
 ├── routes/
+│   ├── _error.tsx         # 404/500 error pages
 │   ├── admin/
 │   │   ├── articles/      # Article CRUD (4 files)
+│   │   ├── orders/        # Order CRUD + guest management
 │   │   ├── users/         # User CRUD (4 files)
 │   │   └── site-settings/ # Settings CRUD (4 files)
 │   ├── auth/
@@ -308,9 +321,17 @@ admin-ui-starter/
 │   │   └── logout.tsx
 │   └── index.tsx          # Home/redirect
 ├── islands/
-│   └── ThemeSwitcher.tsx  # Client-side theme toggle
+│   ├── DataTableActions.tsx   # Row action buttons
+│   ├── DatePicker.tsx         # Date/datetime picker
+│   ├── FilterableDataTable.tsx # Table with filters
+│   ├── ImageUploadPane.tsx    # S3 image uploads
+│   ├── Pagination.tsx         # Page navigation
+│   ├── RelationshipSelect.tsx # Foreign key dropdowns
+│   └── ThemeSwitcher.tsx      # Dark/light mode toggle
 ├── entities/              # API service layer
 │   ├── articles/
+│   ├── orders/
+│   ├── payments/
 │   ├── users/
 │   └── site_settings/
 └── static/                # Static assets
@@ -318,7 +339,7 @@ admin-ui-starter/
 
 ## Fresh 2.2.0 Patterns (Latest)
 
-**✅ CORRECT:**
+**CORRECT (Fresh 2.x):**
 
 ```typescript
 import { define } from "./utils.ts";
@@ -333,7 +354,7 @@ export default define.page<typeof handler>(function Page({ data }) {
 });
 ```
 
-**❌ DEPRECATED (Old Fresh 1.x):**
+**DEPRECATED (Old Fresh 1.x):**
 
 ```typescript
 // Don't use these!
