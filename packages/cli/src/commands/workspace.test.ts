@@ -66,13 +66,15 @@ Deno.test({
       assertEquals(workspace!.components.api, true);
       assertEquals(workspace!.components.adminUi, true);
       assertEquals(workspace!.components.store, true);
-      assertEquals(workspace!.projects.length, 3); // api + admin-ui + store
+      assertEquals(workspace!.components.status, true);
+      assertEquals(workspace!.projects.length, 4); // api + admin-ui + store + status
 
       // Verify folders exist
       const workspacePath = join(tempDir, workspaceName);
       const apiPath = join(workspacePath, `${workspaceName}-api`);
       const adminUiPath = join(workspacePath, `${workspaceName}-admin-ui`);
       const storePath = join(workspacePath, `${workspaceName}-store`);
+      const statusPath = join(workspacePath, `${workspaceName}-status`);
 
       assertEquals(
         await Deno.stat(workspacePath)
@@ -94,6 +96,12 @@ Deno.test({
       );
       assertEquals(
         await Deno.stat(storePath)
+          .then(() => true)
+          .catch(() => false),
+        true,
+      );
+      assertEquals(
+        await Deno.stat(statusPath)
           .then(() => true)
           .catch(() => false),
         true,
@@ -134,9 +142,10 @@ Deno.test({
       assertExists(workspace);
       assertEquals(workspace!.githubRepos.length, 0); // No GitHub repos
 
-      // Verify both components created by default
+      // Verify all default components created
       assertEquals(workspace!.components.api, true);
       assertEquals(workspace!.components.adminUi, true);
+      assertEquals(workspace!.components.status, true);
 
       // Cleanup
       await destroyWorkspace({
@@ -255,7 +264,8 @@ Deno.test({
       assertEquals(workspace!.components.api, true);
       assertEquals(workspace!.components.adminUi, false);
       assertEquals(workspace!.components.store, true); // store created by default
-      assertEquals(workspace!.projects.length, 2); // api + store
+      assertEquals(workspace!.components.status, true); // status created by default
+      assertEquals(workspace!.projects.length, 3); // api + store + status
 
       await destroyWorkspace({
         name: workspaceName,
@@ -290,7 +300,8 @@ Deno.test({
       assertEquals(workspace!.components.api, true);
       assertEquals(workspace!.components.adminUi, true);
       assertEquals(workspace!.components.store, false);
-      assertEquals(workspace!.projects.length, 2); // api + admin-ui
+      assertEquals(workspace!.components.status, true); // status created by default
+      assertEquals(workspace!.projects.length, 3); // api + admin-ui + status
 
       const workspacePath = join(tempDir, workspaceName);
       const storePath = join(workspacePath, `${workspaceName}-store`);

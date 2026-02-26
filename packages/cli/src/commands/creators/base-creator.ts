@@ -17,7 +17,7 @@ export type ProjectScope = "core" | "listing" | "commerce";
 
 export interface BaseCreateOptions {
   projectName: string;
-  projectType: "api" | "admin-ui" | "store" | "workspace";
+  projectType: "api" | "admin-ui" | "store" | "status" | "workspace";
   targetDir?: string;
   latest?: boolean;
   skipDbSetup?: boolean;

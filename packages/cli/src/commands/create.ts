@@ -1,6 +1,7 @@
 import { ApiProjectCreator } from "./creators/api-creator.ts";
 import { AdminUiProjectCreator } from "./creators/admin-ui-creator.ts";
 import { StoreProjectCreator } from "./creators/store-creator.ts";
+import { StatusProjectCreator } from "./creators/status-creator.ts";
 import type {
   BaseProjectCreator,
   ProjectScope,
@@ -8,7 +9,7 @@ import type {
 
 export interface CreateOptions {
   projectName: string;
-  projectType?: "api" | "admin-ui" | "store" | "workspace";
+  projectType?: "api" | "admin-ui" | "store" | "status" | "workspace";
   targetDir?: string;
   latest?: boolean;
   skipDbSetup?: boolean;
@@ -50,6 +51,10 @@ export async function createProject(options: CreateOptions): Promise<void> {
 
     case "store":
       creator = new StoreProjectCreator(baseOptions);
+      break;
+
+    case "status":
+      creator = new StatusProjectCreator(baseOptions);
       break;
 
     default: {

@@ -24,6 +24,7 @@ export interface WorkspaceOptions {
   withApi?: boolean;
   withAdminUi?: boolean;
   withStore?: boolean;
+  withStatus?: boolean;
   withUi?: boolean;
   withInfra?: boolean;
   withMobile?: boolean;
@@ -33,6 +34,7 @@ export interface WorkspaceOptions {
   skipApi?: boolean;
   skipAdminUi?: boolean;
   skipStore?: boolean;
+  skipStatus?: boolean;
   skipUi?: boolean;
   skipInfra?: boolean;
   skipMobile?: boolean;
@@ -58,6 +60,7 @@ export interface WorkspaceOptions {
 const RESERVED_SUFFIXES = [
   "-api",
   "-admin-ui",
+  "-status",
   "-ui",
   "-infra",
   "-mobile",
@@ -69,6 +72,7 @@ type ComponentType =
   | "api"
   | "admin-ui"
   | "store"
+  | "status"
   | "ui"
   | "infra"
   | "mobile"
@@ -78,6 +82,7 @@ const AVAILABLE_COMPONENTS: ComponentType[] = [
   "api",
   "admin-ui",
   "store",
+  "status",
   // Future components (not yet implemented)
   // "ui",
   // "infra",
@@ -120,12 +125,12 @@ function validateWorkspaceName(name: string): void {
  */
 function determineComponents(options: WorkspaceOptions): ComponentType[] {
   const hasWithFlags = options.withApi || options.withAdminUi ||
-    options.withStore ||
+    options.withStore || options.withStatus ||
     options.withUi || options.withInfra ||
     options.withMobile || options.withMetrics;
 
   const hasSkipFlags = options.skipApi || options.skipAdminUi ||
-    options.skipStore ||
+    options.skipStore || options.skipStatus ||
     options.skipUi || options.skipInfra ||
     options.skipMobile || options.skipMetrics;
 
@@ -143,6 +148,7 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
     if (options.withApi) components.push("api");
     if (options.withAdminUi) components.push("admin-ui");
     if (options.withStore) components.push("store");
+    if (options.withStatus) components.push("status");
     if (options.withUi) components.push("ui");
     if (options.withInfra) components.push("infra");
     if (options.withMobile) components.push("mobile");
@@ -165,6 +171,9 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
     if (options.skipStore) {
       components = components.filter((c) => c !== "store");
     }
+    if (options.skipStatus) {
+      components = components.filter((c) => c !== "status");
+    }
   } else {
     // Default: create all available components
     components = [...AVAILABLE_COMPONENTS];
@@ -172,20 +181,20 @@ function determineComponents(options: WorkspaceOptions): ComponentType[] {
 
   // Filter to only implemented components
   const implementedComponents = components.filter((c) =>
-    c === "api" || c === "admin-ui" || c === "store"
+    c === "api" || c === "admin-ui" || c === "store" || c === "status"
   );
 
   if (implementedComponents.length === 0) {
     throw new Error(
       "No components selected for creation. " +
-        "Currently available: api, admin-ui. " +
+        "Currently available: api, admin-ui, store, status. " +
         "Future: ui, infra, mobile, metrics.",
     );
   }
 
   // Warn about future components
   const futureComponents = components.filter((c) =>
-    c !== "api" && c !== "admin-ui" && c !== "store"
+    c !== "api" && c !== "admin-ui" && c !== "store" && c !== "status"
   );
   if (futureComponents.length > 0) {
     Logger.warning(
@@ -622,6 +631,7 @@ export async function createWorkspace(
         api: componentTypes.includes("api"),
         adminUi: componentTypes.includes("admin-ui"),
         store: componentTypes.includes("store"),
+        status: componentTypes.includes("status"),
         ui: componentTypes.includes("ui"),
         infra: componentTypes.includes("infra"),
         mobile: componentTypes.includes("mobile"),
@@ -642,10 +652,9 @@ export async function createWorkspace(
       try {
         await createProject({
           projectName: name,
-          projectType: type as "api" | "admin-ui" | "store",
+          projectType: type as "api" | "admin-ui" | "store" | "status",
           targetDir: workspacePath,
-          skipDbSetup: options.skipDbSetup ||
-            type === "admin-ui" || type === "store", // Only API needs database
+          skipDbSetup: type !== "api", // Only API needs database
           // Pass scope to both API and admin-ui so the sidebar is filtered correctly
           scope: type === "api" || type === "admin-ui"
             ? options.scope

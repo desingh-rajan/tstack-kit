@@ -1,6 +1,6 @@
 {
   "name": "@tonystack/cli",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno run --allow-read --allow-write mod.ts",
@@ -25,32 +25,16 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended",
-        "workspace"
-      ],
-      "include": [
-        "no-unversioned-import",
-        "no-import-prefix"
-      ]
+      "tags": ["recommended", "workspace"],
+      "include": ["no-unversioned-import", "no-import-prefix"]
     }
   },
   "compilerOptions": {
-    "lib": [
-      "deno.window",
-      "deno.ns"
-    ],
+    "lib": ["deno.window", "deno.ns"],
     "strict": true
   },
   "publish": {
-    "include": [
-      "mod.ts",
-      "src/**/*.ts",
-      "README.md",
-      "LICENSE"
-    ],
-    "exclude": [
-      "tests/**"
-    ]
+    "include": ["mod.ts", "src/**/*.ts", "README.md", "LICENSE"],
+    "exclude": ["tests/**"]
   }
 }

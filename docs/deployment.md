@@ -367,6 +367,397 @@ on:
 Create `your-project-prod` and `your-project-staging` environments in your
 repository settings.
 
+## Multi-Service Deployment
+
+TStack deploys 3 services to a single server. This section covers the
+architecture, configuration, and deployment of all services together.
+
+### Architecture Overview
+
+```
++---------------------------------------------------------------------+
+|                         Single VPS Server                           |
+|                                                                     |
+|  +-------------------------------------------------------------+   |
+|  |                      kamal-proxy                             |   |
+|  |                   (reverse proxy)                            |   |
+|  |                                                              |   |
+|  |  Routes:                                                     |   |
+|  |  - example.com/*       -> sc-store     (storefront)          |   |
+|  |  - example.com/sc-be/* -> sc-api       (API, path_prefix)    |   |
+|  |  - admin.example.com/* -> sc-admin-ui  (admin panel)         |   |
+|  +-------------------------------------------------------------+   |
+|                              |                                      |
+|         +--------------------+--------------------+                 |
+|         v                    v                    v                 |
+|  +-------------+     +-------------+     +-------------+           |
+|  |  sc-store   |     |   sc-api    |     |sc-admin-ui  |           |
+|  |   :8000     |     |   :8000     |     |   :8000     |           |
+|  +-------------+     +-------------+     +-------------+           |
+|                                                                     |
++---------------------------------------------------------------------+
+```
+
+### Path Prefix Routing
+
+When multiple services share the same domain, you need path-based routing:
+
+- `example.com/` -> Storefront
+- `example.com/sc-be/api/*` -> API Backend
+
+Configure path_prefix in the API service's deploy.yml:
+
+```yaml
+# sc-api/config/deploy.yml
+proxy:
+  host: example.com
+  app_port: 8000
+  ssl: true
+  healthcheck:
+    path: /health
+    interval: 3
+  path_prefix: /sc-be # Routes example.com/sc-be/* to this service
+```
+
+**How it works:**
+
+1. Request comes in: `https://example.com/sc-be/api/products`
+2. kamal-proxy matches the `/sc-be` prefix
+3. Strips the prefix and forwards: `http://sc-api:8000/api/products`
+4. API receives clean path without prefix
+
+**API routes must NOT include the prefix:**
+
+```typescript
+// WRONG - Don't include path_prefix in your routes
+app.get("/sc-be/api/products", handler);
+
+// CORRECT - Routes are relative to the service
+app.get("/api/products", handler);
+```
+
+**Health check path is also relative to the service:**
+
+```yaml
+proxy:
+  healthcheck:
+    path: /health # Actual path on the service
+# kamal-proxy calls: http://container:8000/health
+# NOT: http://container:8000/sc-be/health
+```
+
+### Environment Variables for Different Contexts
+
+The API service itself does not know about the proxy prefix. But the frontend
+needs the full public URL (with path_prefix) for client-side API calls, OAuth
+redirect URLs, and CORS configuration.
+
+```yaml
+# sc-api/config/deploy.yml
+env:
+  clear:
+    PORT: "8000"
+    APP_URL: https://example.com/sc-be
+    STOREFRONT_URL: https://example.com
+    ADMIN_URL: https://admin.example.com
+```
+
+```yaml
+# sc-store/config/deploy.yml
+env:
+  clear:
+    API_URL: https://example.com/sc-be/api
+    API_BASE_URL: https://example.com/sc-be/api
+    # Internal URL (no prefix needed - direct container access)
+    API_INTERNAL_URL: http://sc-api-internal:8000
+```
+
+### OAuth Redirect URLs
+
+Google OAuth needs exact redirect URLs, including the path prefix:
+
+```
+Authorized redirect URIs (Google Cloud Console):
+- https://example.com/sc-be/auth/google/callback
+- https://admin.example.com/auth/callback
+- http://localhost:8000/auth/google/callback (development)
+```
+
+```yaml
+# sc-api/config/deploy.yml
+env:
+  clear:
+    APP_URL: https://example.com/sc-be
+    GOOGLE_CALLBACK_URL: https://example.com/sc-be/auth/google/callback
+```
+
+### Subdomain vs Path Routing
+
+**Option A: Subdomain Routing (simpler config, more DNS records)**
+
+```yaml
+# Each service gets its own subdomain
+# api.example.com -> sc-api
+# admin.example.com -> sc-admin-ui
+# example.com -> sc-store
+
+# sc-api/config/deploy.yml
+proxy:
+  host: api.example.com
+  # No path_prefix needed
+```
+
+Pros: Simpler configuration, no path stripping. Cons: Requires wildcard SSL or
+multiple certs, more DNS records.
+
+**Option B: Path Routing (our approach - single domain + single SSL cert)**
+
+```yaml
+# Single domain with path prefixes
+# example.com/sc-be/* -> sc-api
+# example.com/* -> sc-store
+
+# sc-api/config/deploy.yml
+proxy:
+  host: example.com
+  path_prefix: /sc-be
+```
+
+Pros: Single domain, single SSL cert, simpler DNS. Cons: More complex proxy
+config, must handle prefix correctly.
+
+### Service Discovery and Internal Networking
+
+Services need to communicate. Going through the public internet is slow (~10ms).
+Docker network aliases provide direct container access (~1ms).
+
+```yaml
+# sc-api/config/deploy.yml
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    options:
+      network-alias: sc-api-internal # Stable internal DNS name
+```
+
+Other services can then reach the API directly:
+
+```yaml
+# sc-store/config/deploy.yml
+env:
+  clear:
+    API_INTERNAL_URL: http://sc-api-internal:8000
+```
+
+```typescript
+// In storefront SSR code:
+// WRONG - External URL for SSR (slow, ~10ms round trip)
+const api = "https://example.com/sc-be/api";
+
+// CORRECT - Internal URL for SSR (fast, ~1ms)
+const api = Deno.env.get("API_INTERNAL_URL") || "http://sc-api-internal:8000";
+```
+
+### Complete deploy.yml Templates
+
+**API Service:**
+
+```yaml
+# sc-api/config/deploy.yml
+service: sc-api
+image: youruser/sc-api
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    options:
+      network-alias: sc-api-internal
+
+proxy:
+  host: example.com
+  app_port: 8000
+  ssl: true
+  healthcheck:
+    path: /health
+    interval: 3
+  path_prefix: /sc-be
+
+registry:
+  username: youruser
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+  cache:
+    type: registry
+    image: youruser/sc-api-build-cache
+
+env:
+  clear:
+    PORT: "8000"
+    NODE_ENV: production
+    APP_URL: https://example.com/sc-be
+    STOREFRONT_URL: https://example.com
+  secret:
+    - DATABASE_URL
+    - JWT_SECRET
+    - GOOGLE_CLIENT_ID
+    - GOOGLE_CLIENT_SECRET
+
+accessories:
+  postgres:
+    image: postgres:16
+    host: YOUR_SERVER_IP
+    port: "127.0.0.1:5432:5432"
+    env:
+      secret:
+        - POSTGRES_PASSWORD
+      clear:
+        POSTGRES_USER: sc_user
+        POSTGRES_DB: sc_api_production
+    directories:
+      - data:/var/lib/postgresql/data
+    options:
+      network-alias: sc-api-postgres
+```
+
+**Storefront Service:**
+
+```yaml
+# sc-store/config/deploy.yml
+service: sc-store
+image: youruser/sc-store
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+
+proxy:
+  host: example.com
+  app_port: 8000
+  ssl: true
+  healthcheck:
+    path: /health
+    interval: 10
+    timeout: 60
+
+registry:
+  username: youruser
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+  cache:
+    type: registry
+    image: youruser/sc-store-build-cache
+
+env:
+  clear:
+    PORT: "8000"
+    NODE_ENV: production
+    API_URL: https://example.com/sc-be/api
+    API_BASE_URL: https://example.com/sc-be/api
+    API_INTERNAL_URL: http://sc-api-internal:8000
+  secret:
+    - SESSION_SECRET
+```
+
+**Admin Panel (Subdomain):**
+
+```yaml
+# sc-admin-ui/config/deploy.yml
+service: sc-admin-ui
+image: youruser/sc-admin-ui
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+
+proxy:
+  host: admin.example.com # Subdomain, no path_prefix
+  app_port: 8000
+  ssl: true
+  healthcheck:
+    path: /health
+    interval: 10
+    timeout: 60
+
+env:
+  clear:
+    PORT: "8000"
+    NODE_ENV: production
+    API_URL: https://example.com/sc-be/api
+    API_BASE_URL: https://example.com/sc-be/api
+    API_INTERNAL_URL: http://sc-api-internal:8000
+```
+
+### Deployment Order
+
+Deploy in this order (the API creates network aliases and accessories first):
+
+```bash
+# 1. API (creates network-alias and accessories)
+cd sc-api && kamal setup    # First time only
+cd sc-api && kamal deploy
+
+# 2. Storefront (uses API internal URL)
+cd sc-store && kamal deploy
+
+# 3. Admin UI (uses API internal URL)
+cd sc-admin-ui && kamal deploy
+```
+
+### Multi-Service Pitfalls
+
+**1. Health check fails with path_prefix:**
+
+```yaml
+# WRONG
+healthcheck:
+  path: /sc-be/health # Proxy already strips prefix!
+
+# CORRECT
+healthcheck:
+  path: /health
+```
+
+**2. API routes include prefix:**
+
+```typescript
+// WRONG
+router.get("/sc-be/api/users", handler);
+
+// CORRECT
+router.get("/api/users", handler);
+```
+
+**3. Frontend uses wrong API URL internally:**
+
+```typescript
+// WRONG - External URL for SSR
+const api = "https://example.com/sc-be/api";
+
+// CORRECT - Internal URL for SSR
+const api = process.env.API_INTERNAL_URL || "http://sc-api-internal:8000";
+```
+
+**4. OAuth callback URL mismatch:**
+
+```
+Google Console: https://example.com/auth/callback
+Actual URL:     https://example.com/sc-be/auth/callback
+                                    ^^^^^^
+                                    Missing prefix!
+```
+
+---
+
 ## Common Commands
 
 ```bash

@@ -15,6 +15,7 @@ export type ProjectType =
   | "api"
   | "admin-ui"
   | "store"
+  | "status"
   | "ui"
   | "infra"
   | "mobile";
@@ -42,6 +43,7 @@ export interface WorkspaceMetadata {
     api: boolean;
     adminUi: boolean;
     store: boolean;
+    status: boolean;
     ui: boolean;
     infra: boolean;
     mobile: boolean;
