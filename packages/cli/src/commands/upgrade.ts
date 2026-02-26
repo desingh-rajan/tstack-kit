@@ -29,8 +29,15 @@ async function getCurrentVersion(): Promise<string | null> {
     const config = JSON.parse(content);
     return config.version || null;
   } catch (error) {
+    // File not found is expected on installations that predate the upgrade
+    // command — return null silently so the upgrade can proceed normally.
+    if (error instanceof Deno.errors.NotFound) {
+      return null;
+    }
+    // Unexpected error (permission denied, malformed JSON, etc.) — log it.
     console.error(
-      "[upgrade] Could not read current version:",
+      yellow("[warn]"),
+      "Could not read current version:",
       error instanceof Error ? error.message : String(error),
     );
     return null;
@@ -213,7 +220,7 @@ export async function upgradeCommand(targetVersion?: string): Promise<void> {
   if (currentVersion) {
     console.log(blue(`[info]`), `Current version: v${currentVersion}`);
   } else {
-    console.log(yellow(`[warn]`), "Could not detect current version");
+    console.log(blue(`[info]`), "No previous version detected");
   }
 
   // Determine target version
