@@ -6,7 +6,7 @@
 
 set -e
 
-TSTACK_VERSION="1.6.3"
+TSTACK_VERSION="1.6.4"
 TSTACK_RELEASE_URL="https://github.com/desingh-rajan/tstack-kit/archive/refs/tags/v${TSTACK_VERSION}.tar.gz"
 TSTACK_INSTALL_DIR="$HOME/.tstack"
 
