@@ -1,6 +1,6 @@
 {
   "name": "@tonystack/cli",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno run --allow-read --allow-write mod.ts",
