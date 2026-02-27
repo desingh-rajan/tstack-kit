@@ -11,6 +11,7 @@ import {
 } from "../utils/workspaceStore.ts";
 import { getProject } from "../utils/projectStore.ts";
 import type { ProjectScope } from "./creators/base-creator.ts";
+import { generateWorkspaceDocker } from "./workspace-docker.ts";
 import denoConfig from "../../deno.json" with { type: "json" };
 
 const VERSION = denoConfig.version;
@@ -713,7 +714,38 @@ export async function createWorkspace(
       }
     }
 
-    // Step 7: Update workspace status based on result
+    // Step 7: Generate Docker configuration and workspace deno.json
+    const successfulComponents = componentTypes.filter(
+      (c) => !failedComponents.includes(c),
+    );
+    if (successfulComponents.length > 0) {
+      try {
+        // Get DB credentials from PGUSER/PGPASSWORD (same source as api-creator)
+        const dbUser = Deno.env.get("PGUSER") || "postgres";
+        const dbPassword = Deno.env.get("PGPASSWORD") || "password";
+
+        await generateWorkspaceDocker({
+          workspacePath,
+          workspaceName: name,
+          components: successfulComponents as (
+            | "api"
+            | "admin-ui"
+            | "store"
+            | "status"
+          )[],
+          dbUser,
+          dbPassword,
+        });
+      } catch (error) {
+        Logger.warning(
+          `Failed to generate Docker configuration: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+
+    // Step 8: Update workspace status based on result
     if (failedComponents.length > 0) {
       metadata.status = "partial";
       metadata.updatedAt = new Date();
@@ -729,27 +761,43 @@ export async function createWorkspace(
       await updateWorkspace(name, metadata);
     }
 
-    // Step 8: Success message
+    // Step 9: Success message
     Logger.newLine();
     Logger.banner(VERSION);
-    Logger.success(`✅ Workspace "${name}" created successfully!`);
+    Logger.success(`Workspace "${name}" created successfully!`);
     Logger.newLine();
     Logger.subtitle("Workspace Structure:");
     Logger.code(`${workspacePath}/`);
     for (const project of metadata.projects) {
-      Logger.code(`  ├── ${project.folderName}/`);
-      Logger.code(`  │   └── .git/ (initialized)`);
+      Logger.code(`  |-- ${project.folderName}/`);
+      Logger.code(`  |   +-- .git/ (initialized)`);
       const repo = metadata.githubRepos.find((r) =>
         r.name === project.folderName
       );
       if (repo) {
-        Logger.code(`  │   └── remote: ${repo.url}`);
+        Logger.code(`  |   +-- remote: ${repo.url}`);
       }
     }
+    Logger.code(`  |-- docker-compose.dev.yml`);
+    Logger.code(`  |-- docker-compose.test.yml`);
+    Logger.code(`  |-- docker-compose.yml`);
+    Logger.code(`  |-- start-dev.sh`);
+    Logger.code(`  |-- start-test.sh`);
+    Logger.code(`  |-- start-prod.sh`);
+    Logger.code(`  |-- stop.sh`);
+    Logger.code(`  +-- deno.json`);
     Logger.newLine();
-    Logger.subtitle("Next Steps:");
+    Logger.subtitle("Quick Start:");
     Logger.code(`cd ${name}`);
-    Logger.code(`cd ${name}-api && deno task dev`);
+    Logger.newLine();
+    Logger.info("Without Docker (local dev):");
+    Logger.code(`deno task dev`);
+    Logger.newLine();
+    Logger.info("With Docker (hot reload):");
+    Logger.code(`./start-dev.sh`);
+    Logger.newLine();
+    Logger.info("With Docker (production mode):");
+    Logger.code(`./start-prod.sh`);
     Logger.newLine();
   } catch (error) {
     // Update workspace status to partial on failure

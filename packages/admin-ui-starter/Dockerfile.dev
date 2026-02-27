@@ -1,0 +1,14 @@
+# Development image — Vite dev server with HMR
+# Source code is volume-mounted by docker-compose, not copied here.
+
+FROM denoland/deno:latest
+
+WORKDIR /app
+
+# Cache dependencies at build time
+COPY deno.json deno.lock* ./
+RUN deno install
+
+EXPOSE 5173
+
+CMD ["run", "-A", "npm:vite"]

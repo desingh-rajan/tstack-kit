@@ -16,30 +16,46 @@ hardened. Ship products, not boilerplate.
 - **Security hardened** -- Rate limiting, input validation, pinned deps, scoped
   permissions
 - **360+ tests** -- Real PostgreSQL integration tests across all packages
+- **Docker multi-env** -- Dev (hot reload), test, prod -- auto-generated with
+  Dozzle logs
 
 ---
 
 ## Try It Now
 
 ```bash
-# Requires: Deno 2.6+, PostgreSQL 16+
+# Requires: Deno 2.6+, PostgreSQL 16+, Docker (optional)
 
 # Install CLI (10 seconds)
 curl -fsSL https://raw.githubusercontent.com/desingh-rajan/tstack-kit/main/install.sh | sh
 
 # Create a full-stack workspace
 tstack create workspace my-shop
-cd my-shop/my-shop-api
+cd my-shop
+```
 
-# Setup database
-deno task migrate:generate  # Generate migrations from schema
-deno task migrate:run       # Apply migrations
-deno task db:seed           # Seed superadmin + demo data
+Every workspace ships with three ways to run your stack:
 
-# Start the stack (in separate terminals)
-deno task dev                         # API:   localhost:8000
-cd ../my-shop-admin && deno task dev  # Admin: localhost:5173
-cd ../my-shop-store && deno task dev  # Store: localhost:5174
+```bash
+# Option 1: Local dev (no Docker)
+deno task dev                # runs all services with concurrently
+
+# Option 2: Docker dev (hot reload)
+./start-dev.sh               # all services in containers, code changes reload
+./start-dev.sh --with-db     # same + containerised PostgreSQL
+
+# Option 3: Docker production (lightweight)
+./start-prod.sh              # multi-stage alpine builds, no dev deps
+./start-prod.sh --with-db    # same + containerised PostgreSQL
+```
+
+Setup your database and start building:
+
+```bash
+cd my-shop-api
+deno task migrate:generate   # Generate migrations from schema
+deno task migrate:run        # Apply migrations
+deno task db:seed            # Seed superadmin + demo data
 ```
 
 ---
@@ -48,13 +64,23 @@ cd ../my-shop-store && deno task dev  # Store: localhost:5174
 
 ```
 my-shop/
-├── my-shop-api/      # Hono + Drizzle + PostgreSQL
-├── my-shop-admin/    # Fresh + DaisyUI admin panel
-└── my-shop-store/    # Fresh + Tailwind storefront
+├── my-shop-api/              # Hono + Drizzle + PostgreSQL
+├── my-shop-admin/            # Fresh + DaisyUI admin panel
+├── my-shop-store/            # Fresh + Tailwind storefront
+├── my-shop-status/           # Health status page
+├── docker-compose.dev.yml    # Hot-reload dev containers
+├── docker-compose.test.yml   # Production images + test DB
+├── docker-compose.yml        # Production images + prod DB
+├── start-dev.sh              # ./start-dev.sh [--with-db]
+├── start-test.sh             # ./start-test.sh [--with-db]
+├── start-prod.sh             # ./start-prod.sh [--with-db]
+├── stop.sh                   # Stop all Docker services
+└── deno.json                 # deno task dev (no Docker)
 ```
 
 Each workspace creates 3 databases (dev/test/prod), initializes git with
-`main`/`staging`/`dev` branches, and wires all services together.
+`main`/`staging`/`dev` branches, generates Docker configuration, and wires all
+services together.
 
 ---
 
@@ -68,6 +94,8 @@ Each workspace creates 3 databases (dev/test/prod), initializes git with
 | `tstack create api my-api`       | **Zero-Config API**: Database ready, auth wired, secure defaults             |
 | `tstack scaffold product`        | **Vertical Slice**: Model, service, routes, tests, admin UI -- all generated |
 | `tstack destroy my-app`          | **Clean Teardown**: Project removed, databases dropped, no orphans           |
+| `./start-dev.sh`                 | **Docker Dev**: All services in containers with hot reload + Dozzle logs     |
+| `./start-prod.sh`                | **Docker Prod**: Multi-stage alpine builds, production-ready                 |
 
 The CLI tracks every project via Deno KV. Create 10 projects, destroy 5 -- your
 system stays clean.
@@ -151,7 +179,8 @@ Entity automatically appears in the Admin UI sidebar.
 | **Workspace Management** | Create/destroy multi-project workspaces with database lifecycle                          |
 | **GitHub Integration**   | Auto-create repos with `--github-org`; pushes main/staging/dev                           |
 | **Kamal Deployment**     | One-command production deployment via `tstack infra`                                     |
-| **Docker Ready**         | docker-compose with internal networking (`SSR_API_URL`)                                  |
+| **Docker Multi-Env**     | Dev (hot reload), test (E2E), prod (alpine) -- auto-generated per workspace              |
+| **Dozzle Logs**          | Real-time Docker log viewer at `localhost:9999` in every compose environment             |
 | **Health Checks**        | `/health` endpoint on all services                                                       |
 | **Advanced Pagination**  | Filterable tables with date pickers, search, and sorting                                 |
 
@@ -349,6 +378,53 @@ reference including database pool tuning (`DB_POOL_SIZE`, `DB_IDLE_TIMEOUT`,
 
 ---
 
+## Docker Development
+
+Every `tstack create workspace` generates a complete Docker setup with three
+environments:
+
+| Environment | Command           | Purpose                                       | Ports                               |
+| ----------- | ----------------- | --------------------------------------------- | ----------------------------------- |
+| **Dev**     | `./start-dev.sh`  | Hot-reload containers, source-mounted volumes | API: 8000, Admin: 5173, Store: 5174 |
+| **Test**    | `./start-test.sh` | Production images with test database          | API: 8000, Admin: 3001, Store: 3002 |
+| **Prod**    | `./start-prod.sh` | Lightweight multi-stage alpine builds         | API: 8000, Admin: 3001, Store: 3002 |
+
+All environments include Dozzle (Docker log viewer) at `http://localhost:9999`
+and a status page at `http://localhost:8001`.
+
+### PostgreSQL: Host or Container
+
+By default, Docker services connect to your host machine's PostgreSQL -- the
+databases TStack already created for you. No duplication, no data sync issues.
+
+Need a fully isolated environment? Pass `--with-db`:
+
+```bash
+./start-dev.sh --with-db     # Spins up postgres:16-alpine alongside services
+./start-test.sh --with-db    # Test DB on port 5433 (avoids conflict with dev)
+```
+
+### Non-Docker Local Dev
+
+Every workspace also gets a root `deno.json` with a `dev` task that uses
+`concurrently` to run all services locally without Docker:
+
+```bash
+cd my-shop
+deno task dev                # Runs api + admin + store + status in parallel
+deno task dev:api             # Run just the API
+deno task dev:admin           # Run just the admin UI
+deno task dev:store           # Run just the storefront
+```
+
+### Stopping Services
+
+```bash
+./stop.sh                    # Stops all Docker services across all environments
+```
+
+---
+
 ## Running Tests
 
 All three packages have test suites with real PostgreSQL integration tests.
@@ -426,12 +502,23 @@ environment variables, and troubleshooting.
 - `/health` routes added to storefront and admin-ui templates
 - Comprehensive Kamal multi-service deployment guide in `docs/deployment.md`
 
+### v1.6.4 (February 2026) -- Shipped
+
+- Docker multi-environment workspace generation: dev (hot reload), test
+  (production images + test DB), prod (multi-stage alpine builds)
+  ([#43](https://github.com/desingh-rajan/tstack-kit/issues/43))
+- Shell scripts (`start-dev.sh`, `start-test.sh`, `start-prod.sh`, `stop.sh`)
+  with `--with-db` flag for opt-in containerised PostgreSQL
+- Dozzle real-time Docker log viewer in every compose environment
+- Workspace root `deno.json` with `concurrently` for non-Docker local dev
+- Dockerfiles for all starter packages (dev + production multi-stage builds)
+- Netdata metrics monitoring section in deployment guide
+  ([#41](https://github.com/desingh-rajan/tstack-kit/issues/41))
+
 ### v1.7 (Q2 2026)
 
 - Playwright E2E tests for storefront and admin UI
   ([#84](https://github.com/desingh-rajan/tstack-kit/issues/84))
-- Docker multi-environment setup
-  ([#43](https://github.com/desingh-rajan/tstack-kit/issues/43))
 - Integer vs UUID column support
   ([#65](https://github.com/desingh-rajan/tstack-kit/issues/65))
 - Test coverage improvements
@@ -439,8 +526,6 @@ environment variables, and troubleshooting.
 
 ### v2.0 (2026)
 
-- Monitoring and observability
-  ([#41](https://github.com/desingh-rajan/tstack-kit/issues/41))
 - Multi-cloud deployment toolkit
   ([#40](https://github.com/desingh-rajan/tstack-kit/issues/40))
 - Mobile admin app (Flutter)
