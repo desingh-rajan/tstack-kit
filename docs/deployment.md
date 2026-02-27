@@ -38,6 +38,7 @@ You need a domain with DNS A records pointing to your server IPs.
 | A    | admin   | 159.89.162.100 | 600 |
 | A    | status  | 159.89.162.100 | 600 |
 | A    | logs    | 159.89.162.100 | 600 |
+| A    | metrics | 159.89.162.100 | 600 |
 | A    | staging | 167.71.225.50  | 600 |
 
 All subdomains point to the **same VPS IP**. A single `kamal-proxy` instance
@@ -53,6 +54,7 @@ example.com/sc-be/*      → sc-api    (kamal-proxy: host=example.com, path_pref
 admin.example.com        → sc-admin-ui  (kamal-proxy: host=admin.example.com)
 status.example.com       → sc-status    (kamal-proxy: host=status.example.com)
 logs.example.com         → dozzle       (kamal-proxy: host=logs.example.com)
+metrics.example.com      → netdata      (kamal-proxy: host=metrics.example.com)
 ```
 
 **Why path prefix for API?**
@@ -1140,6 +1142,152 @@ inspect container states but cannot exec into containers or start/stop services.
 > **Security note**: `DOZZLE_USERNAME` and `DOZZLE_PASSWORD` enable Dozzle's
 > built-in simple auth. Never expose Dozzle without authentication. The Docker
 > socket is mounted read-only.
+
+---
+
+## Netdata — Container & Host Metrics
+
+[Netdata](https://netdata.cloud) is a zero-configuration, real-time metrics
+dashboard. It auto-discovers every running Docker container and exposes host
+metrics (CPU, RAM, disk I/O, network) with no instrumentation required in your
+app code. Like Dozzle for logs, Netdata is deployed as a Kamal **service** so
+that kamal-proxy can route `metrics.example.com` to it with automatic SSL.
+
+> **Why not an accessory?** Kamal accessories don't go through kamal-proxy, so
+> they can't get subdomain routing or SSL automatically. Running Netdata as a
+> full service gives it a proper `proxy:` stanza and full kamal-proxy
+> integration.
+
+### DNS
+
+Add an A record for `metrics.example.com` pointing to the same VPS IP (see
+[Domain & DNS Setup](#2-domain--dns-setup) above).
+
+### deploy.yml
+
+Create a minimal `config/deploy.yml` in whichever repo manages accessories
+(typically `sc-api`), or create a standalone `sc-metrics/` directory:
+
+```yaml
+# sc-api/config/deploy.yml  — add alongside existing services, OR
+# sc-metrics/config/deploy.yml — standalone directory
+
+service: sc-netdata
+image: netdata/netdata:stable
+
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    volumes:
+      - /proc:/host/proc:ro # Host process metrics
+      - /sys:/host/sys:ro # Host system metrics
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Container discovery
+      - /etc/passwd:/host/etc/passwd:ro # Username resolution
+      - netdata_lib:/var/lib/netdata
+      - netdata_cache:/var/cache/netdata
+
+proxy:
+  host: metrics.example.com # DNS A record must exist
+  app_port: 19999 # Netdata's default internal port
+  ssl: true
+  healthcheck:
+    path: /api/v1/info # Netdata's built-in health endpoint
+    interval: 10
+
+registry:
+  # Netdata is pulled from Docker Hub — no private registry needed
+  server: registry-1.docker.io
+  username: ""
+  password: []
+
+builder:
+  # No build step — pulling a public image directly
+  driver: remote
+  remote:
+    arch: amd64
+
+env:
+  clear:
+    NETDATA_EXTRA_DEB_PACKAGES: "" # No extra packages needed
+  secret:
+    - NETDATA_CLAIM_TOKEN # Optional: link to Netdata Cloud for multi-VPS view
+    - NETDATA_CLAIM_ROOMS # Optional: Netdata Cloud room ID
+```
+
+### Named volumes
+
+Netdata requires persistent storage to retain metric history across restarts.
+Declare these volumes on the server before first deploy:
+
+```bash
+docker volume create netdata_lib
+docker volume create netdata_cache
+```
+
+### Required secrets
+
+Add these to your `.env` (passed via `kamal secrets`). Both are optional —
+Netdata runs fully without them (local only):
+
+```bash
+NETDATA_CLAIM_TOKEN=your-netdata-cloud-claim-token  # optional
+NETDATA_CLAIM_ROOMS=your-room-id                    # optional
+```
+
+To get a claim token: sign up at [app.netdata.cloud](https://app.netdata.cloud)
+→ Space → Connect Nodes.
+
+### Deploy and start
+
+```bash
+# First deploy
+kamal deploy
+
+# Restart after config changes
+kamal app restart
+```
+
+### Access
+
+- `https://metrics.example.com` — Netdata dashboard, no login required by
+  default (restrict access via firewall or add an auth proxy if needed)
+
+Netdata has read-only access to host metrics and the Docker socket (`:ro`). It
+cannot exec into containers or modify any system state.
+
+> **Security note**: Netdata's dashboard has no built-in auth by default.
+> Restrict `metrics.example.com` to trusted IPs via your firewall, or place a
+> basic-auth reverse proxy in front. Never expose raw Netdata to the public
+> internet without protection.
+
+### What Netdata monitors automatically
+
+No app-side instrumentation needed. Out of the box:
+
+- **Host**: CPU, RAM, disk I/O, network traffic, system load
+- **Docker containers**: per-container CPU, memory, network, disk — all
+  auto-discovered from the Docker socket
+- **PostgreSQL**: if the `pg` plugin is enabled (auto-detected when Postgres is
+  running on the host)
+- **Redis**: auto-detected and monitored with no config
+
+### Scaling to multiple VPS
+
+When you grow beyond a single server, each VPS gets its own Netdata agent
+deployed with the same `deploy.yml` pattern. To aggregate all agents into one
+dashboard, two options:
+
+1. **Netdata Cloud (free tier)** — add `NETDATA_CLAIM_TOKEN` and
+   `NETDATA_CLAIM_ROOMS` to each agent's secrets. All nodes appear in one
+   Netdata Cloud dashboard at `app.netdata.cloud`. No extra VPS needed.
+
+2. **Self-hosted parent** — designate one VPS as the Netdata parent. Agents on
+   app servers stream metrics to it via `stream.conf`. The parent's
+   `metrics.example.com` shows all nodes in a single UI.
+
+For the current single-VPS setup, neither is required — the standalone agent at
+`metrics.example.com` covers everything.
 
 ## Further Reading
 
